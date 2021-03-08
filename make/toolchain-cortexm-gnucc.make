@@ -62,6 +62,7 @@ CXX_FLAGS  += -fno-rtti -fno-use-cxa-atexit
 LD_FLAGS   += -Wl,-Map=$(MAP),--cref,--no-warn-mismatch,--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
+DEFS       := $(DEFS:ISO=)
 C_FLAGS    += -std=c$(STDC:20=2x)
 CXX_FLAGS  += -std=c++$(STDCXX:20=2a)
 else
@@ -120,11 +121,6 @@ COMMON_F   += -Wall
 else
 COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
-endif
-ifneq ($(filter ISO,$(DEFS)),)
-DEFS       := $(DEFS:ISO=)
-else
-COMMON_F   += -Wno-gnu-zero-variadic-macro-arguments
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
