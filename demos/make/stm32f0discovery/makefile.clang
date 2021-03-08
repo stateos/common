@@ -1,0 +1,12 @@
+ifndef COMMON
+$(error Please define COMMON path before including any common package)
+endif
+
+#----------------------------------------------------------#
+
+DEMOS_ARCH     := cortexm
+DEMOS_DEVICE   := stm32f0
+
+#----------------------------------------------------------#
+include $(COMMON)/make/stm32f0discovery/makefile.clang
+#----------------------------------------------------------#

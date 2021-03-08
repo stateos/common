@@ -1,0 +1,24 @@
+#----------------------------------------------------------#
+
+TARGET_PLATFORM := stm32ldiscovery
+TARGET_CHIP     := stm32l152xb
+TARGET_DEVICE   := stm32l1
+TARGET_CORE     := cortex-m3
+TARGET_ARCH     := cortexm
+TARGET_COMPILER := gnucc
+
+#----------------------------------------------------------#
+
+LIBRARY_PREFIX  := lib
+LIBRARY_SUFFIX  := .a
+
+#----------------------------------------------------------#
+
+QEMU_BOARD := STM32L-Discovery
+OOCD_BOARD := $(TARGET_PLATFORM)
+
+#----------------------------------------------------------#
+
+DEFS += STM32L152xB
+
+#----------------------------------------------------------#

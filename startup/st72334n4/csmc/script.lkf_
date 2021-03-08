@@ -1,0 +1,22 @@
+# LINK COMMAND FILE for ST72334N4
+
+# segment vector:
++seg .vector -b 0xFFE0 -m 0x0020 -k # (keep)
+# segment code, constants:
++seg .text   -b 0xC000 -m 0x4000 -n .text
++seg .const  -a .text            -n .const -it
+# segment eeprom:
++seg .eeprom -b 0x0C00 -m 0x0100 -n .eeprom
+# segment zero page:
++seg .bsct   -b 0x0080 -m 0x0080 -n .bsct
++seg .ubsct  -a .bsct            -n .ubsct
++seg .bit    -a .ubsct           -n .bit   -id
++seg .share  -a .bit             -n .share -is
+# segment ram:
++seg .data   -b 0x0200 -m 0x0080 -n .data
++seg .bss    -a .data            -n .bss
+
+@*
+
++def __endzp=@.ubsct                # end of uninitialized zpage
++def __memory=@.bss                 # end of bss segment

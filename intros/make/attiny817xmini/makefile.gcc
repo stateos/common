@@ -1,0 +1,13 @@
+ifndef COMMON
+$(error Please define COMMON path before including any common package)
+endif
+
+#----------------------------------------------------------#
+
+INTROS_ARCH     := avr8
+INTROS_DEVICE   := attiny817
+INTROS_COMPILER := gcc
+
+#----------------------------------------------------------#
+include $(COMMON)/make/attiny817xmini/makefile.gcc
+#----------------------------------------------------------#

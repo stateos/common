@@ -1,0 +1,87 @@
+/*
+ *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+ *
+ *  Copyright (c) 2019 United States Government as represented by
+ *  the Administrator of the National Aeronautics and Space Administration.
+ *  All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+/**
+ * \file     os-impl-no-symtab.c
+ * \author   joseph.p.hickey@nasa.gov
+ *
+ */
+
+/****************************************************************************************
+                                    INCLUDE FILES
+ ***************************************************************************************/
+
+#include "os-shared-module.h"
+
+/****************************************************************************************
+                                    SYMTAB API
+ ***************************************************************************************/
+
+/*----------------------------------------------------------------
+ *
+ * Function: OS_GlobalSymbolLookup_Impl
+ *
+ *  Purpose: Implemented per internal OSAL API
+ *           See prototype for argument/return detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_GlobalSymbolLookup_Impl(cpuaddr *SymbolAddress, const char *SymbolName)
+{
+    (void) SymbolAddress;
+    (void) SymbolName;
+
+    return OS_ERR_NOT_IMPLEMENTED;
+
+} /* end OS_GlobalSymbolLookup_Impl */
+
+/*----------------------------------------------------------------
+ *
+ * Function: OS_ModuleSymbolLookup_Impl
+ *
+ *  Purpose: Implemented per internal OSAL API
+ *           See prototype for argument/return detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_ModuleSymbolLookup_Impl(const OS_object_token_t *token, cpuaddr *SymbolAddress, const char *SymbolName)
+{
+    (void) token;
+    (void) SymbolAddress;
+    (void) SymbolName;
+
+    return OS_ERR_NOT_IMPLEMENTED;
+
+} /* end OS_ModuleSymbolLookup_Impl */
+
+/*----------------------------------------------------------------
+ *
+ * Function: OS_SymbolTableDump_Impl
+ *
+ *  Purpose: Implemented per internal OSAL API
+ *           See prototype for argument/return detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_SymbolTableDump_Impl(const char *filename, size_t SizeLimit)
+{
+    (void) filename;
+    (void) SizeLimit;
+
+    return (OS_ERR_NOT_IMPLEMENTED);
+
+} /* end OS_SymbolTableDump_Impl */

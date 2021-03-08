@@ -1,0 +1,29 @@
+#----------------------------------------------------------#
+
+TARGET_PLATFORM := stm32f4discovery
+TARGET_CHIP     := stm32f407xx
+TARGET_DEVICE   := stm32f4
+TARGET_CORE     := cortex-m4
+TARGET_ARCH     := cortexm
+TARGET_COMPILER := csmcc
+
+#----------------------------------------------------------#
+
+LIBRARY_PREFIX  :=
+LIBRARY_SUFFIX  := .cxm
+
+#----------------------------------------------------------#
+
+QEMU_BOARD := STM32F4-Discovery
+OOCD_BOARD := $(TARGET_PLATFORM)
+
+#----------------------------------------------------------#
+
+DEFS += STM32F407xx
+
+#----------------------------------------------------------#
+
+LIBS   += $(if $(filter qemu,$(MAKECMDGOALS)),libflc.cxm,libfpulc.cxm)
+C_FLAGS = $(if $(filter qemu,$(MAKECMDGOALS)),,+fpu)
+
+#----------------------------------------------------------#

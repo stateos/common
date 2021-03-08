@@ -1,0 +1,15 @@
+#----------------------------------------------------------#
+
+TARGET_PLATFORM := pc
+TARGET_CHIP     := amd64
+TARGET_DEVICE   := x86
+TARGET_CORE     := x86
+TARGET_ARCH     := x86
+TARGET_COMPILER := gcc
+
+#----------------------------------------------------------#
+
+LIBRARY_PREFIX  := lib
+LIBRARY_SUFFIX  := .a
+
+#----------------------------------------------------------#

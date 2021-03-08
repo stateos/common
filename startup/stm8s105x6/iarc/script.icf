@@ -1,0 +1,45 @@
+/*******************************************************************************
+@file     stm32s105.icf
+@author   Rajmund Szymanski
+@date     27.11.2019
+@brief    Linker script for STM8S105 device
+*******************************************************************************/
+
+define symbol __RAM_start__ = 0x0000;
+define symbol __RAM_size__  = 2K; // 0x0800
+define symbol __RAM_end__   = __RAM_start__+__RAM_size__;
+
+define symbol __EEP_start__ = 0x4000;
+define symbol __EEP_size__  = 1K; // 0x0400
+define symbol __EEP_end__   = __EEP_start__+__EEP_size__;
+
+define symbol __ROM_start__ = 0x8000;
+define symbol __ROM_size__  = 32K; // 0x8000
+define symbol __ROM_end__   = __ROM_start__+__ROM_size__;
+
+define memory MEM with size = 16M;
+define region RAM = MEM:[ from __RAM_start__ size __RAM_size__ ];
+define region EEP = MEM:[ from __EEP_start__ size __EEP_size__ ];
+define region ROM = MEM:[ from __ROM_start__ size __ROM_size__ ];
+
+if (!isdefinedsymbol(stack_size)) {
+define symbol stack_size = 0;
+}
+define symbol __stack_size = stack_size;
+
+define block CSTACK with size = __stack_size {};
+define block   HEAP                          {};
+
+initialize by copy    { readwrite        };
+do not initialize     { section .noinit  };
+place at start of RAM { section .vregs   };
+place in          RAM { readwrite        };
+place in          RAM { block HEAP       };
+place at end of   RAM { block CSTACK     };
+place in          EEP { section .eeprom  };
+keep                  { section .intvec  };
+place at start of ROM { section .intvec };
+place in          ROM { readonly         };
+
+define exported symbol _stack      = __RAM_end__ - 1;
+define exported symbol HEAP$$Limit = __RAM_end__ - __stack_size;

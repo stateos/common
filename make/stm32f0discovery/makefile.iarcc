@@ -1,0 +1,24 @@
+#----------------------------------------------------------#
+
+TARGET_PLATFORM := stm32f0discovery
+TARGET_CHIP     := stm32f051x8
+TARGET_DEVICE   := stm32f0
+TARGET_CORE     := cortex-m0
+TARGET_ARCH     := cortexm
+TARGET_COMPILER := iarcc
+
+#----------------------------------------------------------#
+
+LIBRARY_PREFIX  := lib
+LIBRARY_SUFFIX  := .a
+
+#----------------------------------------------------------#
+
+QEMU_BOARD := STM32F0-Discovery
+OOCD_BOARD := $(TARGET_PLATFORM)
+
+#----------------------------------------------------------#
+
+DEFS += STM32F051x8
+
+#----------------------------------------------------------#

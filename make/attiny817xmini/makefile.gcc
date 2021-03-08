@@ -1,0 +1,19 @@
+#----------------------------------------------------------#
+
+TARGET_PLATFORM := attiny817xmini
+TARGET_CHIP     := attiny817
+TARGET_DEVICE   := attiny817
+TARGET_CORE     := attiny
+TARGET_ARCH     := avr8
+TARGET_COMPILER := gcc
+
+#----------------------------------------------------------#
+
+LIBRARY_PREFIX  := lib
+LIBRARY_SUFFIX  := .a
+
+#----------------------------------------------------------#
+
+DEFS += F_CPU=20000000
+
+#----------------------------------------------------------#

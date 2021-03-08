@@ -1,0 +1,19 @@
+#----------------------------------------------------------#
+
+TARGET_PLATFORM := stm8discovery
+TARGET_CHIP     := stm8s105x6
+TARGET_DEVICE   := stm8s
+TARGET_CORE     := stm8
+TARGET_ARCH     := stm8
+TARGET_COMPILER := csmc
+
+#----------------------------------------------------------#
+
+LIBRARY_PREFIX  :=
+LIBRARY_SUFFIX  := .sm8
+
+#----------------------------------------------------------#
+
+DEFS += STM8S105
+
+#----------------------------------------------------------#
