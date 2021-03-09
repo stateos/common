@@ -31,10 +31,10 @@ set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo Release MinSizeRel)
 
 set(INIT_FLAGS             "-mthumb -mcpu=${TARGET_CORE} -fdata-sections -ffunction-sections")
 
-set(CMAKE_C_FLAGS          "${INIT_FLAGS}"                               CACHE INTERNAL "c compiler flags")
-set(CMAKE_CXX_FLAGS        "${INIT_FLAGS} -fno-rtti -fno-use-cxa-atexit" CACHE INTERNAL "cxx compiler flags")
-set(CMAKE_ASM_FLAGS        "${INIT_FLAGS} -x assembler-with-cpp"         CACHE INTERNAL "asm compiler flags")
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections -demangle"                 CACHE INTERNAL "exe linker flags")
+set(CMAKE_C_FLAGS          "${INIT_FLAGS}"                       CACHE INTERNAL "c compiler flags")
+set(CMAKE_CXX_FLAGS        "${INIT_FLAGS} -fno-use-cxa-atexit"   CACHE INTERNAL "cxx compiler flags")
+set(CMAKE_ASM_FLAGS        "${INIT_FLAGS} -x assembler-with-cpp" CACHE INTERNAL "asm compiler flags")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections -demangle"         CACHE INTERNAL "exe linker flags")
 
 set(CMAKE_C_FLAGS_DEBUG            "-g -ggdb -Og"       CACHE INTERNAL "c debug compiler flags")
 set(CMAKE_CXX_FLAGS_DEBUG          "-g -ggdb -Og"       CACHE INTERNAL "cxx debug compiler flags")
@@ -84,7 +84,7 @@ function(setup_target_compiler target)
 	if (exceptions IN_LIST ARGN)
 		message(STATUS "${STARTMSG} Using exceptions")
 	else()
-		add_flags(CMAKE_CXX_FLAGS -fno-exceptions)
+		add_flags(CMAKE_CXX_FLAGS -fno-rtti -fno-exceptions)
 	endif()
 
 	if (stdlib IN_LIST ARGN)

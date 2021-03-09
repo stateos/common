@@ -64,7 +64,6 @@ ifneq (clean,$(MAKECMDGOALS))
 COMMON_F   += --target=arm-arm-none-eabi -mthumb -mcpu=$(TARGET_CORE)
 COMMON_F   += -O$(OPTF) -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
-CXX_FLAGS  += -fno-rtti
 LD_FLAGS   += --strict
 LD_FLAGS   += --map --list=$(MAP) --symbols --list_mapping_symbols --info common,sizes,totals,veneers,unused
 ifneq ($(filter ISO,$(DEFS)),)
@@ -79,7 +78,7 @@ ifneq ($(filter EXCEPTIONS,$(DEFS)),)
 $(info Using exceptions)
 DEFS       := $(DEFS:EXCEPTIONS=)
 else
-CXX_FLAGS  += -fno-exceptions
+CXX_FLAGS  += -fno-rtti -fno-exceptions
 endif
 ifneq ($(filter STDLIB,$(DEFS)),)
 $(info Using stdlib)

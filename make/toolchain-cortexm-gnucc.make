@@ -58,7 +58,7 @@ COMMON_F   += -mthumb -mcpu=$(TARGET_CORE)
 COMMON_F   += -O$(OPTF) -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
-CXX_FLAGS  += -fno-rtti -fno-use-cxa-atexit
+CXX_FLAGS  += -fno-use-cxa-atexit
 LD_FLAGS   += -Wl,-Map=$(MAP),--cref,--no-warn-mismatch,--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
@@ -90,7 +90,7 @@ ifneq ($(filter EXCEPTIONS,$(DEFS)),)
 $(info Using exceptions)
 DEFS       := $(DEFS:EXCEPTIONS=)
 else
-CXX_FLAGS  += -fno-exceptions
+CXX_FLAGS  += -fno-rtti -fno-exceptions
 endif
 ifneq ($(filter STDLIB,$(DEFS)),)
 $(info Using stdlib)

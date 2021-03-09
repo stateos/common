@@ -66,13 +66,13 @@ else
 C_FLAGS    += -std=gnu$(STDC:20=2x)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
 endif
-CXX_FLAGS  += -fno-rtti -fno-use-cxa-atexit
+CXX_FLAGS  += -fno-use-cxa-atexit
 LD_FLAGS   += -Wl,-Map=$(MAP),--cref,--no-warn-mismatch,--gc-sections
 ifneq ($(filter EXCEPTIONS,$(DEFS)),)
 $(info Using exceptions)
 DEFS       := $(DEFS:EXCEPTIONS=)
 else
-CXX_FLAGS  += -fno-exceptions
+CXX_FLAGS  += -fno-rtti -fno-exceptions
 endif
 ifneq ($(filter LTO,$(DEFS)),)
 $(info Using lto)
