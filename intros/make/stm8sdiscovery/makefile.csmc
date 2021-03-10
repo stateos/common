@@ -4,9 +4,10 @@ endif
 
 #----------------------------------------------------------#
 
-DEMOS_ARCH     := stm8
-DEMOS_DEVICE   := stm8s
+INTROS_ARCH     := stm8
+INTROS_DEVICE   := stm8s
+INTROS_COMPILER := csmc
 
 #----------------------------------------------------------#
-include $(COMMON)/make/stm8discovery/makefile.iarc
+include $(COMMON)/make/stm8sdiscovery/makefile.csmc
 #----------------------------------------------------------#

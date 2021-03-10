@@ -1,16 +1,16 @@
 #----------------------------------------------------------#
 
-TARGET_PLATFORM := stm8discovery
+TARGET_PLATFORM := stm8sdiscovery
 TARGET_CHIP     := stm8s105x6
 TARGET_DEVICE   := stm8s
 TARGET_CORE     := stm8
 TARGET_ARCH     := stm8
-TARGET_COMPILER := csmc
+TARGET_COMPILER := iarc
 
 #----------------------------------------------------------#
 
 LIBRARY_PREFIX  :=
-LIBRARY_SUFFIX  := .sm8
+LIBRARY_SUFFIX  := .a
 
 #----------------------------------------------------------#
 

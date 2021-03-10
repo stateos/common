@@ -6,8 +6,8 @@ endif
 
 STATEOS_ARCH     := stm8
 STATEOS_DEVICE   := stm8s
-STATEOS_COMPILER := sdcc
+STATEOS_COMPILER := iarc
 
 #----------------------------------------------------------#
-include $(COMMON)/make/stm8discovery/makefile.sdcc
+include $(COMMON)/make/stm8sdiscovery/makefile.iarc
 #----------------------------------------------------------#
