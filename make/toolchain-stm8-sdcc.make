@@ -5,7 +5,7 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?=
-SDCC       ?= /c/sys/sdcc/bin/
+SDCC       ?=
 STVP       := stvp_cmdline
 STDC       ?= 11
 

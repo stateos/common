@@ -5,7 +5,7 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?=
-CSMCC      ?= /c/sys/cosmic/cxstm32/
+CSMCC      ?=
 GNUCC      ?=
 OPENOCD    := openocd
 STLINK     := st-link_cli

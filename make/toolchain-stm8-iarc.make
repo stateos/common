@@ -5,7 +5,7 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?=
-IARC       ?= /c/sys/icc/stm8/bin/
+IARC       ?=
 STVP       := stvp_cmdline
 OPTF       ?=
 

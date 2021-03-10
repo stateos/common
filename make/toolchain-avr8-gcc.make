@@ -5,7 +5,7 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?=
-GCC        ?= /c/sys/gcc/avr/bin/
+GCC        ?=
 PROGRAM    := atprogram
 OPTF       ?=
 STDC       ?= 11

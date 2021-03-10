@@ -10,7 +10,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_C_STANDARD   11)
 set(CMAKE_CXX_STANDARD 11)
 
-set(TOOLCHAIN_gcc      "/c/sys/gcc/avr/bin/")
+set(TOOLCHAIN_gcc      "")
 set(CMAKE_C_COMPILER   "${TOOLCHAIN_gcc}avr-gcc")
 set(CMAKE_CXX_COMPILER "${TOOLCHAIN_gcc}avr-g++")
 set(CMAKE_ASM_COMPILER "${TOOLCHAIN_gcc}avr-gcc")

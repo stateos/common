@@ -5,7 +5,7 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?=
-ARMCC      ?= /c/sys/arm/armcc/bin/
+ARMCC      ?=
 GNUCC      ?=
 OPENOCD    := openocd
 STLINK     := st-link_cli
