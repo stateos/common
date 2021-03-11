@@ -30,11 +30,6 @@ function(setup_target target)
 
 	target_compile_definitions(test
 		PRIVATE
-		STM32L152xB
-	)
-
-	target_compile_definitions(test
-		PRIVATE
 		F_CPU=20000000
 	)
 
