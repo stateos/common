@@ -48,7 +48,6 @@ void Fault_Handler()
 	for (;;);
 }
 
-//#if ! defined (__ICCARM__)
 /* Default _exit handler */
 __WEAK
 void _exit( int code )
@@ -58,7 +57,6 @@ void _exit( int code )
 	/* Go into an infinite loop */
 	for (;;);
 }
-//#endif
 
 /*******************************************************************************
  Specific definitions for the compiler

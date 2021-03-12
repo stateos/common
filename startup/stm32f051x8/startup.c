@@ -47,6 +47,7 @@ void Fault_Handler()
 }
 
 /* Default _exit handler */
+__WEAK
 void _exit( int code )
 {
 	(void) code;
