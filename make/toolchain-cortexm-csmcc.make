@@ -11,12 +11,12 @@ OPENOCD    := openocd
 STLINK     := st-link_cli
 CUBE       := stm32_programmer_cli
 QEMU       := qemu-system-gnuarmeclipse
+BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(strip $(PROJECT)),)
-PROJECT    := $(firstword $(notdir $(CURDIR)))
-endif
+PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
+BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -35,21 +35,23 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-BIN        := $(PROJECT).bin
-CXM        := $(PROJECT).cxm
-ELF        := $(PROJECT).elf
-HEX        := $(PROJECT).hex
-LIB        := $(PROJECT).cxm
-MAP        := $(PROJECT).map
+BIN        := $(BUILD)$(PROJECT).bin
+CXM        := $(BUILD)$(PROJECT).cxm
+ELF        := $(BUILD)$(PROJECT).elf
+HEX        := $(BUILD)$(PROJECT).hex
+LIB        := $(BUILD)$(PROJECT).cxm
+MAP        := $(BUILD)$(PROJECT).map
 
-OBJS       := $(SRCS:.s=.o)
-OBJS       := $(OBJS:.c=.o)
+SRCS       := $(foreach s,$(SRCS),$(realpath $s))
+OBJS       := $(SRCS:%.s=$(BUILD)%.o)
+OBJS       := $(OBJS:%.c=$(BUILD)%.o)
 LSTS       := $(OBJS:.o=.ls)
 TXTS       := $(OBJS:.o=.la)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(BIN) $(CXM) $(ELF) $(HEX) $(LIB) $(MAP) $(LSTS) $(OBJS) $(TXTS)
+GENERATED  := $(BIN) $(CXM) $(ELF) $(HEX) $(LIB) $(MAP)
+GENERATED  += $(OBJS) $(LSTS) $(TXTS)
 
 #----------------------------------------------------------#
 
@@ -59,7 +61,7 @@ LIBS       += crtsi.cxm libilc.cxm libm.cxm
 #----------------------------------------------------------#
 
 ifneq (clean,$(MAKECMDGOALS))
-AS_FLAGS   += -l -ep#-ax
+AS_FLAGS   += -l -ep # -ax
 C_FLAGS    += -pc99 -l -pad +modlc
 LD_FLAGS   += -m $(MAP) -p
 ifneq ($(filter DEBUG,$(DEFS)),)
@@ -119,13 +121,15 @@ lib : $(OBJS)
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-%.o : %.s
+$(BUILD)%.o : %.s
 	$(info $<)
-	$(AS) $(AS_FLAGS) $<
+	mkdir -p $(dir $@)
+	$(AS) -co$(dir $@) -cl$(dir $@) $(AS_FLAGS) $<
 
-%.o : %.c
+$(BUILD)%.o : %.c
 	$(info $<)
-	$(CC) $(C_FLAGS) $<
+	mkdir -p $(dir $@)
+	$(CC) -co$(dir $@) -cl$(dir $@) $(C_FLAGS) $<
 
 $(CXM) : $(OBJS) $(SCRIPT)
 	$(info $@)
@@ -149,7 +153,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(GENERATED)
+	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
 
 flash : all $(HEX)
 	$(info Programing device...)

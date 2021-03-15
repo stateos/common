@@ -8,13 +8,13 @@ PROJECT    ?=
 GCC        ?=
 OPTF       ?=
 STDC       ?= 11
-STDCXX     ?= 17
+STDCXX     ?= 20
+BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(strip $(PROJECT)),)
-PROJECT    := $(firstword $(notdir $(CURDIR)))
-endif
+PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
+BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -44,18 +44,20 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-EXE        := $(PROJECT).exe
-LIB        := lib$(PROJECT).a
-LSS        := $(PROJECT).lss
-MAP        := $(PROJECT).map
+EXE        := $(BUILD)$(PROJECT).exe
+LIB        := $(BUILD)lib$(PROJECT).a
+LSS        := $(BUILD)$(PROJECT).lss
+MAP        := $(BUILD)$(PROJECT).map
 
-OBJS       := $(SRCS:%=%.o)
-DEPS       := $(OBJS:%.o=%.d)
-LSTS       := $(OBJS:%.o=%.lst)
+SRCS       := $(foreach s,$(SRCS),$(realpath $s))
+OBJS       := $(SRCS:%=$(BUILD)%.o)
+DEPS       := $(OBJS:.o=.d)
+LSTS       := $(OBJS:.o=.lst)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(EXE) $(LIB) $(LSS) $(MAP) $(DEPS) $(LSTS) $(OBJS)
+GENERATED  := $(EXE) $(LIB) $(LSS) $(MAP)
+GENERATED  += $(OBJS) $(DEPS) $(LSTS)
 
 #----------------------------------------------------------#
 
@@ -156,28 +158,34 @@ lib : $(LIB) print_size
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-%.s.o : %.s
+$(BUILD)/%.s.o : /%.s
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(AS) $(AS_FLAGS) -c $< -o $@
 
-%.c.o : %.c
+$(BUILD)/%.c.o : /%.c
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(CC) $(C_FLAGS) -c $< -o $@
 
-%.cc.o : %.cc
+$(BUILD)/%.cc.o : /%.cc
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-%.cpp.o : %.cpp
+$(BUILD)/%.cpp.o : /%.cpp
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-%.f.o : %.f
+$(BUILD)/%.f.o : /%.f
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(FC) $(F_FLAGS) -c $< -o $@
 
-%.rc.o : %.rc
+$(BUILD)/%.rc.o : /%.rc
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(RES) $< $@
 
 $(EXE) : $(OBJS)
@@ -202,7 +210,7 @@ print_exe_size : $(EXE)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(GENERATED)
+	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
 
 run : all
 	$(info Starting the program...)

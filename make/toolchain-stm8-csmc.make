@@ -7,12 +7,12 @@ endif
 PROJECT    ?=
 CSMC       ?=
 STVP       := stvp_cmdline
+BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(strip $(PROJECT)),)
-PROJECT    := $(firstword $(notdir $(CURDIR)))
-endif
+PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
+BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -29,20 +29,22 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-ELF        := $(PROJECT).elf
-HEX        := $(PROJECT).s19
-LIB        := $(PROJECT).sm8
-MAP        := $(PROJECT).map
-SM8        := $(PROJECT).sm8
+ELF        := $(BUILD)$(PROJECT).elf
+HEX        := $(BUILD)$(PROJECT).s19
+LIB        := $(BUILD)$(PROJECT).sm8
+MAP        := $(BUILD)$(PROJECT).map
+SM8        := $(BUILD)$(PROJECT).sm8
 
-OBJS       := $(SRCS:.s=.o)
-OBJS       := $(OBJS:.c=.o)
+SRCS       := $(foreach s,$(SRCS),$(realpath $s))
+OBJS       := $(SRCS:%.s=$(BUILD)%.o)
+OBJS       := $(OBJS:%.c=$(BUILD)%.o)
 LSTS       := $(OBJS:.o=.ls)
 TXTS       := $(OBJS:.o=.la)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(ELF) $(HEX) $(LIB) $(MAP) $(SM8) $(LSTS) $(OBJS) $(TXTS)
+GENERATED  := $(ELF) $(HEX) $(LIB) $(MAP) $(SM8)
+GENERATED  += $(OBJS) $(LSTS) $(TXTS)
 
 #----------------------------------------------------------#
 
@@ -92,11 +94,13 @@ lib : $(OBJS)
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-%.o : %.s
-	$(AS) $(AS_FLAGS) $<
+$(BUILD)%.o : %.s
+	mkdir -p $(dir $@)
+	$(AS) -co$(dir $@) -cl$(dir $@) $(AS_FLAGS) $<
 
-%.o : %.c
-	$(CC) $(C_FLAGS) $<
+$(BUILD)%.o : %.c
+	mkdir -p $(dir $@)
+	$(CC) -co$(dir $@) -cl$(dir $@) $(C_FLAGS) $<
 
 $(SM8) : $(OBJS) $(SCRIPT)
 	$(info $@)
@@ -116,7 +120,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(GENERATED)
+	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
 
 flash : all $(HEX)
 	$(info Programing device...)

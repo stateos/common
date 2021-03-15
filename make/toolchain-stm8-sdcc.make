@@ -8,12 +8,12 @@ PROJECT    ?=
 SDCC       ?=
 STVP       := stvp_cmdline
 STDC       ?= 11
+BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(strip $(PROJECT)),)
-PROJECT    := $(firstword $(notdir $(CURDIR)))
-endif
+PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
+BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -30,24 +30,26 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-ELF        := $(PROJECT).elf
-HEX        := $(PROJECT).hex
-LIB        := $(PROJECT).lib
-MAP        := $(PROJECT).map
-CDB        := $(PROJECT).cdb
-LKF        := $(PROJECT).lk
+ELF        := $(BUILD)$(PROJECT).elf
+HEX        := $(BUILD)$(PROJECT).hex
+LIB        := $(BUILD)$(PROJECT).lib
+MAP        := $(BUILD)$(PROJECT).map
+CDB        := $(BUILD)$(PROJECT).cdb
+LKF        := $(BUILD)$(PROJECT).lk
 
-OBJS       := $(SRCS:%=%.rel)
+SRCS       := $(foreach s,$(SRCS),$(realpath $s))
+OBJS       := $(SRCS:%=$(BUILD)%.rel)
+ADBS       := $(OBJS:.rel=.adb)
 ASMS       := $(OBJS:.rel=.asm)
+DEPS       := $(OBJS:.rel=.d)
 LSTS       := $(OBJS:.rel=.lst)
 RSTS       := $(OBJS:.rel=.rst)
 SYMS       := $(OBJS:.rel=.sym)
-ADBS       := $(OBJS:.rel=.adb)
-DEPS       := $(OBJS:.rel=.d)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(BIN) $(ELF) $(HEX) $(LIB) $(LSS) $(MAP) $(CDB) $(LKF) $(LSTS) $(OBJS) $(ASMS) $(DEPS) $(LSTS) $(RSTS) $(SYMS) $(ADBS)
+GENERATED  := $(ELF) $(HEX) $(LIB) $(MAP) $(CDB) $(LKF)
+GENERATED  += $(OBJS) $(ADBS) $(ASMS) $(DEPS) $(LSTS) $(RSTS) $(SYMS)
 
 #----------------------------------------------------------#
 
@@ -101,12 +103,14 @@ lib : $(LIB)
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-%.s.rel : %.s
+$(BUILD)%.s.rel : %.s
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(AS) $(AS_FLAGS) $@ $<
 
-%.c.rel : %.c
+$(BUILD)%.c.rel : %.c
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(CC) -c $(C_FLAGS) $< -o $@
 
 $(ELF) : $(OBJS)
@@ -127,7 +131,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(GENERATED)
+	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
 
 flash : all $(HEX)
 	$(info Programing device...)

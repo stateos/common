@@ -13,12 +13,12 @@ QEMU       := qemu-system-gnuarmeclipse
 OPTF       ?=
 STDC       ?= 11
 STDCXX     ?= 17
+BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(strip $(PROJECT)),)
-PROJECT    := $(firstword $(notdir $(CURDIR)))
-endif
+PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
+BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -36,20 +36,22 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-BIN        := $(PROJECT).bin
-ELF        := $(PROJECT).elf
-HEX        := $(PROJECT).hex
-LIB        := lib$(PROJECT).a
-LSS        := $(PROJECT).lss
-MAP        := $(PROJECT).map
+BIN        := $(BUILD)$(PROJECT).bin
+ELF        := $(BUILD)$(PROJECT).elf
+HEX        := $(BUILD)$(PROJECT).hex
+LIB        := $(BUILD)lib$(PROJECT).a
+LSS        := $(BUILD)$(PROJECT).lss
+MAP        := $(BUILD)$(PROJECT).map
 
-OBJS       := $(SRCS:%=%.o)
+SRCS       := $(foreach s,$(SRCS),$(realpath $s))
+OBJS       := $(SRCS:%=$(BUILD)%.o)
 DEPS       := $(OBJS:.o=.d)
 LSTS       := $(OBJS:.o=.lst)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(BIN) $(ELF) $(HEX) $(LIB) $(LSS) $(MAP) $(DEPS) $(LSTS) $(OBJS)
+GENERATED  := $(BIN) $(ELF) $(HEX) $(LIB) $(LSS) $(MAP)
+GENERATED  += $(OBJS) $(DEPS) $(LSTS)
 
 #----------------------------------------------------------#
 
@@ -179,20 +181,24 @@ lib : $(LIB) print_size
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-%.s.o : %.s
+$(BUILD)%.s.o : %.s
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(AS) $(AS_FLAGS) -c $< -o $@
 
-%.c.o : %.c
+$(BUILD)%.c.o : %.c
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(CC) $(C_FLAGS) -c $< -o $@
 
-%.cc.o : %.cc
+$(BUILD)%.cc.o : %.cc
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-%.cpp.o : %.cpp
+$(BUILD)%.cpp.o : %.cpp
 	$(info $<)
+	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 $(ELF) : $(OBJS) $(SCRIPT)
@@ -225,7 +231,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(GENERATED)
+	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
 
 flash : all $(HEX)
 	$(info Programing device...)
