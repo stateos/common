@@ -19,7 +19,6 @@ BUILD      ?= build
 #----------------------------------------------------------#
 
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -37,14 +36,14 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-BIN        := $(BUILD)$(PROJECT).bin
-ELF        := $(BUILD)$(PROJECT).axf
-FED        := $(BUILD)$(PROJECT).fed
-HEX        := $(BUILD)$(PROJECT).hex
-HTM        := $(BUILD)$(PROJECT).htm
-LIB        := $(BUILD)$(PROJECT).lib
-LSS        := $(BUILD)$(PROJECT).lss
-MAP        := $(BUILD)$(PROJECT).map
+ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).axf
+LIB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lib
+BIN        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).bin
+HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).hex
+FED        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).fed
+HTM        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).htm
+LSS        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lss
+MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%=$(BUILD)%.o)
@@ -54,7 +53,7 @@ TXTS       := $(OBJS:.o=.txt)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(BIN) $(ELF) $(FED) $(HEX) $(HTM) $(LIB) $(LSS) $(MAP)
+GENERATED  := $(ELF) $(LIB) $(BIN) $(HEX) $(FED) $(HTM) $(LSS) $(MAP)
 GENERATED  += $(OBJS) $(DEPS) $(LSTS) $(TXTS)
 
 #----------------------------------------------------------#
@@ -141,7 +140,7 @@ DEBUG_CMD  += -ex "c"
 
 $(info Using '$(MAKECMDGOALS)')
 
-all : $(LSS) print_elf_size
+all : $(ELF) $(LSS) print_elf_size
 
 lib : $(LIB) print_size
 
@@ -156,11 +155,6 @@ $(BUILD)/%.c.o : /%.c
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(CC) $(C_FLAGS) -c $< -o $@
-
-$(BUILD)/%.cc.o : /%.cc
-	$(info $<)
-	mkdir -p $(dir $@)
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 $(BUILD)/%.cpp.o : /%.cpp
 	$(info $<)

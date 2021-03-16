@@ -16,7 +16,6 @@ BUILD      ?= build
 #----------------------------------------------------------#
 
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -35,12 +34,12 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-BIN        := $(BUILD)$(PROJECT).bin
-CXM        := $(BUILD)$(PROJECT).cxm
-ELF        := $(BUILD)$(PROJECT).elf
-HEX        := $(BUILD)$(PROJECT).hex
-LIB        := $(BUILD)$(PROJECT).cxm
-MAP        := $(BUILD)$(PROJECT).map
+CXM        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).cxm
+LIB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).cxm
+ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).elf
+BIN        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).bin
+HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).hex
+MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%.s=$(BUILD)%.o)
@@ -50,7 +49,7 @@ TXTS       := $(OBJS:.o=.la)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(BIN) $(CXM) $(ELF) $(HEX) $(LIB) $(MAP)
+GENERATED  := $(CXM) $(LIB) $(ELF) $(BIN) $(HEX) $(MAP)
 GENERATED  += $(OBJS) $(LSTS) $(TXTS)
 
 #----------------------------------------------------------#
@@ -121,15 +120,15 @@ lib : $(OBJS)
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-$(BUILD)%.o : %.s
+$(BUILD)/%.o : /%.s
 	$(info $<)
 	mkdir -p $(dir $@)
-	$(AS) -co$(dir $@) -cl$(dir $@) $(AS_FLAGS) $<
+	$(AS) -co $(dir $@) -cl $(dir $@) $(AS_FLAGS) $<
 
-$(BUILD)%.o : %.c
+$(BUILD)/%.o : /%.c
 	$(info $<)
 	mkdir -p $(dir $@)
-	$(CC) -co$(dir $@) -cl$(dir $@) $(C_FLAGS) $<
+	$(CC) -co $(dir $@) -cl $(dir $@) $(C_FLAGS) $<
 
 $(CXM) : $(OBJS) $(SCRIPT)
 	$(info $@)

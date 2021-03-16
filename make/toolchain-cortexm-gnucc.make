@@ -18,7 +18,6 @@ BUILD      ?= build
 #----------------------------------------------------------#
 
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -36,12 +35,13 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-BIN        := $(BUILD)$(PROJECT).bin
-ELF        := $(BUILD)$(PROJECT).elf
-HEX        := $(BUILD)$(PROJECT).hex
-LIB        := $(BUILD)lib$(PROJECT).a
-LSS        := $(BUILD)$(PROJECT).lss
-MAP        := $(BUILD)$(PROJECT).map
+ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).elf
+LIB        := $(if $(BUILD),$(BUILD)/,)lib$(PROJECT).a
+BIN        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).bin
+HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).hex
+DMP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).dmp
+LSS        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lss
+MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%=$(BUILD)%.o)
@@ -50,7 +50,7 @@ LSTS       := $(OBJS:.o=.lst)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(BIN) $(ELF) $(HEX) $(LIB) $(LSS) $(MAP)
+GENERATED  := $(ELF) $(LIB) $(BIN) $(HEX) $(DMP) $(LSS) $(MAP)
 GENERATED  += $(OBJS) $(DEPS) $(LSTS)
 
 #----------------------------------------------------------#
@@ -175,28 +175,33 @@ DEBUG_CMD  += -ex "c"
 
 $(info Using '$(MAKECMDGOALS)')
 
-all : $(LSS) print_elf_size
+all : $(ELF) $(DMP) $(LSS) print_elf_size
 
 lib : $(LIB) print_size
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-$(BUILD)%.s.o : %.s
+$(BUILD)/%.S.o : /%.S
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(AS) $(AS_FLAGS) -c $< -o $@
 
-$(BUILD)%.c.o : %.c
+$(BUILD)/%.s.o : /%.s
+	$(info $<)
+	mkdir -p $(dir $@)
+	$(AS) $(AS_FLAGS) -c $< -o $@
+
+$(BUILD)/%.c.o : /%.c
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(CC) $(C_FLAGS) -c $< -o $@
 
-$(BUILD)%.cc.o : %.cc
+$(BUILD)/%.cc.o : /%.cc
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-$(BUILD)%.cpp.o : %.cpp
+$(BUILD)/%.cpp.o : /%.cpp
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
@@ -217,9 +222,13 @@ $(HEX) : $(ELF)
 	$(info $@)
 	$(COPY) -O ihex $< $@
 
+$(DMP) : $(ELF)
+	$(info $@)
+	$(DUMP) -Ctx $< > $@
+
 $(LSS) : $(ELF)
 	$(info $@)
-	$(DUMP) --demangle -S $< > $@
+	$(DUMP) -CS $< > $@
 
 print_size : $(OBJS)
 	$(info Size of modules:)

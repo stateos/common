@@ -12,7 +12,6 @@ BUILD      ?= build
 #----------------------------------------------------------#
 
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -29,11 +28,11 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-ELF        := $(BUILD)$(PROJECT).elf
-HEX        := $(BUILD)$(PROJECT).s19
-LIB        := $(BUILD)$(PROJECT).sm8
-MAP        := $(BUILD)$(PROJECT).map
-SM8        := $(BUILD)$(PROJECT).sm8
+SM8        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).sm8
+LIB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).sm8
+ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).elf
+HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).s19
+MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%.s=$(BUILD)%.o)
@@ -43,7 +42,7 @@ TXTS       := $(OBJS:.o=.la)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(ELF) $(HEX) $(LIB) $(MAP) $(SM8)
+GENERATED  := $(SM8) $(LIB) $(ELF) $(HEX) $(MAP)
 GENERATED  += $(OBJS) $(LSTS) $(TXTS)
 
 #----------------------------------------------------------#
@@ -94,13 +93,13 @@ lib : $(OBJS)
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-$(BUILD)%.o : %.s
+$(BUILD)/%.o : /%.s
 	mkdir -p $(dir $@)
-	$(AS) -co$(dir $@) -cl$(dir $@) $(AS_FLAGS) $<
+	$(AS) -co $(dir $@) -cl $(dir $@) $(AS_FLAGS) $<
 
-$(BUILD)%.o : %.c
+$(BUILD)/%.o : /%.c
 	mkdir -p $(dir $@)
-	$(CC) -co$(dir $@) -cl$(dir $@) $(C_FLAGS) $<
+	$(CC) -co $(dir $@) -cl $(dir $@) $(C_FLAGS) $<
 
 $(SM8) : $(OBJS) $(SCRIPT)
 	$(info $@)

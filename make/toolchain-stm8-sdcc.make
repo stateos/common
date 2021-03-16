@@ -13,7 +13,6 @@ BUILD      ?= build
 #----------------------------------------------------------#
 
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -30,12 +29,12 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-ELF        := $(BUILD)$(PROJECT).elf
-HEX        := $(BUILD)$(PROJECT).hex
-LIB        := $(BUILD)$(PROJECT).lib
-MAP        := $(BUILD)$(PROJECT).map
-CDB        := $(BUILD)$(PROJECT).cdb
-LKF        := $(BUILD)$(PROJECT).lk
+ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).elf
+LIB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lib
+HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).hex
+MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
+CDB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).cdb
+LKF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lk
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%=$(BUILD)%.rel)
@@ -48,7 +47,7 @@ SYMS       := $(OBJS:.rel=.sym)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(ELF) $(HEX) $(LIB) $(MAP) $(CDB) $(LKF)
+GENERATED  := $(ELF) $(LIB) $(HEX) $(MAP) $(CDB) $(LKF)
 GENERATED  += $(OBJS) $(ADBS) $(ASMS) $(DEPS) $(LSTS) $(RSTS) $(SYMS)
 
 #----------------------------------------------------------#
@@ -103,12 +102,12 @@ lib : $(LIB)
 
 $(OBJS) : $(MAKEFILE_LIST)
 
-$(BUILD)%.s.rel : %.s
+$(BUILD)/%.s.rel : /%.s
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(AS) $(AS_FLAGS) $@ $<
 
-$(BUILD)%.c.rel : %.c
+$(BUILD)/%.c.rel : /%.c
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(CC) -c $(C_FLAGS) $< -o $@

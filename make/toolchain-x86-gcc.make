@@ -14,7 +14,6 @@ BUILD      ?= build
 #----------------------------------------------------------#
 
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-BUILD      := $(if $(BUILD),$(BUILD)/,)
 
 #----------------------------------------------------------#
 
@@ -44,10 +43,11 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-EXE        := $(BUILD)$(PROJECT).exe
-LIB        := $(BUILD)lib$(PROJECT).a
-LSS        := $(BUILD)$(PROJECT).lss
-MAP        := $(BUILD)$(PROJECT).map
+ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).exe
+LIB        := $(if $(BUILD),$(BUILD)/,)lib$(PROJECT).a
+DMP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).dmp
+LSS        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lss
+MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%=$(BUILD)%.o)
@@ -56,7 +56,7 @@ LSTS       := $(OBJS:.o=.lst)
 
 #----------------------------------------------------------#
 
-GENERATED  := $(EXE) $(LIB) $(LSS) $(MAP)
+GENERATED  := $(ELF) $(LIB) $(DMP) $(LSS) $(MAP)
 GENERATED  += $(OBJS) $(DEPS) $(LSTS)
 
 #----------------------------------------------------------#
@@ -150,13 +150,18 @@ LD_FLAGS   += $(COMMON_F)
 
 $(info Using '$(MAKECMDGOALS)')
 
-all : $(LSS) print_exe_size
+all : $(ELF) $(DMP) $(LSS) print_elf_size
 
 unicode : all
 
 lib : $(LIB) print_size
 
 $(OBJS) : $(MAKEFILE_LIST)
+
+$(BUILD)/%.S.o : /%.S
+	$(info $<)
+	mkdir -p $(dir $@)
+	$(AS) $(AS_FLAGS) -c $< -o $@
 
 $(BUILD)/%.s.o : /%.s
 	$(info $<)
@@ -188,7 +193,7 @@ $(BUILD)/%.rc.o : /%.rc
 	mkdir -p $(dir $@)
 	$(RES) $< $@
 
-$(EXE) : $(OBJS)
+$(ELF) : $(OBJS)
 	$(info $@)
 	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) $(LIB_DIRS_F) -o $@
 
@@ -196,17 +201,21 @@ $(LIB) : $(OBJS)
 	$(info $@)
 	$(AR) -r $@ $?
 
-$(LSS) : $(EXE)
+$(DMP) : $(ELF)
 	$(info $@)
-	$(DUMP) -C -d $< > $@
+	$(DUMP) -Ctx $< > $@
+
+$(LSS) : $(ELF)
+	$(info $@)
+	$(DUMP) -CS $< > $@
 
 print_size : $(OBJS)
 	$(info Size of modules:)
 	$(SIZE) -B -t --common $(OBJS)
 
-print_exe_size : $(EXE)
+print_elf_size : $(ELF)
 	$(info Size of target file:)
-	$(SIZE) -B $(EXE)
+	$(SIZE) -B $(ELF)
 
 clean :
 	$(info Removing all generated output files)
@@ -215,10 +224,10 @@ clean :
 run : all
 	$(info Starting the program...)
 ifneq ($(OS),Windows_NT)
-	@chmod 777 ./$(EXE)
+	@chmod 777 ./$(ELF)
 endif
-	@./$(EXE)
+	@./$(ELF)
 
-.PHONY : all unicode lib run clean
+.PHONY : all unicode lib clean run
 
 -include $(DEPS)
