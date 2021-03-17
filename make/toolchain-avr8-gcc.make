@@ -4,8 +4,8 @@ endif
 
 #----------------------------------------------------------#
 
-PROJECT    ?=
-GCC        ?=
+PROJECT    ?= # project name
+GCC        ?= # toolchain path
 PROGRAM    := atprogram
 OPTF       ?=
 STDC       ?= 11

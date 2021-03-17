@@ -4,8 +4,8 @@ endif
 
 #----------------------------------------------------------#
 
-PROJECT    ?=
-CSMC       ?=
+PROJECT    ?= # project name
+CSMC       ?= # toolchain path
 STVP       := stvp_cmdline
 BUILD      ?= build
 

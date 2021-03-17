@@ -4,8 +4,8 @@ endif
 
 #----------------------------------------------------------#
 
-PROJECT    ?=
-IARC       ?=
+PROJECT    ?= # project name
+IARC       ?= # toolchain path
 STVP       := stvp_cmdline
 OPTF       ?=
 BUILD      ?= build

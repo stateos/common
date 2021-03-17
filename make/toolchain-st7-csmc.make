@@ -4,9 +4,9 @@ endif
 
 #----------------------------------------------------------#
 
-PROJECT    ?=
-CSMC       ?=
-CSTM       ?=
+PROJECT    ?= # project name
+CSMC       ?= # toolchain path (st7)
+CSTM       ?= # toolchain path (stm8)
 BUILD      ?= build
 
 #----------------------------------------------------------#

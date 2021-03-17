@@ -4,9 +4,9 @@ endif
 
 #----------------------------------------------------------#
 
-PROJECT    ?=
-IARCC      ?=
-GNUCC      ?=
+PROJECT    ?= # project name
+IARCC      ?= # toolchain path
+GNUCC      ?= # toolchain path
 OPENOCD    := openocd
 STLINK     := st-link_cli
 CUBE       := stm32_programmer_cli
