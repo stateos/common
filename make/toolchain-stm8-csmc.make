@@ -71,7 +71,7 @@ endif
 #----------------------------------------------------------#
 
 DEFS_F     := $(DEFS:%=-d%)
-INCS_F     := $(INCS:%=-i%/)
+INCS_F     := $(INCS:%=-i%)
 LIB_DIRS_F := $(LIB_DIRS:%=-l%)
 
 AS_FLAGS   += $(DEFS_F)

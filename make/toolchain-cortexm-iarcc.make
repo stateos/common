@@ -92,7 +92,7 @@ endif
 #----------------------------------------------------------#
 
 DEFS_F     := $(DEFS:%=-D%)
-INCS_F     := $(INCS:%=-I%/)
+INCS_F     := $(INCS:%=-I%)
 LIB_DIRS_F := $(LIB_DIRS:%=-L%)
 SCRIPT_F   := $(SCRIPT:%=--config %)
 

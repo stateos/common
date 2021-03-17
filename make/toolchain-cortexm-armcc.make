@@ -97,7 +97,7 @@ clist=$(subst $(space),$(comma),$(strip $1))
 #----------------------------------------------------------#
 
 DEFS_F     := $(DEFS:%=-D%)
-INCS_F     := $(INCS:%=-I%/)
+INCS_F     := $(INCS:%=-I%)
 LIB_DIRS   += $(abspath $(ARMCC)../../RV31/LIB)
 LIB_DIRS_F := --libpath=$(abspath $(ARMCC)../lib/)
 LIB_DIRS_F += --userlibpath=$(call clist,$(LIB_DIRS))
