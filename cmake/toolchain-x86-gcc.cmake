@@ -103,7 +103,7 @@ function(setup_target_compiler target)
 
 	target_link_libraries(${target}
 		PRIVATE
-		-Wl,-Map=${map_file}
+		-Wl,-Map=${map_file},--cref
 	)
 
 	add_custom_command(
