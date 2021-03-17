@@ -14,6 +14,12 @@ BUILD      ?= build
 
 #----------------------------------------------------------#
 
+ifeq ($(BUILD),)
+$(error Invalid BUILD definition)
+endif
+
+#----------------------------------------------------------#
+
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
@@ -31,23 +37,17 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).elf
-LIB        := $(if $(BUILD),$(BUILD)/,)lib$(PROJECT).a
-BIN        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).bin
-HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).hex
-DMP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).dmp
-LSS        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lss
-MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
+ELF        := $(BUILD)/$(PROJECT).elf
+LIB        := $(BUILD)/lib$(PROJECT).a
+BIN        := $(BUILD)/$(PROJECT).bin
+HEX        := $(BUILD)/$(PROJECT).hex
+DMP        := $(BUILD)/$(PROJECT).dmp
+LSS        := $(BUILD)/$(PROJECT).lss
+MAP        := $(BUILD)/$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%=$(BUILD)%.o)
 DEPS       := $(OBJS:.o=.d)
-LSTS       := $(OBJS:.o=.lst)
-
-#----------------------------------------------------------#
-
-GENERATED  := $(ELF) $(LIB) $(BIN) $(HEX) $(DMP) $(LSS) $(MAP)
-GENERATED  += $(OBJS) $(DEPS) $(LSTS)
 
 #----------------------------------------------------------#
 
@@ -68,7 +68,7 @@ C_FLAGS    += -std=gnu$(STDC:20=2x)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
 endif
 CXX_FLAGS  += -fno-use-cxa-atexit
-LD_FLAGS   += -Wl,-Map=$(MAP),--cref,--no-warn-mismatch,--gc-sections
+LD_FLAGS   += -Wl,-Map=$(MAP),--cref,--gc-sections
 ifneq ($(filter EXCEPTIONS,$(DEFS)),)
 $(info Using exceptions)
 DEFS       := $(DEFS:EXCEPTIONS=)
@@ -134,11 +134,6 @@ $(BUILD)/%.c.o : /%.c
 	mkdir -p $(dir $@)
 	$(CC) $(C_FLAGS) -c $< -o $@
 
-$(BUILD)/%.cc.o : /%.cc
-	$(info $<)
-	mkdir -p $(dir $@)
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
-
 $(BUILD)/%.cpp.o : /%.cpp
 	$(info $<)
 	mkdir -p $(dir $@)
@@ -178,7 +173,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
+	$(RM) -Rd $(BUILD)
 
 flash : all
 	$(info Programing device...)

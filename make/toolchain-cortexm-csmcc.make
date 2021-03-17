@@ -15,6 +15,12 @@ BUILD      ?= build
 
 #----------------------------------------------------------#
 
+ifeq ($(BUILD),)
+$(error Invalid BUILD definition)
+endif
+
+#----------------------------------------------------------#
+
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
@@ -34,23 +40,16 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-CXM        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).cxm
-LIB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).cxm
-ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).elf
-BIN        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).bin
-HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).hex
-MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
+CXM        := $(BUILD)/$(PROJECT).cxm
+ELF        := $(BUILD)/$(PROJECT).elf
+LIB        := $(BUILD)/$(PROJECT).cxm
+BIN        := $(BUILD)/$(PROJECT).bin
+HEX        := $(BUILD)/$(PROJECT).hex
+MAP        := $(BUILD)/$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%.s=$(BUILD)%.o)
 OBJS       := $(OBJS:%.c=$(BUILD)%.o)
-LSTS       := $(OBJS:.o=.ls)
-TXTS       := $(OBJS:.o=.la)
-
-#----------------------------------------------------------#
-
-GENERATED  := $(CXM) $(LIB) $(ELF) $(BIN) $(HEX) $(MAP)
-GENERATED  += $(OBJS) $(LSTS) $(TXTS)
 
 #----------------------------------------------------------#
 
@@ -152,7 +151,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
+	$(RM) -Rd $(BUILD)
 
 flash : all $(HEX)
 	$(info Programing device...)

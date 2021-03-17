@@ -11,13 +11,19 @@ BUILD      ?= build
 
 #----------------------------------------------------------#
 
+ifeq ($(BUILD),)
+$(error Invalid BUILD definition)
+endif
+
+#----------------------------------------------------------#
+
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
 
 AS         := $(CSMC)cxstm8
 CC         := $(CSMC)cxstm8
-COPY       := $(CSMC)cvdwarf
+DWARF      := $(CSMC)cvdwarf
 DUMP       := $(CSMC)chex
 LD         := $(CSMC)clnk
 AR         := $(CSMC)clib
@@ -28,22 +34,15 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-SM8        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).sm8
-LIB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).sm8
-ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).elf
-HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).s19
-MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
+SM8        := $(BUILD)/$(PROJECT).sm8
+ELF        := $(BUILD)/$(PROJECT).elf
+LIB        := $(BUILD)/$(PROJECT).sm8
+HEX        := $(BUILD)/$(PROJECT).s19
+MAP        := $(BUILD)/$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%.s=$(BUILD)%.o)
 OBJS       := $(OBJS:%.c=$(BUILD)%.o)
-LSTS       := $(OBJS:.o=.ls)
-TXTS       := $(OBJS:.o=.la)
-
-#----------------------------------------------------------#
-
-GENERATED  := $(SM8) $(LIB) $(ELF) $(HEX) $(MAP)
-GENERATED  += $(OBJS) $(LSTS) $(TXTS)
 
 #----------------------------------------------------------#
 
@@ -107,7 +106,7 @@ $(SM8) : $(OBJS) $(SCRIPT)
 
 $(ELF) : $(SM8)
 	$(info $@)
-	$(COPY) $<
+	$(DWARF) $<
 
 $(HEX) : $(SM8)
 	$(info $@)
@@ -119,7 +118,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
+	$(RM) -Rd $(BUILD)
 
 flash : all $(HEX)
 	$(info Programing device...)

@@ -13,6 +13,12 @@ BUILD      ?= build
 
 #----------------------------------------------------------#
 
+ifeq ($(BUILD),)
+$(error Invalid BUILD definition)
+endif
+
+#----------------------------------------------------------#
+
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
@@ -43,21 +49,15 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).exe
-LIB        := $(if $(BUILD),$(BUILD)/,)lib$(PROJECT).a
-DMP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).dmp
-LSS        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lss
-MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
+ELF        := $(BUILD)/$(PROJECT).exe
+LIB        := $(BUILD)/lib$(PROJECT).a
+DMP        := $(BUILD)/$(PROJECT).dmp
+LSS        := $(BUILD)/$(PROJECT).lss
+MAP        := $(BUILD)/$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%=$(BUILD)%.o)
 DEPS       := $(OBJS:.o=.d)
-LSTS       := $(OBJS:.o=.lst)
-
-#----------------------------------------------------------#
-
-GENERATED  := $(ELF) $(LIB) $(DMP) $(LSS) $(MAP)
-GENERATED  += $(OBJS) $(DEPS) $(LSTS)
 
 #----------------------------------------------------------#
 
@@ -78,7 +78,7 @@ C_FLAGS    += -std=gnu$(STDC:20=2x)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
 endif
 F_FLAGS    += -cpp
-LD_FLAGS   += -Wl,--gc-sections,-Map=$(MAP)
+LD_FLAGS   += -Wl,-Map=$(MAP),--cref,--gc-sections
 ifneq ($(filter CLANG,$(DEFS)),)
 $(info Using clang)
 else
@@ -219,7 +219,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
+	$(RM) -Rd $(BUILD)
 
 run : all
 	$(info Starting the program...)

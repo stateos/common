@@ -12,6 +12,12 @@ BUILD      ?= build
 
 #----------------------------------------------------------#
 
+ifeq ($(BUILD),)
+$(error Invalid BUILD definition)
+endif
+
+#----------------------------------------------------------#
+
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
@@ -29,26 +35,14 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
-ELF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).elf
-LIB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lib
-HEX        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).hex
-MAP        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).map
-CDB        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).cdb
-LKF        := $(if $(BUILD),$(BUILD)/,)$(PROJECT).lk
+ELF        := $(BUILD)/$(PROJECT).elf
+LIB        := $(BUILD)/$(PROJECT).lib
+HEX        := $(BUILD)/$(PROJECT).hex
+MAP        := $(BUILD)/$(PROJECT).map
 
 SRCS       := $(foreach s,$(SRCS),$(realpath $s))
 OBJS       := $(SRCS:%=$(BUILD)%.rel)
-ADBS       := $(OBJS:.rel=.adb)
-ASMS       := $(OBJS:.rel=.asm)
 DEPS       := $(OBJS:.rel=.d)
-LSTS       := $(OBJS:.rel=.lst)
-RSTS       := $(OBJS:.rel=.rst)
-SYMS       := $(OBJS:.rel=.sym)
-
-#----------------------------------------------------------#
-
-GENERATED  := $(ELF) $(LIB) $(HEX) $(MAP) $(CDB) $(LKF)
-GENERATED  += $(OBJS) $(ADBS) $(ASMS) $(DEPS) $(LSTS) $(RSTS) $(SYMS)
 
 #----------------------------------------------------------#
 
@@ -130,7 +124,7 @@ print_elf_size : $(ELF)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(if $(BUILD),-Rd $(BUILD),$(GENERATED))
+	$(RM) -Rd $(BUILD)
 
 flash : all $(HEX)
 	$(info Programing device...)
