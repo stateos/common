@@ -1,1 +1,1 @@
-## Common submodule
+## Common submodule for embedded applications
