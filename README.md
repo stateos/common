@@ -4,7 +4,7 @@
 
 - StateOS
 - IntrOS
-- Demos
+- DemOS
 
 ### Platform
 
