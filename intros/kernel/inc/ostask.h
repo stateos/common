@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    18.03.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -1076,8 +1076,7 @@ struct baseTask : public __tsk
 	};
 };
 
-using ThisTask = baseTask::Current;
-using This     = baseTask::Current;
+using this_task = baseTask::Current;
 
 /******************************************************************************
  *
