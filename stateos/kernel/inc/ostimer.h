@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    18.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -823,8 +823,7 @@ struct baseTimer : public __tmr
 	};
 };
 
-using ThisTimer = baseTimer::Current;
-using Self      = baseTimer::Current;
+using this_timer = baseTimer::Current;
 
 /******************************************************************************
  *
