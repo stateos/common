@@ -1,6 +1,6 @@
 include_guard(GLOBAL)
 
-add_library(device::attiny817xmini ALIAS device)
+add_library(device::${TARGET_PLATFORM} ALIAS device)
 
 target_sources(device
 	INTERFACE

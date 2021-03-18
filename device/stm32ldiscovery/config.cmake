@@ -2,7 +2,7 @@ include_guard(GLOBAL)
 
 find_package(cmsis REQUIRED)
 target_link_libraries(device INTERFACE cmsis)
-add_library(device::stm32ldiscovery ALIAS device)
+add_library(device::${TARGET_PLATFORM} ALIAS device)
 
 target_sources(device
 	INTERFACE
