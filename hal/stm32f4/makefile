@@ -5,10 +5,6 @@ ifndef COMMON
 $(error Please define COMMON path before including any common package)
 endif
 
-ifndef TARGET_DEVICE
-$(error Please define TARGET_DEVICE before including hal package)
-endif
-
 ifndef TARGET_COMPILER
 $(error Please define TARGET_COMPILER before including hal package)
 endif

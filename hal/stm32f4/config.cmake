@@ -1,9 +1,5 @@
 include_guard(GLOBAL)
 
-if (NOT DEFINED TARGET_DEVICE)
-    message(FATAL_ERROR "Please define TARGET_DEVICE before including hal package")
-endif()
-
 if (NOT DEFINED TARGET_COMPILER)
     message(FATAL_ERROR "Please define TARGET_COMPILER before including hal package")
 endif()
