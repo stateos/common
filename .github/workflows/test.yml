@@ -12,8 +12,8 @@ jobs:
     - name: checkout repository
       uses: actions/checkout@v2
     - name: dispatch demos
-      run: curl -X POST -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/stateos/DemOS/dispatches
+      run: curl -X POST https://api.github.com/repos/stateos/DemOS/dispatches -H "Accept: application/vnd.github.v3+json"
     - name: dispatch intros
-      run: curl -X POST -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/stateos/IntrOS/dispatches
+      run: curl -X POST https://api.github.com/repos/stateos/IntrOS/dispatches -H "Accept: application/vnd.github.v3+json"
     - name: dispatch stateos
-      run: curl -X POST -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/stateos/StateOS/dispatches
+      run: curl -X POST https://api.github.com/repos/stateos/StateOS/dispatches -H "Accept: application/vnd.github.v3+json"
