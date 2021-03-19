@@ -12,8 +12,14 @@ jobs:
     - name: checkout repository
       uses: actions/checkout@v2
     - name: dispatch demos
-      run: curl -X POST https://api.github.com/repos/stateos/DemOS/dispatches -H 'Accept: application/vnd.github.v3+json' -d '{"event_type":"test"}'
+      run: curl -X POST https://api.github.com/repos/stateos/DemOS/dispatches \
+                -H 'Accept: application/vnd.github.v3+json' \
+                -d '{"event_type":"test"}'
     - name: dispatch intros
-      run: curl -X POST https://api.github.com/repos/stateos/IntrOS/dispatches -H 'Accept: application/vnd.github.v3+json' -d '{"event_type":"test"}'
+      run: curl -X POST https://api.github.com/repos/stateos/IntrOS/dispatches \
+                -H 'Accept: application/vnd.github.v3+json' \
+                -d '{"event_type":"test"}'
     - name: dispatch stateos
-      run: curl -X POST https://api.github.com/repos/stateos/StateOS/dispatches -H 'Accept: application/vnd.github.v3+json' -d '{"event_type":"test"}'
+      run: curl -X POST https://api.github.com/repos/stateos/StateOS/dispatches \
+                -H 'Accept: application/vnd.github.v3+json' \
+                -d '{"event_type":"test"}'
