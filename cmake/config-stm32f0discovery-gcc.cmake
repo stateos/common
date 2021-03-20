@@ -7,8 +7,6 @@ set(TARGET_CORE     "cortex-m0")
 set(TARGET_ARCH     "cortexm")
 set(TARGET_COMPILER "gnucc")
 
-set(CMAKE_SYSTEM_PROCESSOR cortex-m0)
-
 include("${CMAKE_CURRENT_LIST_DIR}/toolchain-cortexm-gcc.cmake")
 
 function(setup_target target)

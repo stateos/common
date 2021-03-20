@@ -84,8 +84,6 @@ function(setup_target_compiler target)
 
 	if (MINGW)
 		set(ELF_SUFFIX ".exe")
-	else()
-		set(ELF_SUFFIX ".elf")
 	endif()
 
 	if (CMAKE_SYSTEM_NAME STREQUAL "Generic")
