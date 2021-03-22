@@ -3,10 +3,12 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/stm8sdiscovery/makefile.csmc
+#----------------------------------------------------------#
 
 DEMOS_ARCH     := stm8
 DEMOS_DEVICE   := stm8s
 
 #----------------------------------------------------------#
-include $(COMMON)/make/stm8sdiscovery/makefile.csmc
+include $(COMMON)/demos/makefile
 #----------------------------------------------------------#

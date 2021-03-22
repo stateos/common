@@ -3,11 +3,13 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/stm32f0discovery/makefile.gnucc
+#----------------------------------------------------------#
 
 STATEOS_ARCH     := cortexm
 STATEOS_DEVICE   := stm32f0
 STATEOS_COMPILER := gnucc
 
 #----------------------------------------------------------#
-include $(COMMON)/make/stm32f0discovery/makefile.gnucc
+include $(COMMON)/stateos/makefile
 #----------------------------------------------------------#

@@ -3,10 +3,12 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/st7custom/makefile.csmc
+#----------------------------------------------------------#
 
 DEMOS_ARCH     := st7
 DEMOS_DEVICE   := st7
 
 #----------------------------------------------------------#
-include $(COMMON)/make/st7custom/makefile.csmc
+include $(COMMON)/demos/makefile
 #----------------------------------------------------------#

@@ -3,10 +3,12 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/pc/makefile.gcc
+#----------------------------------------------------------#
 
 DEMOS_ARCH   := x86
 DEMOS_DEVICE := x86
 
 #----------------------------------------------------------#
-include $(COMMON)/make/pc/makefile.gcc
+include $(COMMON)/demos/makefile
 #----------------------------------------------------------#

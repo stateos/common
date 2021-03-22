@@ -3,11 +3,13 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/stm8sdiscovery/makefile.csmc
+#----------------------------------------------------------#
 
 STATEOS_ARCH     := stm8
 STATEOS_DEVICE   := stm8s
 STATEOS_COMPILER := csmc
 
 #----------------------------------------------------------#
-include $(COMMON)/make/stm8sdiscovery/makefile.csmc
+include $(COMMON)/stateos/makefile
 #----------------------------------------------------------#

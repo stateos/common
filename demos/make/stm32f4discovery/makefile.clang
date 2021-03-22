@@ -3,10 +3,12 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/stm32f4discovery/makefile.clang
+#----------------------------------------------------------#
 
 DEMOS_ARCH     := cortexm
 DEMOS_DEVICE   := stm32f4
 
 #----------------------------------------------------------#
-include $(COMMON)/make/stm32f4discovery/makefile.clang
+include $(COMMON)/demos/makefile
 #----------------------------------------------------------#

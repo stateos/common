@@ -3,11 +3,13 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/stm32f0discovery/makefile.armcc
+#----------------------------------------------------------#
 
 INTROS_ARCH     := cortexm
 INTROS_DEVICE   := stm32f0
 INTROS_COMPILER := armcc
 
 #----------------------------------------------------------#
-include $(COMMON)/make/stm32f0discovery/makefile.armcc
+include $(COMMON)/intros/makefile
 #----------------------------------------------------------#

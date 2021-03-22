@@ -3,10 +3,12 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/stm32ldiscovery/makefile.gnucc
+#----------------------------------------------------------#
 
 DEMOS_ARCH     := cortexm
 DEMOS_DEVICE   := stm32l1
 
 #----------------------------------------------------------#
-include $(COMMON)/make/stm32ldiscovery/makefile.gnucc
+include $(COMMON)/demos/makefile
 #----------------------------------------------------------#

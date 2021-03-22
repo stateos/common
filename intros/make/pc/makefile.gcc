@@ -3,11 +3,13 @@ $(error Please define COMMON path before including any common package)
 endif
 
 #----------------------------------------------------------#
+include $(COMMON)/make/pc/makefile.gcc
+#----------------------------------------------------------#
 
 INTROS_ARCH     := x86
 INTROS_DEVICE   := x86
 INTROS_COMPILER := gcc
 
 #----------------------------------------------------------#
-include $(COMMON)/make/pc/makefile.gcc
+include $(COMMON)/intros/makefile
 #----------------------------------------------------------#
