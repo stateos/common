@@ -68,19 +68,11 @@ function(setup_target_compiler target)
 		target_link_options(${target} PRIVATE ${ALL_WARNING_FLAGS})
 	endif()
 
-	if (MINGW)
-		set(ELF_SUFFIX ".exe")
-	endif()
-
-	if (CMAKE_SYSTEM_NAME STREQUAL "Generic")
-		set_target_properties(${target} PROPERTIES SUFFIX ${ELF_SUFFIX})
-	endif()
-
 	if(CMAKE_GENERATOR STREQUAL "Ninja")
 		target_compile_options(${target} PRIVATE -fdiagnostics-color)
 	endif()
 
-	set(elf_file ${target}${ELF_SUFFIX})
+	set(elf_file ${target}$<IF:${MINGW},.exe,>)
 	set(map_file ${target}.map)
 	set(lss_file ${target}.lss)
 	set(dmp_file ${target}.dmp)
