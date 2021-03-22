@@ -51,10 +51,7 @@ function(setup_target target)
 		)
 	endif()
 
-	target_compile_definitions(test
-		PRIVATE
-		STM32L152xB
-	)
+	target_compile_definitions(test PRIVATE STM32L152xB)
 
 	setup_target_compiler(${target} ${ARGN})
 

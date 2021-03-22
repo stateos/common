@@ -65,21 +65,18 @@ function(setup_target target)
 
 	if ((nofpu IN_LIST ARGN) OR (${__NOFPU}))
 		message(STATUS "${STARTMSG} Using software floats")
-		update_flags(CMAKE_C_FLAGS   -mfpu=fpv4-sp-d16 -mfloat-abi=soft -ffast-math)
-		update_flags(CMAKE_CXX_FLAGS -mfpu=fpv4-sp-d16 -mfloat-abi=soft -ffast-math)
-		update_flags(CMAKE_ASM_FLAGS -mfpu=fpv4-sp-d16 -mfloat-abi=soft -ffast-math)
-		set(__NOFPU ON)
+		set(FPU_FLAGS -mfpu=fpv4-sp-d16 -mfloat-abi=soft -ffast-math)
 	else()
 		message(STATUS "${STARTMSG} Using hardware floats")
-		update_flags(CMAKE_C_FLAGS   -mfpu=fpv4-sp-d16 -mfloat-abi=hard -ffast-math)
-		update_flags(CMAKE_CXX_FLAGS -mfpu=fpv4-sp-d16 -mfloat-abi=hard -ffast-math)
-		update_flags(CMAKE_ASM_FLAGS -mfpu=fpv4-sp-d16 -mfloat-abi=hard -ffast-math)
+		set(FPU_FLAGS -mfpu=fpv4-sp-d16 -mfloat-abi=hard -ffast-math)
 	endif()
 
-	target_compile_definitions(test
-		PRIVATE
-		STM32F407xx
-	)
+	update_flags(CMAKE_ASM_FLAGS ${FPU_FLAGS})
+	update_flags(CMAKE_C_FLAGS   ${FPU_FLAGS})
+	update_flags(CMAKE_CXX_FLAGS ${FPU_FLAGS})
+	target_link_options(${target} PRIVATE ${FPU_FLAGS})
+
+	target_compile_definitions(test PRIVATE STM32F407xx)
 
 	setup_target_compiler(${target} ${ARGN})
 
