@@ -11,5 +11,5 @@ INTROS_DEVICE   := stm32f7
 INTROS_COMPILER := clang
 
 #----------------------------------------------------------#
-include $(COMMON)/demos/makefile
+include $(COMMON)/intros/makefile
 #----------------------------------------------------------#

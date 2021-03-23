@@ -11,5 +11,5 @@ STATEOS_DEVICE   := stm32f3
 STATEOS_COMPILER := armcc
 
 #----------------------------------------------------------#
-include $(COMMON)/demos/makefile
+include $(COMMON)/stateos/makefile
 #----------------------------------------------------------#

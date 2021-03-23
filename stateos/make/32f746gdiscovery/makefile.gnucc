@@ -11,5 +11,5 @@ STATEOS_DEVICE   := stm32f7
 STATEOS_COMPILER := gnucc
 
 #----------------------------------------------------------#
-include $(COMMON)/demos/makefile
+include $(COMMON)/stateos/makefile
 #----------------------------------------------------------#

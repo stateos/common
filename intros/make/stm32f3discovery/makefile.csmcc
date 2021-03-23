@@ -11,5 +11,5 @@ INTROS_DEVICE   := stm32f3
 INTROS_COMPILER := csmcc
 
 #----------------------------------------------------------#
-include $(COMMON)/demos/makefile
+include $(COMMON)/intros/makefile
 #----------------------------------------------------------#
