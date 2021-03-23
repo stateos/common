@@ -1,0 +1,28 @@
+#----------------------------------------------------------#
+
+TARGET_PLATFORM := stm32l4discovery
+TARGET_CHIP     := stm32l476vg
+TARGET_DEVICE   := stm32l4
+TARGET_CORE     := cortex-m4
+TARGET_ARCH     := cortexm
+TARGET_COMPILER := armcc
+
+#----------------------------------------------------------#
+
+LIBRARY_PREFIX  :=
+LIBRARY_SUFFIX  := .lib
+
+#----------------------------------------------------------#
+
+QEMU_BOARD :=
+OOCD_BOARD := $(TARGET_PLATFORM)
+
+#----------------------------------------------------------#
+
+DEFS += STM32L476xx
+
+#----------------------------------------------------------#
+
+COMMON_F = --fpu=$(if $(filter qemu,$(MAKECMDGOALS)),softvfp,fpv4-sp)
+
+#----------------------------------------------------------#
