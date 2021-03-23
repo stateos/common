@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    23.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -471,6 +471,8 @@ namespace stateos {
 
 struct Semaphore : public __sem
 {
+	constexpr
+	Semaphore( void ): __sem _SEM_INIT(0, semDefault) {}
 	constexpr
 	Semaphore( const unsigned _init, const unsigned _limit = semDefault ): __sem _SEM_INIT(_init, _limit) {}
 
