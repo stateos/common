@@ -14,7 +14,7 @@ LIBRARY_SUFFIX  := .lib
 
 #----------------------------------------------------------#
 
-QEMU_BOARD := STM32L-Discovery
+QEMU_BOARD :=
 OOCD_BOARD := $(TARGET_PLATFORM)
 
 #----------------------------------------------------------#

@@ -1,0 +1,15 @@
+ifndef COMMON
+$(error Please define COMMON path before including any common package)
+endif
+
+#----------------------------------------------------------#
+include $(COMMON)/make/32f746gdiscovery/makefile.clang
+#----------------------------------------------------------#
+
+STATEOS_ARCH     := cortexm
+STATEOS_DEVICE   := stm32f7
+STATEOS_COMPILER := clang
+
+#----------------------------------------------------------#
+include $(COMMON)/demos/makefile
+#----------------------------------------------------------#

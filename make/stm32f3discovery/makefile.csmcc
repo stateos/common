@@ -1,9 +1,9 @@
 #----------------------------------------------------------#
 
-TARGET_PLATFORM := stm32ldiscovery
-TARGET_CHIP     := stm32l152rb
-TARGET_DEVICE   := stm32l1
-TARGET_CORE     := cortex-m3
+TARGET_PLATFORM := stm32f3discovery
+TARGET_CHIP     := stm32f303vc
+TARGET_DEVICE   := stm32f3
+TARGET_CORE     := cortex-m4
 TARGET_ARCH     := cortexm
 TARGET_COMPILER := csmcc
 
@@ -19,6 +19,11 @@ OOCD_BOARD := $(TARGET_PLATFORM)
 
 #----------------------------------------------------------#
 
-DEFS += STM32L152xB
+DEFS += STM32F303xC
+
+#----------------------------------------------------------#
+
+LIBS   += $(if $(filter qemu,$(MAKECMDGOALS)),libflc.cxm,libfpulc.cxm)
+C_FLAGS = $(if $(filter qemu,$(MAKECMDGOALS)),,+fpu)
 
 #----------------------------------------------------------#

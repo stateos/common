@@ -1,0 +1,15 @@
+ifndef COMMON
+$(error Please define COMMON path before including any common package)
+endif
+
+#----------------------------------------------------------#
+include $(COMMON)/make/stm32f3discovery/makefile.csmcc
+#----------------------------------------------------------#
+
+STATEOS_ARCH     := cortexm
+STATEOS_DEVICE   := stm32f3
+STATEOS_COMPILER := csmcc
+
+#----------------------------------------------------------#
+include $(COMMON)/demos/makefile
+#----------------------------------------------------------#
