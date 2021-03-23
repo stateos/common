@@ -1,0 +1,28 @@
+#----------------------------------------------------------#
+
+TARGET_PLATFORM := stm32f746g-disco
+TARGET_CHIP     := stm32f746ng
+TARGET_DEVICE   := stm32f7
+TARGET_CORE     := cortex-m7
+TARGET_ARCH     := cortexm
+TARGET_COMPILER := iarcc
+
+#----------------------------------------------------------#
+
+LIBRARY_PREFIX  := lib
+LIBRARY_SUFFIX  := .a
+
+#----------------------------------------------------------#
+
+QEMU_BOARD :=
+OOCD_BOARD := $(TARGET_PLATFORM)
+
+#----------------------------------------------------------#
+
+DEFS += STM32F746xx
+
+#----------------------------------------------------------#
+
+CORE_F = --fpu $(if $(filter qemu,$(MAKECMDGOALS)),none,vfpv5_sp)
+
+#----------------------------------------------------------#
