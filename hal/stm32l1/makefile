@@ -11,6 +11,74 @@ endif
 
 INCS += $(COMMON)/hal/$(TARGET_DEVICE)/inc
 
+ifneq ($(filter lib,$(MAKECMDGOALS)),)
+
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_adc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_adc_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_comp.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_cortex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_crc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_cryp.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_cryp_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_dac.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_dac_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_dma.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_flash.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_flash_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_flash_ramfunc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_gpio.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_i2c.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_i2s.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_irda.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_iwdg.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_lcd.c
+SRCS +=#$(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_msp_template.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_nor.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_opamp.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_opamp_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_pcd.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_pcd_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_pwr.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_pwr_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_rcc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_rcc_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_rtc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_rtc_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_sd.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_smartcard.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_spi.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_sram.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_tim.c
+SRCS +=#$(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_timebase_tim_template.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_tim_ex.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_uart.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_usart.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_hal_wwdg.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_adc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_comp.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_crc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_dac.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_dma.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_exti.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_fsmc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_gpio.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_i2c.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_opamp.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_pwr.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_rcc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_rtc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_sdmmc.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_spi.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_tim.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_usart.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_usb.c
+SRCS += $(COMMON)/hal/$(TARGET_DEVICE)/src/stm32l1xx_ll_utils.c
+
+else
+
 LIBS += $(COMMON)/hal/$(TARGET_DEVICE)/lib/$(TARGET_COMPILER)/$(LIBRARY_PREFIX)HAL$(LIBRARY_SUFFIX)
+
+endif
 
 endif
