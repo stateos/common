@@ -55,7 +55,7 @@ DEPS       := $(OBJS:.o=.d)
 #----------------------------------------------------------#
 
 ifneq (clean,$(MAKECMDGOALS))
-CORE_F     += --cpu=$(TARGET_CORE)
+CORE_F     += --cpu $(TARGET_CORE)
 COMMON_F   += --thumb -O$(OPTF) -e --dependencies=m $(BUILD)$<.d
 AS_FLAGS   += -S -s+ -w+
 C_FLAGS    += --silent

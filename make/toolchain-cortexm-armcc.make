@@ -63,7 +63,7 @@ INCS       += $(abspath $(ARMCC)../../RV31/INC)
 ifneq (clean,$(MAKECMDGOALS))
 COMMON_F   += --thumb --cpu=$(TARGET_CORE)
 COMMON_F   += --md --depend=$(@:.o=.d) # --feedback=$(FED)
-OPTIM_F    += -O$(OPTF) --split_sections --interleave
+OPTIM_F    += -O$(OPTF) --split_sections # --interleave
 AS_FLAGS   +=#--list=$(@:.o=.lst)
 C_FLAGS    += --c$(STDC)     --forceinline # --asm --asm_dir=$(@D) # --list --list_dir=$(@D)
 CXX_FLAGS  += --cpp$(STDCXX) --forceinline # --asm --asm_dir=$(@D) # --list --list_dir=$(@D)

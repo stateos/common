@@ -1,7 +1,7 @@
 #----------------------------------------------------------#
 
 TARGET_PLATFORM := stm32f0discovery
-TARGET_CHIP     := stm32f051x8
+TARGET_CHIP     := stm32f051r8
 TARGET_DEVICE   := stm32f0
 TARGET_CORE     := cortex-m0
 TARGET_ARCH     := cortexm

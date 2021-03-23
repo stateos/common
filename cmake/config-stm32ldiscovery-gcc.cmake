@@ -1,7 +1,7 @@
 include_guard(GLOBAL)
 
 set(TARGET_PLATFORM "stm32ldiscovery")
-set(TARGET_CHIP     "stm32l152xb")
+set(TARGET_CHIP     "stm32l152rb")
 set(TARGET_DEVICE   "stm32l1")
 set(TARGET_CORE     "cortex-m3")
 set(TARGET_ARCH     "cortexm")

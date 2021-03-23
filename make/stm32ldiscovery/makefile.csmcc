@@ -1,7 +1,7 @@
 #----------------------------------------------------------#
 
 TARGET_PLATFORM := stm32ldiscovery
-TARGET_CHIP     := stm32l152xb
+TARGET_CHIP     := stm32l152rb
 TARGET_DEVICE   := stm32l1
 TARGET_CORE     := cortex-m3
 TARGET_ARCH     := cortexm

@@ -1,7 +1,7 @@
 include_guard(GLOBAL)
 
 set(TARGET_PLATFORM "stm32f4discovery")
-set(TARGET_CHIP     "stm32f407xx")
+set(TARGET_CHIP     "stm32f407vg")
 set(TARGET_DEVICE   "stm32f4")
 set(TARGET_CORE     "cortex-m4")
 set(TARGET_ARCH     "cortexm")
