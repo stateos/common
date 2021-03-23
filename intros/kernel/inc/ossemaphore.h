@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    23.03.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -318,6 +318,8 @@ namespace intros {
 
 struct Semaphore : public __sem
 {
+	constexpr
+	Semaphore( void ): __sem _SEM_INIT(0, semDefault) {}
 	constexpr
 	Semaphore( const unsigned _init, const unsigned _limit = semDefault ): __sem _SEM_INIT(_init, _limit) {}
 
