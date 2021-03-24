@@ -144,7 +144,7 @@ AS_FLAGS   += $(COMMON_F) $(DEFS_F) $(INCS_F)
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 CXX_FLAGS  += $(COMMON_F) $(DEFS_F) $(INCS_F)
 F_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
-LD_FLAGS   += $(COMMON_F)
+LD_FLAGS   += $(COMMON_F) $(LIB_DIRS_F)
 
 #----------------------------------------------------------#
 
@@ -195,7 +195,7 @@ $(BUILD)/%.rc.o : /%.rc
 
 $(ELF) : $(OBJS)
 	$(info $@)
-	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) $(LIB_DIRS_F) -o $@
+	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) -o $@
 
 $(LIB) : $(OBJS)
 	$(info $@)

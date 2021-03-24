@@ -82,7 +82,7 @@ SRC_DIRS_F := $(SRC_DIRS:%/=--directory=%)
 LIB_DIRS_F := $(LIB_DIRS:%/=-L%)
 
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
-LD_FLAGS   += $(COMMON_F)
+LD_FLAGS   += $(COMMON_F) $(LIB_DIRS_F)
 
 #----------------------------------------------------------#
 
@@ -108,7 +108,7 @@ $(BUILD)/%.c.rel : /%.c
 
 $(ELF) : $(OBJS)
 	$(info $@)
-	$(CC) --out-fmt-elf $(LD_FLAGS) $(OBJS) $(LIBS) $(LIB_DIRS_F) -o $@
+	$(CC) --out-fmt-elf $(LD_FLAGS) $(OBJS) $(LIBS) -o $@
 
 $(LIB) : $(OBJS)
 	$(info $@)

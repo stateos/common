@@ -98,6 +98,8 @@ clist=$(subst $(space),$(comma),$(strip $1))
 
 DEFS_F     := $(DEFS:%=-D%)
 INCS_F     := $(INCS:%=-I%)
+DEFS_L     := $(DEFS_F:%=--pd=%)
+INCS_L     := $(INCS_F:%=--pd=%)
 LIB_DIRS   += $(abspath $(ARMCC)../../RV31/LIB)
 LIB_DIRS_F := --libpath=$(abspath $(ARMCC)../lib/)
 LIB_DIRS_F += --userlibpath=$(call clist,$(LIB_DIRS))
@@ -107,7 +109,7 @@ AS_FLAGS   +=#$(foreach d,$(DEFS),$(if $(findstring =,$d),--pd="$(subst =, SETA 
 AS_FLAGS   += $(COMMON_F) --cpreproc --cpreproc_opts=$(call clist,$(DEFS_F) $(INCS_F))
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F) $(OPTIM_F)
 CXX_FLAGS  += $(COMMON_F) $(DEFS_F) $(INCS_F) $(OPTIM_F)
-LD_FLAGS   += $(SCRIPT_F) $(DEFS_F:%=--pd=%) $(INCS_F:%=--pd=%)
+LD_FLAGS   += $(SCRIPT_F) $(DEFS_L) $(INCS_L) $(LIB_DIRS_F)
 
 #----------------------------------------------------------#
 
@@ -161,7 +163,7 @@ $(BUILD)/%.cpp.o : /%.cpp
 
 $(ELF) : $(OBJS) $(SCRIPT)
 	$(info $@)
-	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) $(LIB_DIRS_F) -o $@
+	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) -o $@
 
 $(LIB) : $(OBJS)
 	$(info $@)

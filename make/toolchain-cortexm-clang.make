@@ -128,6 +128,8 @@ clist=$(subst $(space),$(comma),$(strip $1))
 
 DEFS_F     := $(DEFS:%=-D%)
 INCS_F     := $(INCS:%=-I%)
+DEFS_L     := $(DEFS_F:%=--pd=%)
+INCS_L     := $(INCS_F:%=--pd=%)
 LIB_DIRS   += $(abspath $(CLANG)../../RV31/LIB)
 LIB_DIRS_F := --libpath=$(abspath $(CLANG)../lib/)
 LIB_DIRS_F += --userlibpath=$(call clist,$(LIB_DIRS))
@@ -136,7 +138,7 @@ SCRIPT_F   := $(SCRIPT:%=--scatter=%)
 AS_FLAGS   += $(COMMON_F) $(DEFS_F) $(INCS_F)
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 CXX_FLAGS  += $(COMMON_F) $(DEFS_F) $(INCS_F)
-LD_FLAGS   += $(SCRIPT_F) $(DEFS_F:%=--pd=%) $(INCS_F:%=--pd=%)
+LD_FLAGS   += $(SCRIPT_F) $(DEFS_L) $(INCS_L) $(LIB_DIRS_F)
 
 #----------------------------------------------------------#
 
@@ -200,7 +202,7 @@ $(BUILD)/%.cpp.o : /%.cpp
 
 $(ELF) : $(OBJS) $(SCRIPT)
 	$(info $@)
-	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) $(LIB_DIRS_F) -o $@
+	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) -o $@
 
 $(LIB) : $(OBJS)
 	$(info $@)

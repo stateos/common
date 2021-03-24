@@ -76,7 +76,7 @@ LIB_DIRS_F := $(LIB_DIRS:%=-l%)
 
 AS_FLAGS   += $(DEFS_F)
 C_FLAGS    += $(DEFS_F) $(INCS_F)
-LD_FLAGS   += $(SCRIPT)
+LD_FLAGS   += $(SCRIPT) $(LIB_DIRS_F)
 
 #----------------------------------------------------------#
 
@@ -102,7 +102,7 @@ $(BUILD)/%.o : /%.c
 
 $(SM8) : $(OBJS) $(SCRIPT)
 	$(info $@)
-	$(LD) -o $@ $(LD_FLAGS) $(OBJS) $(LIBS) $(LIB_DIRS_F)
+	$(LD) -o $@ $(LD_FLAGS) $(OBJS) $(LIBS)
 
 $(ELF) : $(SM8)
 	$(info $@)

@@ -107,7 +107,7 @@ LIB_DIRS_F := $(LIB_DIRS:%=-L%)
 AS_FLAGS   += $(COMMON_F) $(DEFS_F) $(INCS_F)
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 CXX_FLAGS  += $(COMMON_F) $(DEFS_F) $(INCS_F)
-LD_FLAGS   += $(COMMON_F)
+LD_FLAGS   += $(COMMON_F) $(LIB_DIRS_F)
 
 #----------------------------------------------------------#
 
@@ -141,7 +141,7 @@ $(BUILD)/%.cpp.o : /%.cpp
 
 $(ELF) : $(OBJS)
 	$(info $@)
-	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) $(LIB_DIRS_F) -o $@
+	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) -o $@
 
 $(LIB) : $(OBJS)
 	$(info $@)
