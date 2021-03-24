@@ -28,7 +28,7 @@
 #ifndef OS_IMPL_CLOCK_H_
 #define OS_IMPL_CLOCK_H_
 
-#include <osconfig.h>
-#include <os.h>
+#include "osconfig.h"
+#include "os.h"
 
 #endif /* OS_IMPL_CLOCK_H_ */

@@ -28,11 +28,9 @@
 /*
 **  Include Files
 */
-#include <stdio.h>
 #include <stdlib.h>
-
-#include <os.h>
-
+#include <stdio.h>
+#include "os.h"
 #include "bsp_internal.h"
 
 /* ---------------------------------------------------------

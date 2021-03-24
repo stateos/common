@@ -28,7 +28,7 @@
 #ifndef OS_IMPL_LOADER_H
 #define OS_IMPL_LOADER_H
 
-#include <osconfig.h>
+#include "osconfig.h"
 
 typedef struct
 {

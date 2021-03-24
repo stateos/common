@@ -66,6 +66,14 @@ enum
 
 OS_stream_internal_record_t OS_stream_table[OS_MAX_NUM_OPEN_FILES];
 
+/*
+ * OS_cp copyblock size - in theory could be adjusted
+ * to match page size for performance so providing a unique
+ * define here.  Given a requirement/request could be transitioned
+ * to a configuration parameter
+ */
+#define OS_CP_BLOCK_SIZE 512
+
 /*----------------------------------------------------------------
  *
  * Helper function to close a file from an iterator
@@ -98,9 +106,8 @@ int32 OS_FileAPI_Init(void)
  *
  * Function: OS_OpenCreate
  *
- *  Purpose: Local helper routine, not part of OSAL API.
- *           Implements both "open" and "creat" file operations
- *           (The difference is a matter of what flags are passed in)
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
 int32 OS_OpenCreate(osal_id_t *filedes, const char *path, int32 flags, int32 access)
@@ -112,6 +119,9 @@ int32 OS_OpenCreate(osal_id_t *filedes, const char *path, int32 flags, int32 acc
 
     /* Check parameters */
     OS_CHECK_POINTER(filedes);
+
+    /* Initialize file descriptor */
+    *filedes = OS_OBJECT_ID_UNDEFINED;
 
     /*
     ** Check for a valid access mode
@@ -418,7 +428,7 @@ int32 OS_cp(const char *src, const char *dest)
     int32     wr_total;
     osal_id_t file1;
     osal_id_t file2;
-    uint8     copyblock[512];
+    uint8     copyblock[OS_CP_BLOCK_SIZE];
 
     /* Check Parameters */
     OS_CHECK_POINTER(src);

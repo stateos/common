@@ -31,7 +31,7 @@
 #include <stdbool.h>
 #include "osconfig.h"
 #include "osapi.h"
-#include <os.h>
+#include "os.h"
 
 typedef struct
 {

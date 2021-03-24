@@ -26,7 +26,6 @@
  */
 
 #include <string.h>
-
 #include "bsp_internal.h"
 #include "bsp-impl.h"
 

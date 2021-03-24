@@ -28,8 +28,8 @@
 #ifndef OS_IMPL_BINSEM_H
 #define OS_IMPL_BINSEM_H
 
-#include <osconfig.h>
-#include <os.h>
+#include "osconfig.h"
+#include "os.h"
 
 typedef struct
 {

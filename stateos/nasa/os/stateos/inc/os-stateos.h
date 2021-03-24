@@ -37,7 +37,7 @@
 #include <string.h>
 #include <time.h>
 
-#include <os.h>
+#include "os.h"
 
 #ifdef  DEBUG
 #ifndef OSAL_CONFIG_DEBUG_PRINTF

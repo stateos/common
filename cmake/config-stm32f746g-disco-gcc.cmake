@@ -14,7 +14,7 @@ function(setup_target target)
 	set(elf_file ${target}.elf)
 	set(hex_file ${target}.hex)
 
-	set(OOCD_INIT -d0 -f board/stm32f746g-disco.cfg -c init -c targets)
+	set(OOCD_INIT -d0 -f board/${TARGET_PLATFORM}.cfg -c init -c targets)
 	set(OOCD_SAVE -c "reset halt" -c "flash write_image erase ${elf_file}" -c "verify_image ${elf_file}")
 	set(OOCD_HOST -c "arm semihosting enable")
 	set(OOCD_EXEC -c "reset run")

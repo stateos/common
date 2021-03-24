@@ -29,7 +29,7 @@
 #define OS_SHARED_COMMON_H
 
 #include "osapi-common.h"
-#include <os-shared-globaldefs.h>
+#include "os-shared-globaldefs.h"
 
 /*
  * A "magic number" that when written to the "ShutdownFlag" member
@@ -146,7 +146,7 @@ static inline size_t OS_strnlen(const char *s, size_t maxlen)
     if (end != NULL)
     {
         /* actual length of string is difference */
-        maxlen = end - s;
+        maxlen = (uintptr_t)(end - s);
     }
     return maxlen;
 }
