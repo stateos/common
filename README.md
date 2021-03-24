@@ -2,9 +2,9 @@
 
 ### OS / RTOS
 
-- StateOS
-- IntrOS
-- DemOS
+- [StateOS](https://github.com/stateos/StateOS)
+- [IntrOS](https://github.com/stateos/IntrOS)
+- [DemOS](https://github.com/stateos/DemOS)
 
 ### Platform
 
