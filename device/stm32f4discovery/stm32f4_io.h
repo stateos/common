@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_io.h
  * @author  Rajmund Szymanski
- * @date    04.03.2021
+ * @date    24.03.2021
  * @brief   This file contains macro definitions for the STM32F4XX GPIO ports.
  ******************************************************************************/
 
@@ -41,70 +41,70 @@ struct __gpio_config
 	unsigned out:    1; // 11
 };
 */
-#define GPIO_OUT_Pos        (11U)
-#define GPIO_OUT_Msk        (0x1UL << GPIO_OUT_Pos)
-#define GPIO_OUT(cfg)       _FLD2VAL(GPIO_OUT, cfg)
+#define GPIO_OUT_Pos         (11U)
+#define GPIO_OUT_Msk         (0x1UL << GPIO_OUT_Pos)
+#define GPIO_OUT_Val(cfg)    _FLD2VAL(GPIO_OUT, cfg)
 
-#define GPIO_MODE_Pos       (9U)
-#define GPIO_MODE_Msk       (0x3UL << GPIO_MODE_Pos)
-#define GPIO_MODE(cfg)      _FLD2VAL(GPIO_MODE, cfg)
+#define GPIO_MODE_Pos        (9U)
+#define GPIO_MODE_Msk        (0x3UL << GPIO_MODE_Pos)
+#define GPIO_MODE_Val(cfg)   _FLD2VAL(GPIO_MODE, cfg)
 
-#define GPIO_OTYPE_Pos      (8U)
-#define GPIO_OTYPE_Msk      (0x1UL << GPIO_OTYPE_Pos)
-#define GPIO_OTYPE(cfg)     _FLD2VAL(GPIO_OTYPE, cfg)
+#define GPIO_OTYPE_Pos       (8U)
+#define GPIO_OTYPE_Msk       (0x1UL << GPIO_OTYPE_Pos)
+#define GPIO_OTYPE_Val(cfg)  _FLD2VAL(GPIO_OTYPE, cfg)
 
-#define GPIO_OSPEED_Pos     (6U)
-#define GPIO_OSPEED_Msk     (0x3UL << GPIO_OSPEED_Pos)
-#define GPIO_OSPEED(cfg)    _FLD2VAL(GPIO_OSPEED, cfg)
+#define GPIO_OSPEED_Pos      (6U)
+#define GPIO_OSPEED_Msk      (0x3UL << GPIO_OSPEED_Pos)
+#define GPIO_OSPEED_Val(cfg) _FLD2VAL(GPIO_OSPEED, cfg)
 
-#define GPIO_PUPD_Pos       (4U)
-#define GPIO_PUPD_Msk       (0x3UL << GPIO_PUPD_Pos)
-#define GPIO_PUPD(cfg)      _FLD2VAL(GPIO_PUPD, cfg)
+#define GPIO_PUPD_Pos        (4U)
+#define GPIO_PUPD_Msk        (0x3UL << GPIO_PUPD_Pos)
+#define GPIO_PUPD_Val(cfg)   _FLD2VAL(GPIO_PUPD, cfg)
 
-#define GPIO_AF_Pos         (0U)
-#define GPIO_AF_Msk         (0xFUL << GPIO_AF_Pos)
-#define GPIO_AF(cfg)        _FLD2VAL(GPIO_AF, cfg)
+#define GPIO_AF_Pos          (0U)
+#define GPIO_AF_Msk          (0xFUL << GPIO_AF_Pos)
+#define GPIO_AF_Val(cfg)     _FLD2VAL(GPIO_AF, cfg)
 
-#define GPIO_PORT_Pos       (10U)
-#define GPIO_PORT_Msk       (0xFUL << GPIO_PORT_Pos)
-#define GPIO_PORT(gpio)     _FLD2VAL(GPIO_PORT, gpio)
+#define GPIO_PORT_Pos        (10U)
+#define GPIO_PORT_Msk        (0xFUL << GPIO_PORT_Pos)
+#define GPIO_PORT_Val(gpio)  _FLD2VAL(GPIO_PORT, gpio)
 
-#define GPIO_Reset          _VAL2FLD(GPIO_OUT, 0)  /* reset output pin */
-#define GPIO_Set            _VAL2FLD(GPIO_OUT, 1)  /*   set output pin */
+#define GPIO_Reset           _VAL2FLD(GPIO_OUT, 0)  /* reset output pin */
+#define GPIO_Set             _VAL2FLD(GPIO_OUT, 1)  /*   set output pin */
 
-#define GPIO_Input          _VAL2FLD(GPIO_MODE, 0)
-#define GPIO_Output         _VAL2FLD(GPIO_MODE, 1)
-#define GPIO_Alternate      _VAL2FLD(GPIO_MODE, 2)
-#define GPIO_Analog         _VAL2FLD(GPIO_MODE, 3)
+#define GPIO_Input           _VAL2FLD(GPIO_MODE, 0)
+#define GPIO_Output          _VAL2FLD(GPIO_MODE, 1)
+#define GPIO_Alternate       _VAL2FLD(GPIO_MODE, 2)
+#define GPIO_Analog          _VAL2FLD(GPIO_MODE, 3)
 
-#define GPIO_PushPull       _VAL2FLD(GPIO_OTYPE, 0)
-#define GPIO_OpenDrain      _VAL2FLD(GPIO_OTYPE, 1)
+#define GPIO_PushPull        _VAL2FLD(GPIO_OTYPE, 0)
+#define GPIO_OpenDrain       _VAL2FLD(GPIO_OTYPE, 1)
 
-#define GPIO_2MHz           _VAL2FLD(GPIO_OSPEED, 0)
-#define GPIO_25MHz          _VAL2FLD(GPIO_OSPEED, 1)
-#define GPIO_50MHz          _VAL2FLD(GPIO_OSPEED, 2)
-#define GPIO_100MHz         _VAL2FLD(GPIO_OSPEED, 3)
+#define GPIO_2MHz            _VAL2FLD(GPIO_OSPEED, 0)
+#define GPIO_25MHz           _VAL2FLD(GPIO_OSPEED, 1)
+#define GPIO_50MHz           _VAL2FLD(GPIO_OSPEED, 2)
+#define GPIO_100MHz          _VAL2FLD(GPIO_OSPEED, 3)
 
-#define GPIO_NoPull         _VAL2FLD(GPIO_PUPD, 0)
-#define GPIO_PullUp         _VAL2FLD(GPIO_PUPD, 1)
-#define GPIO_PullDown       _VAL2FLD(GPIO_PUPD, 2)
+#define GPIO_NoPull          _VAL2FLD(GPIO_PUPD, 0)
+#define GPIO_PullUp          _VAL2FLD(GPIO_PUPD, 1)
+#define GPIO_PullDown        _VAL2FLD(GPIO_PUPD, 2)
 
-#define GPIO_AF0            _VAL2FLD(GPIO_AF, 0)
-#define GPIO_AF1            _VAL2FLD(GPIO_AF, 1)
-#define GPIO_AF2            _VAL2FLD(GPIO_AF, 2)
-#define GPIO_AF3            _VAL2FLD(GPIO_AF, 3)
-#define GPIO_AF4            _VAL2FLD(GPIO_AF, 4)
-#define GPIO_AF5            _VAL2FLD(GPIO_AF, 5)
-#define GPIO_AF6            _VAL2FLD(GPIO_AF, 6)
-#define GPIO_AF7            _VAL2FLD(GPIO_AF, 7)
-#define GPIO_AF8            _VAL2FLD(GPIO_AF, 8)
-#define GPIO_AF9            _VAL2FLD(GPIO_AF, 9)
-#define GPIO_AF10           _VAL2FLD(GPIO_AF,10)
-#define GPIO_AF11           _VAL2FLD(GPIO_AF,11)
-#define GPIO_AF12           _VAL2FLD(GPIO_AF,12)
-#define GPIO_AF13           _VAL2FLD(GPIO_AF,13)
-#define GPIO_AF14           _VAL2FLD(GPIO_AF,14)
-#define GPIO_AF15           _VAL2FLD(GPIO_AF,15)
+#define GPIO_AF0             _VAL2FLD(GPIO_AF, 0)
+#define GPIO_AF1             _VAL2FLD(GPIO_AF, 1)
+#define GPIO_AF2             _VAL2FLD(GPIO_AF, 2)
+#define GPIO_AF3             _VAL2FLD(GPIO_AF, 3)
+#define GPIO_AF4             _VAL2FLD(GPIO_AF, 4)
+#define GPIO_AF5             _VAL2FLD(GPIO_AF, 5)
+#define GPIO_AF6             _VAL2FLD(GPIO_AF, 6)
+#define GPIO_AF7             _VAL2FLD(GPIO_AF, 7)
+#define GPIO_AF8             _VAL2FLD(GPIO_AF, 8)
+#define GPIO_AF9             _VAL2FLD(GPIO_AF, 9)
+#define GPIO_AF10            _VAL2FLD(GPIO_AF,10)
+#define GPIO_AF11            _VAL2FLD(GPIO_AF,11)
+#define GPIO_AF12            _VAL2FLD(GPIO_AF,12)
+#define GPIO_AF13            _VAL2FLD(GPIO_AF,13)
+#define GPIO_AF14            _VAL2FLD(GPIO_AF,14)
+#define GPIO_AF15            _VAL2FLD(GPIO_AF,15)
 
 #ifndef USE_HAL_DRIVER
 
@@ -165,25 +165,25 @@ struct __gpio_config
 
 #endif//USE_HAL_DRIVER
 
-#define GPIO_Pin_0          (1UL<< 0)
-#define GPIO_Pin_1          (1UL<< 1)
-#define GPIO_Pin_2          (1UL<< 2)
-#define GPIO_Pin_3          (1UL<< 3)
-#define GPIO_Pin_4          (1UL<< 4)
-#define GPIO_Pin_5          (1UL<< 5)
-#define GPIO_Pin_6          (1UL<< 6)
-#define GPIO_Pin_7          (1UL<< 7)
-#define GPIO_Pin_8          (1UL<< 8)
-#define GPIO_Pin_9          (1UL<< 9)
-#define GPIO_Pin_10         (1UL<<10)
-#define GPIO_Pin_11         (1UL<<11)
-#define GPIO_Pin_12         (1UL<<12)
-#define GPIO_Pin_13         (1UL<<13)
-#define GPIO_Pin_14         (1UL<<14)
-#define GPIO_Pin_15         (1UL<<15)
-#define GPIO_Pin_All       ((1UL<<16)-1UL)
+#define GPIO_Pin_0           (1UL<< 0)
+#define GPIO_Pin_1           (1UL<< 1)
+#define GPIO_Pin_2           (1UL<< 2)
+#define GPIO_Pin_3           (1UL<< 3)
+#define GPIO_Pin_4           (1UL<< 4)
+#define GPIO_Pin_5           (1UL<< 5)
+#define GPIO_Pin_6           (1UL<< 6)
+#define GPIO_Pin_7           (1UL<< 7)
+#define GPIO_Pin_8           (1UL<< 8)
+#define GPIO_Pin_9           (1UL<< 9)
+#define GPIO_Pin_10          (1UL<<10)
+#define GPIO_Pin_11          (1UL<<11)
+#define GPIO_Pin_12          (1UL<<12)
+#define GPIO_Pin_13          (1UL<<13)
+#define GPIO_Pin_14          (1UL<<14)
+#define GPIO_Pin_15          (1UL<<15)
+#define GPIO_Pin_All        ((1UL<<16)-1UL)
 
-#define GPIO_Pins(...)     __bitset(_,##__VA_ARGS__,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16)
+#define GPIO_Pins(...)      __bitset(_,##__VA_ARGS__,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16)
 
 /* -------------------------------------------------------------------------- */
 
@@ -238,20 +238,20 @@ void __pinini( GPIO_TypeDef *gpio, uint32_t pins, uint32_t cfg )
 {
 	uint32_t high;
 
-	if (0UL != pins*GPIO_OUT(cfg))    gpio->BSRR = (pins & GPIO_Pin_All) * GPIO_OUT(cfg);
-	if (0UL != pins*GPIO_OTYPE(cfg))  REG_SET_BITS(gpio->OTYPER,  pins * GPIO_OTYPE(cfg));
+	if (0UL != pins*GPIO_OUT_Val(cfg))    gpio->BSRR = (pins & GPIO_Pin_All) * GPIO_OUT_Val(cfg);
+	if (0UL != pins*GPIO_OTYPE_Val(cfg))  REG_SET_BITS(gpio->OTYPER,  pins * GPIO_OTYPE_Val(cfg));
 
 	pins = __stretch(pins);
 
-	if (0UL != pins*GPIO_MODE(cfg))   REG_SET_BITS(gpio->MODER,   pins * GPIO_MODE(cfg));
-	if (0UL != pins*GPIO_OSPEED(cfg)) REG_SET_BITS(gpio->OSPEEDR, pins * GPIO_OSPEED(cfg));
-	if (0UL != pins*GPIO_PUPD(cfg))   REG_SET_BITS(gpio->PUPDR,   pins * GPIO_PUPD(cfg));
+	if (0UL != pins*GPIO_MODE_Val(cfg))   REG_SET_BITS(gpio->MODER,   pins * GPIO_MODE_Val(cfg));
+	if (0UL != pins*GPIO_OSPEED_Val(cfg)) REG_SET_BITS(gpio->OSPEEDR, pins * GPIO_OSPEED_Val(cfg));
+	if (0UL != pins*GPIO_PUPD_Val(cfg))   REG_SET_BITS(gpio->PUPDR,   pins * GPIO_PUPD_Val(cfg));
 
 	high = __stretch(pins >> 16);
 	pins = __stretch(pins);
 
-	if (0UL != pins*GPIO_AF(cfg))     REG_SET_BITS(gpio->AFR[0],  pins * GPIO_AF(cfg));
-	if (0UL != high*GPIO_AF(cfg))     REG_SET_BITS(gpio->AFR[1],  high * GPIO_AF(cfg));
+	if (0UL != pins*GPIO_AF_Val(cfg))     REG_SET_BITS(gpio->AFR[0],  pins * GPIO_AF_Val(cfg));
+	if (0UL != high*GPIO_AF_Val(cfg))     REG_SET_BITS(gpio->AFR[1],  high * GPIO_AF_Val(cfg));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -261,23 +261,23 @@ void __pincfg( GPIO_TypeDef *gpio, uint32_t pins, uint32_t cfg )
 {
 	uint32_t high;
 
-	gpio->BSRR = (pins & GPIO_Pin_All) << (16 * GPIO_OUT(~cfg));
+	gpio->BSRR = (pins & GPIO_Pin_All) << (16 * GPIO_OUT_Val(~cfg));
 
-	MODIFY_REG(gpio->OTYPER,  pins * 0x1, pins * GPIO_OTYPE(cfg));
+	MODIFY_REG(gpio->OTYPER,  pins * 0x1, pins * GPIO_OTYPE_Val(cfg));
 
 	pins = __stretch(pins);
 
-	MODIFY_REG(gpio->MODER,   pins * 0x3, pins * GPIO_MODE(cfg));
-	MODIFY_REG(gpio->OSPEEDR, pins * 0x3, pins * GPIO_OSPEED(cfg));
-	MODIFY_REG(gpio->PUPDR,   pins * 0x3, pins * GPIO_PUPD(cfg));
+	MODIFY_REG(gpio->MODER,   pins * 0x3, pins * GPIO_MODE_Val(cfg));
+	MODIFY_REG(gpio->OSPEEDR, pins * 0x3, pins * GPIO_OSPEED_Val(cfg));
+	MODIFY_REG(gpio->PUPDR,   pins * 0x3, pins * GPIO_PUPD_Val(cfg));
 
 	high = __stretch(pins>>16);
 	pins = __stretch(pins);
 
 	if (pins)
-	MODIFY_REG(gpio->AFR[0],  pins * 0xF, pins * GPIO_AF(cfg));
+	MODIFY_REG(gpio->AFR[0],  pins * 0xF, pins * GPIO_AF_Val(cfg));
 	if (high)
-	MODIFY_REG(gpio->AFR[1],  high * 0xF, high * GPIO_AF(cfg));
+	MODIFY_REG(gpio->AFR[1],  high * 0xF, high * GPIO_AF_Val(cfg));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -297,7 +297,7 @@ void __pinlck( GPIO_TypeDef *gpio, uint32_t pins )
 __STATIC_FORCEINLINE
 void GPIO_Init( GPIO_TypeDef *gpio, uint32_t pins, uint32_t cfg )
 {
-	REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT(gpio)); RCC->AHB1ENR;
+	REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); RCC->AHB1ENR;
 
 	__pinini(gpio, pins, cfg);
 }
@@ -307,7 +307,7 @@ void GPIO_Init( GPIO_TypeDef *gpio, uint32_t pins, uint32_t cfg )
 static inline
 void GPIO_Config( GPIO_TypeDef *gpio, uint32_t pins, uint32_t cfg )
 {
-	REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT(gpio)); RCC->AHB1ENR;
+	REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); RCC->AHB1ENR;
 
 	__pincfg(gpio, pins, cfg);
 }
@@ -337,7 +337,7 @@ template<const unsigned gpio>
 class PortT
 {
 public:
-	PortT( void ) { REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT(gpio)); RCC->AHB1ENR; }
+	PortT( void ) { REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); RCC->AHB1ENR; }
 	
 	void init  ( const unsigned pins, const unsigned cfg ) { __pinini((GPIO_TypeDef *)gpio, pins, cfg); }
 	void config( const unsigned pins, const unsigned cfg ) { __pincfg((GPIO_TypeDef *)gpio, pins, cfg); }
@@ -385,7 +385,7 @@ template<const unsigned gpio, const unsigned pin>
 class PinT
 {
 public:
-	PinT( void ) { REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT(gpio)); RCC->AHB1ENR; }
+	PinT( void ) { REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); RCC->AHB1ENR; }
 
 	void init  ( const unsigned cfg ) { __pinini((GPIO_TypeDef *)gpio, 1 << pin, cfg); }
 	void config( const unsigned cfg ) { __pincfg((GPIO_TypeDef *)gpio, 1 << pin, cfg); }
