@@ -6,7 +6,7 @@ endif
 include $(COMMON)/make/attiny817xmini/makefile.gcc
 #----------------------------------------------------------#
 
-DEMOS_ARCH   := avr8
+DEMOS_ARCH   := avr
 DEMOS_DEVICE := attiny817
 
 #----------------------------------------------------------#

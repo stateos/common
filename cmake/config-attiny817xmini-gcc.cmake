@@ -4,10 +4,10 @@ set(TARGET_PLATFORM "attiny817xmini")
 set(TARGET_CHIP     "attiny817")
 set(TARGET_DEVICE   "attiny817")
 set(TARGET_CORE     "attiny")
-set(TARGET_ARCH     "avr8")
+set(TARGET_ARCH     "avr")
 set(TARGET_COMPILER "gcc")
 
-include("${CMAKE_CURRENT_LIST_DIR}/toolchain-avr8-gcc.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/toolchain-avr-gcc.cmake")
 
 function(setup_target target)
 

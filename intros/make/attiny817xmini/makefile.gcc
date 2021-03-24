@@ -6,7 +6,7 @@ endif
 include $(COMMON)/make/attiny817xmini/makefile.gcc
 #----------------------------------------------------------#
 
-INTROS_ARCH     := avr8
+INTROS_ARCH     := avr
 INTROS_DEVICE   := attiny817
 INTROS_COMPILER := gcc
 
