@@ -8,10 +8,11 @@
 
 ### Platform
 
-- 32F746G Discovery
+- STM32F746G Discovery
 - STM32F4 Discovery
 - STM32F3 Discovery
 - STM32F0 Discovery
+- STM32L476G Discovery
 - STM32L Discovery
 - STM8S Discovery
 - ATtiny817 Xplained Mini
