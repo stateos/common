@@ -61,7 +61,7 @@ COMMON_F   += -O$(OPTF) -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 CXX_FLAGS  += -fno-use-cxa-atexit
-LD_FLAGS   += -Wl,-Map=$(MAP),--cref,--gc-sections
+LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)

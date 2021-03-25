@@ -118,7 +118,7 @@ function(setup_target_compiler target)
 	set(lss_file ${target}.lss)
 	set(dmp_file ${target}.dmp)
 
-	target_link_options(${target} PRIVATE -Wl,-Map=${map_file},--cref)
+	target_link_options(${target} PRIVATE -Wl,-Map=${map_file})
 
 	add_custom_command(
 		TARGET  ${target}
