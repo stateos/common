@@ -82,7 +82,7 @@ C_FLAGS    += -std=gnu$(STDC:20=2x)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
 endif
 F_FLAGS    += -cpp
-LD_FLAGS   += -Wl,-Map=$(MAP),--cref,--gc-sections
+LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter CLANG,$(DEFS)),)
 $(info Using clang)
 else
