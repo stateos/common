@@ -113,8 +113,8 @@ $(HEX) : $(SM8)
 	$(DUMP) -o $@ $<
 
 print_elf_size : $(ELF)
-	$(info Size of target file:)
-	$(SIZE) -B $(ELF)
+	$(info Size of target:)
+	$(SIZE) -B $<
 
 clean :
 	$(info Removing all generated output files)

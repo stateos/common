@@ -232,17 +232,17 @@ $(LSS) : $(ELF)
 
 print_size : $(OBJS)
 	$(info Size of modules:)
-	$(SIZE) -B -t --common $(OBJS)
+	$(SIZE) -B -t --common $?
 
 print_elf_size : $(ELF)
-	$(info Size of target file:)
-	$(SIZE) -B $(ELF)
+	$(info Size of target:)
+	$(SIZE) -B $<
 
 clean :
 	$(info Removing all generated output files)
 	$(RM) -Rd $(BUILD)
 
-flash : all $(HEX)
+flash : all
 	$(info Programing device...)
 	$(OPENOCD) $(OOCD_INIT) $(OOCD_SAVE) $(OOCD_EXEC) $(OOCD_EXIT)
 #	$(CUBE) -q -c port=SWD mode=UR -w $(ELF) -v -hardRst

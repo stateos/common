@@ -49,7 +49,11 @@ RM         ?= rm -f
 
 #----------------------------------------------------------#
 
+ifneq ($(OS),Windows_NT)
+ELF        := $(BUILD)/$(PROJECT)
+else
 ELF        := $(BUILD)/$(PROJECT).exe
+endif
 LIB        := $(BUILD)/lib$(PROJECT).a
 DMP        := $(BUILD)/$(PROJECT).dmp
 LSS        := $(BUILD)/$(PROJECT).lss
@@ -196,6 +200,9 @@ $(BUILD)/%.rc.o : /%.rc
 $(ELF) : $(OBJS)
 	$(info $@)
 	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) -o $@
+ifneq ($(OS),Windows_NT)
+	@chmod 777 $@
+endif
 
 $(LIB) : $(OBJS)
 	$(info $@)
@@ -211,22 +218,19 @@ $(LSS) : $(ELF)
 
 print_size : $(OBJS)
 	$(info Size of modules:)
-	$(SIZE) -B -t --common $(OBJS)
+	$(SIZE) -B -t --common $?
 
 print_elf_size : $(ELF)
-	$(info Size of target file:)
-	$(SIZE) -B $(ELF)
+	$(info Size of target:)
+	$(SIZE) -B $<
 
 clean :
 	$(info Removing all generated output files)
 	$(RM) -Rd $(BUILD)
 
 run : all
-	$(info Starting the program...)
-ifneq ($(OS),Windows_NT)
-	@chmod 777 ./$(ELF)
-endif
-	@./$(ELF)
+	$(info Running the target...)
+	@$(ELF)
 
 .PHONY : all unicode lib clean run
 
