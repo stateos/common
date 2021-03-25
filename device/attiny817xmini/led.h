@@ -6,48 +6,32 @@
 #include <avr/io.h>
 #include <stdint.h>
 
-struct  __LEDs { uint8_t: PIN0_bp; volatile uint8_t f: 1; uint8_t: 0; };
+struct  __LED { uint8_t: PIN0_bp; volatile uint8_t f: 1; uint8_t: 0; };
 
-#define   LEDs   (((struct __LEDs *)&(PORTC.OUT))->f)
+#define   LED (((struct __LED *)&(PORTC.OUT))->f)
 
 static inline
-void led_init( int nr )
+void led_init( void )
 {
-	switch (nr)
-	{
-		case  0: PORTC.DIRSET = PIN0_bm; break;
-		default: break;
-	}
+	PORTC.DIRSET = PIN0_bm;
 }
 
 static inline
-void led_set( int nr )
+void led_set( void )
 {
-	switch (nr)
-	{
-		case  0: PORTC.OUTSET = PIN0_bm; break;
-		default: break;
-	}
+	PORTC.OUTSET = PIN0_bm;
 }
 
 static inline
-void led_clear( int nr )
+void led_clear( void )
 {
-	switch (nr)
-	{
-		case  0: PORTC.OUTCLR = PIN0_bm; break;
-		default: break;
-	}
+	PORTC.OUTCLR = PIN0_bm;
 }
 
 static inline
-void led_toggle( int nr )
+void led_toggle( void )
 {
-	switch (nr)
-	{
-		case  0: PORTC.OUTTGL = PIN0_bm; break;
-		default: break;
-	}
+	PORTC.OUTTGL = PIN0_bm;
 }
 
 #endif//__LED_H__

@@ -7,28 +7,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-struct  __BTNs { uint8_t: PIN5_bp; volatile uint8_t f: 1; uint8_t: 0; };
+struct  __BTN { uint8_t: PIN5_bp; volatile uint8_t f: 1; uint8_t: 0; };
 
-#define   BTNs   (((struct __BTNs *)&(PORTC.IN))->f)
+#define   BTN (((struct __BTN *)&(PORTC.IN))->f)
 
 static inline
-void btn_init( int nr )
+void btn_init( void )
 {
-	switch (nr)
-	{
-		case  0: PORTC.DIRCLR = PIN5_bm; PORTC.PIN5CTRL = PORT_INVEN_bm; break;
-		default: break;
-	}
+	PORTC.DIRCLR = PIN5_bm;
+	PORTC.PIN5CTRL = PORT_INVEN_bm;
 }
 
 static inline
-bool btn_get( int nr )
+bool btn_get( void )
 {
-	switch (nr)
-	{
-		case  0: return (PORTC.IN & PIN5_bm) != 0;
-		default: return false;
-	}
+	return (PORTC.IN & PIN5_bm) != 0;
 }
 
 #endif//__BTN_H__
