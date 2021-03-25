@@ -2,7 +2,7 @@
 
     @file    DemOS: os.h
     @author  Rajmund Szymanski
-    @date    23.12.2020
+    @date    25.03.2021
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
@@ -29,25 +29,14 @@
 
  ******************************************************************************/
 
-#ifndef __DEMOS
-
-#define __DEMOS_MAJOR        0
-#define __DEMOS_MINOR        8
-#define __DEMOS_BUILD        0
-
-#define __DEMOS        ((((__DEMOS_MAJOR)&0xFFUL)<<24)|(((__DEMOS_MINOR)&0xFFUL)<<16)|((__DEMOS_BUILD)&0xFFFFUL))
-
-#define __DEMOS__           "DemOS v" STRINGIZE(__DEMOS_MAJOR) "." STRINGIZE(__DEMOS_MINOR) "." STRINGIZE(__DEMOS_BUILD)
-
-#define STRINGIZE(n) STRINGIZE_HELPER(n)
-#define STRINGIZE_HELPER(n) #n
-
-/* -------------------------------------------------------------------------- */
+#ifndef __DEMOS_H
+#define __DEMOS_H
 
 #include <stddef.h>
 #include <stdint.h>
 #include <limits.h>
 #include <stdbool.h>
+#include "osversion.h"
 #include "osport.h"
 
 #ifdef __cplusplus
@@ -348,4 +337,4 @@ typedef uint_fast8_t one_t;
 }
 #endif
 
-#endif//__DEMOS
+#endif//__DEMOS_H

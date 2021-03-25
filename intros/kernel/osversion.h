@@ -1,6 +1,6 @@
 /******************************************************************************
 
-    @file    IntrOS: os.h
+    @file    IntrOS: osversion.h
     @author  Rajmund Szymanski
     @date    25.03.2021
     @brief   This file contains definitions for IntrOS.
@@ -29,60 +29,18 @@
 
  ******************************************************************************/
 
-#ifndef __INTROS_H
-#define __INTROS_H
+#ifndef __INTROSVERSION_H
+#define __INTROSVERSION_H
 
-#include "osversion.h"
-#include "oskernel.h"
-#include "inc/osclock.h"
-#include "inc/oscriticalsection.h"
-#include "inc/osspinlock.h"
-#include "inc/osonceflag.h"
-#include "inc/osevent.h"
-#include "inc/ossignal.h"
-#include "inc/osflag.h"
-#include "inc/osbarrier.h"
-#include "inc/ossemaphore.h"
-#include "inc/osmutex.h"
-#include "inc/osconditionvariable.h"
-#include "inc/osrwlock.h"
-#include "inc/oslist.h"
-#include "inc/osmemorypool.h"
-#include "inc/osstreambuffer.h"
-#include "inc/osmessagebuffer.h"
-#include "inc/osmailboxqueue.h"
-#include "inc/oseventqueue.h"
-#include "inc/osjobqueue.h"
-#include "inc/ostimer.h"
-#include "inc/ostask.h"
+#define __INTROS_MAJOR        4
+#define __INTROS_MINOR        8
+#define __INTROS_BUILD        0
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define __INTROS        ((((__INTROS_MAJOR)&0xFFUL)<<24)|(((__INTROS_MINOR)&0xFFUL)<<16)|((__INTROS_BUILD)&0xFFFFUL))
 
-/******************************************************************************
- *
- * Name              : sys_init
- *
- * Description       : initialize system timer and enable services
- *
- * Parameters        : none
- *
- * Return            : none
- *
- * Note              : function port_sys_init should be invoked as a static constructor
- *                   : otherwise, call sys_init as the first instruction in function main
- *
- ******************************************************************************/
+#define __INTROS__           "IntrOS v" STRINGIZE(__INTROS_MAJOR) "." STRINGIZE(__INTROS_MINOR) "." STRINGIZE(__INTROS_BUILD)
 
-__STATIC_INLINE
-void sys_init( void )
-{
-	port_sys_init();
-}
+#define STRINGIZE(n) STRINGIZE_HELPER(n)
+#define STRINGIZE_HELPER(n) #n
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif//__INTROS_H
+#endif//__INTROSVERSION_H
