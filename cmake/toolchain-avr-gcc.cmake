@@ -29,7 +29,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 set(COMMON_OPTIONS -mmcu=${TARGET_DEVICE} -fdata-sections -ffunction-sections -mno-gas-isr-prologues)
 
-add_compile_options(${COMMON_OPTIONS} $<$<COMPILE_LANGUAGE:ASM>:"-x assembler-with-cpp"> $<$<COMPILE_LANGUAGE:CXX>:-fno-use-cxa-atexit>)
+add_compile_options(${COMMON_OPTIONS} $<$<COMPILE_LANGUAGE:ASM>:-xassembler-with-cpp> $<$<COMPILE_LANGUAGE:CXX>:-fno-use-cxa-atexit>)
 add_link_options(${COMMON_OPTIONS} -Wl,--gc-sections)
 
 set(STD_WARNING_FLAGS -Wall)
