@@ -56,8 +56,6 @@ endfunction()
 
 function(setup_target_compiler target)
 
-	add_compile_options($<$<COMPILE_LANGUAGE:ASM>:"-x assembler-with-cpp"> $<$<COMPILE_LANGUAGE:CXX>:-fno-use-cxa-atexit>)
-
 	if (nostartfiles IN_LIST ARGN)
 		message(STATUS "${STARTMSG} Using nostartfiles")
 		target_link_options(${target} PRIVATE -nostartfiles)

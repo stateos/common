@@ -24,7 +24,7 @@ PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 #----------------------------------------------------------#
 
 ifneq ($(filter CLANG,$(DEFS)),)
-AS         := $(GCC)clang -x assembler-with-cpp
+AS         := $(GCC)clang
 CC         := $(GCC)clang
 CXX        := $(GCC)clang++
 COPY       := $(GCC)llvm-objcopy
@@ -33,7 +33,7 @@ SIZE       := $(GCC)llvm-size
 LD         := $(GCC)clang++
 AR         := $(GCC)llvm-ar
 else
-AS         := $(GCC)gcc -x assembler-with-cpp
+AS         := $(GCC)gcc
 CC         := $(GCC)gcc
 CXX        := $(GCC)g++
 COPY       := $(GCC)objcopy
@@ -71,7 +71,7 @@ COMMON_F   += -MD -MP
 ifeq  ($(filter CLANG,$(DEFS)),)
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 endif
-AS_FLAGS   +=
+AS_FLAGS   += -xassembler-with-cpp
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)

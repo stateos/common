@@ -27,7 +27,7 @@ PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
 
-AS         := $(GNUCC)arm-none-eabi-gcc -x assembler-with-cpp
+AS         := $(GNUCC)arm-none-eabi-gcc
 CC         := $(GNUCC)arm-none-eabi-gcc
 CXX        := $(GNUCC)arm-none-eabi-g++
 COPY       := $(GNUCC)arm-none-eabi-objcopy
@@ -60,6 +60,7 @@ COMMON_F   += -mthumb -mcpu=$(TARGET_CORE)
 COMMON_F   += -O$(OPTF) -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
+AS_FLAGS   += -xassembler-with-cpp
 CXX_FLAGS  += -fno-use-cxa-atexit
 LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)

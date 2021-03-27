@@ -28,7 +28,7 @@ PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
 
-AS         := $(CLANG)armclang -x assembler-with-cpp
+AS         := $(CLANG)armclang
 CC         := $(CLANG)armclang
 CXX        := $(CLANG)armclang
 COPY       := $(CLANG)fromelf
@@ -64,6 +64,7 @@ ifneq (clean,$(MAKECMDGOALS))
 COMMON_F   += --target=arm-arm-none-eabi -mthumb -mcpu=$(TARGET_CORE)
 COMMON_F   += -O$(OPTF) -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
+AS_FLAGS   += -xassembler-with-cpp
 LD_FLAGS   += --strict
 LD_FLAGS   += --map --list=$(MAP) --symbols --list_mapping_symbols --info common,sizes,totals,veneers,unused
 ifneq ($(filter ISO,$(DEFS)),)

@@ -24,7 +24,7 @@ PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
 
-AS         := $(GCC)avr-gcc -x assembler-with-cpp
+AS         := $(GCC)avr-gcc
 CC         := $(GCC)avr-gcc
 CXX        := $(GCC)avr-g++
 COPY       := $(GCC)avr-objcopy
@@ -57,7 +57,7 @@ COMMON_F   += -O$(OPTF) -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 COMMON_F   += -mno-gas-isr-prologues
-AS_FLAGS   +=
+AS_FLAGS   += -xassembler-with-cpp
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)
