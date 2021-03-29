@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    18.03.2021
+    @date    29.03.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -627,6 +627,7 @@ struct baseTimer : public __tmr
 	};
 };
 
+using thisTimer = baseTimer::Current;
 using this_timer = baseTimer::Current;
 
 /******************************************************************************
