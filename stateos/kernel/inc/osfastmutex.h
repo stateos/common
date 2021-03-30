@@ -2,7 +2,7 @@
 
     @file    StateOS: osfastmutex.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    30.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -410,19 +410,19 @@ struct FastMutex : public __mut
 		return Ptr(mut);
 	}
 
-	void reset    ( void )           {        mut_reset    (this); }
-	void kill     ( void )           {        mut_kill     (this); }
-	void destroy  ( void )           {        mut_destroy  (this); }
-	int  take     ( void )           { return mut_take     (this); }
-	int  tryLock  ( void )           { return mut_tryLock  (this); }
+	void reset    ( void )            {        mut_reset    (this); }
+	void kill     ( void )            {        mut_kill     (this); }
+	void destroy  ( void )            {        mut_destroy  (this); }
+	int  take     ( void )            { return mut_take     (this); }
+	int  tryLock  ( void )            { return mut_tryLock  (this); }
 	template<typename T>
-	int  waitFor  ( const T _delay ) { return mut_waitFor  (this, Clock::count(_delay)); }
+	int  waitFor  ( const T& _delay ) { return mut_waitFor  (this, Clock::count(_delay)); }
 	template<typename T>
-	int  waitUntil( const T _time )  { return mut_waitUntil(this, Clock::until(_time)); }
-	int  wait     ( void )           { return mut_wait     (this); }
-	int  lock     ( void )           { return mut_lock     (this); }
-	int  give     ( void )           { return mut_give     (this); }
-	int  unlock   ( void )           { return mut_unlock   (this); }
+	int  waitUntil( const T& _time )  { return mut_waitUntil(this, Clock::until(_time)); }
+	int  wait     ( void )            { return mut_wait     (this); }
+	int  lock     ( void )            { return mut_lock     (this); }
+	int  give     ( void )            { return mut_give     (this); }
+	int  unlock   ( void )            { return mut_unlock   (this); }
 };
 
 }     //  namespace

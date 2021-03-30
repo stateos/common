@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.c
     @author  Rajmund Szymanski
-    @date    26.12.2020
+    @date    30.03.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -223,6 +223,42 @@ int sem_give( sem_t *sem )
 	sys_lock();
 	{
 		result = priv_sem_give(sem);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_sem_update( sem_t *sem, unsigned num )
+/* -------------------------------------------------------------------------- */
+{
+	num -= core_num_wakeup(sem->obj.queue, E_SUCCESS, num);
+
+	if (num > sem->limit - sem->count)
+	{
+		sem->count = sem->limit;
+		return E_TIMEOUT;
+	}
+
+	sem->count += num;
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int sem_update( sem_t *sem, unsigned num )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(sem);
+	assert(sem->obj.res!=RELEASED);
+	assert(sem->count<=sem->limit);
+
+	sys_lock();
+	{
+		result = priv_sem_update(sem, num);
 	}
 	sys_unlock();
 

@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    30.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -646,37 +646,37 @@ struct MailBoxQueueT : public __box
 		return Ptr(box);
 	}
 
-	void     reset    (       void )                        {        box_reset    (this); }
-	void     kill     (       void )                        {        box_kill     (this); }
-	void     destroy  (       void )                        {        box_destroy  (this); }
-	int      take     (       void *_data )                 { return box_take     (this, _data); }
-	int      tryWait  (       void *_data )                 { return box_tryWait  (this, _data); }
-	int      takeISR  (       void *_data )                 { return box_takeISR  (this, _data); }
+	void     reset    (       void )                         {        box_reset    (this); }
+	void     kill     (       void )                         {        box_kill     (this); }
+	void     destroy  (       void )                         {        box_destroy  (this); }
+	int      take     (       void *_data )                  { return box_take     (this, _data); }
+	int      tryWait  (       void *_data )                  { return box_tryWait  (this, _data); }
+	int      takeISR  (       void *_data )                  { return box_takeISR  (this, _data); }
 	template<typename T>
-	int      waitFor  (       void *_data, const T _delay ) { return box_waitFor  (this, _data, Clock::count(_delay)); }
+	int      waitFor  (       void *_data, const T& _delay ) { return box_waitFor  (this, _data, Clock::count(_delay)); }
 	template<typename T>
-	int      waitUntil(       void *_data, const T _time )  { return box_waitUntil(this, _data, Clock::until(_time)); }
-	int      wait     (       void *_data )                 { return box_wait     (this, _data); }
-	int      give     ( const void *_data )                 { return box_give     (this, _data); }
-	int      giveISR  ( const void *_data )                 { return box_giveISR  (this, _data); }
+	int      waitUntil(       void *_data, const T& _time )  { return box_waitUntil(this, _data, Clock::until(_time)); }
+	int      wait     (       void *_data )                  { return box_wait     (this, _data); }
+	int      give     ( const void *_data )                  { return box_give     (this, _data); }
+	int      giveISR  ( const void *_data )                  { return box_giveISR  (this, _data); }
 	template<typename T>
-	int      sendFor  ( const void *_data, const T _delay ) { return box_sendFor  (this, _data, Clock::count(_delay)); }
+	int      sendFor  ( const void *_data, const T& _delay ) { return box_sendFor  (this, _data, Clock::count(_delay)); }
 	template<typename T>
-	int      sendUntil( const void *_data, const T _time )  { return box_sendUntil(this, _data, Clock::until(_time)); }
-	int      send     ( const void *_data )                 { return box_send     (this, _data); }
-	void     push     ( const void *_data )                 {        box_push     (this, _data); }
-	void     pushISR  ( const void *_data )                 {        box_pushISR  (this, _data); }
-	unsigned count    (       void )                        { return box_count    (this); }
-	unsigned countISR (       void )                        { return box_countISR (this); }
-	unsigned space    (       void )                        { return box_space    (this); }
-	unsigned spaceISR (       void )                        { return box_spaceISR (this); }
-	unsigned limit    (       void )                        { return box_limit    (this); }
-	unsigned limitISR (       void )                        { return box_limitISR (this); }
+	int      sendUntil( const void *_data, const T& _time )  { return box_sendUntil(this, _data, Clock::until(_time)); }
+	int      send     ( const void *_data )                  { return box_send     (this, _data); }
+	void     push     ( const void *_data )                  {        box_push     (this, _data); }
+	void     pushISR  ( const void *_data )                  {        box_pushISR  (this, _data); }
+	unsigned count    (       void )                         { return box_count    (this); }
+	unsigned countISR (       void )                         { return box_countISR (this); }
+	unsigned space    (       void )                         { return box_space    (this); }
+	unsigned spaceISR (       void )                         { return box_spaceISR (this); }
+	unsigned limit    (       void )                         { return box_limit    (this); }
+	unsigned limitISR (       void )                         { return box_limitISR (this); }
 #if OS_ATOMICS
-	int      takeAsync(       void *_data )                 { return box_takeAsync(this, _data); }
-	int      waitAsync(       void *_data )                 { return box_waitAsync(this, _data); }
-	int      giveAsync( const void *_data )                 { return box_giveAsync(this, _data); }
-	int      sendAsync( const void *_data )                 { return box_sendAsync(this, _data); }
+	int      takeAsync(       void *_data )                  { return box_takeAsync(this, _data); }
+	int      waitAsync(       void *_data )                  { return box_waitAsync(this, _data); }
+	int      giveAsync( const void *_data )                  { return box_giveAsync(this, _data); }
+	int      sendAsync( const void *_data )                  { return box_sendAsync(this, _data); }
 #endif
 
 	private:

@@ -2,7 +2,7 @@
 
     @file    StateOS: oscriticalsection.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    30.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -220,7 +220,7 @@ struct CriticalSection
 template<class T>
 struct Lock
 {
-	 Lock( T &_lck ): lck_(_lck), result_(lck_.lock()) { assert(result_==E_SUCCESS); }
+	 Lock( T& _lck ): lck_(_lck), result_(lck_.lock()) { assert(result_==E_SUCCESS); }
 	~Lock( void ) { if (result_ == E_SUCCESS) lck_.unlock(); }
 
 	Lock( Lock&& ) = default;
@@ -229,7 +229,7 @@ struct Lock
 	Lock& operator=( const Lock& ) = delete;
 
 	private:
-	T &lck_;
+	T& lck_;
 	const int result_;
 };
 

@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    23.03.2021
+    @date    30.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -431,6 +431,31 @@ int sem_giveAsync( sem_t *sem );
 
 /******************************************************************************
  *
+ * Name              : sem_update
+ * ISR alias         : sem_updateISR
+ *
+ * Description       : try to increment the internal semaphore counter by the value of num
+ *
+ * Parameters
+ *   sem             : pointer to semaphore object
+ *   num             : update value of semaphore counter
+ *
+ * Return
+ *   E_SUCCESS       : semaphore counter was successfully updated
+ *   E_TIMEOUT       : semaphore counter was updated to the limit value
+ *
+ * Note              : can be used in both thread and handler mode
+ *                     use ISR alias in blockable interrupt handlers
+ *
+ ******************************************************************************/
+
+int sem_update( sem_t *sem, unsigned num );
+
+__STATIC_INLINE
+int sem_updateISR( sem_t *sem, unsigned num ) { return sem_update(sem, num); }
+
+/******************************************************************************
+ *
  * Name              : sem_getValue
  *
  * Description       : return current value of semaphore
@@ -569,25 +594,27 @@ struct Semaphore : public __sem
 		return Ptr(sem);
 	}
 
-	void     reset    ( void )           {        sem_reset    (this); }
-	void     kill     ( void )           {        sem_kill     (this); }
-	void     destroy  ( void )           {        sem_destroy  (this); }
-	int      take     ( void )           { return sem_take     (this); }
-	int      tryWait  ( void )           { return sem_tryWait  (this); }
-	int      takeISR  ( void )           { return sem_takeISR  (this); }
+	void     reset    ( void )            {        sem_reset    (this); }
+	void     kill     ( void )            {        sem_kill     (this); }
+	void     destroy  ( void )            {        sem_destroy  (this); }
+	int      take     ( void )            { return sem_take     (this); }
+	int      tryWait  ( void )            { return sem_tryWait  (this); }
+	int      takeISR  ( void )            { return sem_takeISR  (this); }
 	template<typename T>
-	int      waitFor  ( const T _delay ) { return sem_waitFor  (this, Clock::count(_delay)); }
+	int      waitFor  ( const T& _delay ) { return sem_waitFor  (this, Clock::count(_delay)); }
 	template<typename T>
-	int      waitUntil( const T _time )  { return sem_waitUntil(this, Clock::until(_time)); }
-	int      wait     ( void )           { return sem_wait     (this); }
-	int      give     ( void )           { return sem_give     (this); }
-	int      post     ( void )           { return sem_post     (this); }
-	int      giveISR  ( void )           { return sem_giveISR  (this); }
-	unsigned getValue ( void )           { return sem_getValue (this); }
+	int      waitUntil( const T& _time )  { return sem_waitUntil(this, Clock::until(_time)); }
+	int      wait     ( void )            { return sem_wait     (this); }
+	int      give     ( void )            { return sem_give     (this); }
+	int      post     ( void )            { return sem_post     (this); }
+	int      giveISR  ( void )            { return sem_giveISR  (this); }
+	int      update   ( unsigned _num )   { return sem_update   (this, _num); }
+	int      updateISR( unsigned _num )   { return sem_updateISR(this, _num); }
+	unsigned getValue ( void )            { return sem_getValue (this); }
 #if OS_ATOMICS
-	int      takeAsync( void )           { return sem_takeAsync(this); }
-	int      waitAsync( void )           { return sem_waitAsync(this); }
-	int      giveAsync( void )           { return sem_giveAsync(this); }
+	int      takeAsync( void )            { return sem_takeAsync(this); }
+	int      waitAsync( void )            { return sem_waitAsync(this); }
+	int      giveAsync( void )            { return sem_giveAsync(this); }
 #endif
 };
 

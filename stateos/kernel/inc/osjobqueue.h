@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    30.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -631,32 +631,32 @@ struct JobQueueT : public __job
 		return Ptr(job);
 	}
 
-	void     reset    ( void )                        {        job_reset    (this); }
-	void     kill     ( void )                        {        job_kill     (this); }
-	void     destroy  ( void )                        {        job_destroy  (this); }
-	int      take     ( void )                        { return job_take     (this); }
-	int      tryWait  ( void )                        { return job_tryWait  (this); }
-	int      takeISR  ( void )                        { return job_takeISR  (this); }
+	void     reset    ( void )                         {        job_reset    (this); }
+	void     kill     ( void )                         {        job_kill     (this); }
+	void     destroy  ( void )                         {        job_destroy  (this); }
+	int      take     ( void )                         { return job_take     (this); }
+	int      tryWait  ( void )                         { return job_tryWait  (this); }
+	int      takeISR  ( void )                         { return job_takeISR  (this); }
 	template<typename T>
-	int      waitFor  ( const T _delay )              { return job_waitFor  (this, Clock::count(_delay)); }
+	int      waitFor  ( const T& _delay )              { return job_waitFor  (this, Clock::count(_delay)); }
 	template<typename T>
-	int      waitUntil( const T _time )               { return job_waitUntil(this, Clock::until(_time)); }
-	int      wait     ( void )                        { return job_wait     (this); }
-	int      give     ( fun_t *_fun )                 { return job_give     (this, _fun); }
-	int      giveISR  ( fun_t *_fun )                 { return job_giveISR  (this, _fun); }
+	int      waitUntil( const T& _time )               { return job_waitUntil(this, Clock::until(_time)); }
+	int      wait     ( void )                         { return job_wait     (this); }
+	int      give     ( fun_t *_fun )                  { return job_give     (this, _fun); }
+	int      giveISR  ( fun_t *_fun )                  { return job_giveISR  (this, _fun); }
 	template<typename T>
-	int      sendFor  ( fun_t *_fun, const T _delay ) { return job_sendFor  (this, _fun, Clock::count(_delay)); }
+	int      sendFor  ( fun_t *_fun, const T& _delay ) { return job_sendFor  (this, _fun, Clock::count(_delay)); }
 	template<typename T>
-	int      sendUntil( fun_t *_fun, const T _time )  { return job_sendUntil(this, _fun, Clock::until(_time)); }
-	int      send     ( fun_t *_fun )                 { return job_send     (this, _fun); }
-	void     push     ( fun_t *_fun )                 {        job_push     (this, _fun); }
-	void     pushISR  ( fun_t *_fun )                 {        job_pushISR  (this, _fun); }
-	unsigned count    ( void )                        { return job_count    (this); }
-	unsigned countISR ( void )                        { return job_countISR (this); }
-	unsigned space    ( void )                        { return job_space    (this); }
-	unsigned spaceISR ( void )                        { return job_spaceISR (this); }
-	unsigned limit    ( void )                        { return job_limit    (this); }
-	unsigned limitISR ( void )                        { return job_limitISR (this); }
+	int      sendUntil( fun_t *_fun, const T& _time )  { return job_sendUntil(this, _fun, Clock::until(_time)); }
+	int      send     ( fun_t *_fun )                  { return job_send     (this, _fun); }
+	void     push     ( fun_t *_fun )                  {        job_push     (this, _fun); }
+	void     pushISR  ( fun_t *_fun )                  {        job_pushISR  (this, _fun); }
+	unsigned count    ( void )                         { return job_count    (this); }
+	unsigned countISR ( void )                         { return job_countISR (this); }
+	unsigned space    ( void )                         { return job_space    (this); }
+	unsigned spaceISR ( void )                         { return job_spaceISR (this); }
+	unsigned limit    ( void )                         { return job_limit    (this); }
+	unsigned limitISR ( void )                         { return job_limitISR (this); }
 #if OS_ATOMICS
 	int      takeAsync( void )                        { return job_takeAsync(this); }
 	int      waitAsync( void )                        { return job_waitAsync(this); }

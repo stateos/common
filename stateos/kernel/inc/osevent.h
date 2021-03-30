@@ -2,7 +2,7 @@
 
     @file    StateOS: osevent.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    30.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -373,16 +373,16 @@ struct Event : public __evt
 		return Ptr(evt);
 	}
 
-	void reset    ( void )                             {        evt_reset    (this); }
-	void kill     ( void )                             {        evt_kill     (this); }
-	void destroy  ( void )                             {        evt_destroy  (this); }
+	void reset    ( void )                              {        evt_reset    (this); }
+	void kill     ( void )                              {        evt_kill     (this); }
+	void destroy  ( void )                              {        evt_destroy  (this); }
 	template<typename T>
-	int  waitFor  ( unsigned *_event, const T _delay ) { return evt_waitFor  (this, _event, Clock::count(_delay)); }
+	int  waitFor  ( unsigned *_event, const T& _delay ) { return evt_waitFor  (this, _event, Clock::count(_delay)); }
 	template<typename T>
-	int  waitUntil( unsigned *_event, const T _time )  { return evt_waitUntil(this, _event, Clock::until(_time)); }
-	int  wait     ( unsigned *_event )                 { return evt_wait     (this, _event); }
-	void give     ( unsigned  _event )                 {        evt_give     (this, _event); }
-	void giveISR  ( unsigned  _event )                 {        evt_giveISR  (this, _event); }
+	int  waitUntil( unsigned *_event, const T& _time )  { return evt_waitUntil(this, _event, Clock::until(_time)); }
+	int  wait     ( unsigned *_event )                  { return evt_wait     (this, _event); }
+	void give     ( unsigned  _event )                  {        evt_give     (this, _event); }
+	void giveISR  ( unsigned  _event )                  {        evt_giveISR  (this, _event); }
 };
 
 }     //  namespace

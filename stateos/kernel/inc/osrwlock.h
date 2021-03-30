@@ -2,7 +2,7 @@
 
     @file    StateOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    30.03.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -526,29 +526,29 @@ struct RWLock : public __rwl
 		return Ptr(rwl);
 	}
 
-	void reset         ( void )           {        rwl_reset         (this); }
-	void kill          ( void )           {        rwl_kill          (this); }
-	void destroy       ( void )           {        rwl_destroy       (this); }
-	int  takeRead      ( void )           { return rwl_takeRead      (this); }
-	int  tryLockRead   ( void )           { return rwl_tryLockRead   (this); }
+	void reset         ( void )            {        rwl_reset         (this); }
+	void kill          ( void )            {        rwl_kill          (this); }
+	void destroy       ( void )            {        rwl_destroy       (this); }
+	int  takeRead      ( void )            { return rwl_takeRead      (this); }
+	int  tryLockRead   ( void )            { return rwl_tryLockRead   (this); }
 	template<typename T>
-	int  waitReadFor   ( const T _delay ) { return rwl_waitReadFor   (this, Clock::count(_delay)); }
+	int  waitReadFor   ( const T& _delay ) { return rwl_waitReadFor   (this, Clock::count(_delay)); }
 	template<typename T>
-	int  waitReadUntil ( const T _time )  { return rwl_waitReadUntil (this, Clock::until(_time)); }
-	int  waitRead      ( void )           { return rwl_waitRead      (this); }
-	int  lockRead      ( void )           { return rwl_lockRead      (this); }
-	void giveRead      ( void )           {        rwl_giveRead      (this); }
-	void unlockRead    ( void )           {        rwl_unlockRead    (this); }
-	int  takeWrite     ( void )           { return rwl_takeWrite     (this); }
-	int  tryLockWrite  ( void )           { return rwl_tryLockWrite  (this); }
+	int  waitReadUntil ( const T& _time )  { return rwl_waitReadUntil (this, Clock::until(_time)); }
+	int  waitRead      ( void )            { return rwl_waitRead      (this); }
+	int  lockRead      ( void )            { return rwl_lockRead      (this); }
+	void giveRead      ( void )            {        rwl_giveRead      (this); }
+	void unlockRead    ( void )            {        rwl_unlockRead    (this); }
+	int  takeWrite     ( void )            { return rwl_takeWrite     (this); }
+	int  tryLockWrite  ( void )            { return rwl_tryLockWrite  (this); }
 	template<typename T>
-	int  waitWriteFor  ( const T _delay ) { return rwl_waitWriteFor  (this, Clock::count(_delay)); }
+	int  waitWriteFor  ( const T& _delay ) { return rwl_waitWriteFor  (this, Clock::count(_delay)); }
 	template<typename T>
-	int  waitWriteUntil( const T _time )  { return rwl_waitWriteUntil(this, Clock::until(_time)); }
-	int  waitWrite     ( void )           { return rwl_waitWrite     (this); }
-	int  lockWrite     ( void )           { return rwl_lockWrite     (this); }
-	void giveWrite     ( void )           {        rwl_giveWrite     (this); }
-	void unlockWrite   ( void )           {        rwl_unlockWrite   (this); }
+	int  waitWriteUntil( const T& _time )  { return rwl_waitWriteUntil(this, Clock::until(_time)); }
+	int  waitWrite     ( void )            { return rwl_waitWrite     (this); }
+	int  lockWrite     ( void )            { return rwl_lockWrite     (this); }
+	void giveWrite     ( void )            {        rwl_giveWrite     (this); }
+	void unlockWrite   ( void )            {        rwl_unlockWrite   (this); }
 };
 
 /******************************************************************************
@@ -564,7 +564,7 @@ struct RWLock : public __rwl
 
 struct ReadLock
 {
-	 ReadLock( RWLock &_rwl ): lck_(_rwl), result_(lck_.lockRead()) { assert(result_==E_SUCCESS); }
+	 ReadLock( RWLock& _rwl ): lck_(_rwl), result_(lck_.lockRead()) { assert(result_==E_SUCCESS); }
 	~ReadLock( void ) { if (result_ == E_SUCCESS) lck_.unlockRead(); }
 
 	ReadLock( ReadLock&& ) = default;
@@ -573,7 +573,7 @@ struct ReadLock
 	ReadLock& operator=( const ReadLock& ) = delete;
 
 	private:
-	RWLock &lck_;
+	RWLock& lck_;
 	const int result_;
 };
 
@@ -590,7 +590,7 @@ struct ReadLock
 
 struct WriteLock
 {
-	 WriteLock( RWLock &_rwl ): lck_(_rwl), result_(lck_.lockWrite()) { assert(result_==E_SUCCESS); }
+	 WriteLock( RWLock& _rwl ): lck_(_rwl), result_(lck_.lockWrite()) { assert(result_==E_SUCCESS); }
 	~WriteLock( void ) { if (result_ == E_SUCCESS) lck_.unlockWrite(); }
 
 	WriteLock( WriteLock&& ) = default;
@@ -599,7 +599,7 @@ struct WriteLock
 	WriteLock& operator=( const WriteLock& ) = delete;
 
 	private:
-	RWLock &lck_;
+	RWLock& lck_;
 	const int result_;
 };
 
