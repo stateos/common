@@ -479,16 +479,18 @@ tsk_t *core_tsk_wakeup( tsk_t *tsk, int event )
 
 unsigned core_num_wakeup( tsk_t *tsk, int event, unsigned num )
 {
-	while (num > 0 && (tsk = core_tsk_wakeup(tsk, event))) { tsk = tsk->obj.queue; --num; }
+	unsigned cnt = 0;
 
-	return num;
+	while (tsk && num > 0) { tsk = core_tsk_wakeup(tsk, event)->obj.queue; ++cnt; --num; }
+
+	return cnt;
 }
 
 /* -------------------------------------------------------------------------- */
 
 void core_all_wakeup( tsk_t *tsk, int event )
 {
-	while (tsk = core_tsk_wakeup(tsk, event), tsk) tsk = tsk->obj.queue;
+	while (tsk) { tsk = core_tsk_wakeup(tsk, event)->obj.queue; }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -497,7 +499,7 @@ unsigned core_tsk_count( tsk_t *tsk )
 {
 	unsigned cnt = 0;
 
-	while (tsk) { cnt++; tsk = tsk->obj.queue; }
+	while (tsk) { tsk = tsk->obj.queue; ++cnt; }
 
 	return cnt;
 }
