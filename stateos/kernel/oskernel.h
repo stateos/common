@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    28.02.2021
+    @date    30.03.2021
     @brief   This file defines set of kernel functions for StateOS.
 
  ******************************************************************************
@@ -250,6 +250,14 @@ tsk_t *core_one_wakeup( tsk_t *tsk, int event )
 {
 	return core_tsk_wakeup(tsk, event);
 }
+
+// resume execution of no more than 'num' tasks from blocked queue with event value 'event'; 'tsk' is the head (first task) of the queue
+// remove 'num' resumed tasks from guard object blocked queue
+// remove 'num' resumed tasks from timers READY queue
+// insert 'num' resumed tasks into tasks READY queue
+// force context switch if priority of any resumed task is greater then priority of the current task and kernel works in preemptive mode
+// return 'num' minus the number of resumed tasks
+unsigned core_num_wakeup( tsk_t *tsk, int event, unsigned num );
 
 // resume execution of all tasks from blocked queue with event value 'event'; 'tsk' is the head (first task) of the queue
 // remove all resumed tasks from guard object blocked queue

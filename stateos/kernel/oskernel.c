@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    26.02.2021
+    @date    30.03.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -473,6 +473,15 @@ tsk_t *core_tsk_wakeup( tsk_t *tsk, int event )
 	}
 
 	return tsk;
+}
+
+/* -------------------------------------------------------------------------- */
+
+unsigned core_num_wakeup( tsk_t *tsk, int event, unsigned num )
+{
+	while (num > 0 && (tsk = core_tsk_wakeup(tsk, event))) { tsk = tsk->obj.queue; --num; }
+
+	return num;
 }
 
 /* -------------------------------------------------------------------------- */
