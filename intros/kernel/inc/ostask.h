@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    29.03.2021
+    @date    30.03.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -1050,15 +1050,15 @@ struct baseTask : public __tsk
 		void flip      ( fun_t *  _state )  {        tsk_flip      (_state); }
 #endif
 		template<typename T> static
-		void sleepFor  ( const T  _delay )  {        tsk_sleepFor  (Clock::count(_delay)); }
+		void sleepFor  ( const T& _delay )  {        tsk_sleepFor  (Clock::count(_delay)); }
 		template<typename T> static
-		void sleepNext ( const T  _delay )  {        tsk_sleepNext (Clock::count(_delay)); }
+		void sleepNext ( const T& _delay )  {        tsk_sleepNext (Clock::count(_delay)); }
 		template<typename T> static
-		void sleepUntil( const T  _time )   {        tsk_sleepUntil(Clock::until(_time)); }
+		void sleepUntil( const T& _time )   {        tsk_sleepUntil(Clock::until(_time)); }
 		static
 		void sleep     ( void )             {        tsk_sleep     (); }
 		template<typename T> static
-		void delay     ( const T  _delay )  {        tsk_delay     (Clock::count(_delay)); }
+		void delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
 		static
 		void suspend   ( void )             {        cur_suspend   (); }
 		static
