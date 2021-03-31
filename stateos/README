@@ -49,6 +49,7 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 6.8
+- updated OnceFlag class
 - added sem_update function
 - added internal core_num_wakeup function
 - added version header file
