@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    23.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -279,6 +279,24 @@ unsigned sem_giveAsync( sem_t *sem );
 
 /******************************************************************************
  *
+ * Name              : sem_update
+ *
+ * Description       : try to increment the internal semaphore counter by the value of num
+ *
+ * Parameters
+ *   sem             : pointer to semaphore object
+ *   num             : update value of semaphore counter
+ *
+ * Return
+ *   SUCCESS         : semaphore counter was successfully updated
+ *   FAILURE         : semaphore counter was updated to the limit value
+ *
+ ******************************************************************************/
+
+unsigned sem_update( sem_t *sem, unsigned num );
+
+/******************************************************************************
+ *
  * Name              : sem_getValue
  *
  * Description       : return current value of semaphore
@@ -368,16 +386,17 @@ struct Semaphore : public __sem
 
 /* -------------------------------------------------------------------------- */
 
-	unsigned take     ( void ) { return sem_take     (this); }
-	unsigned tryWait  ( void ) { return sem_tryWait  (this); }
-	void     wait     ( void ) {        sem_wait     (this); }
-	unsigned give     ( void ) { return sem_give     (this); }
-	unsigned post     ( void ) { return sem_post     (this); }
-	unsigned getValue ( void ) { return sem_getValue (this); }
+	unsigned take     ( void )          { return sem_take     (this); }
+	unsigned tryWait  ( void )          { return sem_tryWait  (this); }
+	void     wait     ( void )          {        sem_wait     (this); }
+	unsigned give     ( void )          { return sem_give     (this); }
+	unsigned post     ( void )          { return sem_post     (this); }
+	unsigned update   ( unsigned _num ) { return sem_update   (this, _num); }
+	unsigned getValue ( void )          { return sem_getValue (this); }
 #if OS_ATOMICS
-	unsigned takeAsync( void ) { return sem_takeAsync(this); }
-	void     waitAsync( void ) {        sem_waitAsync(this); }
-	unsigned giveAsync( void ) { return sem_giveAsync(this); }
+	unsigned takeAsync( void )          { return sem_takeAsync(this); }
+	void     waitAsync( void )          {        sem_waitAsync(this); }
+	unsigned giveAsync( void )          { return sem_giveAsync(this); }
 #endif
 };
 

@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.c
     @author  Rajmund Szymanski
-    @date    26.12.2020
+    @date    01.04.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -113,6 +113,40 @@ unsigned sem_give( sem_t *sem )
 	sys_lock();
 	{
 		result = priv_sem_give(sem);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+unsigned priv_sem_update( sem_t *sem, unsigned num )
+/* -------------------------------------------------------------------------- */
+{
+	if (num > sem->limit - sem->count)
+	{
+		sem->count = sem->limit;
+		return FAILURE;
+	}
+
+	sem->count += num;
+	return SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+unsigned sem_update( sem_t *sem, unsigned num )
+/* -------------------------------------------------------------------------- */
+{
+	unsigned result;
+
+	assert(sem);
+	assert(sem->limit);
+	assert(sem->count<=sem->limit);
+
+	sys_lock();
+	{
+		result = priv_sem_update(sem, num);
 	}
 	sys_unlock();
 
