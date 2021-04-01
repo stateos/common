@@ -2,7 +2,7 @@
 
     @file    StateOS: osclock.h
     @author  Rajmund Szymanski
-    @date    04.03.2021
+    @date    01.04.2021
     @brief   This file implements steady clock for StateOS.
 
  ******************************************************************************
@@ -90,22 +90,31 @@ struct Clock
 	using time_point = std::chrono::time_point<Clock, duration>;
 
 	static constexpr
-	bool is_steady   = true;
+	bool  is_steady  = true;
 
 	static
-	time_point now()                    { return time_point(duration(sys_time())); }
+	time_point now()
+	{
+		return time_point(duration(sys_time()));
+	}
 
-	static constexpr
-	rep count( const duration _delay )  { return _delay.count(); }
-	static constexpr
-	rep until( const time_point _time ) { return _time.time_since_epoch().count(); }
-//	template<typename D> static constexpr
-//	rep count( const D _delay )         { return std::chrono::duration_cast<duration>(_delay).count(); }
+	template<class _Rep, class _Period> static constexpr
+	rep count( const std::chrono::duration<_Rep, _Period>& _delay )
+	{
+		return std::chrono::duration_cast<duration>(_delay).count();
+	}
+
+	template<class _Clock, class _Duration> static constexpr
+	rep until( const std::chrono::time_point<_Clock, _Duration>& _time )
+	{
+		return std::chrono::time_point_cast<duration>(_time).time_since_epoch().count();
+	}
 #endif
 	static constexpr
-	rep count( const rep _delay )       { return _delay; }
+	rep count( const rep _delay ) { return _delay; }
+
 	static constexpr
-	rep until( const rep _time )        { return _time; }
+	rep until( const rep _time )  { return _time; }
 };
 
 }     //  namespace
