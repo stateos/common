@@ -298,8 +298,8 @@ namespace intros {
 
 struct SpinLock : private CriticalSection
 {
-	SpinLock( spn_t *_spn ): spn_{ _spn} { core_spn_lock  (spn_); }
-	SpinLock( spn_t& _spn ): spn_{&_spn} { core_spn_lock  (spn_); }
+	SpinLock( spn_t *_spn ): spn_{ _spn} { core_spn_lock(spn_); }
+	SpinLock( spn_t& _spn ): spn_{&_spn} { core_spn_lock(spn_); }
 
 	~SpinLock() { core_spn_unlock(spn_); }
 
