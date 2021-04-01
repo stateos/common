@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -977,24 +977,24 @@ struct baseTask : public __tsk
 {
 #if __cplusplus >= 201402
 	template<class F>
-	baseTask( F&&     _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(fun_, _stack, _size), fun{_state} {}
+	baseTask( F&& _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(fun_, _stack, _size), fun{_state} {}
 #else
-	baseTask( fun_t * _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_state, _stack, _size) {}
+	baseTask( fun_t *_state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_state, _stack, _size) {}
 #endif
 
-	void     start    ( void )             {        tsk_start    (this); }
+	void     start    ()                   {        tsk_start    (this); }
 #if __cplusplus >= 201402
 	template<class F>
 	void     startFrom( F&&      _state )  {        new (&fun) Fun_t(_state);
-	                                            tsk_startFrom(this, fun_); }
+	                                                tsk_startFrom(this, fun_); }
 #else
-	void     startFrom( fun_t *  _state )  {        tsk_startFrom(this, _state); }
+	void     startFrom( fun_t  * _state )  {        tsk_startFrom(this, _state); }
 #endif
-	void     join     ( void )             {        tsk_join     (this); }
-	void     reset    ( void )             {        tsk_reset    (this); }
-	void     kill     ( void )             {        tsk_kill     (this); }
-	unsigned suspend  ( void )             { return tsk_suspend  (this); }
-	unsigned resume   ( void )             { return tsk_resume   (this); }
+	void     join     ()                   {        tsk_join     (this); }
+	void     reset    ()                   {        tsk_reset    (this); }
+	void     kill     ()                   {        tsk_kill     (this); }
+	unsigned suspend  ()                   { return tsk_suspend  (this); }
+	unsigned resume   ()                   { return tsk_resume   (this); }
 	void     give     ( unsigned _signo )  {        tsk_give     (this, _signo); }
 	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
 #if __cplusplus >= 201402
@@ -1002,17 +1002,17 @@ struct baseTask : public __tsk
 	void     action   ( F&&      _action ) {        new (&act) Act_t(_action);
 	                                                tsk_action   (this, act_); }
 #else
-	void     action   ( act_t *  _action ) {        tsk_action   (this, _action); }
+	void     action   ( act_t  * _action ) {        tsk_action   (this, _action); }
 #endif
 	explicit
 	operator bool     () const             { return __tsk::hdr.id != ID_STOPPED; }
 
 	template<class T = baseTask> static
-	T *      current  ( void )             { return static_cast<T *>(tsk_this()); }
+	T *      current  ()                   { return static_cast<T *>(tsk_this()); }
 
 #if __cplusplus >= 201402
 	static
-	void     fun_     ( void )             {        current()->fun(); }
+	void     fun_     ()                   {        current()->fun(); }
 	Fun_t    fun;
 	static
 	void     act_     ( unsigned _signo )  {        current()->act(_signo); }
@@ -1030,24 +1030,24 @@ struct baseTask : public __tsk
 	struct Current
 	{
 		static
-		void stop      ( void )             {        tsk_stop      (); }
+		void stop      ()                   {        tsk_stop      (); }
 		static
-		void exit      ( void )             {        tsk_exit      (); }
+		void exit      ()                   {        tsk_exit      (); }
 		static
-		void reset     ( void )             {        cur_reset     (); }
+		void reset     ()                   {        cur_reset     (); }
 		static
-		void kill      ( void )             {        cur_kill      (); }
+		void kill      ()                   {        cur_kill      (); }
 		static
-		void yield     ( void )             {        tsk_yield     (); }
+		void yield     ()                   {        tsk_yield     (); }
 		static
-		void pass      ( void )             {        tsk_pass      (); }
+		void pass      ()                   {        tsk_pass      (); }
 #if __cplusplus >= 201402
 		template<class F> static
 		void flip      ( F&&      _state )  {        new (&current()->fun) Fun_t(_state);
 		                                             tsk_flip      (fun_); }
 #else
 		static
-		void flip      ( fun_t *  _state )  {        tsk_flip      (_state); }
+		void flip      ( fun_t  * _state )  {        tsk_flip      (_state); }
 #endif
 		template<typename T> static
 		void sleepFor  ( const T& _delay )  {        tsk_sleepFor  (Clock::count(_delay)); }
@@ -1056,11 +1056,11 @@ struct baseTask : public __tsk
 		template<typename T> static
 		void sleepUntil( const T& _time )   {        tsk_sleepUntil(Clock::until(_time)); }
 		static
-		void sleep     ( void )             {        tsk_sleep     (); }
+		void sleep     ()                   {        tsk_sleep     (); }
 		template<typename T> static
 		void delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
 		static
-		void suspend   ( void )             {        cur_suspend   (); }
+		void suspend   ()                   {        cur_suspend   (); }
 		static
 		void give      ( unsigned _signo )  {        cur_give      (_signo); }
 		static
@@ -1071,7 +1071,7 @@ struct baseTask : public __tsk
 		                                             cur_action    (act_); }
 #else
 		static
-		void action    ( act_t *  _action ) {        cur_action    (_action); }
+		void action    ( act_t  * _action ) {        cur_action    (_action); }
 #endif
 	};
 };
@@ -1104,12 +1104,12 @@ struct TaskT : public baseTask, public baseStack<size_>
 	baseTask{std::bind(std::forward<F>(_state), std::forward<A>(_args)...), baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
 #endif
 
+	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
+
 	TaskT( TaskT<size_>&& ) = default;
 	TaskT( const TaskT<size_>& ) = delete;
 	TaskT<size_>& operator=( TaskT<size_>&& ) = delete;
 	TaskT<size_>& operator=( const TaskT<size_>& ) = delete;
-
-	~TaskT( void ) { assert(__tsk::hdr.id == ID_STOPPED); }
 
 /******************************************************************************
  *

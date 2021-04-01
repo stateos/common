@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -294,16 +294,16 @@ namespace intros {
 template<unsigned limit_, size_t size_>
 struct MemoryPoolT : public __mem
 {
-	MemoryPoolT( void ): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) { mem_bind(this); }
+	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) { mem_bind(this); }
 
 	MemoryPoolT( MemoryPoolT&& ) = default;
 	MemoryPoolT( const MemoryPoolT& ) = delete;
 	MemoryPoolT& operator=( MemoryPoolT&& ) = delete;
 	MemoryPoolT& operator=( const MemoryPoolT& ) = delete;
 
-	void *take   ( void )        { return mem_take   (this); }
-	void *tryWait( void )        { return mem_tryWait(this); }
-	void *wait   ( void )        { return mem_wait   (this); }
+	void *take   ()              { return mem_take   (this); }
+	void *tryWait()              { return mem_tryWait(this); }
+	void *wait   ()              { return mem_wait   (this); }
 	void  give   ( void *_data ) {        mem_give   (this, _data); }
 
 	private:
@@ -325,11 +325,11 @@ struct MemoryPoolT : public __mem
 template<unsigned limit_, class C>
 struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
 {
-	MemoryPoolTT( void ): MemoryPoolT<limit_, sizeof(C)>() {}
+	MemoryPoolTT(): MemoryPoolT<limit_, sizeof(C)>() {}
 
-	C *take   ( void ) { return reinterpret_cast<C *>(mem_take   (this)); }
-	C *tryWait( void ) { return reinterpret_cast<C *>(mem_tryWait(this)); }
-	C *wait   ( void ) { return reinterpret_cast<C *>(mem_wait   (this)); }
+	C *take   () { return reinterpret_cast<C *>(mem_take   (this)); }
+	C *tryWait() { return reinterpret_cast<C *>(mem_tryWait(this)); }
+	C *wait   () { return reinterpret_cast<C *>(mem_wait   (this)); }
 };
 
 }     //  namespace

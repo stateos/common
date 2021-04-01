@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbarrier.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -207,7 +207,7 @@ struct Barrier : public __bar
 	Barrier& operator=( Barrier&& ) = delete;
 	Barrier& operator=( const Barrier& ) = delete;
 
-	void wait( void ) { bar_wait(this); }
+	void wait() { bar_wait(this); }
 };
 
 }     //  namespace

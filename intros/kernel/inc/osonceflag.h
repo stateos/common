@@ -2,7 +2,7 @@
 
     @file    IntrOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    31.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -218,7 +218,7 @@ namespace intros {
 struct OnceFlag
 {
 	constexpr
-	OnceFlag( void ): flg_{_ONE_INIT()} {}
+	OnceFlag(): flg_{_ONE_INIT()} {}
 
 	OnceFlag( OnceFlag&& ) = default;
 	OnceFlag( const OnceFlag& ) = delete;
@@ -226,8 +226,8 @@ struct OnceFlag
 	OnceFlag& operator=( const OnceFlag& ) = delete;
 
 #if __cplusplus >= 201402
-	template<typename F, typename... A>
-	void call( F&& _fun, A&&... _args )
+	template<typename Callable, typename... Args>
+	void call( Callable&& _fun, Args&&... _args )
 	{
 		one_t flag;
 	#if OS_ATOMICS
@@ -235,10 +235,10 @@ struct OnceFlag
 	#else
 		{ CriticalSection cri; flag = flg_; flg_ = _ONE_DONE(); }
 	#endif
-		if (flag == _ONE_INIT()) _fun(std::forward<A>(_args)...);
+		if (flag == _ONE_INIT()) _fun(std::forward<Args>(_args)...);
 	}
 #else
-	void call( fun_t * _fun )
+	void call( fun_t *_fun )
 	{
 		one_call(&flg_, _fun);
 	}

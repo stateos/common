@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -366,25 +366,25 @@ template<unsigned limit_>
 struct EventQueueT : public __evq
 {
 	constexpr
-	EventQueueT( void ): __evq _EVQ_INIT(limit_, data_) {}
+	EventQueueT(): __evq _EVQ_INIT(limit_, data_) {}
 
 	EventQueueT( EventQueueT&& ) = default;
 	EventQueueT( const EventQueueT& ) = delete;
 	EventQueueT& operator=( EventQueueT&& ) = delete;
 	EventQueueT& operator=( const EventQueueT& ) = delete;
 
-	unsigned take     ( void )            { return evq_take     (this); }
-	unsigned tryWait  ( void )            { return evq_tryWait  (this); }
-	unsigned wait     ( void )            { return evq_wait     (this); }
+	unsigned take     ()                  { return evq_take     (this); }
+	unsigned tryWait  ()                  { return evq_tryWait  (this); }
+	unsigned wait     ()                  { return evq_wait     (this); }
 	unsigned give     ( unsigned _event ) { return evq_give     (this, _event); }
 	void     send     ( unsigned _event ) {        evq_send     (this, _event); }
 	void     push     ( unsigned _event ) {        evq_push     (this, _event); }
-	unsigned count    ( void )            { return evq_count    (this); }
-	unsigned space    ( void )            { return evq_space    (this); }
-	unsigned limit    ( void )            { return evq_limit    (this); }
+	unsigned count    ()                  { return evq_count    (this); }
+	unsigned space    ()                  { return evq_space    (this); }
+	unsigned limit    ()                  { return evq_limit    (this); }
 #if OS_ATOMICS
-	unsigned takeAsync( void )            { return evq_takeAsync(this); }
-	unsigned waitAsync( void )            { return evq_waitAsync(this); }
+	unsigned takeAsync()                  { return evq_takeAsync(this); }
+	unsigned waitAsync()                  { return evq_waitAsync(this); }
 	unsigned giveAsync( unsigned _event ) { return evq_giveAsync(this, _event); }
 	void     sendAsync( unsigned _event ) {        evq_sendAsync(this, _event); }
 #endif

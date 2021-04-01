@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -240,21 +240,21 @@ namespace intros {
 struct Mutex : public __mtx
 {
 	constexpr
-	Mutex( void ): __mtx _MTX_INIT() {}
+	Mutex(): __mtx _MTX_INIT() {}
 
 	Mutex( Mutex&& ) = default;
 	Mutex( const Mutex& ) = delete;
 	Mutex& operator=( Mutex&& ) = delete;
 	Mutex& operator=( const Mutex& ) = delete;
 
-	~Mutex( void ) { assert(__mtx::owner == nullptr); }
+	~Mutex() { assert(__mtx::owner == nullptr); }
 
-	unsigned take   ( void ) { return mtx_take   (this); }
-	unsigned tryLock( void ) { return mtx_tryLock(this); }
-	void     wait   ( void ) {        mtx_wait   (this); }
-	void     lock   ( void ) {        mtx_lock   (this); }
-	unsigned give   ( void ) { return mtx_give   (this); }
-	unsigned unlock ( void ) { return mtx_unlock (this); }
+	unsigned take   () { return mtx_take   (this); }
+	unsigned tryLock() { return mtx_tryLock(this); }
+	void     wait   () {        mtx_wait   (this); }
+	void     lock   () {        mtx_lock   (this); }
+	unsigned give   () { return mtx_give   (this); }
+	unsigned unlock () { return mtx_unlock (this); }
 };
 
 }     //  namespace

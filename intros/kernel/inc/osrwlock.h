@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -307,27 +307,27 @@ namespace intros {
 struct RWLock : public __rwl
 {
 	constexpr
-	RWLock( void ): __rwl _RWL_INIT() {}
+	RWLock(): __rwl _RWL_INIT() {}
+
+	~RWLock() { assert(__rwl::write == false && __rwl::count == 0); }
 
 	RWLock( RWLock&& ) = default;
 	RWLock( const RWLock& ) = delete;
 	RWLock& operator=( RWLock&& ) = delete;
 	RWLock& operator=( const RWLock& ) = delete;
 
-	~RWLock( void ) { assert(__rwl::write == false && __rwl::count == 0); }
-
-	unsigned takeRead    ( void ) { return rwl_takeRead    (this); }
-	unsigned tryLockRead ( void ) { return rwl_tryLockRead (this); }
-	void     waitRead    ( void ) {        rwl_waitRead    (this); }
-	void     lockRead    ( void ) {        rwl_lockRead    (this); }
-	void     giveRead    ( void ) {        rwl_giveRead    (this); }
-	void     unlockRead  ( void ) {        rwl_unlockRead  (this); }
-	unsigned takeWrite   ( void ) { return rwl_takeWrite   (this); }
-	unsigned tryLockWrite( void ) { return rwl_tryLockWrite(this); }
-	void     waitWrite   ( void ) {        rwl_waitWrite   (this); }
-	void     lockWrite   ( void ) {        rwl_lockWrite   (this); }
-	void     giveWrite   ( void ) {        rwl_giveWrite   (this); }
-	void     unlockWrite ( void ) {        rwl_unlockWrite (this); }
+	unsigned takeRead    () { return rwl_takeRead    (this); }
+	unsigned tryLockRead () { return rwl_tryLockRead (this); }
+	void     waitRead    () {        rwl_waitRead    (this); }
+	void     lockRead    () {        rwl_lockRead    (this); }
+	void     giveRead    () {        rwl_giveRead    (this); }
+	void     unlockRead  () {        rwl_unlockRead  (this); }
+	unsigned takeWrite   () { return rwl_takeWrite   (this); }
+	unsigned tryLockWrite() { return rwl_tryLockWrite(this); }
+	void     waitWrite   () {        rwl_waitWrite   (this); }
+	void     lockWrite   () {        rwl_lockWrite   (this); }
+	void     giveWrite   () {        rwl_giveWrite   (this); }
+	void     unlockWrite () {        rwl_unlockWrite (this); }
 };
 
 /******************************************************************************
@@ -343,8 +343,9 @@ struct RWLock : public __rwl
 
 struct ReadLock
 {
-	 ReadLock( RWLock &_rwl ): lck_(_rwl) { lck_.lockRead(); }
-	~ReadLock( void )                     { lck_.unlockRead(); }
+	ReadLock( RWLock& _rwl ): lck_(_rwl) { lck_.lockRead(); }
+
+	~ReadLock() { lck_.unlockRead(); }
 
 	ReadLock( ReadLock&& ) = default;
 	ReadLock( const ReadLock& ) = delete;
@@ -352,7 +353,7 @@ struct ReadLock
 	ReadLock& operator=( const ReadLock& ) = delete;
 
 	private:
-	RWLock &lck_;
+	RWLock& lck_;
 };
 
 /******************************************************************************
@@ -368,8 +369,9 @@ struct ReadLock
 
 struct WriteLock
 {
-	 WriteLock( RWLock &_rwl ): lck_(_rwl) { lck_.lockWrite(); }
-	~WriteLock( void )                     { lck_.unlockWrite(); }
+	WriteLock( RWLock& _rwl ): lck_(_rwl) { lck_.lockWrite(); }
+
+	~WriteLock() { lck_.unlockWrite(); }
 
 	WriteLock( WriteLock&& ) = default;
 	WriteLock( const WriteLock& ) = delete;
@@ -377,7 +379,7 @@ struct WriteLock
 	WriteLock& operator=( const WriteLock& ) = delete;
 
 	private:
-	RWLock &lck_;
+	RWLock& lck_;
 };
 
 }     //  namespace

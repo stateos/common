@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmessagebuffer.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -388,7 +388,7 @@ template<size_t limit_>
 struct MessageBufferT : public __msg
 {
 	constexpr
-	MessageBufferT( void ): __msg _MSG_INIT(limit_, data_) {}
+	MessageBufferT(): __msg _MSG_INIT(limit_, data_) {}
 
 	MessageBufferT( MessageBufferT&& ) = default;
 	MessageBufferT( const MessageBufferT& ) = delete;
@@ -401,10 +401,10 @@ struct MessageBufferT : public __msg
 	unsigned give   ( const void *_data, size_t _size ) { return msg_give   (this, _data, _size); }
 	unsigned send   ( const void *_data, size_t _size ) { return msg_send   (this, _data, _size); }
 	unsigned push   ( const void *_data, size_t _size ) { return msg_push   (this, _data, _size); }
-	size_t   count  ( void )                            { return msg_count  (this); }
-	size_t   space  ( void )                            { return msg_space  (this); }
-	size_t   limit  ( void )                            { return msg_limit  (this); }
-	size_t   size   ( void )                            { return msg_size   (this); }
+	size_t   count  ()                                  { return msg_count  (this); }
+	size_t   space  ()                                  { return msg_space  (this); }
+	size_t   limit  ()                                  { return msg_limit  (this); }
+	size_t   size   ()                                  { return msg_size   (this); }
 
 	private:
 	char data_[limit_];
@@ -426,7 +426,7 @@ template<unsigned limit_, class C>
 struct MessageBufferTT : public MessageBufferT<limit_*(sizeof(size_t)+sizeof(C))>
 {
 	constexpr
-	MessageBufferTT( void ): MessageBufferT<limit_*(sizeof(size_t)+sizeof(C))>() {}
+	MessageBufferTT(): MessageBufferT<limit_*(sizeof(size_t)+sizeof(C))>() {}
 
 	unsigned take   (       C *_data ) { return msg_take   (this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }
 	unsigned tryWait(       C *_data ) { return msg_tryWait(this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }

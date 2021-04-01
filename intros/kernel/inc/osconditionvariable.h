@@ -2,7 +2,7 @@
 
     @file    IntrOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -213,7 +213,7 @@ namespace intros {
 struct ConditionVariable : public __cnd
 {
 	constexpr
-	ConditionVariable( void ): __cnd _CND_INIT() {}
+	ConditionVariable(): __cnd _CND_INIT() {}
 
 	ConditionVariable( ConditionVariable&& ) = default;
 	ConditionVariable( const ConditionVariable& ) = delete;
@@ -221,9 +221,9 @@ struct ConditionVariable : public __cnd
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;
 
 	void wait     ( mtx_t *_mtx ) { cnd_wait     (this,  _mtx); }
-	void wait     ( mtx_t &_mtx ) { cnd_wait     (this, &_mtx); }
-	void give     ( void )        { cnd_give     (this); }
-	void notifyAll( void )        { cnd_notifyAll(this); }
+	void wait     ( mtx_t& _mtx ) { cnd_wait     (this, &_mtx); }
+	void give     ()              { cnd_give     (this); }
+	void notifyAll()              { cnd_notifyAll(this); }
 };
 
 }     //  namespace

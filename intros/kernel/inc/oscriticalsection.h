@@ -2,7 +2,7 @@
 
     @file    IntrOS: oscriticalsection.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -180,8 +180,9 @@ namespace intros {
 
 struct CriticalSection
 {
-	 CriticalSection( void ) { lck_ = core_set_lock(); }
-	~CriticalSection( void ) { core_put_lock(lck_); }
+	CriticalSection() { lck_ = core_set_lock(); }
+
+	~CriticalSection() { core_put_lock(lck_); }
 
 	CriticalSection( CriticalSection&& ) = delete;
 	CriticalSection( const CriticalSection& ) = delete;
@@ -206,8 +207,10 @@ struct CriticalSection
 template<class T>
 struct Lock
 {
-	 Lock( T &_lck ): lck_(_lck) { lck_.lock(); }
-	~Lock( void )                { lck_.unlock(); }
+	explicit
+	Lock( T& _lck ): lck_(_lck) { lck_.lock(); }
+
+	~Lock() { lck_.unlock(); }
 
 	Lock( Lock&& ) = default;
 	Lock( const Lock& ) = delete;
@@ -215,7 +218,7 @@ struct Lock
 	Lock& operator=( const Lock& ) = delete;
 
 	private:
-	T &lck_;
+	T& lck_;
 };
 
 }     //  namespace

@@ -337,7 +337,7 @@ namespace intros {
 struct Semaphore : public __sem
 {
 	constexpr
-	Semaphore( void ): __sem _SEM_INIT(0, semDefault) {}
+	Semaphore(): __sem _SEM_INIT(0, semDefault) {}
 	constexpr
 	Semaphore( const unsigned _init, const unsigned _limit = semDefault ): __sem _SEM_INIT(_init, _limit) {}
 
@@ -345,6 +345,19 @@ struct Semaphore : public __sem
 	Semaphore( const Semaphore& ) = delete;
 	Semaphore& operator=( Semaphore&& ) = delete;
 	Semaphore& operator=( const Semaphore& ) = delete;
+
+	unsigned take     ()                { return sem_take     (this); }
+	unsigned tryWait  ()                { return sem_tryWait  (this); }
+	void     wait     ()                {        sem_wait     (this); }
+	unsigned give     ()                { return sem_give     (this); }
+	unsigned post     ()                { return sem_post     (this); }
+	unsigned update   ( unsigned _num ) { return sem_update   (this, _num); }
+	unsigned getValue ()                { return sem_getValue (this); }
+#if OS_ATOMICS
+	unsigned takeAsync()                { return sem_takeAsync(this); }
+	void     waitAsync()                {        sem_waitAsync(this); }
+	unsigned giveAsync()                { return sem_giveAsync(this); }
+#endif
 
 /******************************************************************************
  *
@@ -384,20 +397,6 @@ struct Semaphore : public __sem
 		return { _init, semCounting };
 	}
 
-/* -------------------------------------------------------------------------- */
-
-	unsigned take     ( void )          { return sem_take     (this); }
-	unsigned tryWait  ( void )          { return sem_tryWait  (this); }
-	void     wait     ( void )          {        sem_wait     (this); }
-	unsigned give     ( void )          { return sem_give     (this); }
-	unsigned post     ( void )          { return sem_post     (this); }
-	unsigned update   ( unsigned _num ) { return sem_update   (this, _num); }
-	unsigned getValue ( void )          { return sem_getValue (this); }
-#if OS_ATOMICS
-	unsigned takeAsync( void )          { return sem_takeAsync(this); }
-	void     waitAsync( void )          {        sem_waitAsync(this); }
-	unsigned giveAsync( void )          { return sem_giveAsync(this); }
-#endif
 };
 
 }     //  namespace

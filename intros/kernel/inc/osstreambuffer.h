@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstreambuffer.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -373,7 +373,7 @@ template<size_t limit_>
 struct StreamBufferT : public __stm
 {
 	constexpr
-	StreamBufferT( void ): __stm _STM_INIT(limit_, data_) {}
+	StreamBufferT(): __stm _STM_INIT(limit_, data_) {}
 
 	StreamBufferT( StreamBufferT&& ) = default;
 	StreamBufferT( const StreamBufferT& ) = delete;
@@ -386,9 +386,9 @@ struct StreamBufferT : public __stm
 	unsigned give   ( const void *_data, size_t _size ) { return stm_give   (this, _data, _size); }
 	unsigned send   ( const void *_data, size_t _size ) { return stm_send   (this, _data, _size); }
 	unsigned push   ( const void *_data, size_t _size ) { return stm_push   (this, _data, _size); }
-	size_t   count  ( void )                            { return stm_count  (this); }
-	size_t   space  ( void )                            { return stm_space  (this); }
-	size_t   limit  ( void )                            { return stm_limit  (this); }
+	size_t   count  ()                                  { return stm_count  (this); }
+	size_t   space  ()                                  { return stm_space  (this); }
+	size_t   limit  ()                                  { return stm_limit  (this); }
 
 	private:
 	char data_[limit_];
@@ -410,7 +410,7 @@ template<unsigned limit_, class C>
 struct StreamBufferTT : public StreamBufferT<limit_*sizeof(C)>
 {
 	constexpr
-	StreamBufferTT( void ): StreamBufferT<limit_*sizeof(C)>() {}
+	StreamBufferTT(): StreamBufferT<limit_*sizeof(C)>() {}
 
 	unsigned take   (       C *_data ) { return stm_take   (this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }
 	unsigned tryWait(       C *_data ) { return stm_tryWait(this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }

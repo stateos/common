@@ -2,7 +2,7 @@
 
     @file    IntrOS: osevent.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -224,15 +224,15 @@ namespace intros {
 struct Event : public __evt
 {
 	constexpr
-	Event( void ): __evt _EVT_INIT() {}
+	Event(): __evt _EVT_INIT() {}
 
 	Event( Event&& ) = default;
 	Event( const Event& ) = delete;
 	Event& operator=( Event&& ) = delete;
 	Event& operator=( const Event& ) = delete;
 
-	unsigned take( void )            { return evt_take(this); }
-	unsigned wait( void )            { return evt_wait(this); }
+	unsigned take()                  { return evt_take(this); }
+	unsigned wait()                  { return evt_wait(this); }
 	void     give( unsigned _event ) {        evt_give(this, _event); }
 };
 

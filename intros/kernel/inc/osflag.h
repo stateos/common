@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -305,7 +305,7 @@ struct Flag : public __flg
 	unsigned give   ( unsigned _flags )                   { return flg_give   (this, _flags); }
 	unsigned set    ( unsigned _flags )                   { return flg_set    (this, _flags); }
 	unsigned clear  ( unsigned _flags )                   { return flg_clear  (this, _flags); }
-	unsigned get    ( void )                              { return flg_get    (this); }
+	unsigned get    ()                                    { return flg_get    (this); }
 };
 
 }     //  namespace

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    02.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -367,25 +367,25 @@ template<unsigned limit_>
 struct JobQueueT : public __job
 {
 	constexpr
-	JobQueueT( void ): __job _JOB_INIT(limit_, data_) {}
+	JobQueueT(): __job _JOB_INIT(limit_, data_) {}
 
 	JobQueueT( JobQueueT&& ) = default;
 	JobQueueT( const JobQueueT& ) = delete;
 	JobQueueT& operator=( JobQueueT&& ) = delete;
 	JobQueueT& operator=( const JobQueueT& ) = delete;
 
-	unsigned take     ( void )        { return job_take     (this); }
-	unsigned tryWait  ( void )        { return job_tryWait  (this); }
-	void     wait     ( void )        {        job_wait     (this); }
+	unsigned take     ()              { return job_take     (this); }
+	unsigned tryWait  ()              { return job_tryWait  (this); }
+	void     wait     ()              {        job_wait     (this); }
 	unsigned give     ( fun_t *_fun ) { return job_give     (this, _fun); }
 	void     send     ( fun_t *_fun ) {        job_send     (this, _fun); }
 	void     push     ( fun_t *_fun ) {        job_push     (this, _fun); }
-	unsigned count    ( void )        { return job_count    (this); }
-	unsigned space    ( void )        { return job_space    (this); }
-	unsigned limit    ( void )        { return job_limit    (this); }
+	unsigned count    ()              { return job_count    (this); }
+	unsigned space    ()              { return job_space    (this); }
+	unsigned limit    ()              { return job_limit    (this); }
 #if OS_ATOMICS
-	unsigned takeAsync( void )        { return job_takeAsync(this); }
-	void     waitAsync( void )        {        job_waitAsync(this); }
+	unsigned takeAsync()              { return job_takeAsync(this); }
+	void     waitAsync()              {        job_waitAsync(this); }
 	unsigned giveAsync( fun_t *_fun ) { return job_giveAsync(this, _fun); }
 	void     sendAsync( fun_t *_fun ) {        job_sendAsync(this, _fun); }
 #endif
