@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -498,12 +498,30 @@ struct Mutex : public __mtx
 	constexpr
 	Mutex( const unsigned _mode, const unsigned _prio = 0 ): __mtx _MTX_INIT(_mode, _prio) {}
 
+	~Mutex() { assert(__mtx::owner == nullptr); }
+
 	Mutex( Mutex&& ) = default;
 	Mutex( const Mutex& ) = delete;
 	Mutex& operator=( Mutex&& ) = delete;
 	Mutex& operator=( const Mutex& ) = delete;
 
-	~Mutex( void ) { assert(__mtx::owner == nullptr); }
+	void     reset    ()                  {        mtx_reset    (this); }
+	void     kill     ()                  {        mtx_kill     (this); }
+	void     destroy  ()                  {        mtx_destroy  (this); }
+	void     setPrio  ( unsigned _prio )  {        mtx_setPrio  (this, _prio); }
+	void     prio     ( unsigned _prio )  {        mtx_prio     (this, _prio); }
+	unsigned getPrio  ()                  { return mtx_getPrio  (this); }
+	unsigned prio     ()                  { return mtx_getPrio  (this); }
+	int      take     ()                  { return mtx_take     (this); }
+	int      tryLock  ()                  { return mtx_tryLock  (this); }
+	template<typename T>
+	int      waitFor  ( const T& _delay ) { return mtx_waitFor  (this, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil( const T& _time )  { return mtx_waitUntil(this, Clock::until(_time)); }
+	int      wait     ()                  { return mtx_wait     (this); }
+	int      lock     ()                  { return mtx_lock     (this); }
+	int      give     ()                  { return mtx_give     (this); }
+	int      unlock   ()                  { return mtx_unlock   (this); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<Mutex>;
@@ -539,23 +557,6 @@ struct Mutex : public __mtx
 		return Ptr(mtx);
 	}
 
-	void     reset    ( void )            {        mtx_reset    (this); }
-	void     kill     ( void )            {        mtx_kill     (this); }
-	void     destroy  ( void )            {        mtx_destroy  (this); }
-	void     setPrio  ( unsigned _prio )  {        mtx_setPrio  (this, _prio); }
-	void     prio     ( unsigned _prio )  {        mtx_prio     (this, _prio); }
-	unsigned getPrio  ( void )            { return mtx_getPrio  (this); }
-	unsigned prio     ( void )            { return mtx_getPrio  (this); }
-	int      take     ( void )            { return mtx_take     (this); }
-	int      tryLock  ( void )            { return mtx_tryLock  (this); }
-	template<typename T>
-	int      waitFor  ( const T& _delay ) { return mtx_waitFor  (this, Clock::count(_delay)); }
-	template<typename T>
-	int      waitUntil( const T& _time )  { return mtx_waitUntil(this, Clock::until(_time)); }
-	int      wait     ( void )            { return mtx_wait     (this); }
-	int      lock     ( void )            { return mtx_lock     (this); }
-	int      give     ( void )            { return mtx_give     (this); }
-	int      unlock   ( void )            { return mtx_unlock   (this); }
 };
 
 }     //  namespace

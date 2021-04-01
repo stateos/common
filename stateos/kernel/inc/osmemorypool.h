@@ -2,7 +2,7 @@
 
     @file    StateOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -438,14 +438,28 @@ namespace stateos {
 template<unsigned limit_, size_t size_>
 struct MemoryPoolT : public __mem
 {
-	MemoryPoolT( void ): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) { mem_bind(this); }
+	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) { mem_bind(this); }
+
+	~MemoryPoolT() { assert(__mem::lst.obj.queue == nullptr); }
 
 	MemoryPoolT( MemoryPoolT&& ) = default;
 	MemoryPoolT( const MemoryPoolT& ) = delete;
 	MemoryPoolT& operator=( MemoryPoolT&& ) = delete;
 	MemoryPoolT& operator=( const MemoryPoolT& ) = delete;
 
-	~MemoryPoolT( void ) { assert(__mem::lst.obj.queue == nullptr); }
+	void reset    ()                                {        mem_reset    (this); }
+	void kill     ()                                {        mem_kill     (this); }
+	void destroy  ()                                {        mem_destroy  (this); }
+	int  take     ( void **_data )                  { return mem_take     (this, _data); }
+	int  tryWait  ( void **_data )                  { return mem_tryWait  (this, _data); }
+	int  takeISR  ( void **_data )                  { return mem_takeISR  (this, _data); }
+	template<typename T>
+	int  waitFor  ( void **_data, const T& _delay ) { return mem_waitFor  (this, _data, Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( void **_data, const T& _time )  { return mem_waitUntil(this, _data, Clock::until(_time)); }
+	int  wait     ( void **_data )                  { return mem_wait     (this, _data); }
+	void give     ( void  *_data )                  {        mem_give     (this, _data); }
+	void giveISR  ( void  *_data )                  {        mem_giveISR  (this, _data); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<MemoryPoolT<limit_, size_>>;
@@ -470,27 +484,13 @@ struct MemoryPoolT : public __mem
  ******************************************************************************/
 
 	static
-	Ptr Create( void )
+	Ptr Create()
 	{
 		auto mem = new MemoryPoolT<limit_, size_>();
 		if (mem != nullptr)
 			mem->__mem::lst.obj.res = mem;
 		return Ptr(mem);
 	}
-
-	void reset    ( void )                          {        mem_reset    (this); }
-	void kill     ( void )                          {        mem_kill     (this); }
-	void destroy  ( void )                          {        mem_destroy  (this); }
-	int  take     ( void **_data )                  { return mem_take     (this, _data); }
-	int  tryWait  ( void **_data )                  { return mem_tryWait  (this, _data); }
-	int  takeISR  ( void **_data )                  { return mem_takeISR  (this, _data); }
-	template<typename T>
-	int  waitFor  ( void **_data, const T& _delay ) { return mem_waitFor  (this, _data, Clock::count(_delay)); }
-	template<typename T>
-	int  waitUntil( void **_data, const T& _time )  { return mem_waitUntil(this, _data, Clock::until(_time)); }
-	int  wait     ( void **_data )                  { return mem_wait     (this, _data); }
-	void give     ( void  *_data )                  {        mem_give     (this, _data); }
-	void giveISR  ( void  *_data )                  {        mem_giveISR  (this, _data); }
 
 	private:
 	que_t data_[limit_ * (1 + MEM_SIZE(size_))];
@@ -511,7 +511,16 @@ struct MemoryPoolT : public __mem
 template<unsigned limit_, class C>
 struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
 {
-	MemoryPoolTT( void ): MemoryPoolT<limit_, sizeof(C)>() {}
+	MemoryPoolTT(): MemoryPoolT<limit_, sizeof(C)>() {}
+
+	int  take     ( C **_data )                  { return mem_take     (this, reinterpret_cast<void **>(_data)); }
+	int  tryWait  ( C **_data )                  { return mem_tryWait  (this, reinterpret_cast<void **>(_data)); }
+	int  takeISR  ( C **_data )                  { return mem_takeISR  (this, reinterpret_cast<void **>(_data)); }
+	template<typename T>
+	int  waitFor  ( C **_data, const T& _delay ) { return mem_waitFor  (this, reinterpret_cast<void **>(_data), Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( C **_data, const T& _time )  { return mem_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }
+	int  wait     ( C **_data )                  { return mem_wait     (this, reinterpret_cast<void **>(_data)); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<MemoryPoolTT<limit_, C>>;
@@ -536,7 +545,7 @@ struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
  ******************************************************************************/
 
 	static
-	Ptr Create( void )
+	Ptr Create()
 	{
 		auto mem = new MemoryPoolTT<limit_, C>();
 		if (mem != nullptr)
@@ -544,14 +553,6 @@ struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
 		return Ptr(mem);
 	}
 
-	int  take     ( C **_data )                  { return mem_take     (this, reinterpret_cast<void **>(_data)); }
-	int  tryWait  ( C **_data )                  { return mem_tryWait  (this, reinterpret_cast<void **>(_data)); }
-	int  takeISR  ( C **_data )                  { return mem_takeISR  (this, reinterpret_cast<void **>(_data)); }
-	template<typename T>
-	int  waitFor  ( C **_data, const T& _delay ) { return mem_waitFor  (this, reinterpret_cast<void **>(_data), Clock::count(_delay)); }
-	template<typename T>
-	int  waitUntil( C **_data, const T& _time )  { return mem_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }
-	int  wait     ( C **_data )                  { return mem_wait     (this, reinterpret_cast<void **>(_data)); }
 };
 
 }     //  namespace

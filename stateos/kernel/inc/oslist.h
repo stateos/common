@@ -2,7 +2,7 @@
 
     @file    StateOS: oslist.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -398,14 +398,28 @@ template<class C>
 struct ListTT : public __lst
 {
 	constexpr
-	ListTT( void ): __lst _LST_INIT() {}
+	ListTT(): __lst _LST_INIT() {}
+
+	~ListTT() { assert(__lst::obj.queue == nullptr); }
 
 	ListTT( ListTT&& ) = default;
 	ListTT( const ListTT& ) = delete;
 	ListTT& operator=( ListTT&& ) = delete;
 	ListTT& operator=( const ListTT& ) = delete;
 
-	~ListTT( void ) { assert(__lst::obj.queue == nullptr); }
+	void reset    ()                               {        lst_reset    (this); }
+	void kill     ()                               {        lst_kill     (this); }
+	void destroy  ()                               {        lst_destroy  (this); }
+	int  take     ( C   **_data )                  { return lst_take     (this, reinterpret_cast<void **>(_data)); }
+	int  tryWait  ( C   **_data )                  { return lst_tryWait  (this, reinterpret_cast<void **>(_data)); }
+	int  takeISR  ( C   **_data )                  { return lst_takeISR  (this, reinterpret_cast<void **>(_data)); }
+	template<typename T>
+	int  waitFor  ( C   **_data, const T& _delay ) { return lst_waitFor  (this, reinterpret_cast<void **>(_data), Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( C   **_data, const T& _time )  { return lst_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }
+	int  wait     ( C   **_data )                  { return lst_wait     (this, reinterpret_cast<void **>(_data)); }
+	void give     ( void *_data )                  {        lst_give     (this,                           _data); }
+	void giveISR  ( void *_data )                  {        lst_giveISR  (this,                           _data); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<ListTT<C>>;
@@ -429,7 +443,7 @@ struct ListTT : public __lst
  ******************************************************************************/
 
 	static
-	Ptr Create( void )
+	Ptr Create()
 	{
 		auto lst = new ListTT<C>();
 		if (lst != nullptr)
@@ -437,19 +451,6 @@ struct ListTT : public __lst
 		return Ptr(lst);
 	}
 
-	void reset    ( void )                         {        lst_reset    (this); }
-	void kill     ( void )                         {        lst_kill     (this); }
-	void destroy  ( void )                         {        lst_destroy  (this); }
-	int  take     ( C   **_data )                  { return lst_take     (this, reinterpret_cast<void **>(_data)); }
-	int  tryWait  ( C   **_data )                  { return lst_tryWait  (this, reinterpret_cast<void **>(_data)); }
-	int  takeISR  ( C   **_data )                  { return lst_takeISR  (this, reinterpret_cast<void **>(_data)); }
-	template<typename T>
-	int  waitFor  ( C   **_data, const T& _delay ) { return lst_waitFor  (this, reinterpret_cast<void **>(_data), Clock::count(_delay)); }
-	template<typename T>
-	int  waitUntil( C   **_data, const T& _time )  { return lst_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }
-	int  wait     ( C   **_data )                  { return lst_wait     (this, reinterpret_cast<void **>(_data)); }
-	void give     ( void *_data )                  {        lst_give     (this,                           _data); }
-	void giveISR  ( void *_data )                  {        lst_giveISR  (this,                           _data); }
 };
 
 /******************************************************************************

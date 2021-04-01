@@ -2,7 +2,7 @@
 
     @file    StateOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -389,14 +389,32 @@ namespace stateos {
 struct ConditionVariable : public __cnd
 {
 	constexpr
-	ConditionVariable( void ): __cnd _CND_INIT() {}
+	ConditionVariable(): __cnd _CND_INIT() {}
+
+	~ConditionVariable() { assert(__cnd::obj.queue == nullptr); }
 
 	ConditionVariable( ConditionVariable&& ) = default;
 	ConditionVariable( const ConditionVariable& ) = delete;
 	ConditionVariable& operator=( ConditionVariable&& ) = delete;
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;
 
-	~ConditionVariable( void ) { assert(__cnd::obj.queue == nullptr); }
+	void reset    ()                               {        cnd_reset    (this); }
+	void kill     ()                               {        cnd_kill     (this); }
+	void destroy  ()                               {        cnd_destroy  (this); }
+	template<typename T>
+	int  waitFor  ( mtx_t *_mtx, const T& _delay ) { return cnd_waitFor  (this,  _mtx, Clock::count(_delay)); }
+	template<typename T>
+	int  waitFor  ( mtx_t& _mtx, const T& _delay ) { return cnd_waitFor  (this, &_mtx, Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( mtx_t *_mtx, const T& _time )  { return cnd_waitUntil(this,  _mtx, Clock::until(_time)); }
+	template<typename T>
+	int  waitUntil( mtx_t& _mtx, const T& _time )  { return cnd_waitUntil(this, &_mtx, Clock::until(_time)); }
+	int  wait     ( mtx_t *_mtx )                  { return cnd_wait     (this,  _mtx); }
+	int  wait     ( mtx_t& _mtx )                  { return cnd_wait     (this, &_mtx); }
+	void give     ( bool   _all = cndAll )         {        cnd_give     (this,  _all); }
+	void giveISR  ( bool   _all = cndAll )         {        cnd_giveISR  (this,  _all); }
+	void notifyOne()                               {        cnd_notifyOne(this); }
+	void notifyAll()                               {        cnd_notifyAll(this); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<ConditionVariable>;
@@ -419,7 +437,7 @@ struct ConditionVariable : public __cnd
  ******************************************************************************/
 
 	static
-	Ptr Create( void )
+	Ptr Create()
 	{
 		auto cnd = new ConditionVariable();
 		if (cnd != nullptr)
@@ -427,23 +445,6 @@ struct ConditionVariable : public __cnd
 		return Ptr(cnd);
 	}
 
-	void reset    ( void )                         {        cnd_reset    (this); }
-	void kill     ( void )                         {        cnd_kill     (this); }
-	void destroy  ( void )                         {        cnd_destroy  (this); }
-	template<typename T>
-	int  waitFor  ( mtx_t *_mtx, const T& _delay ) { return cnd_waitFor  (this,  _mtx, Clock::count(_delay)); }
-	template<typename T>
-	int  waitFor  ( mtx_t& _mtx, const T& _delay ) { return cnd_waitFor  (this, &_mtx, Clock::count(_delay)); }
-	template<typename T>
-	int  waitUntil( mtx_t *_mtx, const T& _time )  { return cnd_waitUntil(this,  _mtx, Clock::until(_time)); }
-	template<typename T>
-	int  waitUntil( mtx_t& _mtx, const T& _time )  { return cnd_waitUntil(this, &_mtx, Clock::until(_time)); }
-	int  wait     ( mtx_t *_mtx )                  { return cnd_wait     (this,  _mtx); }
-	int  wait     ( mtx_t& _mtx )                  { return cnd_wait     (this, &_mtx); }
-	void give     ( bool   _all = cndAll )         {        cnd_give     (this,  _all); }
-	void giveISR  ( bool   _all = cndAll )         {        cnd_giveISR  (this,  _all); }
-	void notifyOne( void )                         {        cnd_notifyOne(this); }
-	void notifyAll( void )                         {        cnd_notifyAll(this); }
 };
 
 }     //  namespace

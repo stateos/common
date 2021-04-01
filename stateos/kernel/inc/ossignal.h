@@ -2,7 +2,7 @@
 
     @file    StateOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -431,12 +431,29 @@ struct Signal : public __sig
 	constexpr
 	Signal( const unsigned _mask = 0 ): __sig _SIG_INIT(_mask) {}
 
+	~Signal() { assert(__sig::obj.queue == nullptr); }
+
 	Signal( Signal&& ) = default;
 	Signal( const Signal& ) = delete;
 	Signal& operator=( Signal&& ) = delete;
 	Signal& operator=( const Signal& ) = delete;
 
-	~Signal( void ) { assert(__sig::obj.queue == nullptr); }
+	void reset    ()                                                       {        sig_reset    (this); }
+	void kill     ()                                                       {        sig_kill     (this); }
+	void destroy  ()                                                       {        sig_destroy  (this); }
+	int  take     ( unsigned _sigset, unsigned *_signo = nullptr )         { return sig_take     (this, _sigset, _signo); }
+	int  tryWait  ( unsigned _sigset, unsigned *_signo = nullptr )         { return sig_tryWait  (this, _sigset, _signo); }
+	int  takeISR  ( unsigned _sigset, unsigned *_signo = nullptr )         { return sig_takeISR  (this, _sigset, _signo); }
+	template<typename T>
+	int  waitFor  ( unsigned _sigset, unsigned *_signo,  const T& _delay ) { return sig_waitFor  (this, _sigset, _signo, Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( unsigned _sigset, unsigned *_signo,  const T& _time )  { return sig_waitUntil(this, _sigset, _signo, Clock::until(_time)); }
+	int  wait     ( unsigned _sigset, unsigned *_signo = nullptr )         { return sig_wait     (this, _sigset, _signo); }
+	void give     ( unsigned _signo )                                      {        sig_give     (this, _signo); }
+	void set      ( unsigned _signo )                                      {        sig_set      (this, _signo); }
+	void giveISR  ( unsigned _signo )                                      {        sig_giveISR  (this, _signo); }
+	void clear    ( unsigned _signo )                                      {        sig_clear    (this, _signo); }
+	void clearISR ( unsigned _signo )                                      {        sig_clearISR (this, _signo); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<Signal>;
@@ -468,22 +485,6 @@ struct Signal : public __sig
 		return Ptr(sig);
 	}
 
-	void reset    ( void )                                                 {        sig_reset    (this); }
-	void kill     ( void )                                                 {        sig_kill     (this); }
-	void destroy  ( void )                                                 {        sig_destroy  (this); }
-	int  take     ( unsigned _sigset, unsigned *_signo = nullptr )         { return sig_take     (this, _sigset, _signo); }
-	int  tryWait  ( unsigned _sigset, unsigned *_signo = nullptr )         { return sig_tryWait  (this, _sigset, _signo); }
-	int  takeISR  ( unsigned _sigset, unsigned *_signo = nullptr )         { return sig_takeISR  (this, _sigset, _signo); }
-	template<typename T>
-	int  waitFor  ( unsigned _sigset, unsigned *_signo,  const T& _delay ) { return sig_waitFor  (this, _sigset, _signo, Clock::count(_delay)); }
-	template<typename T>
-	int  waitUntil( unsigned _sigset, unsigned *_signo,  const T& _time )  { return sig_waitUntil(this, _sigset, _signo, Clock::until(_time)); }
-	int  wait     ( unsigned _sigset, unsigned *_signo = nullptr )         { return sig_wait     (this, _sigset, _signo); }
-	void give     ( unsigned _signo )                                      {        sig_give     (this, _signo); }
-	void set      ( unsigned _signo )                                      {        sig_set      (this, _signo); }
-	void giveISR  ( unsigned _signo )                                      {        sig_giveISR  (this, _signo); }
-	void clear    ( unsigned _signo )                                      {        sig_clear    (this, _signo); }
-	void clearISR ( unsigned _signo )                                      {        sig_clearISR (this, _signo); }
 };
 
 }     //  namespace

@@ -2,7 +2,7 @@
 
     @file    StateOS: osbarrier.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -321,12 +321,21 @@ struct Barrier : public __bar
 	constexpr
 	Barrier( const unsigned _limit ): __bar _BAR_INIT(_limit) {}
 
+	~Barrier() { assert(__bar::obj.queue == nullptr); }
+
 	Barrier( Barrier&& ) = default;
 	Barrier( const Barrier& ) = delete;
 	Barrier& operator=( Barrier&& ) = delete;
 	Barrier& operator=( const Barrier& ) = delete;
 
-	~Barrier( void ) { assert(__bar::obj.queue == nullptr); }
+	void reset    ()                  {        bar_reset    (this); }
+	void kill     ()                  {        bar_kill     (this); }
+	void destroy  ()                  {        bar_destroy  (this); }
+	template<typename T>
+	int  waitFor  ( const T& _delay ) { return bar_waitFor  (this, Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( const T& _time )  { return bar_waitUntil(this, Clock::until(_time)); }
+	int  wait     ()                  { return bar_wait     (this); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<Barrier>;
@@ -358,14 +367,6 @@ struct Barrier : public __bar
 		return Ptr(bar);
 	}
 
-	void reset    ( void )            {        bar_reset    (this); }
-	void kill     ( void )            {        bar_kill     (this); }
-	void destroy  ( void )            {        bar_destroy  (this); }
-	template<typename T>
-	int  waitFor  ( const T& _delay ) { return bar_waitFor  (this, Clock::count(_delay)); }
-	template<typename T>
-	int  waitUntil( const T& _time )  { return bar_waitUntil(this, Clock::until(_time)); }
-	int  wait     ( void )            { return bar_wait     (this); }
 };
 
 }     //  namespace

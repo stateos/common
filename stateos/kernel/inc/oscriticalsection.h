@@ -2,7 +2,7 @@
 
     @file    StateOS: oscriticalsection.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -194,8 +194,9 @@ namespace stateos {
 
 struct CriticalSection
 {
-	 CriticalSection( void ) { lck_ = core_set_lock(); }
-	~CriticalSection( void ) { core_put_lock(lck_); }
+	CriticalSection() { lck_ = core_set_lock(); }
+
+	~CriticalSection() { core_put_lock(lck_); }
 
 	CriticalSection( CriticalSection&& ) = delete;
 	CriticalSection( const CriticalSection& ) = delete;
@@ -220,8 +221,10 @@ struct CriticalSection
 template<class T>
 struct Lock
 {
-	 Lock( T& _lck ): lck_(_lck), result_(lck_.lock()) { assert(result_==E_SUCCESS); }
-	~Lock( void ) { if (result_ == E_SUCCESS) lck_.unlock(); }
+	explicit
+	Lock( T& _lck ): lck_(_lck) { lck_.lock(); }
+
+	~Lock() { lck_.unlock(); }
 
 	Lock( Lock&& ) = default;
 	Lock( const Lock& ) = delete;
@@ -230,10 +233,27 @@ struct Lock
 
 	private:
 	T& lck_;
-	const int result_;
 };
 
-}     //  namespace
+} //namespace
+
+#if __cplusplus >= 201402 && !defined(_GLIBCXX_HAS_GTHREADS)
+namespace std {
+
+/******************************************************************************
+ *
+ * Namespace         : std
+ * Class             : std::critical_section
+ *                   : std::lock_guard
+ *
+ ******************************************************************************/
+
+template<class T>
+using lock_guard = stateos::Lock<T>;
+using critical_section = stateos::CriticalSection;
+
+}     //  namespace std
+#endif//__cplusplus >= 201402 && !_GLIBCXX_HAS_GTHREADS
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */

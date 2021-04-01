@@ -2,7 +2,7 @@
 
     @file    StateOS: osfastmutex.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -372,14 +372,28 @@ namespace stateos {
 struct FastMutex : public __mut
 {
 	constexpr
-	FastMutex( void ): __mut _MUT_INIT() {}
+	FastMutex(): __mut _MUT_INIT() {}
+
+	~FastMutex() { assert(__mut::owner == nullptr); }
 
 	FastMutex( FastMutex&& ) = default;
 	FastMutex( const FastMutex& ) = delete;
 	FastMutex& operator=( FastMutex&& ) = delete;
 	FastMutex& operator=( const FastMutex& ) = delete;
 
-	~FastMutex( void ) { assert(__mut::owner == nullptr); }
+	void reset    ()                  {        mut_reset    (this); }
+	void kill     ()                  {        mut_kill     (this); }
+	void destroy  ()                  {        mut_destroy  (this); }
+	int  take     ()                  { return mut_take     (this); }
+	int  tryLock  ()                  { return mut_tryLock  (this); }
+	template<typename T>
+	int  waitFor  ( const T& _delay ) { return mut_waitFor  (this, Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( const T& _time )  { return mut_waitUntil(this, Clock::until(_time)); }
+	int  wait     ()                  { return mut_wait     (this); }
+	int  lock     ()                  { return mut_lock     (this); }
+	int  give     ()                  { return mut_give     (this); }
+	int  unlock   ()                  { return mut_unlock   (this); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<FastMutex>;
@@ -402,7 +416,7 @@ struct FastMutex : public __mut
  ******************************************************************************/
 
 	static
-	Ptr Create( void )
+	Ptr Create()
 	{
 		auto mut = new FastMutex();
 		if (mut != nullptr)
@@ -410,19 +424,6 @@ struct FastMutex : public __mut
 		return Ptr(mut);
 	}
 
-	void reset    ( void )            {        mut_reset    (this); }
-	void kill     ( void )            {        mut_kill     (this); }
-	void destroy  ( void )            {        mut_destroy  (this); }
-	int  take     ( void )            { return mut_take     (this); }
-	int  tryLock  ( void )            { return mut_tryLock  (this); }
-	template<typename T>
-	int  waitFor  ( const T& _delay ) { return mut_waitFor  (this, Clock::count(_delay)); }
-	template<typename T>
-	int  waitUntil( const T& _time )  { return mut_waitUntil(this, Clock::until(_time)); }
-	int  wait     ( void )            { return mut_wait     (this); }
-	int  lock     ( void )            { return mut_lock     (this); }
-	int  give     ( void )            { return mut_give     (this); }
-	int  unlock   ( void )            { return mut_unlock   (this); }
 };
 
 }     //  namespace

@@ -2,7 +2,7 @@
 
     @file    StateOS: osspinlock.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -302,9 +302,10 @@ namespace stateos {
 
 struct SpinLock : private CriticalSection
 {
-	 SpinLock( spn_t *_spn ): spn_{ _spn} { core_spn_lock  (spn_); }
-	 SpinLock( spn_t& _spn ): spn_{&_spn} { core_spn_lock  (spn_); }
-	~SpinLock( void )                     { core_spn_unlock(spn_); }
+	SpinLock( spn_t *_spn ): spn_{ _spn} { core_spn_lock(spn_); }
+	SpinLock( spn_t& _spn ): spn_{&_spn} { core_spn_lock(spn_); }
+
+	~SpinLock() { core_spn_unlock(spn_); }
 
 	SpinLock( SpinLock&& ) = delete;
 	SpinLock( const SpinLock& ) = delete;

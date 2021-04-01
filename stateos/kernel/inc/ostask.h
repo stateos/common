@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -1347,7 +1347,7 @@ struct baseTask : public __tsk
 	baseTask( const unsigned _prio, fun_t * _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_prio, _state, _stack, _size) {}
 #endif
 
-	void     start    ( void )             {        tsk_start    (this); }
+	void     start    ()                   {        tsk_start    (this); }
 #if __cplusplus >= 201402
 	template<class F>
 	void     startFrom( F&&      _state )  {        new (&fun) Fun_t(_state);
@@ -1355,16 +1355,16 @@ struct baseTask : public __tsk
 #else
 	void     startFrom( fun_t *  _state )  {        tsk_startFrom(this, _state); }
 #endif
-	int      detach   ( void )             { return tsk_detach   (this); }
-	int      join     ( void )             { return tsk_join     (this); }
-	int      reset    ( void )             { return tsk_reset    (this); }
-	int      kill     ( void )             { return tsk_kill     (this); }
-	int      destroy  ( void )             { return tsk_destroy  (this); }
-	unsigned prio     ( void )             { return __tsk::basic; }
-	unsigned getPrio  ( void )             { return __tsk::basic; }
-	int      suspend  ( void )             { return tsk_suspend  (this); }
-	int      resume   ( void )             { return tsk_resume   (this); }
-	int      resumeISR( void )             { return tsk_resumeISR(this); }
+	int      detach   ()                   { return tsk_detach   (this); }
+	int      join     ()                   { return tsk_join     (this); }
+	int      reset    ()                   { return tsk_reset    (this); }
+	int      kill     ()                   { return tsk_kill     (this); }
+	int      destroy  ()                   { return tsk_destroy  (this); }
+	unsigned prio     ()                   { return __tsk::basic; }
+	unsigned getPrio  ()                   { return __tsk::basic; }
+	int      suspend  ()                   { return tsk_suspend  (this); }
+	int      resume   ()                   { return tsk_resume   (this); }
+	int      resumeISR()                   { return tsk_resumeISR(this); }
 	void     give     ( unsigned _signo )  {        tsk_give     (this, _signo); }
 	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
 #if __cplusplus >= 201402
@@ -1378,11 +1378,11 @@ struct baseTask : public __tsk
 	operator bool     () const             { return __tsk::hdr.id != ID_STOPPED; }
 
 	template<class T = baseTask> static
-	T *      current  ( void )             { return static_cast<T *>(tsk_this()); }
+	T *      current  ()                   { return static_cast<T *>(tsk_this()); }
 
 #if __cplusplus >= 201402
 	static
-	void     fun_     ( void )             {        current()->fun(); }
+	void     fun_     ()                   {        current()->fun(); }
 	Fun_t    fun;
 	static
 	void     act_     ( unsigned _signo )  {        current()->act(_signo); }
@@ -1400,21 +1400,21 @@ struct baseTask : public __tsk
 	struct Current
 	{
 		static
-		int      detach    ( void )             { return cur_detach    (); }
+		int      detach    ()                   { return cur_detach    (); }
 		static
-		void     stop      ( void )             {        tsk_stop      (); }
+		void     stop      ()                   {        tsk_stop      (); }
 		static
-		void     exit      ( void )             {        tsk_exit      (); }
+		void     exit      ()                   {        tsk_exit      (); }
 		static
-		int      reset     ( void )             { return cur_reset     (); }
+		int      reset     ()                   { return cur_reset     (); }
 		static
-		int      kill      ( void )             { return cur_kill      (); }
+		int      kill      ()                   { return cur_kill      (); }
 		static
-		int      destroy   ( void )             { return cur_destroy   (); }
+		int      destroy   ()                   { return cur_destroy   (); }
 		static
-		void     yield     ( void )             {        tsk_yield     (); }
+		void     yield     ()                   {        tsk_yield     (); }
 		static
-		void     pass      ( void )             {        tsk_pass      (); }
+		void     pass      ()                   {        tsk_pass      (); }
 #if __cplusplus >= 201402
 		template<class F> static
 		void     flip      ( F&&      _state )  {        new (&current()->fun) Fun_t(_state);
@@ -1428,9 +1428,9 @@ struct baseTask : public __tsk
 		static
 		void     prio      ( unsigned _prio )   {        tsk_prio      (_prio); }
 		static
-		unsigned getPrio   ( void )             { return tsk_getPrio   (); }
+		unsigned getPrio   ()                   { return tsk_getPrio   (); }
 		static
-		unsigned prio      ( void )             { return tsk_getPrio   (); }
+		unsigned prio      ()                   { return tsk_getPrio   (); }
 		template<typename T> static
 		void     sleepFor  ( const T& _delay )  {        tsk_sleepFor  (Clock::count(_delay)); }
 		template<typename T> static
@@ -1438,11 +1438,11 @@ struct baseTask : public __tsk
 		template<typename T> static
 		void     sleepUntil( const T& _time )   {        tsk_sleepUntil(Clock::until(_time)); }
 		static
-		void     sleep     ( void )             {        tsk_sleep     (); }
+		void     sleep     ()                   {        tsk_sleep     (); }
 		template<typename T> static
 		void     delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
 		static
-		void     suspend   ( void )             {        cur_suspend   (); }
+		void     suspend   ()                   {        cur_suspend   (); }
 		static
 		void     give      ( unsigned _signo )  {        cur_give      (_signo); }
 		static
@@ -1498,12 +1498,12 @@ struct TaskT : public baseTask, public baseStack<size_>
 #endif
 #endif
 
+	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
+
 	TaskT( TaskT<size_>&& ) = default;
 	TaskT( const TaskT<size_>& ) = delete;
 	TaskT<size_>& operator=( TaskT<size_>&& ) = delete;
 	TaskT<size_>& operator=( const TaskT<size_>& ) = delete;
-
-	~TaskT( void ) { assert(__tsk::hdr.id == ID_STOPPED); }
 
 #if __cplusplus >= 201402
 	using Deleter = struct _Deleter { void operator()( void* ) const {} };

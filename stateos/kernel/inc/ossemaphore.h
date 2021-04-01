@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -497,16 +497,39 @@ namespace stateos {
 struct Semaphore : public __sem
 {
 	constexpr
-	Semaphore( void ): __sem _SEM_INIT(0, semDefault) {}
+	Semaphore(): __sem _SEM_INIT(0, semDefault) {}
 	constexpr
 	Semaphore( const unsigned _init, const unsigned _limit = semDefault ): __sem _SEM_INIT(_init, _limit) {}
+
+	~Semaphore() { assert(__sem::obj.queue == nullptr); }
 
 	Semaphore( Semaphore&& ) = default;
 	Semaphore( const Semaphore& ) = delete;
 	Semaphore& operator=( Semaphore&& ) = delete;
 	Semaphore& operator=( const Semaphore& ) = delete;
 
-	~Semaphore( void ) { assert(__sem::obj.queue == nullptr); }
+	void     reset    ()                  {        sem_reset    (this); }
+	void     kill     ()                  {        sem_kill     (this); }
+	void     destroy  ()                  {        sem_destroy  (this); }
+	int      take     ()                  { return sem_take     (this); }
+	int      tryWait  ()                  { return sem_tryWait  (this); }
+	int      takeISR  ()                  { return sem_takeISR  (this); }
+	template<typename T>
+	int      waitFor  ( const T& _delay ) { return sem_waitFor  (this, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil( const T& _time )  { return sem_waitUntil(this, Clock::until(_time)); }
+	int      wait     ()                  { return sem_wait     (this); }
+	int      give     ()                  { return sem_give     (this); }
+	int      post     ()                  { return sem_post     (this); }
+	int      giveISR  ()                  { return sem_giveISR  (this); }
+	int      update   ( unsigned _num )   { return sem_update   (this, _num); }
+	int      updateISR( unsigned _num )   { return sem_updateISR(this, _num); }
+	unsigned getValue ()                  { return sem_getValue (this); }
+#if OS_ATOMICS
+	int      takeAsync()                  { return sem_takeAsync(this); }
+	int      waitAsync()                  { return sem_waitAsync(this); }
+	int      giveAsync()                  { return sem_giveAsync(this); }
+#endif
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<Semaphore>;
@@ -527,7 +550,7 @@ struct Semaphore : public __sem
  ******************************************************************************/
 
 	static
-	Semaphore Direct( void )
+	Semaphore Direct()
 	{
 		return { 0, semDirect };
 	}
@@ -594,28 +617,6 @@ struct Semaphore : public __sem
 		return Ptr(sem);
 	}
 
-	void     reset    ( void )            {        sem_reset    (this); }
-	void     kill     ( void )            {        sem_kill     (this); }
-	void     destroy  ( void )            {        sem_destroy  (this); }
-	int      take     ( void )            { return sem_take     (this); }
-	int      tryWait  ( void )            { return sem_tryWait  (this); }
-	int      takeISR  ( void )            { return sem_takeISR  (this); }
-	template<typename T>
-	int      waitFor  ( const T& _delay ) { return sem_waitFor  (this, Clock::count(_delay)); }
-	template<typename T>
-	int      waitUntil( const T& _time )  { return sem_waitUntil(this, Clock::until(_time)); }
-	int      wait     ( void )            { return sem_wait     (this); }
-	int      give     ( void )            { return sem_give     (this); }
-	int      post     ( void )            { return sem_post     (this); }
-	int      giveISR  ( void )            { return sem_giveISR  (this); }
-	int      update   ( unsigned _num )   { return sem_update   (this, _num); }
-	int      updateISR( unsigned _num )   { return sem_updateISR(this, _num); }
-	unsigned getValue ( void )            { return sem_getValue (this); }
-#if OS_ATOMICS
-	int      takeAsync( void )            { return sem_takeAsync(this); }
-	int      waitAsync( void )            { return sem_waitAsync(this); }
-	int      giveAsync( void )            { return sem_giveAsync(this); }
-#endif
 };
 
 }     //  namespace

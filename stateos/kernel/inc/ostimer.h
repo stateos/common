@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -742,17 +742,17 @@ namespace stateos {
 
 struct baseTimer : public __tmr
 {
-	baseTimer( void ):           __tmr _TMR_INIT(nullptr) {}
+	baseTimer(): __tmr _TMR_INIT(nullptr) {}
 #if __cplusplus >= 201402
 	template<class F>
-	baseTimer( F&&     _state ): __tmr _TMR_INIT(fun_), fun{_state} {}
+	baseTimer( F&& _state ): __tmr _TMR_INIT(fun_), fun{_state} {}
 #else
-	baseTimer( fun_t * _state ): __tmr _TMR_INIT(_state) {}
+	baseTimer( fun_t *_state ): __tmr _TMR_INIT(_state) {}
 #endif
 
-	void reset        ( void )                                              {        tmr_reset        (this); }
-	void kill         ( void )                                              {        tmr_kill         (this); }
-	void destroy      ( void )                                              {        tmr_destroy      (this); }
+	void reset        ()                                                    {        tmr_reset        (this); }
+	void kill         ()                                                    {        tmr_kill         (this); }
+	void destroy      ()                                                    {        tmr_destroy      (this); }
 	template<typename T>
 	void start        ( const T& _delay, const T& _period )                 {        tmr_start        (this, Clock::count(_delay), Clock::count(_period)); }
 	template<typename T>
@@ -773,26 +773,26 @@ struct baseTimer : public __tmr
 	template<typename T>
 	void startFrom    ( const T& _delay, const T& _period, fun_t * _state ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _state); }
 #endif
-	void stop         ( void )                                              {        tmr_stop         (this); }
-	int  take         ( void )                                              { return tmr_take         (this); }
-	int  tryWait      ( void )                                              { return tmr_tryWait      (this); }
-	int  takeISR      ( void )                                              { return tmr_takeISR      (this); }
+	void stop         ()                                                    {        tmr_stop         (this); }
+	int  take         ()                                                    { return tmr_take         (this); }
+	int  tryWait      ()                                                    { return tmr_tryWait      (this); }
+	int  takeISR      ()                                                    { return tmr_takeISR      (this); }
 	template<typename T>
 	int  waitFor      ( const T& _delay )                                   { return tmr_waitFor      (this, Clock::count(_delay)); }
 	template<typename T>
 	int  waitNext     ( const T& _delay )                                   { return tmr_waitNext     (this, Clock::count(_delay)); }
 	template<typename T>
 	int  waitUntil    ( const T& _time )                                    { return tmr_waitUntil    (this, Clock::until(_time)); }
-	int  wait         ( void )                                              { return tmr_wait         (this); }
+	int  wait         ()                                                    { return tmr_wait         (this); }
 	explicit
 	operator bool     () const                                              { return __tmr::hdr.id != ID_STOPPED; }
 
 	template<class T = baseTimer> static
-	T *  current      ( void )                                              { return static_cast<T *>(tmr_thisISR()); }
+	T *  current      ()                                                    { return static_cast<T *>(tmr_thisISR()); }
 
 #if __cplusplus >= 201402
 	static
-	void fun_         ( void )                                              {        current()->fun(); }
+	void fun_         ()                                                    {        current()->fun(); }
 	Fun_t fun;
 #endif
 
@@ -840,21 +840,21 @@ using this_timer = baseTimer::Current;
 
 struct Timer : public baseTimer
 {
-	Timer( void ):                     baseTimer{} {}
+	Timer(): baseTimer{} {}
 	template<class F>
-	Timer( F&& _state ):               baseTimer{_state} {}
+	Timer( F&& _state ): baseTimer{_state} {}
 #if __cplusplus >= 201402
-	Timer( std::nullptr_t ):           baseTimer{} {}
+	Timer( std::nullptr_t ): baseTimer{} {}
 	template<typename F, typename... A>
 	Timer( F&& _state, A&&... _args ): baseTimer{std::bind(std::forward<F>(_state), std::forward<A>(_args)...)} {}
 #endif
+
+	~Timer() { assert(__tmr::hdr.id == ID_STOPPED); }
 
 	Timer( Timer&& ) = default;
 	Timer( const Timer& ) = delete;
 	Timer& operator=( Timer&& ) = delete;
 	Timer& operator=( const Timer& ) = delete;
-
-	~Timer( void ) { assert(__tmr::hdr.id == ID_STOPPED); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<Timer>;
@@ -878,7 +878,7 @@ struct Timer : public baseTimer
  ******************************************************************************/
 
 	static
-	Timer Make( void )
+	Timer Make()
 	{
 		return {};
 	}
@@ -1124,7 +1124,7 @@ struct Timer : public baseTimer
  ******************************************************************************/
 
 	static
-	Ptr Create( void )
+	Ptr Create()
 	{
 		auto tmr = new Timer();
 		if (tmr != nullptr)

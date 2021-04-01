@@ -2,7 +2,7 @@
 
     @file    StateOS: osstreambuffer.h
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    01.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -607,14 +607,41 @@ template<size_t limit_>
 struct StreamBufferT : public __stm
 {
 	constexpr
-	StreamBufferT( void ): __stm _STM_INIT(limit_, data_) {}
+	StreamBufferT(): __stm _STM_INIT(limit_, data_) {}
+
+	~StreamBufferT() { assert(__stm::obj.queue == nullptr); }
 
 	StreamBufferT( StreamBufferT&& ) = default;
 	StreamBufferT( const StreamBufferT& ) = delete;
 	StreamBufferT& operator=( StreamBufferT&& ) = delete;
 	StreamBufferT& operator=( const StreamBufferT& ) = delete;
 
-	~StreamBufferT( void ) { assert(__stm::obj.queue == nullptr); }
+	void   reset    ()                                                                   {        stm_reset    (this); }
+	void   kill     ()                                                                   {        stm_kill     (this); }
+	void   destroy  ()                                                                   {        stm_destroy  (this); }
+	int    take     (       void *_data, size_t _size, size_t *_read = nullptr )         { return stm_take     (this, _data, _size, _read); }
+	int    tryWait  (       void *_data, size_t _size, size_t *_read = nullptr )         { return stm_tryWait  (this, _data, _size, _read); }
+	int    takeISR  (       void *_data, size_t _size, size_t *_read = nullptr )         { return stm_takeISR  (this, _data, _size, _read); }
+	template<typename T>
+	int    waitFor  (       void *_data, size_t _size, size_t *_read,  const T& _delay ) { return stm_waitFor  (this, _data, _size, _read, _delay); }
+	template<typename T>
+	int    waitUntil(       void *_data, size_t _size, size_t *_read,  const T& _time )  { return stm_waitUntil(this, _data, _size, _read, _time); }
+	int    wait     (       void *_data, size_t _size, size_t *_read = nullptr )         { return stm_wait     (this, _data, _size, _read); }
+	int    give     ( const void *_data, size_t _size )                                  { return stm_give     (this, _data, _size); }
+	int    giveISR  ( const void *_data, size_t _size )                                  { return stm_giveISR  (this, _data, _size); }
+	template<typename T>
+	int    sendFor  ( const void *_data, size_t _size, const T& _delay )                 { return stm_sendFor  (this, _data, _size, _delay); }
+	template<typename T>
+	int    sendUntil( const void *_data, size_t _size, const T& _time )                  { return stm_sendUntil(this, _data, _size, _time); }
+	int    send     ( const void *_data, size_t _size )                                  { return stm_send     (this, _data, _size); }
+	int    push     ( const void *_data, size_t _size )                                  { return stm_push     (this, _data, _size); }
+	int    pushISR  ( const void *_data, size_t _size )                                  { return stm_pushISR  (this, _data, _size); }
+	size_t count    ()                                                                   { return stm_count    (this); }
+	size_t countISR ()                                                                   { return stm_countISR (this); }
+	size_t space    ()                                                                   { return stm_space    (this); }
+	size_t spaceISR ()                                                                   { return stm_spaceISR (this); }
+	size_t limit    ()                                                                   { return stm_limit    (this); }
+	size_t limitISR ()                                                                   { return stm_limitISR (this); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<StreamBufferT<limit_>>;
@@ -638,40 +665,13 @@ struct StreamBufferT : public __stm
  ******************************************************************************/
 
 	static
-	Ptr Create( void )
+	Ptr Create()
 	{
 		auto stm = new StreamBufferT<limit_>();
 		if (stm != nullptr)
 			stm->__stm::obj.res = stm;
 		return Ptr(stm);
 	}
-
-	void   reset    ( void )                                                             {        stm_reset    (this); }
-	void   kill     ( void )                                                             {        stm_kill     (this); }
-	void   destroy  ( void )                                                             {        stm_destroy  (this); }
-	int    take     (       void *_data, size_t _size, size_t *_read = nullptr )         { return stm_take     (this, _data, _size, _read); }
-	int    tryWait  (       void *_data, size_t _size, size_t *_read = nullptr )         { return stm_tryWait  (this, _data, _size, _read); }
-	int    takeISR  (       void *_data, size_t _size, size_t *_read = nullptr )         { return stm_takeISR  (this, _data, _size, _read); }
-	template<typename T>
-	int    waitFor  (       void *_data, size_t _size, size_t *_read,  const T& _delay ) { return stm_waitFor  (this, _data, _size, _read, _delay); }
-	template<typename T>
-	int    waitUntil(       void *_data, size_t _size, size_t *_read,  const T& _time )  { return stm_waitUntil(this, _data, _size, _read, _time); }
-	int    wait     (       void *_data, size_t _size, size_t *_read = nullptr )         { return stm_wait     (this, _data, _size, _read); }
-	int    give     ( const void *_data, size_t _size )                                  { return stm_give     (this, _data, _size); }
-	int    giveISR  ( const void *_data, size_t _size )                                  { return stm_giveISR  (this, _data, _size); }
-	template<typename T>
-	int    sendFor  ( const void *_data, size_t _size, const T& _delay )                 { return stm_sendFor  (this, _data, _size, _delay); }
-	template<typename T>
-	int    sendUntil( const void *_data, size_t _size, const T& _time )                  { return stm_sendUntil(this, _data, _size, _time); }
-	int    send     ( const void *_data, size_t _size )                                  { return stm_send     (this, _data, _size); }
-	int    push     ( const void *_data, size_t _size )                                  { return stm_push     (this, _data, _size); }
-	int    pushISR  ( const void *_data, size_t _size )                                  { return stm_pushISR  (this, _data, _size); }
-	size_t count    ( void )                                                             { return stm_count    (this); }
-	size_t countISR ( void )                                                             { return stm_countISR (this); }
-	size_t space    ( void )                                                             { return stm_space    (this); }
-	size_t spaceISR ( void )                                                             { return stm_spaceISR (this); }
-	size_t limit    ( void )                                                             { return stm_limit    (this); }
-	size_t limitISR ( void )                                                             { return stm_limitISR (this); }
 
 	private:
 	char data_[limit_];
@@ -693,7 +693,25 @@ template<unsigned limit_, class C>
 struct StreamBufferTT : public StreamBufferT<limit_*sizeof(C)>
 {
 	constexpr
-	StreamBufferTT( void ): StreamBufferT<limit_*sizeof(C)>() {}
+	StreamBufferTT(): StreamBufferT<limit_*sizeof(C)>() {}
+
+	int take     (       C *_data )                  { return stm_take     (this, _data, sizeof(C), nullptr); }
+	int tryWait  (       C *_data )                  { return stm_tryWait  (this, _data, sizeof(C), nullptr); }
+	int takeISR  (       C *_data )                  { return stm_takeISR  (this, _data, sizeof(C), nullptr); }
+	template<typename T>                               
+	int waitFor  (       C *_data, const T& _delay ) { return stm_waitFor  (this, _data, sizeof(C), nullptr, _delay); }
+	template<typename T>                               
+	int waitUntil(       C *_data, const T& _time )  { return stm_waitUntil(this, _data, sizeof(C), nullptr, _time); }
+	int wait     (       C *_data )                  { return stm_wait     (this, _data, sizeof(C), nullptr); }
+	int give     ( const C *_data )                  { return stm_give     (this, _data, sizeof(C)); }
+	int giveISR  ( const C *_data )                  { return stm_giveISR  (this, _data, sizeof(C)); }
+	template<typename T>                               
+	int sendFor  ( const C *_data, const T& _delay ) { return stm_sendFor  (this, _data, sizeof(C), _delay); }
+	template<typename T>                               
+	int sendUntil( const C *_data, const T& _time )  { return stm_sendUntil(this, _data, sizeof(C), _time); }
+	int send     ( const C *_data )                  { return stm_send     (this, _data, sizeof(C)); }
+	int push     ( const C *_data )                  { return stm_push     (this, _data, sizeof(C)); }
+	int pushISR  ( const C *_data )                  { return stm_pushISR  (this, _data, sizeof(C)); }
 
 #if __cplusplus >= 201402
 	using Ptr = std::unique_ptr<StreamBufferTT<limit_, C>>;
@@ -718,7 +736,7 @@ struct StreamBufferTT : public StreamBufferT<limit_*sizeof(C)>
  ******************************************************************************/
 
 	static
-	Ptr Create( void )
+	Ptr Create()
 	{
 		auto stm = new StreamBufferTT<limit_, C>();
 		if (stm != nullptr)
@@ -726,23 +744,6 @@ struct StreamBufferTT : public StreamBufferT<limit_*sizeof(C)>
 		return Ptr(stm);
 	}
 
-	int take     (       C *_data )                  { return stm_take     (this, _data, sizeof(C), nullptr); }
-	int tryWait  (       C *_data )                  { return stm_tryWait  (this, _data, sizeof(C), nullptr); }
-	int takeISR  (       C *_data )                  { return stm_takeISR  (this, _data, sizeof(C), nullptr); }
-	template<typename T>                               
-	int waitFor  (       C *_data, const T& _delay ) { return stm_waitFor  (this, _data, sizeof(C), nullptr, _delay); }
-	template<typename T>                               
-	int waitUntil(       C *_data, const T& _time )  { return stm_waitUntil(this, _data, sizeof(C), nullptr, _time); }
-	int wait     (       C *_data )                  { return stm_wait     (this, _data, sizeof(C), nullptr); }
-	int give     ( const C *_data )                  { return stm_give     (this, _data, sizeof(C)); }
-	int giveISR  ( const C *_data )                  { return stm_giveISR  (this, _data, sizeof(C)); }
-	template<typename T>                               
-	int sendFor  ( const C *_data, const T& _delay ) { return stm_sendFor  (this, _data, sizeof(C), _delay); }
-	template<typename T>                               
-	int sendUntil( const C *_data, const T& _time )  { return stm_sendUntil(this, _data, sizeof(C), _time); }
-	int send     ( const C *_data )                  { return stm_send     (this, _data, sizeof(C)); }
-	int push     ( const C *_data )                  { return stm_push     (this, _data, sizeof(C)); }
-	int pushISR  ( const C *_data )                  { return stm_pushISR  (this, _data, sizeof(C)); }
 };
 
 }     //  namespace
