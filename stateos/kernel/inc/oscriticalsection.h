@@ -208,7 +208,6 @@ struct CriticalSection
 };
 
 }     //  namespace
-#endif//__cplusplus >= 201402 && !_GLIBCXX_HAS_GTHREADS
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
