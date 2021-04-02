@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    02.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -255,6 +255,34 @@ struct Mutex : public __mtx
 	void     lock   () {        mtx_lock   (this); }
 	unsigned give   () { return mtx_give   (this); }
 	unsigned unlock () { return mtx_unlock (this); }
+};
+
+/******************************************************************************
+ *
+ * Class             : Lock
+ *
+ * Description       : create and initialize a guard object
+ *
+ * Constructor parameters
+ *   T               : guard class
+ *
+ ******************************************************************************/
+
+template<class T>
+struct Lock
+{
+	explicit
+	Lock( T& _lck ): lck_(_lck) { lck_.lock(); }
+
+	~Lock() { lck_.unlock(); }
+
+	Lock( Lock&& ) = default;
+	Lock( const Lock& ) = delete;
+	Lock& operator=( Lock&& ) = delete;
+	Lock& operator=( const Lock& ) = delete;
+
+	private:
+	T& lck_;
 };
 
 }     //  namespace
