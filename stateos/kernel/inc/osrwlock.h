@@ -2,7 +2,7 @@
 
     @file    StateOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    02.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -565,9 +565,17 @@ struct RWLock : public __rwl
 
 struct ReadLock
 {
-	ReadLock( RWLock& _rwl ): lck_(_rwl) { lck_.lockRead(); }
+	ReadLock( RWLock& _rwl ): lck_(_rwl)
+	{
+		int result = lck_.lockRead();
+		assert(result = E_SUCCESS);
+		(void) result;
+	}
 
-	~ReadLock() { lck_.unlockRead(); }
+	~ReadLock()
+	{
+		lck_.unlockRead();
+	}
 
 	ReadLock( ReadLock&& ) = default;
 	ReadLock( const ReadLock& ) = delete;
@@ -591,9 +599,17 @@ struct ReadLock
 
 struct WriteLock
 {
-	WriteLock( RWLock& _rwl ): lck_(_rwl) { lck_.lockWrite(); }
+	WriteLock( RWLock& _rwl ): lck_(_rwl)
+	{
+		int result = lck_.lockWrite();
+		assert(result = E_SUCCESS);
+		(void) result;
+	}
 
-	~WriteLock() { lck_.unlockWrite(); }
+	~WriteLock()
+	{
+		lck_.unlockWrite();
+	}
 
 	WriteLock( WriteLock&& ) = default;
 	WriteLock( const WriteLock& ) = delete;

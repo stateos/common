@@ -2,7 +2,7 @@
 
     @file    StateOS: oscriticalsection.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    02.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -207,52 +207,7 @@ struct CriticalSection
 	lck_t lck_;
 };
 
-/******************************************************************************
- *
- * Class             : Lock
- *
- * Description       : create and initialize a guard object
- *
- * Constructor parameters
- *   T               : guard class
- *
- ******************************************************************************/
-
-template<class T>
-struct Lock
-{
-	explicit
-	Lock( T& _lck ): lck_(_lck) { lck_.lock(); }
-
-	~Lock() { lck_.unlock(); }
-
-	Lock( Lock&& ) = default;
-	Lock( const Lock& ) = delete;
-	Lock& operator=( Lock&& ) = delete;
-	Lock& operator=( const Lock& ) = delete;
-
-	private:
-	T& lck_;
-};
-
-} //namespace
-
-#if __cplusplus >= 201402 && !defined(_GLIBCXX_HAS_GTHREADS)
-namespace std {
-
-/******************************************************************************
- *
- * Namespace         : std
- * Class             : std::critical_section
- *                   : std::lock_guard
- *
- ******************************************************************************/
-
-template<class T>
-using lock_guard = stateos::Lock<T>;
-using critical_section = stateos::CriticalSection;
-
-}     //  namespace std
+}     //  namespace
 #endif//__cplusplus >= 201402 && !_GLIBCXX_HAS_GTHREADS
 #endif//__cplusplus
 

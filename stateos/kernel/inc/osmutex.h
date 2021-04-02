@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    02.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -557,6 +557,44 @@ struct Mutex : public __mtx
 		return Ptr(mtx);
 	}
 
+};
+
+/******************************************************************************
+ *
+ * Class             : Lock
+ *
+ * Description       : create and initialize a guard object
+ *
+ * Constructor parameters
+ *   T               : guard class
+ *
+ ******************************************************************************/
+
+template<class T>
+struct Lock
+{
+	explicit
+	Lock( T& _lck ): lck_(_lck)
+	{
+		int result = lck_.lock();
+		assert(result = E_SUCCESS);
+		(void) result;
+	}
+
+	~Lock()
+	{
+		int result = lck_.unlock();
+		assert(result = E_SUCCESS);
+		(void) result;
+	}
+
+	Lock( Lock&& ) = default;
+	Lock( const Lock& ) = delete;
+	Lock& operator=( Lock&& ) = delete;
+	Lock& operator=( const Lock& ) = delete;
+
+	private:
+	T& lck_;
 };
 
 }     //  namespace
