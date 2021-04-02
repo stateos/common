@@ -87,15 +87,14 @@ struct Clock
 #if __cplusplus >= 201402
 	using period     = std::ratio<1, OS_FREQUENCY>;
 	using duration   = std::chrono::duration<rep, period>;
-	using time_point = std::chrono::time_point<Clock, duration>;
+	using time_point = std::chrono::time_point<Clock>;
 
-	static constexpr
-	bool  is_steady  = true;
+	static constexpr bool is_steady = true;
 
 	static
-	time_point now()
+	time_point now() noexcept
 	{
-		return time_point(duration(sys_time()));
+		return time_point{duration{sys_time()}};
 	}
 
 	template<class _Rep, class _Period> static constexpr
@@ -107,7 +106,7 @@ struct Clock
 	template<class _Clock, class _Duration> static constexpr
 	rep until( const std::chrono::time_point<_Clock, _Duration>& _time )
 	{
-		return std::chrono::time_point_cast<duration>(_time).time_since_epoch().count();
+		return std::chrono::duration_cast<duration>(_time.time_since_epoch()).count();
 	}
 #endif
 	static constexpr
