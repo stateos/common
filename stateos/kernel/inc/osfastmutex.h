@@ -2,7 +2,7 @@
 
     @file    StateOS: osfastmutex.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -355,7 +355,7 @@ int mut_unlock( mut_t *mut ) { return mut_give(mut); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -395,7 +395,7 @@ struct FastMutex : public __mut
 	int  give     ()                  { return mut_give     (this); }
 	int  unlock   ()                  { return mut_unlock   (this); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<FastMutex>;
 #else
 	using Ptr = FastMutex *;

@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -574,7 +574,7 @@ unsigned job_limitISR( job_t *job ) { return job_limit(job); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -634,7 +634,7 @@ struct JobQueueT : public __job
 	int      sendAsync( fun_t *_fun )                  { return job_sendAsync(this, _fun); }
 #endif
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<JobQueueT<limit_>>;
 #else
 	using Ptr = JobQueueT<limit_> *;

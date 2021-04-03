@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -558,7 +558,7 @@ namespace intros {
 struct baseTimer : public __tmr
 {
 	baseTimer(): __tmr _TMR_INIT(nullptr) {}
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<class F>
 	baseTimer( F&& _state ): __tmr _TMR_INIT(fun_), fun{_state} {}
 #else
@@ -575,7 +575,7 @@ struct baseTimer : public __tmr
 	void     startNext    ( const T& _delay )                                   {        tmr_startNext    (this, Clock::count(_delay)); }
 	template<typename T>
 	void     startUntil   ( const T& _time )                                    {        tmr_startUntil   (this, Clock::until(_time)); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename T>
 	void     startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), nullptr); }
 	template<typename T, class F>
@@ -594,7 +594,7 @@ struct baseTimer : public __tmr
 	template<class T = baseTimer> static
 	T *      current      ()                                                    { return static_cast<T *>(tmr_this()); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	static
 	void     fun_         ()                                                    {        current()->fun(); }
 	Fun_t    fun;
@@ -610,7 +610,7 @@ struct baseTimer : public __tmr
 
 	struct Current
 	{
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 		static
 		void flip ( std::nullptr_t )            { tmr_flip (nullptr); }
 		template<class F> static
@@ -647,7 +647,7 @@ struct Timer : public baseTimer
 	Timer(): baseTimer{} {}
 	template<class F>
 	Timer( F&& _state ): baseTimer{_state} {}
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	Timer( std::nullptr_t ): baseTimer{} {}
 	template<typename F, typename... A>
 	Timer( F&& _state, A&&... _args ): baseTimer{std::bind(std::forward<F>(_state), std::forward<A>(_args)...)} {}
@@ -687,7 +687,7 @@ struct Timer : public baseTimer
 		return { _state };
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	static
 	Timer Make( std::nullptr_t )
 	{
@@ -741,7 +741,7 @@ struct Timer : public baseTimer
 		return tmr;
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename T> static
 	Timer Start( const T& _delay, const T& _period, std::nullptr_t )
 	{
@@ -791,7 +791,7 @@ struct Timer : public baseTimer
 		return tmr;
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename T> static
 	Timer StartFor( const T& _delay, std::nullptr_t )
 	{
@@ -842,7 +842,7 @@ struct Timer : public baseTimer
 		return tmr;
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename T> static
 	Timer StartPeriodic( const T& _period, std::nullptr_t )
 	{
@@ -890,7 +890,7 @@ struct Timer : public baseTimer
 		return tmr;
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename T> static
 	Timer StartUntil( const T& _time, std::nullptr_t )
 	{

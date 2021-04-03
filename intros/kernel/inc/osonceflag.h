@@ -2,7 +2,7 @@
 
     @file    IntrOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -225,7 +225,7 @@ struct OnceFlag
 	OnceFlag& operator=( OnceFlag&& ) = delete;
 	OnceFlag& operator=( const OnceFlag& ) = delete;
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename Callable, typename... Args>
 	void call( Callable&& _fun, Args&&... _args )
 	{

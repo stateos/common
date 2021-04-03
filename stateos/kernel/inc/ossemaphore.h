@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -475,7 +475,7 @@ unsigned sem_getValue( sem_t *sem );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -531,7 +531,7 @@ struct Semaphore : public __sem
 	int      giveAsync()                  { return sem_giveAsync(this); }
 #endif
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<Semaphore>;
 #else
 	using Ptr = Semaphore *;

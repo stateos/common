@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    02.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -475,7 +475,7 @@ int mtx_unlock( mtx_t *mtx ) { return mtx_give(mtx); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -523,7 +523,7 @@ struct Mutex : public __mtx
 	int      give     ()                  { return mtx_give     (this); }
 	int      unlock   ()                  { return mtx_unlock   (this); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<Mutex>;
 #else
 	using Ptr = Mutex *;

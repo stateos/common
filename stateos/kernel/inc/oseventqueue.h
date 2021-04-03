@@ -2,7 +2,7 @@
 
     @file    StateOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -578,7 +578,7 @@ unsigned evq_limitISR( evq_t *evq ) { return evq_limit(evq); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -638,7 +638,7 @@ struct EventQueueT : public __evq
 	int      sendAsync( unsigned  _event )                  { return evq_sendAsync(this, _event); }
 #endif
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<EventQueueT<limit_>>;
 #else
 	using Ptr = EventQueueT<limit_> *;

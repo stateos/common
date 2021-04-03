@@ -2,7 +2,7 @@
 
     @file    StateOS: osevent.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -318,7 +318,7 @@ void evt_giveISR( evt_t *evt, unsigned event ) { evt_give(evt, event); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -355,7 +355,7 @@ struct Event : public __evt
 	void give     ( unsigned  _event )                  {        evt_give     (this, _event); }
 	void giveISR  ( unsigned  _event )                  {        evt_giveISR  (this, _event); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<Event>;
 #else
 	using Ptr = Event *;

@@ -2,7 +2,7 @@
 
     @file    StateOS: osstreambuffer.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -589,7 +589,7 @@ size_t stm_limitISR( stm_t *stm ) { return stm_limit(stm); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -643,7 +643,7 @@ struct StreamBufferT : public __stm
 	size_t limit    ()                                                                   { return stm_limit    (this); }
 	size_t limitISR ()                                                                   { return stm_limitISR (this); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<StreamBufferT<limit_>>;
 #else
 	using Ptr = StreamBufferT<limit_> *;
@@ -713,7 +713,7 @@ struct StreamBufferTT : public StreamBufferT<limit_*sizeof(C)>
 	int push     ( const C *_data )                  { return stm_push     (this, _data, sizeof(C)); }
 	int pushISR  ( const C *_data )                  { return stm_pushISR  (this, _data, sizeof(C)); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<StreamBufferTT<limit_, C>>;
 #else
 	using Ptr = StreamBufferTT<limit_, C> *;

@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -1294,7 +1294,7 @@ size_t tsk_stackSpace( void )
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -1314,7 +1314,7 @@ template<size_t size_>
 struct baseStack
 {
 	static_assert(size_>sizeof(ctx_t), "incorrect stack size");
-#if __cplusplus >= 201703 && !defined(__ICCARM__)
+#if __cplusplus >= 201703L && !defined(__ICCARM__)
 	stk_t stack_[STK_SIZE(size_)] __STKALIGN;
 #else
 	stk_t stack_[STK_SIZE(size_)];
@@ -1340,7 +1340,7 @@ struct baseStack
 
 struct baseTask : public __tsk
 {
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<class F>
 	baseTask( const unsigned _prio, F&&     _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_prio, fun_, _stack, _size), fun{_state} {}
 #else
@@ -1348,7 +1348,7 @@ struct baseTask : public __tsk
 #endif
 
 	void     start    ()                   {        tsk_start    (this); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<class F>
 	void     startFrom( F&&      _state )  {        new (&fun) Fun_t(_state);
 	                                                tsk_startFrom(this, fun_); }
@@ -1367,7 +1367,7 @@ struct baseTask : public __tsk
 	int      resumeISR()                   { return tsk_resumeISR(this); }
 	void     give     ( unsigned _signo )  {        tsk_give     (this, _signo); }
 	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<class F>
 	void     action   ( F&&      _action ) {        new (&act) Act_t(_action);
 	                                                tsk_action   (this, act_); }
@@ -1380,7 +1380,7 @@ struct baseTask : public __tsk
 	template<class T = baseTask> static
 	T *      current  ()                   { return static_cast<T *>(tsk_this()); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	static
 	void     fun_     ()                   {        current()->fun(); }
 	Fun_t    fun;
@@ -1415,7 +1415,7 @@ struct baseTask : public __tsk
 		void     yield     ()                   {        tsk_yield     (); }
 		static
 		void     pass      ()                   {        tsk_pass      (); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 		template<class F> static
 		void     flip      ( F&&      _state )  {        new (&current()->fun) Fun_t(_state);
 		                                                 tsk_flip      (fun_); }
@@ -1447,7 +1447,7 @@ struct baseTask : public __tsk
 		void     give      ( unsigned _signo )  {        cur_give      (_signo); }
 		static
 		void     signal    ( unsigned _signo )  {        cur_signal    (_signo); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 		template<class F> static
 		void     action    ( F&&      _action ) {        new (&current()->act) Act_t(_action);
 		                                                 cur_action    (act_); }
@@ -1486,12 +1486,12 @@ struct TaskT : public baseTask, public baseStack<size_>
 	TaskT( F&& _state ):
 	TaskT<size_>{OS_MAIN_PRIO, _state} {}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename F, typename... A>
 	TaskT( const unsigned _prio, F&& _state, A&&... _args ):
 	TaskT<size_>{_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...)} {}
 
-#if __cplusplus >= 201703 && !defined(__ICCARM__)
+#if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>>
 	TaskT( F&& _state, A&&... _args ):
 	TaskT<size_>{std::bind(std::forward<F>(_state), std::forward<A>(_args)...)} {}
@@ -1505,7 +1505,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	TaskT<size_>& operator=( TaskT<size_>&& ) = delete;
 	TaskT<size_>& operator=( const TaskT<size_>& ) = delete;
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Deleter = struct _Deleter { void operator()( void* ) const {} };
 	using Ptr = std::unique_ptr<TaskT<size_>, Deleter>;
 #else
@@ -1541,14 +1541,14 @@ struct TaskT : public baseTask, public baseStack<size_>
 		return Make(OS_MAIN_PRIO, _state);
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename F, typename... A> static
 	TaskT<size_> Make( const unsigned _prio, F&& _state, A&&... _args )
 	{
 		return Make(_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
 	}
 
-#if __cplusplus >= 201703 && !defined(__ICCARM__)
+#if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>> static
 	TaskT<size_> Make( F&& _state, A&&... _args )
 	{
@@ -1588,14 +1588,14 @@ struct TaskT : public baseTask, public baseStack<size_>
 		return Start(OS_MAIN_PRIO, _state);
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename F, typename... A> static
 	TaskT<size_> Start( const unsigned _prio, F&& _state, A&&... _args )
 	{
 		return Start(_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
 	}
 
-#if __cplusplus >= 201703 && !defined(__ICCARM__)
+#if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>> static
 	TaskT<size_> Start( F&& _state, A&&... _args )
 	{
@@ -1642,14 +1642,14 @@ struct TaskT : public baseTask, public baseStack<size_>
 		return Create(OS_MAIN_PRIO, _state);
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename F, typename... A> static
 	Ptr Create( const unsigned _prio, F&& _state, A&&... _args )
 	{
 		return Create(_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
 	}
 
-#if __cplusplus >= 201703 && !defined(__ICCARM__)
+#if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>> static
 	Ptr Create( F&& _state, A&&... _args )
 	{
@@ -1697,14 +1697,14 @@ struct TaskT : public baseTask, public baseStack<size_>
 		return Detached(OS_MAIN_PRIO, _state);
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename F, typename... A> static
 	Ptr Detached( const unsigned _prio, F&& _state, A&&... _args )
 	{
 		return Detached(_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
 	}
 
-#if __cplusplus >= 201703 && !defined(__ICCARM__)
+#if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>> static
 	Ptr Detached( F&& _state, A&&... _args )
 	{

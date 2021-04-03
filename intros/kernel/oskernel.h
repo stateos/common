@@ -2,7 +2,7 @@
 
     @file    IntrOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    26.12.2020
+    @date    03.04.2021
     @brief   This file defines set of kernel functions for IntrOS.
 
  ******************************************************************************
@@ -36,29 +36,26 @@
 #include <stdlib.h>
 #include "oscore.h"
 
-#if OS_ATOMICS
-#ifndef __cplusplus
-#include <stdatomic.h>
-#else
-#include <atomic>
-#endif
-#endif
-
 /* -------------------------------------------------------------------------- *
  *                              FOR INTERNAL USE                              *
  * -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
-#if    __cplusplus < 201103L
-#error This version of c++ compiler is unsupported!
+#if OS_ATOMICS
+#ifndef __cplusplus
+#include <stdatomic.h>
+#define __STD
+#else
+#include <atomic>
+#define __STD std::
+#endif
 #endif
 
-#if    __cplusplus >= 201402
+/* -------------------------------------------------------------------------- */
+
+#if defined(__cplusplus) && (__cplusplus >= 201402L)
 #include <functional>
 using Fun_t = std::function<void( void )>;
 using Act_t = std::function<void( unsigned )>;
-#endif
-
 #endif
 
 /* -------------------------------------------------------------------------- */

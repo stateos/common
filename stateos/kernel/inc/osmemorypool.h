@@ -2,7 +2,7 @@
 
     @file    StateOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -420,7 +420,7 @@ void mem_giveISR( mem_t *mem, void *data ) { lst_giveISR(&mem->lst, data); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -461,7 +461,7 @@ struct MemoryPoolT : public __mem
 	void give     ( void  *_data )                  {        mem_give     (this, _data); }
 	void giveISR  ( void  *_data )                  {        mem_giveISR  (this, _data); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<MemoryPoolT<limit_, size_>>;
 #else
 	using Ptr = MemoryPoolT<limit_, size_> *;
@@ -522,7 +522,7 @@ struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
 	int  waitUntil( C **_data, const T& _time )  { return mem_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }
 	int  wait     ( C **_data )                  { return mem_wait     (this, reinterpret_cast<void **>(_data)); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<MemoryPoolTT<limit_, C>>;
 #else
 	using Ptr = MemoryPoolTT<limit_, C> *;

@@ -2,7 +2,7 @@
 
     @file    StateOS: osflag.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -454,7 +454,7 @@ unsigned flg_getISR( flg_t *flg ) { return flg_get(flg); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -499,7 +499,7 @@ struct Flag : public __flg
 	unsigned get      ()                                               { return flg_get      (this); }
 	unsigned getISR   ()                                               { return flg_getISR   (this); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<Flag>;
 #else
 	using Ptr = Flag *;

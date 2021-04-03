@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -587,7 +587,7 @@ unsigned box_limitISR( box_t *box ) { return box_limit(box); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -648,7 +648,7 @@ struct MailBoxQueueT : public __box
 	int      sendAsync( const void *_data )                  { return box_sendAsync(this, _data); }
 #endif
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<MailBoxQueueT<limit_, size_>>;
 #else
 	using Ptr = MailBoxQueueT<limit_, size_> *;
@@ -701,7 +701,7 @@ struct MailBoxQueueTT : public MailBoxQueueT<limit_, sizeof(C)>
 	constexpr
 	MailBoxQueueTT(): MailBoxQueueT<limit_, sizeof(C)>() {}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<MailBoxQueueTT<limit_, C>>;
 #else
 	using Ptr = MailBoxQueueTT<limit_, C> *;

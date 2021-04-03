@@ -2,7 +2,7 @@
 
     @file    StateOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    02.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -471,7 +471,7 @@ void rwl_unlockWrite( rwl_t *rwl ) { rwl_giveWrite(rwl); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 namespace stateos {
 
 /******************************************************************************
@@ -521,7 +521,7 @@ struct RWLock : public __rwl
 	void giveWrite     ()                  {        rwl_giveWrite     (this); }
 	void unlockWrite   ()                  {        rwl_unlockWrite   (this); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<RWLock>;
 #else
 	using Ptr = RWLock *;

@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    03.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -975,7 +975,7 @@ struct baseStack
 
 struct baseTask : public __tsk
 {
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<class F>
 	baseTask( F&& _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(fun_, _stack, _size), fun{_state} {}
 #else
@@ -983,7 +983,7 @@ struct baseTask : public __tsk
 #endif
 
 	void     start    ()                   {        tsk_start    (this); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<class F>
 	void     startFrom( F&&      _state )  {        new (&fun) Fun_t(_state);
 	                                                tsk_startFrom(this, fun_); }
@@ -997,7 +997,7 @@ struct baseTask : public __tsk
 	unsigned resume   ()                   { return tsk_resume   (this); }
 	void     give     ( unsigned _signo )  {        tsk_give     (this, _signo); }
 	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<class F>
 	void     action   ( F&&      _action ) {        new (&act) Act_t(_action);
 	                                                tsk_action   (this, act_); }
@@ -1010,7 +1010,7 @@ struct baseTask : public __tsk
 	template<class T = baseTask> static
 	T *      current  ()                   { return static_cast<T *>(tsk_this()); }
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	static
 	void     fun_     ()                   {        current()->fun(); }
 	Fun_t    fun;
@@ -1041,7 +1041,7 @@ struct baseTask : public __tsk
 		void yield     ()                   {        tsk_yield     (); }
 		static
 		void pass      ()                   {        tsk_pass      (); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 		template<class F> static
 		void flip      ( F&&      _state )  {        new (&current()->fun) Fun_t(_state);
 		                                             tsk_flip      (fun_); }
@@ -1065,7 +1065,7 @@ struct baseTask : public __tsk
 		void give      ( unsigned _signo )  {        cur_give      (_signo); }
 		static
 		void signal    ( unsigned _signo )  {        cur_signal    (_signo); }
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 		template<class F> static
 		void action    ( F&&      _action ) {        new (&current()->act) Act_t(_action);
 		                                             cur_action    (act_); }
@@ -1098,7 +1098,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<class F>
 	TaskT( F&& _state ):
 	baseTask{_state, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename F, typename... A>
 	TaskT( F&& _state, A&&... _args ):
 	baseTask{std::bind(std::forward<F>(_state), std::forward<A>(_args)...), baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
@@ -1133,7 +1133,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 		return { _state };
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename F, typename... A> static
 	TaskT<size_> Make( F&& _state, A&&... _args )
 	{
@@ -1165,7 +1165,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 		return tsk;
 	}
 
-#if __cplusplus >= 201402
+#if __cplusplus >= 201402L
 	template<typename F, typename... A> static
 	TaskT<size_> Start( F&& _state, A&&... _args )
 	{
