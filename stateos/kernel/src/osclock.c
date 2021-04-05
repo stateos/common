@@ -2,7 +2,7 @@
 
     @file    StateOS: osclock.c
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    13.05.2020
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -33,14 +33,14 @@
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
-cnt_t sys_tick( void )
+cnt_t sys_time( void )
 /* -------------------------------------------------------------------------- */
 {
 	cnt_t cnt;
 
 	sys_lock();
 	{
-		cnt = core_sys_tick();
+		cnt = core_sys_time();
 	}
 	sys_unlock();
 

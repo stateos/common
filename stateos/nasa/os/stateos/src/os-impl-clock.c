@@ -48,7 +48,7 @@
  *-----------------------------------------------------------------*/
 int32 OS_GetLocalTime_Impl(OS_time_t *time_struct)
 {
-    int64 ticks = (int64)sys_tick() * ((OS_TIME_TICKS_PER_SECOND) / (OS_FREQUENCY));
+    int64 ticks = (int64)sys_time() * ((OS_TIME_TICKS_PER_SECOND) / (OS_FREQUENCY));
     time_struct->ticks = ticks - OS_impl_GlobalVars.time_shift;
 
     return OS_SUCCESS;
@@ -65,7 +65,7 @@ int32 OS_GetLocalTime_Impl(OS_time_t *time_struct)
  *-----------------------------------------------------------------*/
 int32 OS_SetLocalTime_Impl(const OS_time_t *time_struct)
 {
-    int64 ticks = (int64)sys_tick() * ((OS_TIME_TICKS_PER_SECOND) / (OS_FREQUENCY));
+    int64 ticks = (int64)sys_time() * ((OS_TIME_TICKS_PER_SECOND) / (OS_FREQUENCY));
     OS_impl_GlobalVars.time_shift = ticks - time_struct->ticks;
 
     return OS_SUCCESS;

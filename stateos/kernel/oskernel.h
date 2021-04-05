@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    03.04.2021
     @brief   This file defines set of kernel functions for StateOS.
 
  ******************************************************************************
@@ -299,17 +299,17 @@ void core_mtx_reset( mtx_t *mtx, int event );
 
 // return current system time in tick-less mode
 #if HW_TIMER_SIZE < OS_TIMER_SIZE // because of CSMCC
-cnt_t port_sys_tick( void );
+cnt_t port_sys_time( void );
 #endif
 
 // return current system time
 __STATIC_INLINE
-cnt_t core_sys_tick( void )
+cnt_t core_sys_time( void )
 {
 #if HW_TIMER_SIZE == 0
 	return System.cnt;
 #else
-	return (cnt_t)port_sys_tick();
+	return (cnt_t)port_sys_time();
 #endif
 }
 
