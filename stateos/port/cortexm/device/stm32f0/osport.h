@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    05.04.2021
     @brief   StateOS port definitions for STM32F0 uC.
 
  ******************************************************************************
@@ -97,7 +97,7 @@ extern "C" {
 #if HW_TIMER_SIZE >= OS_TIMER_SIZE
 
 __STATIC_INLINE
-uint32_t port_sys_time( void )
+uint32_t port_sys_tick( void )
 {
 	return TIM2->CNT;
 }

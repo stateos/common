@@ -24,7 +24,7 @@
 
     @file    StateOS: cmsis_os2.c
     @author  Rajmund Szymanski
-    @date    08.03.2021
+    @date    05.04.2021
     @brief   CMSIS-RTOS2 API implementation for StateOS.
 
  ******************************************************************************
@@ -131,7 +131,7 @@ void osKernelResume (uint32_t sleep_ticks)
 
 uint32_t osKernelGetTickCount (void)
 {
-	return (uint32_t) sys_time();
+	return (uint32_t) sys_tick();
 }
 
 uint32_t osKernelGetTickFreq (void)
@@ -142,14 +142,14 @@ uint32_t osKernelGetTickFreq (void)
 uint32_t osKernelGetSysTimerCount (void)
 {
 #if HW_TIMER_SIZE
-	return sys_time();
+	return sys_tick();
 #else
 	uint32_t cnt;
 	uint32_t tck;
 
 	sys_lock();
 	{
-		cnt = (uint32_t) sys_time();
+		cnt = (uint32_t) sys_tick();
 		tck = SysTick->VAL;
 
 		if (SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)

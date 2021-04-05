@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    05.04.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -116,12 +116,12 @@ bool priv_tmr_expired( tmr_t *tmr )
 	if (tmr->delay == INFINITE)
 	return false; // return if timer counting indefinitely
 
-	if (tmr->delay <= core_sys_time() - tmr->start)
+	if (tmr->delay <= core_sys_tick() - tmr->start)
 	return true;  // return if timer finished counting
 
 	port_tmr_start(tmr->start + tmr->delay);
 
-	if (tmr->delay >  core_sys_time() - tmr->start)
+	if (tmr->delay >  core_sys_tick() - tmr->start)
 	return false; // return if timer still counts
 
 	port_tmr_stop();
@@ -136,7 +136,7 @@ bool priv_tmr_expired( tmr_t *tmr )
 static
 bool priv_tmr_expired( tmr_t *tmr )
 {
-	if (tmr->delay >= core_sys_time() - tmr->start + 1)
+	if (tmr->delay >= core_sys_tick() - tmr->start + 1)
 	return false; // return if timer still counts or counting indefinitely
 
 	return true;  // timer finished counting
@@ -153,7 +153,7 @@ void priv_tmr_wakeup( tmr_t *tmr, int event )
 		tmr->state();
 
 	priv_tmr_remove(tmr);
-	if (tmr->delay >= core_sys_time() - tmr->start + 1)
+	if (tmr->delay >= core_sys_tick() - tmr->start + 1)
 		priv_tmr_insert(tmr);
 
 	core_all_wakeup(tmr->obj.queue, event);
@@ -414,7 +414,7 @@ int core_tsk_waitFor( tsk_t **que, cnt_t delay )
 {
 	tsk_t *cur = System.cur;
 
-	cur->start = core_sys_time();
+	cur->start = core_sys_tick();
 	cur->delay = delay;
 
 	if (cur->delay == IMMEDIATE)
@@ -443,7 +443,7 @@ int core_tsk_waitUntil( tsk_t **que, cnt_t time )
 {
 	tsk_t *cur = System.cur;
 
-	cur->start = core_sys_time();
+	cur->start = core_sys_tick();
 	cur->delay = time - cur->start;
 
 	if (cur->delay - 1U > CNT_LIMIT)

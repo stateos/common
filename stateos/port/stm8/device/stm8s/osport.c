@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    05.04.2021
     @brief   StateOS port file for STM8S uC.
 
  ******************************************************************************
@@ -204,7 +204,7 @@ INTERRUPT_HANDLER(TIM3_CAP_COM_IRQHandler, 16)
 
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
 
-cnt_t port_sys_time( void )
+cnt_t port_sys_tick( void )
 {
 	cnt_t    cnt;
 	uint16_t tck;

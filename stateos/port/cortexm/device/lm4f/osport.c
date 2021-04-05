@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    26.02.2021
+    @date    05.04.2021
     @brief   StateOS port file for LM4F uC.
 
  ******************************************************************************
@@ -186,7 +186,7 @@ void WTIMER0A_Handler( void )
 
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
 
-cnt_t port_sys_time( void )
+cnt_t port_sys_tick( void )
 {
 	cnt_t    cnt;
 	uint32_t tck;

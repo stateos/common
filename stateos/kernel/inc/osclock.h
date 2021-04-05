@@ -2,7 +2,7 @@
 
     @file    StateOS: osclock.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    05.04.2021
     @brief   This file implements steady clock for StateOS.
 
  ******************************************************************************
@@ -40,8 +40,8 @@ extern "C" {
 
 /******************************************************************************
  *
- * Name              : sys_time
- * ISR alias         : sys_timeISR
+ * Name              : sys_tick
+ * ISR alias         : sys_tickISR
  *
  * Description       : return current value of system counter
  *
@@ -54,10 +54,10 @@ extern "C" {
  *
  ******************************************************************************/
 
-cnt_t sys_time( void );
+cnt_t sys_tick( void );
 
 __STATIC_INLINE
-cnt_t sys_timeISR( void ) { return sys_time(); }
+cnt_t sys_tickISR( void ) { return sys_tick(); }
 
 #ifdef __cplusplus
 }
@@ -94,7 +94,7 @@ struct Clock
 	static
 	time_point now() noexcept
 	{
-		return time_point{duration{sys_time()}};
+		return time_point{duration{sys_tick()}};
 	}
 
 	template<class _Rep, class _Period> static constexpr
