@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.c
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    10.03.2020
     @brief   DemOS port file for LM4F uC.
 
  ******************************************************************************
@@ -53,7 +53,7 @@ void sys_init( void )
 
 /* --------------------------------------------------------------------------------------------- */
 
-cnt_t sys_tick( void )
+cnt_t sys_time( void )
 {
 	cnt_t cnt;
 	cnt = sys_counter;
