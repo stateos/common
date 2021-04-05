@@ -2,7 +2,7 @@
 
     @file    IntrOS: osport.h
     @author  Rajmund Szymanski
-    @date    18.06.2020
+    @date    05.04.2021
     @brief   IntrOS port definitions for X86.
 
  ******************************************************************************
@@ -81,7 +81,7 @@ extern "C" {
 #if HW_TIMER_SIZE >= OS_TIMER_SIZE
 
 __STATIC_INLINE
-clock_t port_sys_time( void )
+clock_t port_sys_tick( void )
 {
 	return clock();
 }

@@ -35,6 +35,7 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 4.8
+- renamed system function sys_time to sys_tick
 - updated Clock class
 - updated OnceFlag class
 - added sem_giveNum function

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osport.c
     @author  Rajmund Szymanski
-    @date    31.05.2020
+    @date    05.04.2021
     @brief   IntrOS port file for STM32F4 uC.
 
  ******************************************************************************
@@ -160,7 +160,7 @@ void TIM2_IRQHandler( void )
 
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
 
-cnt_t port_sys_time( void )
+cnt_t port_sys_tick( void )
 {
 	cnt_t    cnt;
 	uint32_t tck;

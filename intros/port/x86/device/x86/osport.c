@@ -2,7 +2,7 @@
 
     @file    IntrOS: osport.c
     @author  Rajmund Szymanski
-    @date    18.06.2020
+    @date    05.04.2021
     @brief   IntrOS port file for X86.
 
  ******************************************************************************
@@ -45,7 +45,7 @@ void port_sys_init( void )
 
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
 
-cnt_t port_sys_time( void )
+cnt_t port_sys_tick( void )
 {
 	static
 	uint32_t clk = 0;

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osclock.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    05.04.2021
     @brief   This file implements steady clock for IntrOS.
 
  ******************************************************************************
@@ -40,7 +40,7 @@ extern "C" {
 
 /******************************************************************************
  *
- * Name              : sys_time
+ * Name              : sys_tick
  *
  * Description       : return current value of system counter
  *
@@ -50,7 +50,7 @@ extern "C" {
  *
  ******************************************************************************/
 
-cnt_t sys_time( void );
+cnt_t sys_tick( void );
 
 #ifdef __cplusplus
 }
@@ -87,7 +87,7 @@ struct Clock
 	static
 	time_point now() noexcept
 	{
-		return time_point{duration{sys_time()}};
+		return time_point{duration{sys_tick()}};
 	}
 
 	template<class _Rep, class _Period> static constexpr
