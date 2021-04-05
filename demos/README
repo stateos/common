@@ -16,6 +16,7 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 0.8
+- renamed system function sys_time to sys_tick
 - added version header file
 - updated os version
 - preventing sign-conversion warnings

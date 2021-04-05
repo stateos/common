@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.h
     @author  Rajmund Szymanski
-    @date    10.03.2020
+    @date    05.04.2021
     @brief   DemOS port definitions for Windows.
 
  ******************************************************************************
@@ -56,7 +56,7 @@ void sys_init( void ) {}
 /* --------------------------------------------------------------------------------------------- */
 
 static inline
-cnt_t sys_time( void ) { return clock(); }
+cnt_t sys_tick( void ) { return clock(); }
 
 /* --------------------------------------------------------------------------------------------- */
 

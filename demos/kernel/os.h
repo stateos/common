@@ -2,7 +2,7 @@
 
     @file    DemOS: os.h
     @author  Rajmund Szymanski
-    @date    25.03.2021
+    @date    05.04.2021
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
@@ -66,7 +66,7 @@ extern "C" {
 extern volatile
 cnt_t   sys_counter;                 // port variable - system time counter
 void    sys_init ( void );           // port function - initialize the system timer
-cnt_t   sys_time ( void );           // port function - get current value of the system timer (in milliseconds)
+cnt_t   sys_tick ( void );           // port function - get current value of the system timer (in milliseconds)
 
 #ifdef  USE_GOTO
 
@@ -204,11 +204,11 @@ typedef cnt_t tmr_t;
 #define OS_TMR(tmr)                     tmr_t tmr[] = { 0 }
 /* -------------------------------------------------------------------------- */
 // check if the timer (tmr) finishes countdown for given duration of time (dly)
-#define tmr_expiredFor(tmr, dly)      ( sys_time() - *(tmr) + 1 > (dly) )
+#define tmr_expiredFor(tmr, dly)      ( sys_tick() - *(tmr) + 1 > (dly) )
 // check if the timer (tmr) finishes countdown until given timepoint (tim)
 #define tmr_expiredUntil(tmr, tim)    ( tmr_expiredFor(tmr, (tim) - *(tmr)) )
 // start/restart the timer (tmr)
-#define tmr_start(tmr)             do { *(tmr) = sys_time();                                                       } while(0)
+#define tmr_start(tmr)             do { *(tmr) = sys_tick();                                                       } while(0)
 // start/restart the timer (tmr) and wait until the timer (tmr) finishes countdown for given duration of time (dly)
 #define tmr_waitFor(tmr, dly)      do { tmr_start(tmr); tsk_waitUntil(tmr_expiredFor(tmr, dly)); *(tmr) += (dly);  } while(0)
 // wait until the timer (tmr) finishes countdown for given duration of time (dly) from the end of the previous countdown

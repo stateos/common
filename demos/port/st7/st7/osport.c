@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.c
     @author  Rajmund Szymanski
-    @date    10.03.2020
+    @date    05.04.2021
     @brief   DemOS port file for ST7 uC.
 
  ******************************************************************************
@@ -61,7 +61,7 @@ void sys_init( void )
 
 /* --------------------------------------------------------------------------------------------- */
 
-cnt_t sys_time( void )
+cnt_t sys_tick( void )
 {
 	cnt_t cnt;
 	disableInterrupts();
