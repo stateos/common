@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    05.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -431,8 +431,8 @@ int sem_giveAsync( sem_t *sem );
 
 /******************************************************************************
  *
- * Name              : sem_update
- * ISR alias         : sem_updateISR
+ * Name              : sem_giveNum
+ * ISR alias         : sem_giveNumISR
  *
  * Description       : try to increment the internal semaphore counter by the value of num
  *
@@ -449,10 +449,10 @@ int sem_giveAsync( sem_t *sem );
  *
  ******************************************************************************/
 
-int sem_update( sem_t *sem, unsigned num );
+int sem_giveNum( sem_t *sem, unsigned num );
 
 __STATIC_INLINE
-int sem_updateISR( sem_t *sem, unsigned num ) { return sem_update(sem, num); }
+int sem_giveNumISR( sem_t *sem, unsigned num ) { return sem_giveNum(sem, num); }
 
 /******************************************************************************
  *
@@ -508,27 +508,27 @@ struct Semaphore : public __sem
 	Semaphore& operator=( Semaphore&& ) = delete;
 	Semaphore& operator=( const Semaphore& ) = delete;
 
-	void     reset    ()                  {        sem_reset    (this); }
-	void     kill     ()                  {        sem_kill     (this); }
-	void     destroy  ()                  {        sem_destroy  (this); }
-	int      take     ()                  { return sem_take     (this); }
-	int      tryWait  ()                  { return sem_tryWait  (this); }
-	int      takeISR  ()                  { return sem_takeISR  (this); }
+	void     reset     ()                  {        sem_reset     (this); }
+	void     kill      ()                  {        sem_kill      (this); }
+	void     destroy   ()                  {        sem_destroy   (this); }
+	int      take      ()                  { return sem_take      (this); }
+	int      tryWait   ()                  { return sem_tryWait   (this); }
+	int      takeISR   ()                  { return sem_takeISR   (this); }
 	template<typename T>
-	int      waitFor  ( const T& _delay ) { return sem_waitFor  (this, Clock::count(_delay)); }
+	int      waitFor   ( const T& _delay ) { return sem_waitFor   (this, Clock::count(_delay)); }
 	template<typename T>
-	int      waitUntil( const T& _time )  { return sem_waitUntil(this, Clock::until(_time)); }
-	int      wait     ()                  { return sem_wait     (this); }
-	int      give     ()                  { return sem_give     (this); }
-	int      post     ()                  { return sem_post     (this); }
-	int      giveISR  ()                  { return sem_giveISR  (this); }
-	int      update   ( unsigned _num )   { return sem_update   (this, _num); }
-	int      updateISR( unsigned _num )   { return sem_updateISR(this, _num); }
-	unsigned getValue ()                  { return sem_getValue (this); }
+	int      waitUntil ( const T& _time )  { return sem_waitUntil (this, Clock::until(_time)); }
+	int      wait      ()                  { return sem_wait      (this); }
+	int      give      ()                  { return sem_give      (this); }
+	int      post      ()                  { return sem_post      (this); }
+	int      giveISR   ()                  { return sem_giveISR   (this); }
+	int      giveNum   ( unsigned _num )   { return sem_giveNum   (this, _num); }
+	int      giveNumISR( unsigned _num )   { return sem_giveNumISR(this, _num); }
+	unsigned getValue  ()                  { return sem_getValue  (this); }
 #if OS_ATOMICS
-	int      takeAsync()                  { return sem_takeAsync(this); }
-	int      waitAsync()                  { return sem_waitAsync(this); }
-	int      giveAsync()                  { return sem_giveAsync(this); }
+	int      takeAsync ()                  { return sem_takeAsync (this); }
+	int      waitAsync ()                  { return sem_waitAsync (this); }
+	int      giveAsync ()                  { return sem_giveAsync (this); }
 #endif
 
 #if __cplusplus >= 201402L

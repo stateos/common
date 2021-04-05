@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    05.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -279,7 +279,7 @@ unsigned sem_giveAsync( sem_t *sem );
 
 /******************************************************************************
  *
- * Name              : sem_update
+ * Name              : sem_giveNum
  *
  * Description       : try to increment the internal semaphore counter by the value of num
  *
@@ -293,7 +293,7 @@ unsigned sem_giveAsync( sem_t *sem );
  *
  ******************************************************************************/
 
-unsigned sem_update( sem_t *sem, unsigned num );
+unsigned sem_giveNum( sem_t *sem, unsigned num );
 
 /******************************************************************************
  *
@@ -351,7 +351,7 @@ struct Semaphore : public __sem
 	void     wait     ()                {        sem_wait     (this); }
 	unsigned give     ()                { return sem_give     (this); }
 	unsigned post     ()                { return sem_post     (this); }
-	unsigned update   ( unsigned _num ) { return sem_update   (this, _num); }
+	unsigned giveNum  ( unsigned _num ) { return sem_giveNum  (this, _num); }
 	unsigned getValue ()                { return sem_getValue (this); }
 #if OS_ATOMICS
 	unsigned takeAsync()                { return sem_takeAsync(this); }

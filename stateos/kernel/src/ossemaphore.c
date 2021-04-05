@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.c
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    05.04.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -231,7 +231,7 @@ int sem_give( sem_t *sem )
 
 /* -------------------------------------------------------------------------- */
 static
-int priv_sem_update( sem_t *sem, unsigned num )
+int priv_sem_giveNum( sem_t *sem, unsigned num )
 /* -------------------------------------------------------------------------- */
 {
 	num -= core_num_wakeup(sem->obj.queue, E_SUCCESS, num);
@@ -247,7 +247,7 @@ int priv_sem_update( sem_t *sem, unsigned num )
 }
 
 /* -------------------------------------------------------------------------- */
-int sem_update( sem_t *sem, unsigned num )
+int sem_giveNum( sem_t *sem, unsigned num )
 /* -------------------------------------------------------------------------- */
 {
 	int result;
@@ -258,7 +258,7 @@ int sem_update( sem_t *sem, unsigned num )
 
 	sys_lock();
 	{
-		result = priv_sem_update(sem, num);
+		result = priv_sem_giveNum(sem, num);
 	}
 	sys_unlock();
 

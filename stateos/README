@@ -51,7 +51,7 @@ Features:
 6.8
 - updated Clock class
 - updated OnceFlag class
-- added sem_update function
+- added sem_giveNum function
 - added internal core_num_wakeup function
 - added version header file
 - updated onceflag
