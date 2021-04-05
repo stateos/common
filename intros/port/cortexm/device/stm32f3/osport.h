@@ -2,7 +2,7 @@
 
     @file    IntrOS: osport.h
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    03.06.2020
     @brief   IntrOS port definitions for STM32F3 uC.
 
  ******************************************************************************
@@ -88,7 +88,7 @@ extern "C" {
 #if HW_TIMER_SIZE >= OS_TIMER_SIZE
 
 __STATIC_INLINE
-uint32_t port_sys_tick( void )
+uint32_t port_sys_time( void )
 {
 	return TIM2->CNT;
 }

@@ -2,7 +2,7 @@
 
     @file    IntrOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    17.12.2020
     @brief   This file provides set of variables and functions for IntrOS.
 
  ******************************************************************************
@@ -199,7 +199,7 @@ bool priv_tmr_countdown( tmr_t *tmr )
 
 	port_set_lock();
 	{
-		if (core_sys_tick() - tmr->start + 1 > tmr->delay)
+		if (core_sys_time() - tmr->start + 1 > tmr->delay)
 		{
 			tmr->start += tmr->delay;
 			tmr->delay = tmr->period;

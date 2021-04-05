@@ -2,7 +2,7 @@
 
     @file    IntrOS: osport.c
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    29.03.2020
     @brief   IntrOS port file for ATtiny817 uC.
 
  ******************************************************************************
@@ -142,7 +142,7 @@ ISR( TCA0_OVF_vect )
 
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
 
-cnt_t port_sys_tick( void )
+cnt_t port_sys_time( void )
 {
 	cnt_t    cnt;
 	uint16_t tck;

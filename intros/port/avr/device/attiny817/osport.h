@@ -2,7 +2,7 @@
 
     @file    IntrOS: osport.h
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    29.03.2020
     @brief   IntrOS port definitions for ATtiny817 uC.
 
  ******************************************************************************
@@ -79,7 +79,7 @@ extern "C" {
 #if HW_TIMER_SIZE >= OS_TIMER_SIZE
 
 __STATIC_INLINE
-uint16_t port_sys_tick( void )
+uint16_t port_sys_time( void )
 {
 	return TCA0.SINGLE.CNT;
 }
