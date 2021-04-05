@@ -2,7 +2,7 @@
 
     @file    IntrOS: osclock.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    05.04.2021
     @brief   This file implements steady clock for IntrOS.
 
  ******************************************************************************
@@ -87,7 +87,7 @@ struct Clock
 	static
 	time_point now() noexcept
 	{
-		return time_point{duration{sys_time()}};
+		return time_point{duration{::sys_time()}};
 	}
 
 	template<class _Rep, class _Period> static constexpr
