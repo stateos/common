@@ -1,6 +1,6 @@
 /******************************************************************************
 
-    @file    StateOS: std_clock.hpp
+    @file    StateOS: chrono.hpp
     @author  Rajmund Szymanski
     @date    07.04.2021
     @brief   This file contains definitions for StateOS.

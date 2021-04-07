@@ -1,6 +1,6 @@
 /******************************************************************************
 
-    @file    StateOS: std_critical_section.hpp
+    @file    StateOS: critical_section.hpp
     @author  Rajmund Szymanski
     @date    02.04.2021
     @brief   This file contains definitions for StateOS.

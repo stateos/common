@@ -1,6 +1,6 @@
 /******************************************************************************
 
-    @file    StateOS: std_semaphore.hpp
+    @file    StateOS: semaphore.hpp
     @author  Rajmund Szymanski
     @date    07.04.2021
     @brief   This file contains definitions for StateOS.
