@@ -574,7 +574,7 @@ unsigned job_limitISR( job_t *job ) { return job_limit(job); }
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
 namespace stateos {
 
 /******************************************************************************

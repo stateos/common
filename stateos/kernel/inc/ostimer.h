@@ -723,7 +723,7 @@ void tmr_delayISR( cnt_t delay ) { tmr_thisISR()->delay = delay; }
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
 namespace stateos {
 
 /******************************************************************************

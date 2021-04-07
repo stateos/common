@@ -286,7 +286,7 @@ void spn_init( spn_t *spn )
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
 namespace stateos {
 
 /******************************************************************************

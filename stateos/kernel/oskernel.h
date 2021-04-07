@@ -41,7 +41,7 @@
  * -------------------------------------------------------------------------- */
 
 #if OS_ATOMICS
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
 #include <atomic>
 #define __STD std::
 #else
@@ -52,7 +52,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201402L)
+#if defined(__cplusplus) && (__cplusplus >= 201402L) && !defined(_GLIBCXX_HAS_GTHREADS)
 #include <functional>
 #include <memory>
 using Fun_t = std::function<void( void )>;

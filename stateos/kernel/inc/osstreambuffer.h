@@ -589,7 +589,7 @@ size_t stm_limitISR( stm_t *stm ) { return stm_limit(stm); }
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
 namespace stateos {
 
 /******************************************************************************

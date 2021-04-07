@@ -302,7 +302,7 @@ int bar_wait( bar_t *bar ) { return bar_waitFor(bar, INFINITE); }
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
 namespace stateos {
 
 /******************************************************************************

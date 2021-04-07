@@ -420,7 +420,7 @@ void mem_giveISR( mem_t *mem, void *data ) { lst_giveISR(&mem->lst, data); }
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
 namespace stateos {
 
 /******************************************************************************
