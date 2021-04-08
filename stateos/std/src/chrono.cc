@@ -23,10 +23,10 @@
 // <http://www.gnu.org/licenses/>.
 
 // -----------------------------------------
-// Modified by Rajmund Szymanski, 07.04.2021
+// Modified by Rajmund Szymanski, 08.04.2021
 
 #include <chrono>
-#include "inc/chrono.hpp"
+#include "inc/chrono.hh"
 
 namespace std _GLIBCXX_VISIBILITY(default)
 {

@@ -30,8 +30,6 @@
 #include <system_error>
 #include <cerrno>
 #include <cxxabi.h>
-#include "os.h"
-#include "inc/chrono.hpp"
 
 #ifdef _GLIBCXX_HAS_GTHREADS
 

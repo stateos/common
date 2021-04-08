@@ -1,8 +1,8 @@
 /******************************************************************************
 
-    @file    StateOS: semaphore.hpp
+    @file    StateOS: semaphore.hh
     @author  Rajmund Szymanski
-    @date    07.04.2021
+    @date    08.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -29,11 +29,11 @@
 
  ******************************************************************************/
 
-#ifndef __STATEOSSTD_SEMAPHORE_HPP
-#define __STATEOSSTD_SEMAPHORE_HPP
+#ifndef __STATEOS_SEMAPHORE_HH
+#define __STATEOS_SEMAPHORE_HH
 
+#include "inc/chrono.hh"
 #include "inc/ossemaphore.h"
-#include "inc/chrono.hpp"
 
 namespace std {
 
@@ -100,4 +100,4 @@ using binary_semaphore = counting_semaphore<1>;
 using        semaphore = counting_semaphore<>;
 
 }     //  namespace std
-#endif//__STATEOSSTD_HPP
+#endif//__STATEOS_SEMAPHORE_HH

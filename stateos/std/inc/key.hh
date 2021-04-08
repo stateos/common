@@ -1,8 +1,8 @@
 /******************************************************************************
 
-    @file    StateOS: chrono.hpp
+    @file    StateOS: key.hh
     @author  Rajmund Szymanski
-    @date    07.04.2021
+    @date    08.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -29,56 +29,31 @@
 
  ******************************************************************************/
 
-#ifndef __STATEOSSTD_CLOCK_HPP
-#define __STATEOSSTD_CLOCK_HPP
+#ifndef __STATEOS_KEY_HH
+#define __STATEOS_KEY_HH
 
-#include <chrono>
-#include "inc/osclock.h"
-
-namespace std {
-namespace chrono {
-
-/******************************************************************************
- *
- * Class             : std::chrono::systick
- *
- ******************************************************************************/
-
-struct systick
+static inline
+int __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *))
 {
-	using rep        = cnt_t;
-#if __cplusplus >= 201402L
-	using period     = ratio<1, OS_FREQUENCY>;
-	using duration   = chrono::duration<rep, period>;
-	using time_point = chrono::time_point<systick>;
+	return 0;
+}
 
-	static constexpr bool is_steady = true;
+static inline
+int __gthread_key_delete(__gthread_key_t key)
+{
+	return 0;
+}
 
-	static
-	time_point now() noexcept
-	{
-		return time_point(duration(::sys_time()));
-	}
+static inline
+void *__gthread_getspecific(__gthread_key_t key)
+{
+	return nullptr;
+}
 
-	template<class Rep, class Period> static constexpr
-	rep count( const chrono::duration<Rep, Period>& _delay )
-	{
-		return duration_cast<duration>(_delay).count();
-	}
+static inline
+int __gthread_setspecific(__gthread_key_t key, const void *ptr)
+{
+	return 0;
+}
 
-	template<class Clock, class Duration> static constexpr
-	rep until( const chrono::time_point<Clock, Duration>& _time )
-	{
-		return duration_cast<duration>(_time.time_since_epoch()).count();
-	}
-#endif
-	static constexpr
-	rep count( const rep _delay ) { return _delay; }
-
-	static constexpr
-	rep until( const rep _time )  { return _time; }
-};
-
-}     //  namespace chrono
-}     //  namespace std
-#endif//__STATEOSSTD_CLOCK_HPP
+#endif//__STATEOS_KEY_HH

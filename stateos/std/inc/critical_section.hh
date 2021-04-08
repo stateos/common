@@ -1,8 +1,8 @@
 /******************************************************************************
 
-    @file    StateOS: critical_section.hpp
+    @file    StateOS: critical_section.hh
     @author  Rajmund Szymanski
-    @date    02.04.2021
+    @date    08.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -29,8 +29,8 @@
 
  ******************************************************************************/
 
-#ifndef __STATEOSSTD_CRITICAL_SECTION_HPP
-#define __STATEOSSTD_CRITICAL_SECTION_HPP
+#ifndef __STATEOS_CRITICAL_SECTION_HH
+#define __STATEOS_CRITICAL_SECTION_HH
 
 #include "inc/oscriticalsection.h"
 
@@ -58,4 +58,4 @@ struct critical_section
 };
 
 }     //  namespace std
-#endif//__STATEOSSTD_CRITICAL_SECTION_HPP
+#endif//__STATEOS_CRITICAL_SECTION_HH
