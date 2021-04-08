@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    07.04.2021
+    @date    08.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define _GLIBCXX_GCC_GTHR_STATEOS_H
 
 #include "os.h"
+#include <ctime>
 
 //-----------------------------------------------------------------------------
 
@@ -42,38 +43,36 @@
 
 //-----------------------------------------------------------------------------
 
-typedef int   __gthread_key_t;
-typedef one_t __gthread_once_t;
-typedef mtx_t __gthread_mutex_t;
-typedef mtx_t __gthread_recursive_mutex_t;
-typedef cnd_t __gthread_cond_t;
-typedef cnt_t __gthread_time_t;
+struct ostime_t
+{
+	std::time_t sec;
+	long        nsec;
+
+	explicit
+	operator cnt_t() const;
+};
 
 //-----------------------------------------------------------------------------
 
 struct ostask_t : public tsk_t
 {
-	ostask_t() noexcept = default;
-
-	~ostask_t() noexcept = default;
-
-	ostask_t( ostask_t&& ) = delete;
-	ostask_t( const ostask_t& ) = delete;
-	ostask_t& operator=( ostask_t&& ) = delete;
-	ostask_t& operator=( const ostask_t& ) = delete;
-	
-	static
-	void handler()
-	{
-		ostask_t *task = reinterpret_cast<ostask_t *>(tsk_this());
-		task->fun(task->arg);
-	}
-
 	void (*fun)(void *);
 	void  *arg;
 	stk_t  stk[];
+
+	static
+	void handler();
 };
 
+//-----------------------------------------------------------------------------
+
+typedef int   __gthread_key_t;
+typedef one_t __gthread_once_t;
+typedef mtx_t __gthread_mutex_t;
+typedef mtx_t __gthread_recursive_mutex_t;
+typedef cnd_t __gthread_cond_t;
+
+typedef ostime_t  __gthread_time_t;
 typedef ostask_t *__gthread_t;
 
 //-----------------------------------------------------------------------------
@@ -87,6 +86,34 @@ typedef ostask_t *__gthread_t;
 #define __GTHREAD_MUTEX_INIT           _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0)
 #define __GTHREAD_RECURSIVE_MUTEX_INIT _MTX_INIT(mtxPrioInherit|mtxRecursive, 0)
 #define __GTHREAD_COND_INIT            _CND_INIT()
+
+//-----------------------------------------------------------------------------
+
+#include "inc/chrono.hpp"
+#include "inc/critical_section.hpp"
+#include "inc/semaphore.hpp"
+
+//-----------------------------------------------------------------------------
+
+inline
+ostime_t::operator cnt_t() const
+{
+	auto s = std::chrono::seconds(sec);
+	auto n = std::chrono::nanoseconds(nsec);
+
+	return std::chrono::systick::count(s) + std::chrono::systick::count(n);
+}
+
+//-----------------------------------------------------------------------------
+
+inline
+void ostask_t::handler()
+{
+	ostask_t *task = reinterpret_cast<ostask_t *>(tsk_this());
+	task->fun(task->arg);
+}
+
+//-----------------------------------------------------------------------------
 
 static inline
 void __GTHREAD_MUTEX_INIT_FUNCTION(__gthread_mutex_t *mutex)
@@ -176,7 +203,7 @@ int __gthread_mutex_trylock(__gthread_mutex_t *mutex)
 static inline
 int __gthread_mutex_timedlock(__gthread_mutex_t *m, const __gthread_time_t *abs_timeout)
 {
-	return mtx_waitUntil(m, *abs_timeout);
+	return mtx_waitUntil(m, static_cast<cnt_t>(*abs_timeout));
 }
 
 static inline
@@ -203,7 +230,7 @@ int __gthread_recursive_mutex_trylock(__gthread_recursive_mutex_t *mutex)
 static inline
 int __gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *m, const __gthread_time_t *abs_timeout)
 {
-	return mtx_waitUntil(m, *abs_timeout);
+	return mtx_waitUntil(m, static_cast<cnt_t>(*abs_timeout));
 }
 
 static inline
@@ -240,7 +267,7 @@ int __gthread_cond_wait_recursive(__gthread_cond_t *cond, __gthread_recursive_mu
 static inline
 int __gthread_cond_timedwait(__gthread_cond_t *cond, __gthread_mutex_t *mutex, const __gthread_time_t *abs_timeout)
 {
-	cnd_waitUntil(cond, mutex, *abs_timeout);
+	cnd_waitUntil(cond, mutex, static_cast<cnt_t>(*abs_timeout));
 }
 
 static inline
@@ -287,12 +314,6 @@ int __gthread_yield()
 	tsk_yield();
 	return 0;
 }
-
-//-----------------------------------------------------------------------------
-
-#include "inc/chrono.hpp"
-#include "inc/critical_section.hpp"
-#include "inc/semaphore.hpp"
 
 //-----------------------------------------------------------------------------
 
