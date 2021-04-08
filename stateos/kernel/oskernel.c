@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    30.03.2021
+    @date    08.04.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -314,6 +314,15 @@ bool core_stk_integrity( void )
 }
 
 #endif
+
+void core_stk_move( tsk_t *tsk, size_t size )
+{
+	assert(size<tsk->size);
+
+	tsk->stack += STK_SIZE(size);
+	tsk->size  -= STK_OVER(size);
+}
+
 /* -------------------------------------------------------------------------- */
 
 void core_ctx_switch( void )

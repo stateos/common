@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    08.04.2021
     @brief   This file defines set of kernel functions for StateOS.
 
  ******************************************************************************
@@ -102,6 +102,10 @@ bool core_ctx_integrity( tsk_t *tsk, void *sp );
 bool core_stk_integrity( void );
 
 #endif
+
+// move beginning of the task stack
+void core_stk_move( tsk_t *tsk, size_t size );
+
 /* -------------------------------------------------------------------------- */
 
 #define assert_ctx_integrity(tsk, sp)  assert(core_ctx_integrity(tsk, sp))
