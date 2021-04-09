@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    09.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -75,6 +75,7 @@ struct __tsk
 	tsk_t  * owner; // task owner (joinable / detached state)
 	tsk_t ** guard; // BLOCKED queue for the pending process
 
+	void   * arg;   // reserved for internal use
 	int      event; // wakeup event
 
 	struct {
@@ -178,7 +179,7 @@ extern "C" {
  ******************************************************************************/
 
 #define               _TSK_INIT( _prio, _state, _stack, _size )                                               \
-                       { _OBJ_INIT(), _HDR_INIT(), _state, 0, 0, 0, NULL, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
+                       { _OBJ_INIT(), _HDR_INIT(), _state, 0, 0, 0, NULL, _stack, _size, NULL, _prio, _prio, NULL, NULL, NULL, 0, \
                        { NULL, NULL }, { 0, NULL, { NULL, NULL } }, { { 0 } }, _PORT_DATA_INIT() }
 
 /******************************************************************************
