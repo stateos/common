@@ -45,6 +45,7 @@ Features:
 - cmsis-rtos2 api
 - nasa-osal support
 - c++ wrapper
+- support for libstdc++
 - all documentation is contained within source files, in particular header files
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
