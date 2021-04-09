@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    08.04.2021
+    @date    09.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -29,8 +29,8 @@
 
  ******************************************************************************/
 
-#ifndef __STATEOS_GLIBCXX_GCC_GTHR_H
-#define __STATEOS_GLIBCXX_GCC_GTHR_H
+#ifndef _GLIBCXX_GCC_GTHR_STATEOS_H
+#define _GLIBCXX_GCC_GTHR_STATEOS_H
 #ifdef  __GNUC__
 
 #include "os.h"
@@ -50,24 +50,28 @@
 
 //-----------------------------------------------------------------------------
 
-typedef int   __gthread_key_t;
-typedef one_t __gthread_once_t;
-typedef mtx_t __gthread_mutex_t;
-typedef mtx_t __gthread_recursive_mutex_t;
-typedef cnd_t __gthread_cond_t;
-
-struct  ostime_t;
-typedef ostime_t  __gthread_time_t;
-
-struct  ostask_t;
-typedef ostask_t *__gthread_t;
-
-//-----------------------------------------------------------------------------
-
 #define __GTHREAD_ONCE_INIT            _ONE_INIT()
 #define __GTHREAD_MUTEX_INIT           _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0)
 #define __GTHREAD_RECURSIVE_MUTEX_INIT _MTX_INIT(mtxPrioInherit|mtxRecursive, 0)
 #define __GTHREAD_COND_INIT            _CND_INIT()
+
+//-----------------------------------------------------------------------------
+
+typedef int    __gthread_key_t;
+typedef one_t  __gthread_once_t;
+typedef mtx_t  __gthread_mutex_t;
+typedef mtx_t  __gthread_recursive_mutex_t;
+typedef cnd_t  __gthread_cond_t;
+typedef tsk_t *__gthread_t;
+
+struct  ostime_t;
+typedef ostime_t  __gthread_time_t;
+
+//-----------------------------------------------------------------------------
+
+#include "inc/chrono.hh"
+#include "inc/critical_section.hh"
+#include "inc/semaphore.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -77,17 +81,155 @@ int __gthread_active_p()
 	return 1;
 }
 
-//-----------------------------------------------------------------------------
+static inline
+int __gthread_mutex_destroy(__gthread_mutex_t *mutex)
+{
+	mtx_destroy(mutex);
+	return 0;
+}
 
-#include "inc/chrono.hh"
-#include "inc/critical_section.hh"
-#include "inc/key.hh"
-#include "inc/condition_variable.hh"
-#include "inc/mutex.hh"
-#include "inc/semaphore.hh"
-#include "inc/thread.hh"
+static inline
+int __gthread_recursive_mutex_destroy(__gthread_recursive_mutex_t *mutex)
+{
+	mtx_destroy(mutex);
+	return 0;
+}
+
+static inline
+int __gthread_mutex_lock(__gthread_mutex_t *mutex)
+{
+	// EINVAL, EAGAIN, EBUSY, EINVAL, EDEADLK(may)
+	return mtx_lock(mutex);
+}
+
+static inline
+int __gthread_mutex_trylock(__gthread_mutex_t *mutex)
+{
+	// XXX EINVAL, EAGAIN, EBUSY
+	return mtx_tryLock(mutex);
+}
+
+static inline
+int __gthread_mutex_timedlock(__gthread_mutex_t *mutex, const __gthread_time_t *abs_timeout)
+{
+	return mtx_waitUntil(mutex, abs_timeout->to_ticks());
+}
+
+static inline
+int __gthread_mutex_unlock(__gthread_mutex_t *mutex)
+{
+	// XXX EINVAL, EAGAIN, EBUSY
+	return mtx_unlock(mutex);
+}
+
+static inline
+int __gthread_recursive_mutex_lock(__gthread_recursive_mutex_t *mutex)
+{
+	// EINVAL, EAGAIN, EBUSY, EINVAL, EDEADLK(may)
+	return mtx_lock(mutex);
+}
+
+static inline
+int __gthread_recursive_mutex_trylock(__gthread_recursive_mutex_t *mutex)
+{
+	// XXX EINVAL, EAGAIN, EBUSY
+	return mtx_tryLock(mutex);
+}
+
+static inline
+int __gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *mutex, const __gthread_time_t *abs_timeout)
+{
+	return mtx_waitUntil(mutex, abs_timeout->to_ticks());
+}
+
+static inline
+int __gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *mutex)
+{
+	// XXX EINVAL, EAGAIN, EBUSY
+	return mtx_unlock(mutex);
+}
+
+static inline
+int __gthread_once(__gthread_once_t *once, void(*func)())
+{
+	one_call(once, func);
+	return 0;
+}
+
+static inline
+int __gthread_cond_signal(__gthread_cond_t *cond)
+{
+	cnd_notifyOne(cond);
+	return 0;
+}
+
+static inline
+int __gthread_cond_broadcast(__gthread_cond_t *cond)
+{
+	cnd_notifyAll(cond);
+	return 0;
+}
+
+static inline
+int __gthread_cond_wait(__gthread_cond_t *cond, __gthread_mutex_t *mutex)
+{
+	return cnd_wait(cond, mutex);
+}
+
+static inline
+int __gthread_cond_wait_recursive(__gthread_cond_t *cond, __gthread_recursive_mutex_t *mutex)
+{
+	return cnd_wait(cond, mutex);
+}
+
+static inline
+int __gthread_cond_timedwait(__gthread_cond_t *cond, __gthread_mutex_t *mutex, const __gthread_time_t *abs_timeout)
+{
+	return cnd_waitUntil(cond, mutex, abs_timeout->to_ticks());
+}
+
+static inline
+int __gthread_join(__gthread_t thread, void **)
+{
+	return tsk_join(thread);
+}
+
+static inline
+int __gthread_detach(__gthread_t thread)
+{
+	return tsk_detach(thread);
+}
+
+static inline
+int __gthread_equal(const __gthread_t t1, const __gthread_t t2)
+{
+	return t1 != t2;
+}
+
+static inline
+__gthread_t __gthread_self()
+{
+	return tsk_this();
+}
+
+static inline
+int __gthread_yield()
+{
+	tsk_yield();
+	return 0;
+}
+
+int __gthread_create(__gthread_t *thread, void (*func)(void *), void *args);
+
+int __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *));
+
+int __gthread_key_delete(__gthread_key_t key);
+
+void *__gthread_getspecific(__gthread_key_t key);
+
+int __gthread_setspecific(__gthread_key_t key, const void *ptr);
 
 //-----------------------------------------------------------------------------
 
 #endif //__GNUC__
-#endif //__STATEOS_GLIBCXX_GCC_GTHR_H
+#endif //_GLIBCXX_GCC_GTHR_STATEOS_H

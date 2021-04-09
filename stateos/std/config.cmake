@@ -18,9 +18,9 @@ target_compile_definitions(stateos-std
 target_sources(stateos-std
 	INTERFACE
 	${STATEOS_PATH}/std/src/chrono.cc
-	${STATEOS_PATH}/std/src/condition_variable.cc
 	${STATEOS_PATH}/std/src/future.cc
 	${STATEOS_PATH}/std/src/mutex.cc
+	${STATEOS_PATH}/std/src/condition_variable.cc
 	${STATEOS_PATH}/std/src/thread.cc
 )
 

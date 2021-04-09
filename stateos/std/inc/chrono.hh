@@ -2,7 +2,7 @@
 
     @file    StateOS: chrono.hh
     @author  Rajmund Szymanski
-    @date    08.04.2021
+    @date    09.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -32,8 +32,8 @@
 #ifndef __STATEOS_CHRONO_HH
 #define __STATEOS_CHRONO_HH
 
-#include <chrono>
 #include "inc/osclock.h"
+#include <chrono>
 
 namespace std {
 namespace chrono {
@@ -84,22 +84,14 @@ struct systick
 
 //-----------------------------------------------------------------------------
 
-struct ostime_t
+struct ostime_t : public timespec
 {
-	std::time_t sec;
-	long        nsec;
-
-	explicit
-	operator cnt_t() const;
+	cnt_t to_ticks() const
+	{
+		auto sec  = std::chrono::seconds(tv_sec);
+		auto nsec = std::chrono::nanoseconds(tv_nsec);
+		return std::chrono::systick::count(sec) + std::chrono::systick::count(nsec);
+	}
 };
-
-inline
-ostime_t::operator cnt_t() const
-{
-	auto s = std::chrono::seconds(sec);
-	auto n = std::chrono::nanoseconds(nsec);
-
-	return std::chrono::systick::count(s) + std::chrono::systick::count(n);
-}
 
 #endif//__STATEOS_CHRONO_HH

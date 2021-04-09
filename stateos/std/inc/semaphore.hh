@@ -2,7 +2,7 @@
 
     @file    StateOS: semaphore.hh
     @author  Rajmund Szymanski
-    @date    08.04.2021
+    @date    09.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -32,8 +32,8 @@
 #ifndef __STATEOS_SEMAPHORE_HH
 #define __STATEOS_SEMAPHORE_HH
 
-#include "inc/chrono.hh"
 #include "inc/ossemaphore.h"
+#include "inc/chrono.hh"
 
 namespace std {
 

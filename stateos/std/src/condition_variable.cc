@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // -----------------------------------------
-// Modified by Rajmund Szymanski, 07.04.2021
+// Modified by Rajmund Szymanski, 08.04.2021
 
 #include <condition_variable>
 
@@ -56,26 +56,26 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
   }
 
   extern void
-  __at_thread_exit(__at_thread_exit_elt*);
+  __at_thread_exit(__at_thread_exit_elt *);
 
   namespace
   {
     __gthread_key_t key;
 
-    void run(void* p)
+    void run(void *p)
     {
-      auto elt = (__at_thread_exit_elt*)p;
+      auto elt = (__at_thread_exit_elt *)p;
       while (elt)
-	{
-	  auto next = elt->_M_next;
-	  elt->_M_cb(elt);
-	  elt = next;
-	}
+      {
+        auto next = elt->_M_next;
+        elt->_M_cb(elt);
+        elt = next;
+      }
     }
 
     void run()
     {
-      auto elt = (__at_thread_exit_elt*)__gthread_getspecific(key);
+      auto elt = (__at_thread_exit_elt *)__gthread_getspecific(key);
       __gthread_setspecific(key, nullptr);
       run(elt);
     }
@@ -85,41 +85,42 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       notifier(condition_variable& cnd, unique_lock<mutex>& l)
       : cv(&cnd), mx(l.release())
       {
-	_M_cb = &notifier::run;
-	__at_thread_exit(this);
+        _M_cb = &notifier::run;
+        __at_thread_exit(this);
       }
 
       ~notifier()
       {
-	mx->unlock();
-	cv->notify_all();
+        mx->unlock();
+        cv->notify_all();
       }
 
-      condition_variable* cv;
-      mutex* mx;
+      condition_variable *cv;
+      mutex *mx;
 
-      static void run(void* p) { delete static_cast<notifier*>(p); }
+      static void run(void *p) { delete static_cast<notifier *>(p); }
     };
 
-
-    void key_init() {
-      struct key_s {
-	key_s() { __gthread_key_create (&key, run); }
-	~key_s() { __gthread_key_delete (key); }
+    void key_init()
+    {
+      struct key_s
+      {
+        key_s() { __gthread_key_create(&key, run); }
+        ~key_s() { __gthread_key_delete(key); }
       };
       static key_s ks;
       // Also make sure the callbacks are run by std::exit.
-      std::atexit (run);
+      std::atexit(run);
     }
   }
 
   void
-  __at_thread_exit(__at_thread_exit_elt* elt)
+  __at_thread_exit(__at_thread_exit_elt *elt)
   {
     static __gthread_once_t once = __GTHREAD_ONCE_INIT;
-    __gthread_once (&once, key_init);
+    __gthread_once(&once, key_init);
 
-    elt->_M_next = (__at_thread_exit_elt*)__gthread_getspecific(key);
+    elt->_M_next = (__at_thread_exit_elt *)__gthread_getspecific(key);
     __gthread_setspecific(key, elt);
   }
 
