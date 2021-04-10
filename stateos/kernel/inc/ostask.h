@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    09.04.2021
+z    @date    10.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -699,6 +699,28 @@ tsk_t *wrk_new( unsigned prio, fun_t *state, size_t size, bool detached, bool au
 {
 	return wrk_create(prio, state, size, detached, autostart);
 }
+
+/******************************************************************************
+ *
+ * Name              : thd_create
+ *
+ * Description       : create and initialize complete work area for task object
+ *                     and start the task
+ *
+ * Parameters
+ *   prio            : initial task priority (any unsigned int value)
+ *   proc            : task initial procedure (initial task function)
+ *   arg             : task initial procedure argument (for internal use)
+ *   size            : size of task private stack (in bytes)
+ *
+ * Return            : pointer to task object
+ *   NULL            : object not created (not enough free memory)
+ *
+ * Note              : for internal use
+ *
+ ******************************************************************************/
+
+tsk_t *thd_create( unsigned prio, thd_t *proc, void *arg, size_t size );
 
 /******************************************************************************
  *

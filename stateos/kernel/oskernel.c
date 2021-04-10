@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    09.04.2021
+    @date    10.04.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -350,11 +350,8 @@ void core_tsk_loop( void )
 
 void core_tsk_exec( void )
 {
-	void *arg;
 	port_clr_lock();
-	arg = System.cur->arg;
-	System.cur->arg = NULL;
-	System.cur->state(arg);
+	System.cur->state(System.cur->arg);
 	tsk_stop();
 }
 
