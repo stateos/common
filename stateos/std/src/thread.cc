@@ -27,8 +27,8 @@
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
-#include <cerrno>
 #include <cxxabi.h>
+#include <cerrno>
 
 #ifdef _GLIBCXX_HAS_GTHREADS
 

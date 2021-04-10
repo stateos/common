@@ -65,13 +65,15 @@ typedef tsk_t *__gthread_t;
 typedef thd_t *__gthread_key_t;
 
 struct  ostime_t;
-typedef ostime_t  __gthread_time_t;
+typedef ostime_t __gthread_time_t;
 
 //-----------------------------------------------------------------------------
 
 #include "inc/chrono.hh"
 #include "inc/critical_section.hh"
+#if    !__has_include(<semaphore>)
 #include "inc/semaphore.hh"
+#endif
 
 //-----------------------------------------------------------------------------
 
