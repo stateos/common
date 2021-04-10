@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // -----------------------------------------
-// Modified by Rajmund Szymanski, 09.04.2021
+// Modified by Rajmund Szymanski, 10.04.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
@@ -31,19 +31,6 @@
 #include <cxxabi.h>
 
 #ifdef _GLIBCXX_HAS_GTHREADS
-
-int __gthread_create(__gthread_t *thread, void (*func)(void *), void *args)
-{
-  auto task = wrk_create(OS_MAIN_PRIO, reinterpret_cast<fun_t *>(func), OS_STACK_SIZE, false, false);
-  if (task != nullptr)
-  {
-    task->arg = args;
-    tsk_start(task);
-    *thread = task;
-    return 0;
-  }
-  return 1;
-}
 
 static void (*key_dtor)(void *) = nullptr;
 
@@ -81,9 +68,12 @@ namespace std _GLIBCXX_VISIBILITY(default)
     static void
     execute_native_thread_routine(void *ptr)
     {
+      auto task = __gthread_self();
+      task->state = nullptr;
+      task->arg = nullptr;
       static_cast<thread::_State *>(ptr)->_M_run();
       if (key_dtor)
-        key_dtor(__gthread_self()->arg);
+        key_dtor(tsk->arg);
     }
   } // extern "C"
 

@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    09.04.2021
+    @date    10.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -186,6 +186,13 @@ static inline
 int __gthread_cond_timedwait(__gthread_cond_t *cond, __gthread_mutex_t *mutex, const __gthread_time_t *abs_timeout)
 {
 	return cnd_waitUntil(cond, mutex, abs_timeout->to_ticks());
+}
+
+static inline
+int __gthread_create(__gthread_t *thread, void (*func)(void *), void *args)
+{
+	*thread = thd_create(OS_MAIN_PRIO, func, args, OS_STACK_SIZE);
+	return *thread == nullptr;
 }
 
 static inline

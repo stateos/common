@@ -2,7 +2,7 @@
 
     @file    StateOS: chrono.hh
     @author  Rajmund Szymanski
-    @date    09.04.2021
+    @date    10.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -84,7 +84,7 @@ struct systick
 
 //-----------------------------------------------------------------------------
 
-struct ostime_t : public timespec
+struct ostime_t : public ::timespec
 {
 	cnt_t to_ticks() const
 	{
