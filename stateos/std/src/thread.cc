@@ -32,35 +32,6 @@
 
 #ifdef _GLIBCXX_HAS_GTHREADS
 
-static void (*key_dtor)(void *) = nullptr;
-
-int __gthread_key_create(__gthread_key_t *, void(*dtor)(void *))
-{
-  assert(key_dtor == nullptr);
-  key_dtor = dtor;
-  return 0;
-}
-
-int __gthread_key_delete(__gthread_key_t)
-{
-  assert(key_dtor != nullptr);
-  key_dtor = nullptr;
-  return 0;
-}
-
-void *__gthread_getspecific(__gthread_key_t)
-{
-  assert(key_dtor != nullptr);
-  return __gthread_self()->arg;
-}
-
-int __gthread_setspecific(__gthread_key_t, const void *ptr)
-{
-  assert(key_dtor != nullptr);
-  __gthread_self()->arg = const_cast<void *>(ptr);
-  return 0;
-}
-
 namespace std _GLIBCXX_VISIBILITY(default)
 {
   extern "C"
@@ -72,8 +43,8 @@ namespace std _GLIBCXX_VISIBILITY(default)
       task->state = nullptr;
       task->arg = nullptr;
       static_cast<thread::_State *>(ptr)->_M_run();
-      if (key_dtor)
-        key_dtor(tsk->arg);
+      if (task->state)
+        reinterpret_cast<thd_t *>(task->state)(task->arg);
     }
   } // extern "C"
 

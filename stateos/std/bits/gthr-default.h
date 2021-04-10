@@ -57,12 +57,12 @@
 
 //-----------------------------------------------------------------------------
 
-typedef int    __gthread_key_t;
 typedef one_t  __gthread_once_t;
 typedef mtx_t  __gthread_mutex_t;
 typedef mtx_t  __gthread_recursive_mutex_t;
 typedef cnd_t  __gthread_cond_t;
 typedef tsk_t *__gthread_t;
+typedef thd_t *__gthread_key_t;
 
 struct  ostime_t;
 typedef ostime_t  __gthread_time_t;
@@ -226,15 +226,32 @@ int __gthread_yield()
 	return 0;
 }
 
-int __gthread_create(__gthread_t *thread, void (*func)(void *), void *args);
+static inline
+int __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *))
+{
+  *keyp = dtor;
+  return 0;
+}
 
-int __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *));
+static inline
+int __gthread_key_delete(__gthread_key_t)
+{
+  return 0;
+}
 
-int __gthread_key_delete(__gthread_key_t key);
+static inline
+void *__gthread_getspecific(__gthread_key_t)
+{
+  return __gthread_self()->arg;
+}
 
-void *__gthread_getspecific(__gthread_key_t key);
-
-int __gthread_setspecific(__gthread_key_t key, const void *ptr);
+static inline
+int __gthread_setspecific(__gthread_key_t key, const void *ptr)
+{
+  __gthread_self()->state = reinterpret_cast<fun_t *>(key);
+  __gthread_self()->arg = const_cast<void *>(ptr);
+  return 0;
+}
 
 //-----------------------------------------------------------------------------
 
