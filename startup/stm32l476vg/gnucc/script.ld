@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     stm32l4xx.ld
 @author   Rajmund Szymanski
-@date     23.02.2021
+@date     12.04.2021
 @brief    Linker script for STM32L476VG device with 1024KB FLASH and 128KB RAM
 *******************************************************************************/
 
@@ -66,7 +66,9 @@ SECTIONS
 
 	.ARM.extab : ALIGN(4)
 	{
+		__extab_start = .;
 		*(.ARM.extab* .gnu.linkonce.armextab.*)
+		__extab_end = .;
 		*(.gcc_except_table)
 		*(.eh_frame_hdr)
 		*(.eh_frame)

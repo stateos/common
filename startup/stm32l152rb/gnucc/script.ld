@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     stm32l1xx.ld
 @author   Rajmund Szymanski
-@date     23.02.2021
+@date     12.04.2021
 @brief    Linker script for STM32L152RB device with 128KB FLASH and 16KB RAM
 *******************************************************************************/
 
@@ -61,7 +61,9 @@ SECTIONS
 
 	.ARM.extab : ALIGN(4)
 	{
+		__extab_start = .;
 		*(.ARM.extab* .gnu.linkonce.armextab.*)
+		__extab_end = .;
 		*(.gcc_except_table)
 		*(.eh_frame_hdr)
 		*(.eh_frame)
