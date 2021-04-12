@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // -----------------------------------------
-// Modified by Rajmund Szymanski, 10.04.2021
+// Modified by Rajmund Szymanski, 12.04.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
