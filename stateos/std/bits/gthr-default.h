@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    10.04.2021
+    @date    12.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -31,11 +31,19 @@
 
 #ifndef _GLIBCXX_GCC_GTHR_STATEOS_H
 #define _GLIBCXX_GCC_GTHR_STATEOS_H
-#ifdef  __GNUC__
 
 #include "os.h"
+#include "inc/chrono.hh"
+#include "inc/critical_section.hh"
+#if    !__has_include(<semaphore>)
+#include "inc/semaphore.hh"
+#endif
 
 //-----------------------------------------------------------------------------
+
+#if   __cplusplus < 201709L
+#error  Required C++20 or above.
+#endif
 
 #if     OS_TASK_EXIT == 0
 #error  osconfig.h: Invalid OS_TASK_EXIT value! It must be a value other than 0.
@@ -50,6 +58,18 @@
 
 //-----------------------------------------------------------------------------
 
+typedef one_t  __gthread_once_t;
+typedef mtx_t  __gthread_mutex_t;
+typedef mtx_t  __gthread_recursive_mutex_t;
+typedef cnd_t  __gthread_cond_t;
+typedef tsk_t *__gthread_t;
+
+struct  oskey_t;
+typedef oskey_t *__gthread_key_t;
+
+struct  ostime_t;
+typedef ostime_t __gthread_time_t;
+
 #define __GTHREAD_ONCE_INIT            _ONE_INIT()
 #define __GTHREAD_MUTEX_INIT           _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0)
 #define __GTHREAD_RECURSIVE_MUTEX_INIT _MTX_INIT(mtxPrioInherit|mtxRecursive, 0)
@@ -57,25 +77,7 @@
 
 //-----------------------------------------------------------------------------
 
-typedef one_t  __gthread_once_t;
-typedef mtx_t  __gthread_mutex_t;
-typedef mtx_t  __gthread_recursive_mutex_t;
-typedef cnd_t  __gthread_cond_t;
-typedef tsk_t *__gthread_t;
-typedef thd_t *__gthread_key_t;
-
-struct  ostime_t;
-typedef ostime_t __gthread_time_t;
-
-//-----------------------------------------------------------------------------
-
-#include "inc/chrono.hh"
-#include "inc/critical_section.hh"
-#if    !__has_include(<semaphore>)
-#include "inc/semaphore.hh"
-#endif
-
-//-----------------------------------------------------------------------------
+#ifndef _LIBOBJC
 
 static inline
 int __gthread_active_p()
@@ -228,34 +230,18 @@ int __gthread_yield()
 	return 0;
 }
 
-static inline
-int __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *))
-{
-  *keyp = dtor;
-  return 0;
-}
+int   __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *));
 
-static inline
-int __gthread_key_delete(__gthread_key_t)
-{
-  return 0;
-}
+int   __gthread_key_delete(__gthread_key_t key);
 
-static inline
-void *__gthread_getspecific(__gthread_key_t)
-{
-  return __gthread_self()->arg;
-}
+void *__gthread_getspecific(__gthread_key_t key);
 
-static inline
-int __gthread_setspecific(__gthread_key_t key, const void *ptr)
-{
-  __gthread_self()->state = reinterpret_cast<fun_t *>(key);
-  __gthread_self()->arg = const_cast<void *>(ptr);
-  return 0;
-}
+int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
+
+int   __gthread_atexit(__gthread_t thread);
+
+#endif//!_LIBOBJC
 
 //-----------------------------------------------------------------------------
 
-#endif //__GNUC__
 #endif //_GLIBCXX_GCC_GTHR_STATEOS_H

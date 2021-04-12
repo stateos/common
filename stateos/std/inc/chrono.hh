@@ -2,7 +2,7 @@
 
     @file    StateOS: chrono.hh
     @author  Rajmund Szymanski
-    @date    10.04.2021
+    @date    11.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -47,7 +47,6 @@ namespace chrono {
 struct systick
 {
 	using rep        = cnt_t;
-#if __cplusplus >= 201402L
 	using period     = ratio<1, OS_FREQUENCY>;
 	using duration   = chrono::duration<rep, period>;
 	using time_point = chrono::time_point<systick>;
@@ -71,7 +70,7 @@ struct systick
 	{
 		return duration_cast<duration>(_time.time_since_epoch()).count();
 	}
-#endif
+
 	static constexpr
 	rep count( const rep _delay ) { return _delay; }
 

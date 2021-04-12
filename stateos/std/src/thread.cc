@@ -27,10 +27,124 @@
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
+#include <mutex>
+#include <vector>
+#include <unordered_map>
 #include <cxxabi.h>
 #include <cerrno>
 
 #ifdef _GLIBCXX_HAS_GTHREADS
+
+struct oskey_t : private std::unordered_map<tsk_t *, void *>
+{
+  oskey_t(void (*func)(void *)) : dtor{func} {}
+
+  void  del();
+  void *get(tsk_t *task);
+  void  set(tsk_t *task, void *ptr);
+  void  run(tsk_t *task);
+  bool  useless();
+
+  private:
+  void (*dtor)(void *);
+};
+
+void oskey_t::del()
+{
+  dtor = nullptr;
+}
+
+void *oskey_t::get(tsk_t *task)
+{
+  return contains(task) ? at(task) : nullptr;
+}
+
+void oskey_t::set(tsk_t *task, void *ptr)
+{
+  insert_or_assign(task, ptr);
+}
+
+void oskey_t::run(tsk_t *task)
+{
+  if (contains(task))
+  {
+    if (dtor)
+      dtor(at(task));
+    erase(task);
+  }
+}
+
+bool oskey_t::useless()
+{
+  return empty() && !dtor;
+}
+
+struct oskey_vector_t : private std::vector<oskey_t>
+{
+  oskey_t *add(void(*dtor)(void *));
+  void     clr();
+  void     run(tsk_t *task);
+
+  std::mutex mtx;
+};
+
+oskey_t *oskey_vector_t::add(void(*dtor)(void *))
+{
+  return &emplace_back(dtor);
+}
+
+void oskey_vector_t::clr()
+{
+  std::erase_if(*this, [](auto& key){ return key.useless(); });
+}
+
+void oskey_vector_t::run(tsk_t *task)
+{
+  for (auto& key : *this)
+    key.run(task);
+}
+
+static oskey_vector_t keys{};
+
+int __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *))
+{
+  std::lock_guard<std::mutex> lock(keys.mtx);
+  assert(keyp);
+  *keyp = keys.add(dtor);
+  return *keyp == nullptr;
+}
+
+int __gthread_key_delete(__gthread_key_t key)
+{
+  std::lock_guard<std::mutex> lock(keys.mtx);
+  assert(key && key->dtor);
+  key->del();
+  keys.clr();
+  return 0;
+}
+
+void *__gthread_getspecific(__gthread_key_t key)
+{
+  std::lock_guard<std::mutex> lock(keys.mtx);
+  assert(key && key->dtor);
+  return key->get(__gthread_self());
+}
+
+int __gthread_setspecific(__gthread_key_t key, const void *ptr)
+{
+  std::lock_guard<std::mutex> lock(keys.mtx);
+  assert(key && key->dtor);
+  key->set(__gthread_self(), const_cast<void *>(ptr));
+  return 0;
+}
+
+int __gthread_atexit(__gthread_t task)
+{
+  std::lock_guard<std::mutex> lock(keys.mtx);
+  keys.run(task);
+  keys.clr();
+  return 0;
+}
 
 namespace std _GLIBCXX_VISIBILITY(default)
 {
@@ -39,12 +153,8 @@ namespace std _GLIBCXX_VISIBILITY(default)
     static void
     execute_native_thread_routine(void *ptr)
     {
-      auto task = __gthread_self();
-      task->state = nullptr;
-      task->arg = nullptr;
       static_cast<thread::_State *>(ptr)->_M_run();
-      if (task->state)
-        reinterpret_cast<thd_t *>(task->state)(task->arg);
+      __gthread_atexit(__gthread_self());
     }
   } // extern "C"
 
