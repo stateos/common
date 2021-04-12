@@ -54,6 +54,7 @@
 #define __GTHREADS 1
 #define __GTHREADS_CXX0X 1
 #define __GTHREAD_HAS_COND
+#define  _GLIBCXX_HAVE_TLS
 #define  _GLIBCXX_USE_SCHED_YIELD
 
 //-----------------------------------------------------------------------------

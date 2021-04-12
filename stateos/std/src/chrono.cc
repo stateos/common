@@ -23,9 +23,18 @@
 // <http://www.gnu.org/licenses/>.
 
 // -----------------------------------------
-// Modified by Rajmund Szymanski, 08.04.2021
+// Modified by Rajmund Szymanski, 12.04.2021
 
+#include <bits/c++config.h>
 #include <chrono>
+
+// Conditional inclusion of sys/time.h for gettimeofday
+#if !defined(_GLIBCXX_USE_CLOCK_MONOTONIC) && \
+    !defined(_GLIBCXX_USE_CLOCK_REALTIME) && \
+     defined(_GLIBCXX_USE_GETTIMEOFDAY)
+#include <sys/time.h>
+#endif
+
 #include "inc/chrono.hh"
 
 namespace std _GLIBCXX_VISIBILITY(default)
