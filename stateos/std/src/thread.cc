@@ -51,16 +51,19 @@ struct oskey_t : private std::unordered_map<tsk_t *, void *>
 
 void oskey_t::del()
 {
+  assert(dtor);
   dtor = nullptr;
 }
 
 void *oskey_t::get(tsk_t *task)
 {
+  assert(dtor);
   return contains(task) ? at(task) : nullptr;
 }
 
 void oskey_t::set(tsk_t *task, void *ptr)
 {
+  assert(dtor);
   insert_or_assign(task, ptr);
 }
 
@@ -117,7 +120,7 @@ int __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *))
 int __gthread_key_delete(__gthread_key_t key)
 {
   std::lock_guard<std::mutex> lock(keys.mtx);
-  assert(key && key->dtor);
+  assert(key);
   key->del();
   keys.clr();
   return 0;
@@ -126,14 +129,14 @@ int __gthread_key_delete(__gthread_key_t key)
 void *__gthread_getspecific(__gthread_key_t key)
 {
   std::lock_guard<std::mutex> lock(keys.mtx);
-  assert(key && key->dtor);
+  assert(key);
   return key->get(__gthread_self());
 }
 
 int __gthread_setspecific(__gthread_key_t key, const void *ptr)
 {
   std::lock_guard<std::mutex> lock(keys.mtx);
-  assert(key && key->dtor);
+  assert(key);
   key->set(__gthread_self(), const_cast<void *>(ptr));
   return 0;
 }
