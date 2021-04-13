@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // -----------------------------------------
-// Modified by Rajmund Szymanski, 12.04.2021
+// Modified by Rajmund Szymanski, 13.04.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
@@ -35,14 +35,14 @@
 
 #ifdef _GLIBCXX_HAS_GTHREADS
 
-struct oskey_t : private std::unordered_map<tsk_t *, void *>
+struct oskey_t : private std::unordered_map<__gthread_t, void *>
 {
   oskey_t(void (*func)(void *)) : dtor{func} {}
 
   void  del();
-  void *get(tsk_t *task);
-  void  set(tsk_t *task, void *ptr);
-  void  run(tsk_t *task);
+  void *get(__gthread_t task);
+  void  set(__gthread_t task, void *ptr);
+  void  run(__gthread_t task);
   bool  useless();
 
   private:
@@ -55,25 +55,26 @@ void oskey_t::del()
   dtor = nullptr;
 }
 
-void *oskey_t::get(tsk_t *task)
+void *oskey_t::get(__gthread_t task)
 {
   assert(dtor);
-  return contains(task) ? at(task) : nullptr;
+  auto it = find(task);
+  return it != end() ? it->second : nullptr;
 }
 
-void oskey_t::set(tsk_t *task, void *ptr)
+void oskey_t::set(__gthread_t task, void *ptr)
 {
   assert(dtor);
   insert_or_assign(task, ptr);
 }
 
-void oskey_t::run(tsk_t *task)
+void oskey_t::run(__gthread_t task)
 {
-  if (contains(task))
+  auto it = find(task);
+  if (it != end())
   {
-    if (dtor)
-      dtor(at(task));
-    erase(task);
+    if (dtor) dtor(it->second);
+    erase(it);
   }
 }
 
@@ -86,7 +87,7 @@ struct oskey_vector_t : private std::vector<oskey_t>
 {
   oskey_t *add(void(*dtor)(void *));
   void     clr();
-  void     run(tsk_t *task);
+  void     run(__gthread_t task);
 
   std::mutex mtx;
 };
@@ -98,10 +99,14 @@ oskey_t *oskey_vector_t::add(void(*dtor)(void *))
 
 void oskey_vector_t::clr()
 {
+#if __cplusplus >= 201709L
   std::erase_if(*this, [](auto& key){ return key.useless(); });
+#else
+  for (auto it = begin(); it != end(); it = it->useless() ? erase(it) : ++it);
+#endif
 }
 
-void oskey_vector_t::run(tsk_t *task)
+void oskey_vector_t::run(__gthread_t task)
 {
   for (auto& key : *this)
     key.run(task);
