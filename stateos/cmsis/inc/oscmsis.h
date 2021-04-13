@@ -2,7 +2,7 @@
 
     @file    StateOS: oscmsis.h
     @author  Rajmund Szymanski
-    @date    09.06.2020
+    @date    13.04.2021
     @brief   CMSIS-RTOS2 API implementation for StateOS.
 
  ******************************************************************************
@@ -35,6 +35,10 @@
 #include <cmsis_os2.h>
 #include <os.h>
 
+#if     OS_TASK_EXIT == 0
+#error  osconfig.h: Invalid OS_TASK_EXIT value! It must be a value other than 0.
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -59,8 +63,6 @@ struct __Thread
 	flg_t          flg;   // StateOS flag object
 	uint32_t       flags; // attribute bits
 	const char   * name;  // task name
-	osThreadFunc_t func;  // task function
-	void         * arg;   // task function argument
 	stk_t          stk[]; // task stack
 };
 
@@ -76,8 +78,6 @@ struct __Timer
 	tmr_t         tmr;   // StateOS timer object
 	uint32_t      flags; // attribute bits
 	const char  * name;  // timer name
-	osTimerFunc_t func;  // timer function
-	void        * arg;   // timer function argument
 };
 
 typedef struct __Timer osTimer_t;

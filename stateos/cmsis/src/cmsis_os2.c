@@ -24,7 +24,7 @@
 
     @file    StateOS: cmsis_os2.c
     @author  Rajmund Szymanski
-    @date    08.03.2021
+    @date    13.04.2021
     @brief   CMSIS-RTOS2 API implementation for StateOS.
 
  ******************************************************************************
@@ -179,18 +179,6 @@ uint32_t osKernelGetSysTimerFreq (void)
 
 /* -------------------------------------------------------------------------- */
 
-static void thread_handler (void)
-{
-	void *tmp = tsk_this(); // because of COSMIC compiler
-	osThread_t *thread = tmp;
-
-	thread->func(thread->arg);
-
-	tsk_stop();
-}
-
-/* -------------------------------------------------------------------------- */
-
 osThreadId_t osThreadNew (osThreadFunc_t func, void *argument, const osThreadAttr_t *attr)
 {
 	osThread_t *thread     = NULL;
@@ -248,15 +236,14 @@ osThreadId_t osThreadNew (osThreadFunc_t func, void *argument, const osThreadAtt
 
 	sys_lock();
 	{
-		tsk_init(&thread->tsk, attr == NULL ? osPriorityNormal : (unsigned)attr->priority, thread_handler, stack_mem, stack_size);
+		tsk_init(&thread->tsk, attr == NULL ? osPriorityNormal : (unsigned)attr->priority, (fun_t *)func, stack_mem, stack_size);
 		if (attr == NULL || attr->cb_mem == NULL || attr->cb_size == 0U ) thread->tsk.obj.res = thread;
 		else if (attr->stack_mem == NULL || attr->stack_size == 0U) thread->tsk.obj.res = stack_mem;
+		thread->tsk.arg = argument;
 		thread->tsk.owner = ((flags & osThreadJoinable) == osThreadJoinable) ? NULL : &thread->tsk;
 		flg_init(&thread->flg, 0);
 		thread->flags = flags;
 		thread->name = (attr == NULL) ? NULL : attr->name;
-		thread->func = func;
-		thread->arg = argument;
 	}
 	sys_unlock();
 
@@ -578,16 +565,6 @@ osStatus_t osDelayUntil (uint32_t ticks)
 
 /* -------------------------------------------------------------------------- */
 
-static void timer_handler (void)
-{
-	void *tmp = tmr_thisISR(); // because of COSMIC compiler
-	osTimer_t *timer = tmp;
-
-	timer->func(timer->arg);
-}
-
-/* -------------------------------------------------------------------------- */
-
 osTimerId_t osTimerNew (osTimerFunc_t func, osTimerType_t type, void *argument, const osTimerAttr_t *attr)
 {
 	osTimer_t *timer = NULL;
@@ -615,12 +592,11 @@ osTimerId_t osTimerNew (osTimerFunc_t func, osTimerType_t type, void *argument, 
 
 	sys_lock();
 	{
-		tmr_init(&timer->tmr, timer_handler);
+		tmr_init(&timer->tmr, (fun_t *)func);
 		if (attr == NULL || attr->cb_mem == NULL || attr->cb_size == 0U) timer->tmr.obj.res = timer;
+		timer->tmr.arg = argument;
 		timer->flags = flags;
 		timer->name = (attr == NULL) ? NULL : attr->name;
-		timer->func = func;
-		timer->arg = argument;
 	}
 	sys_unlock();
 
