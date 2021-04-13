@@ -12,7 +12,7 @@ CUBE       := stm32_programmer_cli
 QEMU       := qemu-system-gnuarmeclipse
 OPTF       ?=
 STDC       ?= 11
-STDCXX     ?= 20
+STDCXX     ?= 17
 BUILD      ?= build
 
 #----------------------------------------------------------#
