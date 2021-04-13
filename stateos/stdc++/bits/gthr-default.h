@@ -41,8 +41,8 @@
 
 //-----------------------------------------------------------------------------
 
-#if   __cplusplus < 201703L
-#error  Required C++17 or above.
+#if   __cplusplus < 201709L
+#error  Required C++20 or above.
 #endif
 
 #if     OS_TASK_EXIT == 0
