@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    10.04.2021
+    @date    13.04.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -150,7 +150,7 @@ static
 void priv_tmr_wakeup( tmr_t *tmr, int event )
 {
 	if (tmr->state)
-		tmr->state();
+		tmr->state(tmr->arg);
 
 	priv_tmr_remove(tmr);
 	if (tmr->delay >= core_sys_time() - tmr->start + 1)
