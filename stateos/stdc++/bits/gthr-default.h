@@ -80,7 +80,7 @@ typedef ostime_t __gthread_time_t;
 
 #ifndef _LIBOBJC
 
-static inline
+static inline constexpr
 int __gthread_active_p()
 {
 	return 1;
