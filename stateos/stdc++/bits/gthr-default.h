@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    12.04.2021
+    @date    14.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -64,9 +64,7 @@ typedef mtx_t  __gthread_mutex_t;
 typedef mtx_t  __gthread_recursive_mutex_t;
 typedef cnd_t  __gthread_cond_t;
 typedef tsk_t *__gthread_t;
-
-struct  oskey_t;
-typedef oskey_t *__gthread_key_t;
+typedef thd_t *__gthread_key_t;
 
 struct  ostime_t;
 typedef ostime_t __gthread_time_t;
@@ -239,7 +237,7 @@ void *__gthread_getspecific(__gthread_key_t key);
 
 int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
 
-int   __gthread_atexit(__gthread_t thread);
+int   __gthread_atexit();
 
 #endif//!_LIBOBJC
 
