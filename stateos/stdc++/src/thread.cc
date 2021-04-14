@@ -35,54 +35,59 @@
 
 #ifdef _GLIBCXX_HAS_GTHREADS
 
-using __gthread_key_value_t = std::unordered_map<__gthread_t, void *>;
-
-static std::unordered_map<__gthread_key_t, std::unique_ptr<__gthread_key_value_t>> key_map;
+static std::unordered_map<__gthread_key_t, void (*)(void *)> key_map;
 static std::mutex key_mtx;
 
-int __gthread_key_create(__gthread_key_t *keyp, __gthread_key_t dtor)
+struct oskey_t : public std::unordered_map<__gthread_t, void *>
 {
-  assert(keyp && dtor);
-  *keyp = dtor;
-  return !key_map.emplace(dtor, std::make_unique<__gthread_key_value_t>()).second;
+  using unordered_map::unordered_map;
+};
+
+int __gthread_key_create(__gthread_key_t *keyp, void (*dtor)(void *))
+{
+  assert(keyp);
+  std::lock_guard<std::mutex> lock(key_mtx);
+  return !key_map.insert({ *keyp = new oskey_t, dtor }).second;
 }
 
-int __gthread_key_delete(__gthread_key_t dtor)
+int __gthread_key_delete(__gthread_key_t key)
 {
+  assert(key);
   std::lock_guard<std::mutex> lock(key_mtx);
-  return key_map.erase(dtor) != 1;
+  delete key;
+  return key_map.erase(key) != 1;
 }
 
-void *__gthread_getspecific(__gthread_key_t dtor)
+void *__gthread_getspecific(__gthread_key_t key)
 {
+  assert(key);
   std::lock_guard<std::mutex> lock(key_mtx);
-  auto &val = key_map.find(dtor)->second;
-  auto it = val->find(__gthread_self());
-  return it != val->end() ? it->second : nullptr;
+  auto it = key->find(__gthread_self());
+  return it != key->end() ? it->second : nullptr;
 }
 
-int __gthread_setspecific(__gthread_key_t dtor, const void *ptr)
+int __gthread_setspecific(__gthread_key_t key, const void *ptr)
 {
+  assert(key);
   std::lock_guard<std::mutex> lock(key_mtx);
-  auto &val = key_map.find(dtor)->second;
-  val->insert_or_assign(__gthread_self(), const_cast<void *>(ptr));
+  key->insert_or_assign(__gthread_self(), const_cast<void *>(ptr));
   return 0;
 }
 
-int __gthread_atexit()
+void __gthread_atexit()
 {
   std::lock_guard<std::mutex> lock(key_mtx);
   auto task = __gthread_self();
   for (auto& item : key_map)
   {
-    auto it = item.second->find(task);
-    if (it != item.second->end())
+    auto it = item.first->find(task);
+    if (it != item.first->end())
     {
-      item.first(it->second);
-      item.second->erase(it);
+      if (item.second)
+        item.second(it->second);
+      item.first->erase(it);
     }
   }
-  return 0;
 }
 
 namespace std _GLIBCXX_VISIBILITY(default)

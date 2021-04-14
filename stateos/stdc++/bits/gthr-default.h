@@ -64,7 +64,9 @@ typedef mtx_t  __gthread_mutex_t;
 typedef mtx_t  __gthread_recursive_mutex_t;
 typedef cnd_t  __gthread_cond_t;
 typedef tsk_t *__gthread_t;
-typedef thd_t *__gthread_key_t;
+
+struct  oskey_t;
+typedef oskey_t *__gthread_key_t;
 
 struct  ostime_t;
 typedef ostime_t __gthread_time_t;
@@ -236,8 +238,6 @@ int   __gthread_key_delete(__gthread_key_t key);
 void *__gthread_getspecific(__gthread_key_t key);
 
 int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
-
-int   __gthread_atexit();
 
 #endif//!_LIBOBJC
 
