@@ -35,19 +35,19 @@
 
 #ifdef _GLIBCXX_HAS_GTHREADS
 
-static std::unordered_map<__gthread_key_t, void (*)(void *)> key_map;
-static std::mutex key_mtx;
+static std::unordered_map<__gthread_key_t, void (*)(void *)> key_map{};
+static std::mutex key_mtx{};
 
 struct oskey_t : public std::unordered_map<__gthread_t, void *>
 {
-  using unordered_map::unordered_map;
+  using unordered_map<__gthread_t, void *>::unordered_map;
 };
 
 int __gthread_key_create(__gthread_key_t *keyp, void (*dtor)(void *))
 {
   assert(keyp);
   std::lock_guard<std::mutex> lock(key_mtx);
-  return !key_map.insert({ *keyp = new oskey_t, dtor }).second;
+  return !key_map.insert({ *keyp = new oskey_t(), dtor }).second;
 }
 
 int __gthread_key_delete(__gthread_key_t key)
@@ -83,7 +83,7 @@ void __gthread_atexit()
     auto it = item.first->find(task);
     if (it != item.first->end())
     {
-      if (item.second)
+      if (item.second && it->second)
         item.second(it->second);
       item.first->erase(it);
     }
