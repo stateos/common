@@ -9,6 +9,7 @@ DEFS += _GLIBCXX_HAS_GTHREADS
 
 INCS += $(COMMON)/stateos/stdc++
 
+SRCS += $(COMMON)/stateos/stdc++/src/emutls.cc
 SRCS += $(COMMON)/stateos/stdc++/src/chrono.cc
 SRCS += $(COMMON)/stateos/stdc++/src/future.cc
 SRCS += $(COMMON)/stateos/stdc++/src/mutex.cc

@@ -17,6 +17,7 @@ target_compile_definitions(stateos-stdc++
 
 target_sources(stateos-stdc++
 	INTERFACE
+	${STATEOS_PATH}/stdc++/src/emutls.cc
 	${STATEOS_PATH}/stdc++/src/chrono.cc
 	${STATEOS_PATH}/stdc++/src/future.cc
 	${STATEOS_PATH}/stdc++/src/mutex.cc
