@@ -23,29 +23,16 @@ a copy of the GCC Runtime Library Exception along with this program;
 see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 <http://www.gnu.org/licenses/>.  */
 
-// -----------------------------------------
-// Modified by Rajmund Szymanski, 15.04.2021
+// ---------------------------------------------------
+// Modified by Rajmund Szymanski @ StateOS, 16.04.2021
 
+#include <atomic>
+#include <mutex>
+#include <vector>
+#include <malloc.h>
 #include "bits/gthr.h"
 
 #ifdef _GLIBCXX_HAS_GTHREADS
-
-struct __emutls_object
-{
-  size_t size;
-  size_t align;
-  union {
-    uintptr_t offset;
-    void *ptr;
-  } loc;
-  void *templ;
-};
-
-struct __emutls_array
-{
-  uintptr_t size;
-  void **data[1];
-};
 
 extern "C"
 {
@@ -53,136 +40,89 @@ void *__emutls_get_address(void *);
 void  __emutls_register_common(void *, size_t, size_t, void *);
 }
 
-#ifdef __GTHREADS
-
-#ifdef __GTHREAD_MUTEX_INIT
-static __gthread_mutex_t emutls_mutex = __GTHREAD_MUTEX_INIT;
-#else
-static __gthread_mutex_t emutls_mutex;
-#endif
-static __gthread_key_t   emutls_key;
-static   size_t          emutls_size{};
-
-static void emutls_destroy(void *ptr)
+struct __emutls_object
 {
-  __emutls_array *arr = reinterpret_cast<__emutls_array *>(ptr);
-  for (uintptr_t i = 0; i < arr->size; ++i)
-  {
-    if (arr->data[i])
-      free(arr->data[i][-1]);
-  }
-  free(ptr);
-}
+  size_t size;  // object size
+  size_t align; // object alignment
+  union {
+    uintptr_t index;
+    void *address;
+  } loc;
+  void *value;  // initial value
+};
 
-static void emutls_init(void)
-{
-#ifndef __GTHREAD_MUTEX_INIT
-  __GTHREAD_MUTEX_INIT_FUNCTION(&emutls_mutex);
-#endif
-  if (__gthread_key_create(&emutls_key, emutls_destroy) != 0)
-    abort();
-}
+using __emutls_array = std::vector<void *>;
 
-#endif // __GTHREADS
+static __gthread_key_t emutls_key{};
+static std::once_flag  emutls_once{};
+static std::mutex      emutls_mutex{};
 
 static void *emutls_alloc(__emutls_object *obj)
 {
-  void *ptr;
-  void *ret;
-  /* We could use here posix_memalign if available and adjust emutls_destroy accordingly. */
-  if (obj->align <= sizeof(void *))
-  {
-    ptr = malloc(obj->size + sizeof(void *));
-    ret = (void *)((uintptr_t)ptr + sizeof(void *));
-  }
-  else
-  {
-    ptr = malloc(obj->size + sizeof(void *) + obj->align - 1);
-    ret = (void *)(((uintptr_t)ptr + sizeof(void *) + obj->align - 1) & ~(obj->align - 1));
-  }
-
+  void *ptr = memalign(obj->align, obj->size);
   if (ptr == nullptr)
     abort();
-
-  ((void **)ret)[-1] = ptr;
-
-  if (obj->templ)
-    memcpy(ret, obj->templ, obj->size);
+  if (obj->value)
+    memcpy(ptr, obj->value, obj->size);
   else
-    memset(ret, 0, obj->size);
+    memset(ptr, 0, obj->size);
+  return obj->loc.address = ptr;
+}
 
-  return ret;
+static void emutls_free(void *ptr)
+{
+  __emutls_array *arr = reinterpret_cast<__emutls_array *>(ptr);
+  for (void *p: *arr)
+    if (p)
+      free(p);
+  delete arr;
+}
+
+static void emutls_init()
+{
+  int err = __gthread_key_create(&emutls_key, emutls_free);
+  if (err)
+    abort();
 }
 
 void *__emutls_get_address(void *ptr)
 {
-  __emutls_object *obj = reinterpret_cast<__emutls_object *>(ptr);
-#ifndef __GTHREADS
-  abort();
-#else
-  uintptr_t offset = __atomic_load_n(&obj->loc.offset, __ATOMIC_ACQUIRE);
-
-  if (__builtin_expect(offset == 0, 0))
-  {
-    static __gthread_once_t once = __GTHREAD_ONCE_INIT;
-    __gthread_once(&once, emutls_init);
-    __gthread_mutex_lock(&emutls_mutex);
-    offset = obj->loc.offset;
-    if (offset == 0)
-    {
-      offset = ++emutls_size;
-      __atomic_store_n(&obj->loc.offset, offset, __ATOMIC_RELEASE);
-    }
-    __gthread_mutex_unlock(&emutls_mutex);
-  }
-
+  std::call_once(emutls_once, emutls_init);
   __emutls_array *arr = reinterpret_cast<__emutls_array *>(__gthread_getspecific(emutls_key));
-  if (__builtin_expect(arr == nullptr, 0))
+  if (arr == nullptr)
   {
-    uintptr_t size = offset + 32;
-    arr = reinterpret_cast<__emutls_array *>(calloc(size + 1, sizeof(void *)));
-    if (arr == nullptr)
-      abort();
-    arr->size = size;
-    __gthread_setspecific(emutls_key, (void *) arr);
+    arr = new __emutls_array;
+    __gthread_setspecific(emutls_key, reinterpret_cast<void *>(arr));
   }
-  else if (__builtin_expect(offset > arr->size, 0))
+  __emutls_object *obj = reinterpret_cast<__emutls_object *>(ptr);
+  uintptr_t index = std::atomic_load_explicit(reinterpret_cast<std::atomic_uintptr_t *>(&obj->loc.index),
+                                                               std::memory_order_acquire);
+  if (!index)
   {
-    uintptr_t orig_size = arr->size;
-    uintptr_t size = orig_size * 2;
-    if (offset > size)
-      size = offset + 32;
-    arr = reinterpret_cast<__emutls_array *>(realloc(arr, (size + 1) * sizeof(void *)));
-    if (arr == nullptr)
-      abort();
-    arr->size = size;
-    memset(arr->data + orig_size, 0, (size - orig_size) * sizeof(void *));
-    __gthread_setspecific(emutls_key, (void *) arr);
+    std::lock_guard<std::mutex> lock(emutls_mutex);
+    index = obj->loc.index;
+    if (!index)
+    {
+      void *ret = emutls_alloc(obj);
+      arr->push_back(ret);
+      std::atomic_store_explicit(reinterpret_cast<std::atomic_uintptr_t *>(&obj->loc.index), arr->size(),
+                                                  std::memory_order_release);
+      return ret;
+    }
   }
-
-  void *ret = arr->data[offset - 1];
-  if (__builtin_expect(ret == nullptr, 0))
-  {
-    ret = emutls_alloc(obj);
-    arr->data[offset - 1] = reinterpret_cast<void **>(ret);
-  }
-  return ret;
-#endif
+  return (*arr)[index - 1];
 }
 
-void
-__emutls_register_common(void *ptr, size_t size, size_t align, void *templ)
+void __emutls_register_common(void *ptr, size_t size, size_t align, void *value)
 {
   __emutls_object *obj = reinterpret_cast<__emutls_object *>(ptr);
   if (obj->size < size)
   {
     obj->size = size;
-    obj->templ = nullptr;
+    obj->value = value;
   }
   if (obj->align < align)
     obj->align = align;
-  if (templ && size == obj->size)
-    obj->templ = templ;
 }
 
 #endif // _GLIBCXX_HAS_GTHREADS

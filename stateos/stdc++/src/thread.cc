@@ -22,8 +22,8 @@
 // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 // <http://www.gnu.org/licenses/>.
 
-// -----------------------------------------
-// Modified by Rajmund Szymanski, 14.04.2021
+// ---------------------------------------------------
+// Modified by Rajmund Szymanski @ StateOS, 16.04.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>

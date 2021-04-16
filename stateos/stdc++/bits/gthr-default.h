@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    14.04.2021
+    @date    16.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -54,7 +54,6 @@
 #define __GTHREADS 1
 #define __GTHREADS_CXX0X 1
 #define __GTHREAD_HAS_COND
-#define  _GLIBCXX_HAVE_TLS
 #define  _GLIBCXX_USE_SCHED_YIELD
 
 //-----------------------------------------------------------------------------
