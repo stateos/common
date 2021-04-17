@@ -34,7 +34,6 @@
 #include <system_error>
 #include <malloc.h>
 #include "bits/gthr.h"
-#include <cstdio>
 
 #ifdef _GLIBCXX_HAS_GTHREADS
 
