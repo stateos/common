@@ -56,12 +56,11 @@ static void *emutls_alloc(__emutls_object *obj)
 {
 	void *ptr = ::memalign(obj->align, obj->size);
 	if (ptr == nullptr)
-		std::__throw_system_error(ENOMEM);
-	if (obj->init)
-		memcpy(ptr, obj->init, obj->size);
+		return nullptr;
+	if (obj->init == nullptr)
+		return ::memset(ptr, 0, obj->size);
 	else
-		memset(ptr, 0, obj->size);
-	return ptr;
+		return ::memcpy(ptr, obj->init, obj->size);
 }
 
 void *__emutls_get_address(void *ptr)
@@ -83,7 +82,7 @@ void *__emutls_get_address(void *ptr)
 	if (address == nullptr)
 	{
 		address = emutls_alloc(obj);
-		if (__gthread_setspecific(key, address) != 0)
+		if (address == nullptr || __gthread_setspecific(key, address) != 0)
 			std::__throw_system_error(ENOMEM);
 	}
 	return address;
