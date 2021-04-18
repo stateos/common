@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    08.04.2021
+    @date    18.04.2021
     @brief   This file defines set of kernel functions for StateOS.
 
  ******************************************************************************
@@ -41,7 +41,7 @@
  * -------------------------------------------------------------------------- */
 
 #if OS_ATOMICS
-#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 #include <atomic>
 #define __STD std::
 #else
@@ -325,7 +325,7 @@ __STATIC_INLINE
 void core_sys_tick( void )
 {
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
-	System.cnt += (cnt_t)(1) << (HW_TIMER_SIZE);
+	System.cnt = System.cnt + ((cnt_t)(1) << (HW_TIMER_SIZE));
 #endif
 }
 #endif
