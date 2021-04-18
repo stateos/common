@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 16.04.2021
+// Modified by Rajmund Szymanski @ StateOS, 18.04.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
@@ -31,37 +31,37 @@
 #include <unordered_map>
 #include <system_error>
 #include <cxxabi.h>
-#include <cerrno>
 
 #ifdef _GLIBCXX_HAS_GTHREADS
 
-static std::unordered_map<__gthread_key_t, void (*)(void *)> key_map{};
-static std::mutex key_mtx{};
+static std::mutex key_mutex{};
 
 struct oskey_t : public std::unordered_map<__gthread_t, void *>
 {
   using unordered_map<__gthread_t, void *>::unordered_map;
 };
 
+static std::unordered_map<__gthread_key_t, void (*)(void *)> key_map{};
+
 int __gthread_key_create(__gthread_key_t *keyp, void (*dtor)(void *))
 {
   assert(keyp);
-  std::lock_guard<std::mutex> lock(key_mtx);
-  return !key_map.insert({ *keyp = new oskey_t(), dtor }).second;
+  std::lock_guard<std::mutex> lock(key_mutex);
+  return key_map.insert({ *keyp = new oskey_t(), dtor }).second ? 0 : 1;
 }
 
 int __gthread_key_delete(__gthread_key_t key)
 {
   assert(key);
-  std::lock_guard<std::mutex> lock(key_mtx);
+  std::lock_guard<std::mutex> lock(key_mutex);
   delete key;
-  return key_map.erase(key) != 1;
+  return key_map.erase(key) != 0 ? 0 : 1;
 }
 
 void *__gthread_getspecific(__gthread_key_t key)
 {
   assert(key);
-  std::lock_guard<std::mutex> lock(key_mtx);
+  std::lock_guard<std::mutex> lock(key_mutex);
   auto it = key->find(__gthread_self());
   return it != key->end() ? it->second : nullptr;
 }
@@ -69,14 +69,14 @@ void *__gthread_getspecific(__gthread_key_t key)
 int __gthread_setspecific(__gthread_key_t key, const void *ptr)
 {
   assert(key);
-  std::lock_guard<std::mutex> lock(key_mtx);
+  std::lock_guard<std::mutex> lock(key_mutex);
   key->insert_or_assign(__gthread_self(), const_cast<void *>(ptr));
   return 0;
 }
 
-void __gthread_atexit()
+static void __gthread_atexit()
 {
-  std::lock_guard<std::mutex> lock(key_mtx);
+  std::lock_guard<std::mutex> lock(key_mutex);
   auto task = __gthread_self();
   for (auto& item : key_map)
   {

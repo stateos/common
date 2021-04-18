@@ -2,7 +2,7 @@
 
     @file    StateOS: emutls.cc
     @author  Rajmund Szymanski
-    @date    17.04.2021
+    @date    18.04.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -30,7 +30,6 @@
  ******************************************************************************/
 
 #include <mutex>
-#include <unordered_map>
 #include <system_error>
 #include <malloc.h>
 #include "bits/gthr.h"
@@ -43,63 +42,63 @@ void *__emutls_get_address(void *);
 void  __emutls_register_common(void *, size_t, size_t, void *);
 }
 
+static std::mutex emutls_mutex{};
+
 struct __emutls_object
 {
-  size_t size;  // object size
-  size_t align; // object alignment
-  void  *key;   // __gthread_key_t
-  void  *init;  // initial value
+	size_t size;  // object size
+	size_t align; // object alignment
+	void  *key;   // __gthread_key_t
+	void  *init;  // initial value
 };
-
-static std::mutex emutls_mutex{};
 
 static void *emutls_alloc(__emutls_object *obj)
 {
-  void *ptr = ::memalign(obj->align, obj->size);
-  if (ptr == nullptr)
-    std::__throw_system_error(ENOMEM);
-  if (obj->init)
-    memcpy(ptr, obj->init, obj->size);
-  else
-    memset(ptr, 0, obj->size);
-  return ptr;
+	void *ptr = ::memalign(obj->align, obj->size);
+	if (ptr == nullptr)
+		std::__throw_system_error(ENOMEM);
+	if (obj->init)
+		memcpy(ptr, obj->init, obj->size);
+	else
+		memset(ptr, 0, obj->size);
+	return ptr;
 }
 
 void *__emutls_get_address(void *ptr)
 {
-  __emutls_object *obj = static_cast<__emutls_object *>(ptr);
-  __gthread_key_t  key = static_cast<__gthread_key_t>(obj->key);
-  if (!key)
-  {
-    std::lock_guard<std::mutex> lock(emutls_mutex);
-    key = static_cast<__gthread_key_t>(obj->key);
-    if (!key)
-    {
-      if (__gthread_key_create(&key, ::free) != 0)
-        std::__throw_system_error(ENOMEM);
-      obj->key = static_cast<void *>(key);
-    }
-  }
-  void *address = __gthread_getspecific(key);
-  if (!address)
-  {
-    address = emutls_alloc(obj);
-    if (__gthread_setspecific(key, address) != 0)
-      std::__throw_system_error(ENOMEM);
-  }
-  return address;
+	__emutls_object *obj = static_cast<__emutls_object *>(ptr);
+	__gthread_key_t key = static_cast<__gthread_key_t>(obj->key);
+	if (key == nullptr)
+	{
+		std::lock_guard<std::mutex> lock(emutls_mutex);
+		key = static_cast<__gthread_key_t>(obj->key);
+		if (key == nullptr)
+		{
+			if (__gthread_key_create(&key, ::free) != 0)
+				std::__throw_system_error(ENOMEM);
+			obj->key = static_cast<void *>(key);
+		}
+	}
+	void *address = __gthread_getspecific(key);
+	if (address == nullptr)
+	{
+		address = emutls_alloc(obj);
+		if (__gthread_setspecific(key, address) != 0)
+			std::__throw_system_error(ENOMEM);
+	}
+	return address;
 }
 
 void __emutls_register_common(void *ptr, size_t size, size_t align, void *init)
 {
-  __emutls_object *obj = static_cast<__emutls_object *>(ptr);
-  if (obj->size < size)
-  {
-    obj->size = size;
-    obj->init = init;
-  }
-  if (obj->align < align)
-    obj->align = align;
+	__emutls_object *obj = static_cast<__emutls_object *>(ptr);
+	if (obj->size < size)
+	{
+		obj->size = size;
+		obj->init = init;
+	}
+	if (obj->align < align)
+		obj->align = align;
 }
 
 #endif // _GLIBCXX_HAS_GTHREADS

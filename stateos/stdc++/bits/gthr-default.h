@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    17.04.2021
+    @date    18.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -53,9 +53,10 @@
 
 #define __GTHREADS 1
 #define __GTHREADS_CXX0X 1
-#define __GTHREAD_HAS_COND
-#define  _GLIBCXX_HAVE_TLS
-#define  _GLIBCXX_USE_SCHED_YIELD
+#define __GTHREAD_HAS_COND 1
+#define  _GLIBCXX_HAVE_TLS 1
+#define  _GLIBCXX_USE_SCHED_YIELD 1
+#define  _GTHREAD_USE_MUTEX_TIMEDLOCK 1
 
 //-----------------------------------------------------------------------------
 
@@ -77,7 +78,8 @@ typedef ostime_t __gthread_time_t;
 #define __GTHREAD_COND_INIT            _CND_INIT()
 
 //-----------------------------------------------------------------------------
-
+extern "C"
+{
 #ifndef _LIBOBJC
 
 static inline constexpr
@@ -197,7 +199,7 @@ static inline
 int __gthread_create(__gthread_t *thread, void (*func)(void *), void *args)
 {
 	*thread = thd_create(OS_MAIN_PRIO, func, args, OS_STACK_SIZE);
-	return *thread == nullptr;
+	return *thread != nullptr ? 0 : 1;
 }
 
 static inline
@@ -215,7 +217,7 @@ int __gthread_detach(__gthread_t thread)
 static inline
 int __gthread_equal(const __gthread_t t1, const __gthread_t t2)
 {
-	return t1 != t2;
+	return t1 == t2 ? 0 : 1;
 }
 
 static inline
@@ -240,7 +242,7 @@ void *__gthread_getspecific(__gthread_key_t key);
 int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
 
 #endif//!_LIBOBJC
-
+} // extern "C"
 //-----------------------------------------------------------------------------
 
 #endif //_GLIBCXX_GCC_GTHR_STATEOS_H
