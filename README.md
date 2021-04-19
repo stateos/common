@@ -9,8 +9,8 @@
 	- with NASA OSAL support
 - [IntrOS](https://github.com/stateos/IntrOS)
 - [DemOS](https://github.com/stateos/DemOS)
-- [CMSIS RTOS]
-- [CMSIS RTOS2]
+- CMSIS RTOS
+- CMSIS RTOS2
 
 ### Platform
 
