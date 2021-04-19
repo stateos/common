@@ -3,8 +3,14 @@
 ### OS / RTOS
 
 - [StateOS](https://github.com/stateos/StateOS)
+	- with STDC++ support
+	- with CMSIS RTOS support
+	- with CMSIS RTOS2 support
+	- with NASA OSAL support
 - [IntrOS](https://github.com/stateos/IntrOS)
 - [DemOS](https://github.com/stateos/DemOS)
+- [CMSIS RTOS]
+- [CMSIS RTOS2]
 
 ### Platform
 
