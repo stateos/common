@@ -9,8 +9,8 @@ ifndef CMSISOS_COMPILER
 $(error Please define CMSISOS_COMPILER before including the cmsis-os package)
 endif
 
-ifndef CMSISOS_PORTFILE
-$(error Please define CMSISOS_PORTFILE before including the cmsis-os package)
+ifndef CMSISOS_TARGET
+$(error Please define CMSISOS_TARGET before including the cmsis-os package)
 endif
 
 INCS += $(COMMON)/cmsis/os/inc
@@ -32,7 +32,7 @@ SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_semaphore.c
 SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_system.c
 SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_thread.c
 SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_timer.c
-SRCS += $(COMMON)/cmsis/os/rtx/source/$(CMSISOS_COMPILER)/$(CMSISOS_PORTFILE)
+SRCS += $(COMMON)/cmsis/os/rtx/source/$(CMSISOS_COMPILER)/irq_$(CMSISOS_TARGET).s
 
 include $(COMMON)/cmsis/makefile
 

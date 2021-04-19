@@ -6,8 +6,8 @@ endif
 include $(COMMON)/make/stm32f0discovery/makefile.clang
 #----------------------------------------------------------#
 
+CMSISOS_TARGET   := cm0
 CMSISOS_COMPILER := GCC
-CMSISOS_PORTFILE := irq_cm0.S
 
 #----------------------------------------------------------#
 include $(COMMON)/cmsis/os/makefile

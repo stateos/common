@@ -6,8 +6,8 @@ endif
 include $(COMMON)/make/stm32f3discovery/makefile.armcc
 #----------------------------------------------------------#
 
+CMSISOS_TARGET   := cm4f
 CMSISOS_COMPILER := ARM
-CMSISOS_PORTFILE := irq_cm4f.s
 
 #----------------------------------------------------------#
 include $(COMMON)/cmsis/os/makefile

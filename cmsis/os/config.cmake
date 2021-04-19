@@ -1,11 +1,11 @@
 include_guard(GLOBAL)
 
-if (NOT DEFINED CMSISOS_COMPILER)
-	message(FATAL_ERROR "Please define CMSISOS_COMPILER before including the cmsis::os package")
+if (NOT DEFINED CMSISOS_TARGET)
+	message(FATAL_ERROR "Please define CMSISOS_TARGET before including the cmsis::os package")
 endif()
 
-if (NOT DEFINED CMSISOS_PORTFILE)
-	message(FATAL_ERROR "Please define CMSISOS_PORTFILE before including the cmsis::os package")
+if (NOT DEFINED CMSISOS_COMPILER)
+	message(FATAL_ERROR "Please define CMSISOS_COMPILER before including the cmsis::os package")
 endif()
 
 project(cmsis-os)
@@ -31,7 +31,7 @@ target_sources(cmsis-os
 	${CMAKE_CURRENT_LIST_DIR}/rtx/source/rtx_system.c
 	${CMAKE_CURRENT_LIST_DIR}/rtx/source/rtx_thread.c
 	${CMAKE_CURRENT_LIST_DIR}/rtx/source/rtx_timer.c
-	${CMAKE_CURRENT_LIST_DIR}/rtx/source/${CMSISOS_COMPILER}/${CMSISOS_PORTFILE}
+	${CMAKE_CURRENT_LIST_DIR}/rtx/source/${CMSISOS_COMPILER}/irq_${CMSISOS_TARGET}.s
 )
 
 target_include_directories(cmsis-os
