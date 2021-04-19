@@ -5,18 +5,19 @@ ifndef COMMON
 $(error Please define COMMON path before including any common package)
 endif
 
-ifndef CMSISOS_COMPILER
-$(error Please define CMSISOS_COMPILER before including the cmsis-os package)
-endif
-
 ifndef CMSISOS_TARGET
 $(error Please define CMSISOS_TARGET before including the cmsis-os package)
+endif
+
+ifndef CMSISOS_COMPILER
+$(error Please define CMSISOS_COMPILER before including the cmsis-os package)
 endif
 
 INCS += $(COMMON)/cmsis/os/inc
 INCS += $(COMMON)/cmsis/os/rtx/config
 INCS += $(COMMON)/cmsis/os/rtx/include
 
+SRCS += $(COMMON)/cmsis/os/src/cmsis_os1.c
 SRCS += $(COMMON)/cmsis/os/src/os_systick.c
 SRCS += $(COMMON)/cmsis/os/rtx/config/RTX_Config.c
 SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_delay.c

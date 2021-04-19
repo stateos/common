@@ -15,7 +15,7 @@ add_library(cmsis::os ALIAS cmsis-os)
 
 target_sources(cmsis-os
 	INTERFACE
-	${CMAKE_CURRENT_LIST_DIR}/src/os_systick.c
+	${CMAKE_CURRENT_LIST_DIR}/src/cmsis_os1.c
 	${CMAKE_CURRENT_LIST_DIR}/src/os_systick.c
 	${CMAKE_CURRENT_LIST_DIR}/rtx/config/RTX_Config.c
 	${CMAKE_CURRENT_LIST_DIR}/rtx/source/rtx_delay.c
