@@ -13,4 +13,8 @@ target_include_directories(cmsis
 	${CMAKE_CURRENT_LIST_DIR}/${TARGET_DEVICE}
 )
 
+if (DEFINED CMSISOS_COMPILER)
+if (DEFINED CMSISOS_PORTFILE)
 include(${CMAKE_CURRENT_LIST_DIR}/os/config.cmake)
+endif()
+endif()

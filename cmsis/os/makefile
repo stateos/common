@@ -5,15 +5,34 @@ ifndef COMMON
 $(error Please define COMMON path before including any common package)
 endif
 
-ifndef TARGET_COMPILER
-$(error Please define TARGET_COMPILER before including the cmsis-os package)
+ifndef CMSISOS_COMPILER
+$(error Please define CMSISOS_COMPILER before including the cmsis-os package)
+endif
+
+ifndef CMSISOS_PORTFILE
+$(error Please define CMSISOS_PORTFILE before including the cmsis-os package)
 endif
 
 INCS += $(COMMON)/cmsis/os/inc
+INCS += $(COMMON)/cmsis/os/rtx/config
+INCS += $(COMMON)/cmsis/os/rtx/include
 
 SRCS += $(COMMON)/cmsis/os/src/os_systick.c
-
-LIBS += $(COMMON)/cmsis/os/lib/$(TARGET_COMPILER)/$(LIBRARY_PREFIX)RTX_CM4F$(LIBRARY_SUFFIX)
+SRCS += $(COMMON)/cmsis/os/rtx/config/RTX_Config.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_delay.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_evflags.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_evr.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_kernel.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_lib.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_memory.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_mempool.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_msgqueue.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_mutex.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_semaphore.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_system.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_thread.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_timer.c
+SRCS += $(COMMON)/cmsis/os/rtx/source/$(CMSISOS_COMPILER)/$(CMSISOS_PORTFILE)
 
 include $(COMMON)/cmsis/makefile
 
