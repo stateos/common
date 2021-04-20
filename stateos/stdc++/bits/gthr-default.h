@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    18.04.2021
+    @date    20.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -80,7 +80,47 @@ typedef ostime_t __gthread_time_t;
 //-----------------------------------------------------------------------------
 extern "C"
 {
-#ifndef _LIBOBJC
+#ifdef _LIBOBJC
+
+static void *thread_local_storage = NULL;
+
+int           __gthread_objc_init_thread_system(void);
+int           __gthread_objc_close_thread_system(void);
+objc_thread_t __gthread_objc_thread_detach(void(*func)(void *), void *arg);
+int           __gthread_objc_thread_set_priority(int priority);
+int           __gthread_objc_thread_get_priority(void);
+void          __gthread_objc_thread_yield(void);
+int           __gthread_objc_thread_exit(void);
+objc_thread_t __gthread_objc_thread_id(void);
+
+static inline
+int __gthread_objc_thread_set_data(void *value)
+{
+  thread_local_storage = value;
+  return 0;
+}
+
+static inline
+void *__gthread_objc_thread_get_data(void)
+{
+  return thread_local_storage;
+}
+
+int __gthread_objc_mutex_allocate(objc_mutex_t mutex);
+int __gthread_objc_mutex_deallocate(objc_mutex_t mutex);
+int __gthread_objc_mutex_lock(objc_mutex_t mutex);
+int __gthread_objc_mutex_trylock(objc_mutex_t mutex);
+int __gthread_objc_mutex_unlock(objc_mutex_t mutex);
+
+int __gthread_objc_condition_allocate(objc_condition_t condition);
+int __gthread_objc_condition_deallocate(objc_condition_t condition);
+int __gthread_objc_condition_wait(objc_condition_t condition, objc_mutex_t mutex);
+int __gthread_objc_condition_broadcast(objc_condition_t condition);
+int __gthread_objc_condition_signal(objc_condition_t condition);
+
+//-----------------------------------------------------------------------------
+#else//_LIBOBJC
+//-----------------------------------------------------------------------------
 
 static inline constexpr
 int __gthread_active_p()
@@ -105,14 +145,14 @@ int __gthread_recursive_mutex_destroy(__gthread_recursive_mutex_t *mutex)
 static inline
 int __gthread_mutex_lock(__gthread_mutex_t *mutex)
 {
-	// EINVAL, EAGAIN, EBUSY, EINVAL, EDEADLK(may)
+	// EAGAIN, EBUSY, EINVAL, EDEADLK(may)
 	return mtx_lock(mutex);
 }
 
 static inline
 int __gthread_mutex_trylock(__gthread_mutex_t *mutex)
 {
-	// XXX EINVAL, EAGAIN, EBUSY
+	// EINVAL, EAGAIN, EBUSY
 	return mtx_tryLock(mutex);
 }
 
@@ -125,7 +165,7 @@ int __gthread_mutex_timedlock(__gthread_mutex_t *mutex, const __gthread_time_t *
 static inline
 int __gthread_mutex_unlock(__gthread_mutex_t *mutex)
 {
-	// XXX EINVAL, EAGAIN, EBUSY
+	// EINVAL, EAGAIN, EBUSY
 	return mtx_unlock(mutex);
 }
 
@@ -139,7 +179,7 @@ int __gthread_recursive_mutex_lock(__gthread_recursive_mutex_t *mutex)
 static inline
 int __gthread_recursive_mutex_trylock(__gthread_recursive_mutex_t *mutex)
 {
-	// XXX EINVAL, EAGAIN, EBUSY
+	// EINVAL, EAGAIN, EBUSY
 	return mtx_tryLock(mutex);
 }
 
@@ -152,7 +192,7 @@ int __gthread_recursive_mutex_timedlock(__gthread_recursive_mutex_t *mutex, cons
 static inline
 int __gthread_recursive_mutex_unlock(__gthread_recursive_mutex_t *mutex)
 {
-	// XXX EINVAL, EAGAIN, EBUSY
+	// EINVAL, EAGAIN, EBUSY
 	return mtx_unlock(mutex);
 }
 
@@ -234,14 +274,11 @@ int __gthread_yield()
 }
 
 int   __gthread_key_create(__gthread_key_t *keyp, void(*dtor)(void *));
-
 int   __gthread_key_delete(__gthread_key_t key);
-
 void *__gthread_getspecific(__gthread_key_t key);
-
 int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
 
-#endif//!_LIBOBJC
+#endif//_LIBOBJC
 } // extern "C"
 //-----------------------------------------------------------------------------
 
