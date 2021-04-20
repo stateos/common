@@ -3,7 +3,7 @@
 ### OS / RTOS
 
 - [StateOS](https://github.com/stateos/StateOS)
-	- with STDC++ support
+	- with std::thread support
 	- with CMSIS RTOS support
 	- with CMSIS RTOS2 support
 	- with NASA OSAL support
