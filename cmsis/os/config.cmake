@@ -37,6 +37,5 @@ target_sources(cmsis-os
 target_include_directories(cmsis-os
 	INTERFACE
 	${CMAKE_CURRENT_LIST_DIR}/inc
-	${CMAKE_CURRENT_LIST_DIR}/rtx/config
 	${CMAKE_CURRENT_LIST_DIR}/rtx/include
 )

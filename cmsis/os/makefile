@@ -14,7 +14,6 @@ $(error Please define CMSISOS_COMPILER before including the cmsis-os package)
 endif
 
 INCS += $(COMMON)/cmsis/os/inc
-INCS += $(COMMON)/cmsis/os/rtx/config
 INCS += $(COMMON)/cmsis/os/rtx/include
 
 SRCS += $(COMMON)/cmsis/os/src/cmsis_os1.c
