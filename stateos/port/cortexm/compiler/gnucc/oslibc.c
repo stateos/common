@@ -2,7 +2,7 @@
 
     @file    StateOS: oslibc.c
     @author  Rajmund Szymanski
-    @date    09.02.2021
+    @date    20.04.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -29,37 +29,106 @@
 
  ******************************************************************************/
 
+#include <sys/lock.h>
 #include "oskernel.h"
+#include "inc/osmutex.h"
 
+/* -------------------------------------------------------------------------- */
+#ifdef _RETARGETABLE_LOCKING
+
+struct __lock { mtx_t mtx; };
+
+struct __lock __lock___arc4random_mutex       = { _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0) };
+struct __lock __lock___at_quick_exit_mutex    = { _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0) };
+struct __lock __lock___atexit_recursive_mutex = { _MTX_INIT(mtxPrioInherit|mtxRecursive,  0) };
+struct __lock __lock___dd_hash_mutex          = { _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0) };
+struct __lock __lock___env_recursive_mutex    = { _MTX_INIT(mtxPrioInherit|mtxRecursive,  0) };
+struct __lock __lock___malloc_recursive_mutex = { _MTX_INIT(mtxPrioInherit|mtxRecursive,  0) };
+struct __lock __lock___sfp_recursive_mutex    = { _MTX_INIT(mtxPrioInherit|mtxRecursive,  0) };
+struct __lock __lock___sinit_recursive_mutex  = { _MTX_INIT(mtxPrioInherit|mtxRecursive,  0) };
+struct __lock __lock___tz_mutex               = { _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0) };
+
+/* -------------------------------------------------------------------------- */
+
+void __retarget_lock_init(_LOCK_T * const lock)
+{
+	*lock = (_LOCK_T)mtx_new(mtxPrioInherit|mtxErrorCheck, 0);
+}
+
+void __retarget_lock_init_recursive(_LOCK_T * const lock)
+{
+	*lock = (_LOCK_T)mtx_new(mtxPrioInherit|mtxRecursive, 0);
+}
+
+void __retarget_lock_close(const _LOCK_T lock)
+{
+	mtx_delete(&lock->mtx);
+}
+
+void __retarget_lock_close_recursive(const _LOCK_T lock)
+{
+	mtx_delete(&lock->mtx);
+}
+
+void __retarget_lock_acquire(const _LOCK_T lock)
+{
+	mtx_lock(&lock->mtx);
+}
+
+void __retarget_lock_acquire_recursive(const _LOCK_T lock)
+{
+	mtx_lock(&lock->mtx);
+}
+
+int __retarget_lock_try_acquire(const _LOCK_T lock)
+{
+	return mtx_tryLock(&lock->mtx);
+}
+
+int __retarget_lock_try_acquire_recursive(const _LOCK_T lock)
+{
+	return mtx_tryLock(&lock->mtx);
+}
+
+void __retarget_lock_release(const _LOCK_T lock)
+{
+	mtx_unlock(&lock->mtx);
+}
+
+void __retarget_lock_release_recursive(const _LOCK_T lock)
+{
+	mtx_unlock(&lock->mtx);
+}
+
+#endif
 /* -------------------------------------------------------------------------- */
 
 static lck_t    LCK = 0;
 static unsigned CNT = 0;
 
-/* -------------------------------------------------------------------------- */
-
-__USED
-void __malloc_lock()
+void __malloc_lock(struct _reent *reent)
 {
-	lck_t lock;
-
-	assert(CNT+1);
-
-	lock = port_get_lock();
+	(void) reent;
+	assert(CNT<UINT_MAX);
+	lck_t lock = port_get_lock();
 	port_set_lock();
 	if (CNT++ == 0U)
 		LCK = lock;
 }
 
-/* -------------------------------------------------------------------------- */
-
-__USED
-void __malloc_unlock()
+void __malloc_unlock(struct _reent *reent)
 {
-	assert(CNT);
-
+	(void) reent;
+	assert(CNT>0U);
 	if (--CNT == 0U)
 		port_put_lock(LCK);
+}
+
+/* -------------------------------------------------------------------------- */
+
+__NO_RETURN void __cxa_pure_virtual(void)
+{
+	abort();
 }
 
 /* -------------------------------------------------------------------------- */
