@@ -2,7 +2,7 @@
 
     @file    StateOS: osalloc.c
     @author  Rajmund Szymanski
-    @date    05.12.2020
+    @date    21.04.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -44,8 +44,8 @@
 #if OS_HEAP_SIZE
 
 static
-seg_t            Heap[SEG_SIZE(OS_HEAP_SIZE)+1] __ALIGNED(sizeof(stk_t));
-#define HeapEnd (Heap+SEG_SIZE(OS_HEAP_SIZE))
+seg_t            Heap[SEG_SIZE(OS_HEAP_SIZE)] __ALIGNED(sizeof(stk_t));
+#define HeapEnd (Heap+SEG_SIZE(OS_HEAP_SIZE)-1)
 
 #endif
 
@@ -56,6 +56,8 @@ seg_t            Heap[SEG_SIZE(OS_HEAP_SIZE)+1] __ALIGNED(sizeof(stk_t));
 static
 seg_t *priv_init( void )
 {
+	static_assert(OS_HEAP_SIZE>sizeof(seg_t), "invalid value of OS_HEAP_SIZE");
+
 	if (Heap[0].next == NULL)
 	{
 	//	system heap must be initialized
