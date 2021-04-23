@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 18.04.2021
+// Modified by Rajmund Szymanski @ StateOS, 23.04.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
@@ -95,9 +95,10 @@ namespace std _GLIBCXX_VISIBILITY(default)
   extern "C"
   {
     static void
-    execute_native_thread_routine(void *ptr)
+    execute_native_thread_routine(void *__p)
     {
-      static_cast<thread::_State *>(ptr)->_M_run();
+      thread::_State_ptr __t{ static_cast<thread::_State *>(__p) };
+      __t->_M_run();
       __gthread_atexit();
     }
   } // extern "C"
