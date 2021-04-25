@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    13.04.2021
+    @date    25.04.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -731,10 +731,11 @@ void core_tsk_idle( void )
 
 void core_res_free( obj_t *obj )
 {
-	if (obj->res != NULL && obj->res != RELEASED)
+	void *ptr = obj->res;
+	if (ptr != NULL && ptr != RELEASED)
 	{
-		free(obj->res);
 		obj->res = RELEASED;
+		free(ptr);
 	}
 }
 
