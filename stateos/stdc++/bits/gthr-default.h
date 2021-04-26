@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    20.04.2021
+    @date    26.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -32,12 +32,15 @@
 #ifndef _GLIBCXX_GCC_GTHR_STATEOS_H
 #define _GLIBCXX_GCC_GTHR_STATEOS_H
 
-#include "os.h"
-#include "inc/chrono.hh"
+#include "inc/ostask.h"
+#include "inc/osmutex.h"
+#include "inc/osonceflag.h"
+#include "inc/osconditionvariable.h"
 #include "inc/critical_section.hh"
 #if    !__has_include(<semaphore>)
 #include "inc/semaphore.hh"
 #endif
+#include "inc/chrono.hh"
 
 //-----------------------------------------------------------------------------
 

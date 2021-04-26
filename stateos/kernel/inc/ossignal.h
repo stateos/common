@@ -2,7 +2,7 @@
 
     @file    StateOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    26.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -37,11 +37,8 @@
 
 /* -------------------------------------------------------------------------- */
 
-#define SIG_LIMIT     (sizeof(unsigned) * CHAR_BIT)
-
-#define SIGSET(signo) (((signo) < SIG_LIMIT) ? 1U << (signo) : 0U) // signal mask from the given signal number
-#define sigAll        (0U-1)                                       // signal mask for all signals
-#define sigAny        (0U)                                         // signal mask for any signal
+#define sigAny       ( 0U )   // signal mask for any signal
+#define sigAll       ( 0U-1 ) // signal mask for all signals
 
 /******************************************************************************
  *

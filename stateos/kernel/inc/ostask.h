@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-z    @date    13.04.2021
+    @date    26.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************

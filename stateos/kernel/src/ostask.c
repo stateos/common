@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.c
     @author  Rajmund Szymanski
-    @date    10.04.2021
+    @date    26.04.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -30,7 +30,6 @@
  ******************************************************************************/
 
 #include "inc/ostask.h"
-#include "inc/ossignal.h"
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
