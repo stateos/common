@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    13.04.2021
+    @date    27.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -356,6 +356,25 @@ tmr_t *tmr_create( fun_t *state );
 
 __STATIC_INLINE
 tmr_t *tmr_new( fun_t *state ) { return tmr_create(state); }
+
+/******************************************************************************
+ *
+ * Name              : tim_create
+ *
+ * Description       : create and initialize a new timer object
+ *
+ * Parameters
+ *   proc            : timer callback procedure
+ *   arg             : timer callback procedure argument (for internal use)
+ *
+ * Return            : pointer to timer object
+ *   NULL            : object not created (not enough free memory)
+ *
+ * Note              : for internal use
+ *
+ ******************************************************************************/
+
+tmr_t *tim_create( thd_t *proc, void *arg );
 
 /******************************************************************************
  *

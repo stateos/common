@@ -79,6 +79,28 @@ tmr_t *tmr_create( fun_t *state )
 }
 
 /* -------------------------------------------------------------------------- */
+tmr_t *tim_create( thd_t *proc, void *arg )
+/* -------------------------------------------------------------------------- */
+{
+	tmr_t *tmr;
+
+	assert_tsk_context();
+
+	sys_lock();
+	{
+		tmr = malloc(sizeof(tmr_t));
+		if (tmr)
+		{
+			priv_tmr_init(tmr, (fun_t *)proc, tmr);
+			tmr->arg = arg;
+		}
+	}
+	sys_unlock();
+
+	return tmr;
+}
+
+/* -------------------------------------------------------------------------- */
 static
 void priv_tmr_reset( tmr_t *tmr, int event )
 /* -------------------------------------------------------------------------- */
