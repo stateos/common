@@ -19,7 +19,9 @@
  */
 
 /**
- * @file osapi-dir.h
+ * \file
+ *
+ * Declarations and prototypes for directories
  */
 
 #ifndef OSAPI_DIR_H
@@ -121,7 +123,7 @@ int32 OS_mkdir(const char *path, uint32 access);
 /**
  * @brief Removes a directory from the file system.
  *
- * Removes a directory from  the structure.
+ * Removes a directory from the structure.
  * The directory must be empty prior to this operation.
  *
  * @param[in]  path      The directory to remove
@@ -136,4 +138,4 @@ int32 OS_mkdir(const char *path, uint32 access);
 int32 OS_rmdir(const char *path);
 /**@}*/
 
-#endif
+#endif /* OSAPI_DIR_H */

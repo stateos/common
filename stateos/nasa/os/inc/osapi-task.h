@@ -19,7 +19,9 @@
  */
 
 /**
- * @file osapi-task.h
+ * \file
+ *
+ * Declarations and prototypes for task abstraction
  */
 
 #ifndef OSAPI_TASK_H
@@ -144,6 +146,7 @@ int32 OS_TaskInstallDeleteHandler(osal_task_entry function_pointer);
  * @brief Delay a task for specified amount of milliseconds
  *
  * Causes the current thread to be suspended from execution for the period of millisecond.
+ * This is a scheduled wait (clock_nanosleep/rtems_task_wake_after/taskDelay), not a "busy" wait.
  *
  * @param[in]   millisecond    Amount of time to delay
  *
@@ -168,18 +171,6 @@ int32 OS_TaskDelay(uint32 millisecond);
  * @retval #OS_ERROR if the OS call to change the priority fails
  */
 int32 OS_TaskSetPriority(osal_id_t task_id, osal_priority_t new_priority);
-
-/*-------------------------------------------------------------------------------------*/
-/**
- * @brief Obsolete
- * @deprecated Explicit registration call no longer needed
- *
- * Obsolete function retained for compatibility purposes.
- * Does Nothing in the current implementation.
- *
- * @return #OS_SUCCESS (always), see @ref OSReturnCodes
- */
-int32 OS_TaskRegister(void);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -248,4 +239,4 @@ int32 OS_TaskFindIdBySystemData(osal_id_t *task_id, const void *sysdata, size_t 
 
 /**@}*/
 
-#endif
+#endif /* OSAPI_TASK_H */

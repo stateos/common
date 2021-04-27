@@ -60,9 +60,12 @@
 #if     OS_TIMER_SIZE != 64
 #error  osconfig.h: Invalid OS_TIMER_SIZE value! It must be a value equal to 64.
 #endif
-
-#define OS_GET_OBJECT_ID(PTR, REC, OBJ) \
-    ((REC *)((uintptr_t)PTR - offsetof(REC, OBJ)))->id;
+#if     OS_TASK_EXIT == 0
+#error  osconfig.h: Invalid OS_TASK_EXIT value! It must be a value other than 0.
+#endif
+#if     OS_MAIN_PRIO < OS_MAX_TASK_PRIORITY
+#error  osconfig.h: Invalid OS_MAIN_PRIO value! It must be a value other than OS_MAX_TASK_PRIORITY.
+#endif
 
 /****************************************************************************************
                                 INLINE FUNCTIONS

@@ -77,7 +77,11 @@ int32 OS_MutSemCreate_Impl(const OS_object_token_t *token, uint32 options)
 
     (void) options;
 
-    mtx_init(&local->mtx, mtxRecursive + mtxPrioInherit, 0);
+    local->mtx = mtx_create(mtxRecursive + mtxPrioInherit, 0);
+    if (local->mtx == NULL)
+    {
+        return OS_SEM_FAILURE;
+    }
 
     return OS_SUCCESS;
 
@@ -95,7 +99,8 @@ int32 OS_MutSemDelete_Impl(const OS_object_token_t *token)
 {
     OS_impl_mutex_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_mutex_table, *token);
 
-    mtx_delete(&local->mtx);
+    mtx_delete(local->mtx);
+    local->mtx = NULL;
 
     return OS_SUCCESS;
 
@@ -113,7 +118,7 @@ int32 OS_MutSemGive_Impl(const OS_object_token_t *token)
 {
     OS_impl_mutex_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_mutex_table, *token);
 
-    int status = mtx_give(&local->mtx);
+    int status = mtx_give(local->mtx);
 
     switch (status)
     {
@@ -134,7 +139,7 @@ int32 OS_MutSemTake_Impl(const OS_object_token_t *token)
 {
     OS_impl_mutex_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_mutex_table, *token);
 
-    int status = mtx_wait(&local->mtx);
+    int status = mtx_wait(local->mtx);
 
     switch (status)
     {

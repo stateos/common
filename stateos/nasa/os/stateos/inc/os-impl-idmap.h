@@ -19,24 +19,25 @@
  */
 
 /**
- * \file
- *
- * \ingroup  shared
+ * \file     os-impl-idmap.h
+ * \ingroup  stateos
+ * \author   Rajmund Szymanski
  *
  */
 
-#ifndef OS_SHARED_ERRORS_H
-#define OS_SHARED_ERRORS_H
+#ifndef OS_IMPL_IDMAP_H
+#define OS_IMPL_IDMAP_H
 
-#include "os-shared-globaldefs.h"
+#include "osconfig.h"
+#include "osapi-idmap.h"
+#include "os.h"
 
-/* Mapping of integer error number to name */
 typedef struct
 {
-    int32       Number;
-    const char *Name;
-} OS_ErrorTable_Entry_t;
+    mtx_t *mtx;
+} OS_impl_objtype_lock_t;
 
-extern const OS_ErrorTable_Entry_t OS_IMPL_ERROR_NAME_TABLE[];
+/* Tables where the lock state information is stored */
+extern OS_impl_objtype_lock_t *const OS_impl_objtype_lock_table[OS_OBJECT_TYPE_USER];
 
-#endif /* OS_SHARED_ERRORS_H */
+#endif /* OS_IMPL_IDMAP_H */

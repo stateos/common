@@ -258,7 +258,7 @@ void OS_printf(const char *String, ...)
 
     BUGCHECK((String) != NULL, )
 
-    if (!OS_SharedGlobalVars.Initialized)
+    if (OS_SharedGlobalVars.GlobalState != OS_INIT_MAGIC_NUMBER)
     {
         /*
          * Catch some historical mis-use of the OS_printf() call.
@@ -277,14 +277,11 @@ void OS_printf(const char *String, ...)
          * If debugging is not enabled, then this message will be silently
          * discarded.
          */
-        OS_DEBUG("BUG: OS_printf() called before init: %s", String);
+        OS_DEBUG("BUG: OS_printf() called when OSAL not initialized: %s", String);
     }
     else if (OS_SharedGlobalVars.PrintfEnabled)
     {
-        /*
-         * Call vsnprintf() to determine the actual size of the
-         * string we are going to write to the buffer after formatting.
-         */
+        /* Format and determine the size of string to write */
         va_start(va, String);
         actualsz = vsnprintf(msg_buffer, sizeof(msg_buffer), String, va);
         va_end(va);

@@ -19,9 +19,12 @@
  */
 
 /**
- * \file     os-impl-console-bsp.c
- * \ingroup  stateos
- * \author   Rajmund Szymanski
+ * \file   os-impl-console-bsp.c
+ * \author joseph.p.hickey@nasa.gov
+ *
+ * Purpose:
+ *      Uses the BSP-provided "console write" function
+ *      Note this only supports a single console
  *
  */
 
@@ -29,10 +32,16 @@
                                     INCLUDE FILES
  ***************************************************************************************/
 
+#include <string.h>
+#include <errno.h>
+
+#include "osapi-printf.h"
+
+#include "bsp-impl.h"
+
 #include "os-impl-console.h"
 #include "os-shared-printf.h"
 #include "os-shared-idmap.h"
-#include "bsp-impl.h"
 
 /****************************************************************************************
                                 CONSOLE OUTPUT
@@ -48,11 +57,14 @@
  *-----------------------------------------------------------------*/
 void OS_ConsoleOutput_Impl(const OS_object_token_t *token)
 {
-    OS_console_internal_record_t *console  = OS_OBJECT_TABLE_GET(OS_console_table, *token);
-    size_t                        StartPos = console->ReadPos;
-    size_t                        EndPos   = console->WritePos;
+    size_t                        StartPos;
+    size_t                        EndPos;
     size_t                        WriteSize;
+    OS_console_internal_record_t *console;
 
+    console  = OS_OBJECT_TABLE_GET(OS_console_table, *token);
+    StartPos = console->ReadPos;
+    EndPos   = console->WritePos;
     while (StartPos != EndPos)
     {
         if (StartPos > EndPos)
@@ -67,18 +79,14 @@ void OS_ConsoleOutput_Impl(const OS_object_token_t *token)
 
         OS_BSP_ConsoleOutput_Impl(&console->BufBase[StartPos], WriteSize);
 
+        StartPos += WriteSize;
         if (StartPos >= console->BufSize)
         {
             /* handle wrap */
             StartPos = 0;
         }
-        else
-        {
-            StartPos += WriteSize;
-        }
     }
 
     /* Update the global with the new read location */
     console->ReadPos = StartPos;
-
 } /* end OS_ConsoleOutput_Impl */

@@ -77,7 +77,11 @@ int32 OS_CountSemCreate_Impl(const OS_object_token_t *token, uint32 sem_initial_
 
     (void) options;
 
-    sem_init(&local->sem, sem_initial_value, semCounting);
+    local->sem = sem_create(sem_initial_value, semCounting);
+    if (local->sem == NULL)
+    {
+        return OS_SEM_FAILURE;
+    }
 
     return OS_SUCCESS;
 
@@ -95,7 +99,8 @@ int32 OS_CountSemDelete_Impl(const OS_object_token_t *token)
 {
     OS_impl_countsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_count_sem_table, *token);
 
-    sem_delete(&local->sem);
+    sem_delete(local->sem);
+    local->sem = NULL;
 
     return OS_SUCCESS;
 
@@ -113,7 +118,7 @@ int32 OS_CountSemGive_Impl(const OS_object_token_t *token)
 {
     OS_impl_countsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_count_sem_table, *token);
 
-    int status = sem_give(&local->sem);
+    int status = sem_give(local->sem);
 
     switch(status)
     {
@@ -134,7 +139,7 @@ int32 OS_CountSemTake_Impl(const OS_object_token_t *token)
 {
     OS_impl_countsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_count_sem_table, *token);
 
-    int status = sem_wait(&local->sem);
+    int status = sem_wait(local->sem);
 
     switch(status)
     {
@@ -155,7 +160,7 @@ int32 OS_CountSemTimedWait_Impl(const OS_object_token_t *token, uint32 millis)
 {
     OS_impl_countsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_count_sem_table, *token);
 
-    int status = sem_waitFor(&local->sem, millis * MSEC);
+    int status = sem_waitFor(local->sem, millis * MSEC);
 
     switch(status)
     {
@@ -177,8 +182,8 @@ int32 OS_CountSemGetInfo_Impl(const OS_object_token_t *token, OS_count_sem_prop_
 {
     OS_impl_countsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_count_sem_table, *token);
 
-    int value = (int)sem_getValue(&local->sem);
-    count_prop->value = value;
+    unsigned value = sem_getValue(local->sem);
+    count_prop->value = (int)value;
 
     return OS_SUCCESS;
 

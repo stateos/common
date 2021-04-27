@@ -28,4 +28,4 @@
 #ifndef OS_IMPL_IO_H
 #define OS_IMPL_IO_H
 
-#endif /* OS_IMPL_IO_H  */
+#endif /* OS_IMPL_IO_H */

@@ -33,9 +33,10 @@
 
 typedef struct
 {
-    mtx_t mtx;
+    mtx_t *mtx;
 } OS_impl_mutex_internal_record_t;
 
+/* Tables where the OS object information is stored */
 extern OS_impl_mutex_internal_record_t OS_impl_mutex_table[OS_MAX_MUTEXES];
 
-#endif /* OS_IMPL_MUTEX_H  */
+#endif /* OS_IMPL_MUTEX_H */

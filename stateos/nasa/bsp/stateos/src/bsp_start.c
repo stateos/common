@@ -19,10 +19,10 @@
  */
 
 /*
- * File:  bsp_start.c
+ * File:     bsp_start.c
+ * \ingroup  stateos
+ * \author   Rajmund Szymanski
  *
- * Purpose:
- *   OSAL BSP main entry point.
  */
 
 /*

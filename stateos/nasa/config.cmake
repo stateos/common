@@ -18,6 +18,7 @@ target_sources(stateos-nasa
 	${STATEOS_PATH}/nasa/bsp/shared/src/osapi-bsp.c
 	${STATEOS_PATH}/nasa/bsp/stateos/src/bsp_console.c
 	${STATEOS_PATH}/nasa/bsp/stateos/src/bsp_start.c
+	${STATEOS_PATH}/nasa/os/portable/os-impl-console-bsp.c
 	${STATEOS_PATH}/nasa/os/shared/src/osapi-binsem.c
 	${STATEOS_PATH}/nasa/os/shared/src/osapi-clock.c
 	${STATEOS_PATH}/nasa/os/shared/src/osapi-common.c
@@ -43,7 +44,6 @@ target_sources(stateos-nasa
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-binsem.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-clock.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-common.c
-	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-console-bsp.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-console.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-countsem.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-errors.c

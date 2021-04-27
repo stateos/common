@@ -28,4 +28,4 @@
 #ifndef OS_IMPL_NETWORK_H
 #define OS_IMPL_NETWORK_H
 
-#endif /* OS_IMPL_NETWORK_H  */
+#endif /* OS_IMPL_NETWORK_H */

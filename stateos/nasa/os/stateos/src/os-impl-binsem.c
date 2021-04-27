@@ -33,15 +33,18 @@
 #include "os-impl-binsem.h"
 #include "os-shared-binsem.h"
 #include "os-shared-idmap.h"
+#include "os-shared-timebase.h"
 
 /****************************************************************************************
                                    GLOBAL DATA
  ***************************************************************************************/
+/*  tables for the properties of objects */
 
+/* Tables where the OS object information is stored */
 OS_impl_binsem_internal_record_t OS_impl_bin_sem_table[OS_MAX_BIN_SEMAPHORES];
 
 /****************************************************************************************
-                                INITIALIZATION FUNCTION
+                                  SEMAPHORE API
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
@@ -59,10 +62,6 @@ int32 OS_BinSemAPI_Impl_Init(void)
 
 } /* end OS_BinSemAPI_Impl_Init */
 
-/****************************************************************************************
-                               BINARY SEMAPHORE API
- ***************************************************************************************/
-
 /*----------------------------------------------------------------
  *
  * Function: OS_BinSemCreate_Impl
@@ -77,7 +76,11 @@ int32 OS_BinSemCreate_Impl(const OS_object_token_t *token, uint32 sem_initial_va
 
     (void) options;
 
-    sem_init(&local->sem, sem_initial_value, semBinary);
+    local->sem = sem_create(sem_initial_value, semBinary);
+    if (local->sem == NULL)
+    {
+        return OS_SEM_FAILURE;
+    }
 
     return OS_SUCCESS;
 
@@ -95,7 +98,8 @@ int32 OS_BinSemDelete_Impl(const OS_object_token_t *token)
 {
     OS_impl_binsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_bin_sem_table, *token);
 
-    sem_delete(&local->sem);
+    sem_delete(local->sem);
+    local->sem = NULL;
 
     return OS_SUCCESS;
 
@@ -113,8 +117,7 @@ int32 OS_BinSemGive_Impl(const OS_object_token_t *token)
 {
     OS_impl_binsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_bin_sem_table, *token);
 
-    int status = sem_give(&local->sem);
-
+    int status = sem_give(local->sem);
     switch(status)
     {
         case E_SUCCESS: return OS_SUCCESS;
@@ -134,9 +137,9 @@ int32 OS_BinSemFlush_Impl(const OS_object_token_t *token)
 {
     OS_impl_binsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_bin_sem_table, *token);
 
-    unsigned value = sem_getValue(&local->sem);
+    unsigned value = sem_getValue(local->sem);
     if (value == 0)
-        sem_reset(&local->sem);
+        sem_reset(local->sem);
 
     return OS_SUCCESS;
 
@@ -154,8 +157,7 @@ int32 OS_BinSemTake_Impl(const OS_object_token_t *token)
 {
     OS_impl_binsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_bin_sem_table, *token);
 
-    int status = sem_wait(&local->sem);
-
+    int status = sem_wait(local->sem);
     switch(status)
     {
         case E_SUCCESS: return OS_SUCCESS;
@@ -175,8 +177,7 @@ int32 OS_BinSemTimedWait_Impl(const OS_object_token_t *token, uint32 msecs)
 {
     OS_impl_binsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_bin_sem_table, *token);
 
-    int status = sem_waitFor(&local->sem, msecs * MSEC);
-
+    int status = sem_waitFor(local->sem, msecs * MSEC);
     switch(status)
     {
         case E_SUCCESS: return OS_SUCCESS;
@@ -197,8 +198,8 @@ int32 OS_BinSemGetInfo_Impl(const OS_object_token_t *token, OS_bin_sem_prop_t *b
 {
     OS_impl_binsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_bin_sem_table, *token);
 
-    int value = (int)sem_getValue(&local->sem);
-    bin_prop->value = value;
+    unsigned value = sem_getValue(local->sem);
+    bin_prop->value = (int)value;
 
     return OS_SUCCESS;
 

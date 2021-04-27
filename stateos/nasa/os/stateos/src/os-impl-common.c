@@ -31,10 +31,11 @@
 
 #include "os-stateos.h"
 #include "os-shared-common.h"
+#include "os-shared-idmap.h"
 
 /****************************************************************************************
-                                     GLOBAL DATA
- ***************************************************************************************/
+                                   GLOBAL DATA
+****************************************************************************************/
 
 OS_impl_GlobalVars_t OS_impl_GlobalVars;
 
@@ -67,14 +68,20 @@ int32 OS_API_Impl_Init(osal_objtype_t idtype)
         case OS_OBJECT_TYPE_OS_QUEUE:
             return_code = OS_QueueAPI_Impl_Init();
             break;
-        case OS_OBJECT_TYPE_OS_COUNTSEM:
-            return_code = OS_CountSemAPI_Impl_Init();
-            break;
         case OS_OBJECT_TYPE_OS_BINSEM:
             return_code = OS_BinSemAPI_Impl_Init();
             break;
+        case OS_OBJECT_TYPE_OS_COUNTSEM:
+            return_code = OS_CountSemAPI_Impl_Init();
+            break;
         case OS_OBJECT_TYPE_OS_MUTEX:
             return_code = OS_MutexAPI_Impl_Init();
+            break;
+        case OS_OBJECT_TYPE_OS_MODULE:
+            return_code = OS_ModuleAPI_Impl_Init();
+            break;
+        case OS_OBJECT_TYPE_OS_TIMEBASE:
+            return_code = OS_TimeBaseAPI_Impl_Init();
             break;
         case OS_OBJECT_TYPE_OS_STREAM:
             return_code = OS_StreamAPI_Impl_Init();
@@ -82,14 +89,8 @@ int32 OS_API_Impl_Init(osal_objtype_t idtype)
         case OS_OBJECT_TYPE_OS_DIR:
             return_code = OS_DirAPI_Impl_Init();
             break;
-        case OS_OBJECT_TYPE_OS_TIMEBASE:
-            return_code = OS_TimeBaseAPI_Impl_Init();
-            break;
         case OS_OBJECT_TYPE_OS_TIMECB:
             return_code = OS_TimerCbAPI_Impl_Init();
-            break;
-        case OS_OBJECT_TYPE_OS_MODULE:
-            return_code = OS_ModuleAPI_Impl_Init();
             break;
         case OS_OBJECT_TYPE_OS_FILESYS:
             return_code = OS_FileSysAPI_Impl_Init();

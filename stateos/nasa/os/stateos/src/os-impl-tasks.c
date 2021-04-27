@@ -37,7 +37,7 @@
 /****************************************************************************************
                                    GLOBAL DATA
  ***************************************************************************************/
-
+/* Tables where the OS object information is stored */
 OS_impl_task_internal_record_t OS_impl_task_table[OS_MAX_TASKS];
 
 /****************************************************************************************
@@ -60,27 +60,18 @@ int32 OS_TaskAPI_Impl_Init(void)
 } /* end OS_TaskAPI_Impl_Init */
 
 /****************************************************************************************
-                                INTERNAL FUNCTIONS
- ***************************************************************************************/
-
-/*----------------------------------------------------------------
- *
- * Function: OS_Task_Handler
- *
- *  Purpose: Local helper routine, not part of OSAL API.
- *
- *-----------------------------------------------------------------*/
-static void OS_Task_Handler(void)
-{
-    osal_id_t id = OS_GET_OBJECT_ID(tsk_this(), OS_impl_task_internal_record_t, tsk);
-
-    OS_TaskEntryPoint(id);
-
-} /* end OS_Task_Handler */
-
-/****************************************************************************************
                                     TASK API
  ***************************************************************************************/
+
+static void OS_TaskEntry(void *arg)
+{
+    OS_VoidPtrValueWrapper_t local_arg = {0};
+
+    local_arg.opaque_arg = arg;
+
+    OS_TaskEntryPoint(local_arg.id);
+
+} /* end OS_RtemsEntry */
 
 /*----------------------------------------------------------------
  *
@@ -92,55 +83,25 @@ static void OS_Task_Handler(void)
  *-----------------------------------------------------------------*/
 int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
 {
-    OS_impl_task_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
-    OS_task_internal_record_t      *task  = OS_OBJECT_TABLE_GET(OS_task_table, *token);
-
-    osal_priority_t priority      = task->priority;
-    osal_stackptr_t stack_pointer = task->stack_pointer;
-    size_t          stack_size    = task->stack_size;
+    OS_impl_task_internal_record_t *impl;
+    OS_task_internal_record_t      *task;
+    OS_VoidPtrValueWrapper_t        impl_arg = {0};
 
     (void) flags;
 
-    if (stack_pointer == NULL)
+    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+    task = OS_OBJECT_TABLE_GET(OS_task_table, *token);
+
+    impl_arg.id = OS_ObjectIdFromToken(token);
+    impl->tsk = thd_create(OS_PriorityRemap(task->priority), OS_TaskEntry, impl_arg.opaque_arg, task->stack_size);
+    if (impl->tsk == NULL)
     {
-        if (stack_size < OS_STACK_SIZE)
-            stack_size = OS_STACK_SIZE;
-        stack_pointer = malloc(stack_size);
-        if (stack_pointer == NULL)
-            return OS_ERROR;
-        local->id = OS_ObjectIdFromToken(token);
-        tsk_init(&local->tsk, OS_PriorityRemap(priority), OS_Task_Handler, stack_pointer, stack_size);
-        local->tsk.obj.res = stack_pointer;
-    }
-    else
-    {
-        if (stack_size < OS_STACK_SIZE)
-            return OS_ERROR;
-        tsk_init(&local->tsk, OS_PriorityRemap(priority), OS_Task_Handler, stack_pointer, stack_size);
+        return OS_ERROR;
     }
 
     return OS_SUCCESS;
 
 } /* end OS_TaskCreate_Impl */
-
-/*----------------------------------------------------------------
- *
- * Function: OS_TaskDetach_Impl
- *
- *  Purpose: Implemented per internal OSAL API
- *           See prototype for argument/return detail
- *
- *-----------------------------------------------------------------*/
-int32 OS_TaskDetach_Impl(const OS_object_token_t *token)
-{
-    OS_impl_task_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
-
-    if (tsk_detach(&local->tsk) != E_SUCCESS)
-        return OS_ERROR;
-
-    return OS_SUCCESS;
-
-} /* end OS_TaskDetach_Impl */
 
 /*----------------------------------------------------------------
  *
@@ -152,13 +113,37 @@ int32 OS_TaskDetach_Impl(const OS_object_token_t *token)
  *-----------------------------------------------------------------*/
 int32 OS_TaskDelete_Impl(const OS_object_token_t *token)
 {
-    OS_impl_task_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+    OS_impl_task_internal_record_t *impl;
 
-    tsk_delete(&local->tsk);
+    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+
+    tsk_delete(impl->tsk);
+    impl->tsk = NULL;
 
     return OS_SUCCESS;
 
 } /* end OS_TaskDelete_Impl */
+
+/*----------------------------------------------------------------
+ *
+ * Function: OS_TaskDetach_Impl
+ *
+ *  Purpose: Implemented per internal OSAL API
+ *           See prototype for argument/return detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_TaskDetach_Impl(const OS_object_token_t *token)
+{
+    OS_impl_task_internal_record_t *impl;
+
+    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+
+    if (tsk_detach(impl->tsk) != E_SUCCESS)
+        return OS_ERROR;
+
+    return OS_SUCCESS;
+
+} /* end OS_TaskDetach_Impl */
 
 /*----------------------------------------------------------------
  *
@@ -200,9 +185,11 @@ int32 OS_TaskDelay_Impl(uint32 millis)
  *-----------------------------------------------------------------*/
 int32 OS_TaskSetPriority_Impl(const OS_object_token_t *token, osal_priority_t new_priority)
 {
-    OS_impl_task_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+    OS_impl_task_internal_record_t *impl;
 
-    core_tsk_prio(&local->tsk, local->tsk.basic = OS_PriorityRemap(new_priority));
+    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+
+    core_tsk_prio(impl->tsk, impl->tsk->basic = OS_PriorityRemap(new_priority));
 
     return OS_SUCCESS;
 
@@ -218,10 +205,14 @@ int32 OS_TaskSetPriority_Impl(const OS_object_token_t *token, osal_priority_t ne
  *-----------------------------------------------------------------*/
 int32 OS_TaskMatch_Impl(const OS_object_token_t *token)
 {
-    OS_impl_task_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+    OS_impl_task_internal_record_t *impl;
 
-    if (tsk_this() != &local->tsk)
+    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+
+    if (impl->tsk != tsk_this())
+    {
         return OS_ERROR;
+    }
 
     return OS_SUCCESS;
 
@@ -253,9 +244,11 @@ int32 OS_TaskRegister_Impl(osal_id_t global_task_id)
  *-----------------------------------------------------------------*/
 osal_id_t OS_TaskGetId_Impl(void)
 {
-    osal_id_t id = OS_GET_OBJECT_ID(tsk_this(), OS_impl_task_internal_record_t, tsk);
+    OS_VoidPtrValueWrapper_t impl_arg = {0};
 
-    return id;
+    impl_arg.opaque_arg = tsk_this()->arg;
+
+    return impl_arg.id;
 
 } /* end OS_TaskGetId_Impl */
 
@@ -303,11 +296,12 @@ int32 OS_TaskValidateSystemData_Impl(const void *sysdata, size_t sysdata_size)
  *-----------------------------------------------------------------*/
 bool OS_TaskIdMatchSystemData_Impl(void *ref, const OS_object_token_t *token, const OS_common_record_t *obj)
 {
-    tsk_t *target = ref;
-    OS_impl_task_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+    OS_impl_task_internal_record_t *impl;
+
+    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
 
     (void) obj;
 
-    return (target == &local->tsk);
+    return (impl->tsk == ref);
 
 } /* end OS_TaskIdMatchSystemData_Impl */

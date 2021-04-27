@@ -18,19 +18,19 @@
  *  limitations under the License.
  */
 
-/*
- * File:  bsp_internal.h
+/**
+ * \file     bsp_internal.h
+ * \ingroup  stateos
+ * \author   Rajmund Szymanski
  *
- * Purpose:
- *   Header file for internal data to the BSP
  */
 
-#ifndef BSP_INTERNAL_H_
-#define BSP_INTERNAL_H_
+#ifndef BSP_INTERNAL_H
+#define BSP_INTERNAL_H
 
 /*
 ** OSAL includes
 */
 #include "bsp-impl.h"
 
-#endif /* BSP_INTERNAL_H_ */
+#endif /* BSP_INTERNAL_H */

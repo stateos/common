@@ -33,9 +33,10 @@
 
 typedef struct
 {
-    sem_t sem;
+    sem_t *sem;
 } OS_impl_countsem_internal_record_t;
 
+/* Tables where the OS object information is stored */
 extern OS_impl_countsem_internal_record_t OS_impl_count_sem_table[OS_MAX_COUNT_SEMAPHORES];
 
-#endif /* OS_IMPL_COUNTSEM_H  */
+#endif /* OS_IMPL_COUNTSEM_H */

@@ -33,14 +33,13 @@
 #include "osapi.h"
 #include "os.h"
 
+/* Console device */
 typedef struct
 {
-    osal_id_t id;
-    tsk_t     tsk;
-    sem_t     data_sem;
-    bool      is_async;
+    bool   is_async;
+    sem_t *data_sem;
 } OS_impl_console_internal_record_t;
 
 extern OS_impl_console_internal_record_t OS_impl_console_table[OS_MAX_CONSOLES];
 
-#endif /* OS_IMPL_CONSOLE_H  */
+#endif /* OS_IMPL_CONSOLE_H */

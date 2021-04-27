@@ -33,9 +33,10 @@
 
 typedef struct
 {
-    sem_t sem;
+    sem_t *sem;
 } OS_impl_binsem_internal_record_t;
 
+/* Tables where the OS object information is stored */
 extern OS_impl_binsem_internal_record_t OS_impl_bin_sem_table[OS_MAX_BIN_SEMAPHORES];
 
-#endif /* OS_IMPL_BINSEM_H  */
+#endif /* OS_IMPL_BINSEM_H */

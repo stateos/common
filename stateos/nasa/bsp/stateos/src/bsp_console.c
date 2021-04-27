@@ -19,10 +19,10 @@
  */
 
 /*
- * File:  bsp_console.c
+ * \file     bsp_console.c
+ * \ingroup  stateos
+ * \author   Rajmund Szymanski
  *
- * Purpose:
- *   OSAL BSP debug console abstraction
  */
 
 #include <string.h>

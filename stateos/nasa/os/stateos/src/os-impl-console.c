@@ -31,9 +31,9 @@
 
 #include "os-stateos.h"
 #include "os-impl-console.h"
-#include "os-shared-common.h"
 #include "os-shared-printf.h"
 #include "os-shared-idmap.h"
+#include "os-shared-common.h"
 
 /****************************************************************************************
                                      DEFINES
@@ -47,6 +47,7 @@
                                    GLOBAL DATA
  ***************************************************************************************/
 
+/* Tables where the OS object information is stored */
 OS_impl_console_internal_record_t OS_impl_console_table[OS_MAX_CONSOLES];
 
 /****************************************************************************************
@@ -82,12 +83,14 @@ int32 OS_ConsoleAPI_Impl_Init(void)
  *-----------------------------------------------------------------*/
 void OS_ConsoleWakeup_Impl(const OS_object_token_t *token)
 {
-    OS_impl_console_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
+    OS_impl_console_internal_record_t *local;
+
+    local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
 
     if (local->is_async)
     {
         /* post the sem for the utility task to run */
-        sem_post(&local->data_sem);
+        sem_post(local->data_sem);
     }
     else
     {
@@ -104,21 +107,22 @@ void OS_ConsoleWakeup_Impl(const OS_object_token_t *token)
  *           Implements the console output task
  *
  *-----------------------------------------------------------------*/
-static void OS_ConsoleTask_Entry()
+static void OS_ConsoleTaskEntryPoint(void *arg)
 {
-    OS_object_token_t                  token;
     OS_impl_console_internal_record_t *local;
-    osal_id_t id = OS_GET_OBJECT_ID(tsk_this(), OS_impl_console_internal_record_t, tsk);
+    OS_object_token_t                  token;
+    OS_VoidPtrValueWrapper_t           local_arg = {0};
 
-    if (OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, OS_OBJECT_TYPE_OS_CONSOLE, id, &token) == OS_SUCCESS)
+    local_arg.opaque_arg = arg;
+    if (OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, OS_OBJECT_TYPE_OS_CONSOLE, local_arg.id, &token) == OS_SUCCESS)
     {
         local = OS_OBJECT_TABLE_GET(OS_impl_console_table, token);
 
         /* Loop forever (unless shutdown is set) */
-        while (OS_SharedGlobalVars.ShutdownFlag != OS_SHUTDOWN_MAGIC_NUMBER)
+        while (OS_SharedGlobalVars.GlobalState != OS_SHUTDOWN_MAGIC_NUMBER)
         {
             OS_ConsoleOutput_Impl(&token);
-            sem_wait(&local->data_sem);
+            sem_wait(local->data_sem);
         }
         OS_ObjectIdRelease(&token);
     }
@@ -134,10 +138,11 @@ static void OS_ConsoleTask_Entry()
  *-----------------------------------------------------------------*/
 int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
 {
-    OS_impl_console_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
+    OS_impl_console_internal_record_t *local;
+    OS_VoidPtrValueWrapper_t           local_arg = {0};
+    tsk_t                             *tsk;
 
-    osal_priority_t priority = OS_CONSOLE_TASK_PRIORITY;
-    osal_stackptr_t stack_pointer;
+    local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
 
     if (OS_ObjectIndexFromToken(token) != 0)
         return OS_ERR_NOT_IMPLEMENTED;
@@ -146,14 +151,17 @@ int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
 
     if (local->is_async)
     {
-        stack_pointer = malloc(OS_CONSOLE_TASK_STACKSIZE);
-        if (stack_pointer == NULL)
+        local_arg.id = OS_ObjectIdFromToken(token);
+        local->data_sem = sem_create(0, semCounting);
+        if (local->data_sem == NULL)
+            return OS_SEM_FAILURE;
+        tsk = thd_create(OS_PriorityRemap(OS_CONSOLE_TASK_PRIORITY), OS_ConsoleTaskEntryPoint, local_arg.opaque_arg, OS_CONSOLE_TASK_STACKSIZE);
+        if (tsk == NULL)
+        {
+            sem_delete(local->data_sem);
             return OS_ERROR;
-
-        local->id = OS_ObjectIdFromToken(token);
-        sem_init(&local->data_sem, 0, semCounting);
-        tsk_init(&local->tsk, OS_PriorityRemap(priority), OS_ConsoleTask_Entry, stack_pointer, OS_CONSOLE_TASK_STACKSIZE);
-        local->tsk.obj.res = stack_pointer;
+        }
+        tsk_detach(tsk);
     }
 
     return OS_SUCCESS;

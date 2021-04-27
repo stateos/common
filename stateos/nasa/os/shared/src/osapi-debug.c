@@ -51,7 +51,7 @@
  *  Purpose: Outputs a single debug statement to the console
  *
  *-----------------------------------------------------------------*/
-#if defined(OSAL_CONFIG_DEBUG_PRINTF)
+#ifdef OSAL_CONFIG_DEBUG_PRINTF
 void OS_DebugPrintf(uint32 Level, const char *Func, uint32 Line, const char *Format, ...)
 {
     va_list va;

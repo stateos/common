@@ -19,9 +19,9 @@
  */
 
 /**
- * \file     os-shared-common.h
+ * \file
+ *
  * \ingroup  shared
- * \author   joseph.p.hickey@nasa.gov
  *
  */
 
@@ -32,15 +32,23 @@
 #include "os-shared-globaldefs.h"
 
 /*
- * A "magic number" that when written to the "ShutdownFlag" member
- * of the global state structure indicates an active shutdown request.
+ * Flag values for the "GlobalState" member the global state structure
  */
-#define OS_SHUTDOWN_MAGIC_NUMBER 0xABADC0DE
+#define OS_INIT_MAGIC_NUMBER     0xBE57C0DE /**< Indicates that OS_API_Init() has been successfully run */
+#define OS_SHUTDOWN_MAGIC_NUMBER 0xABADC0DE /**< Indicates that a system shutdown request is pending */
 
 /* Global variables that are common between implementations */
 struct OS_shared_global_vars
 {
-    bool Initialized;
+    /*
+     * Tracks whether OS_API_Init() has been called or if
+     * there is a shutdown request pending.
+     *
+     * After boot/first startup this should have 0 (from BSS clearing)
+     * After OS_API_Init() is called this has OS_INIT_MAGIC_NUMBER
+     * After OS_ApplicationShutdown() this has OS_SHUTDOWN_MAGIC_NUMBER
+     */
+    volatile uint32 GlobalState;
 
     /*
      * The console device ID used for OS_printf() calls
@@ -48,13 +56,12 @@ struct OS_shared_global_vars
     osal_id_t PrintfConsoleId;
 
     /*
-     * PrintfEnabled and ShutdownFlag are marked "volatile"
+     * PrintfEnabled and GlobalState are marked "volatile"
      * because they are updated and read by different threads
      */
-    volatile bool   PrintfEnabled;
-    volatile uint32 ShutdownFlag;
-    uint32          MicroSecPerTick;
-    uint32          TicksPerSecond;
+    volatile bool PrintfEnabled;
+    uint32        MicroSecPerTick;
+    uint32        TicksPerSecond;
 
     /*
      * The event handler is an application-defined callback
@@ -146,9 +153,9 @@ static inline size_t OS_strnlen(const char *s, size_t maxlen)
     if (end != NULL)
     {
         /* actual length of string is difference */
-        maxlen = (uintptr_t)(end - s);
+        maxlen = end - s;
     }
     return maxlen;
 }
 
-#endif /* OS_SHARED_COMMON_H  */
+#endif /* OS_SHARED_COMMON_H */

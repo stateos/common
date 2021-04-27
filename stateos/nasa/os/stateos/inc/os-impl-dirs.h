@@ -28,4 +28,4 @@
 #ifndef OS_IMPL_DIRS_H
 #define OS_IMPL_DIRS_H
 
-#endif /* OS_IMPL_DIRS_H  */
+#endif /* OS_IMPL_DIRS_H */

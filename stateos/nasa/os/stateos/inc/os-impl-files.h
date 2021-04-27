@@ -28,4 +28,4 @@
 #ifndef OS_IMPL_FILES_H
 #define OS_IMPL_FILES_H
 
-#endif /* OS_IMPL_FILES_H  */
+#endif /* OS_IMPL_FILES_H */

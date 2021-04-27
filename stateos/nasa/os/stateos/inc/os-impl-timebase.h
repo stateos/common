@@ -33,16 +33,21 @@
 
 typedef struct
 {
-    osal_id_t id;
-    tmr_t     tmr;
-    tsk_t     handler_tsk;
-    mtx_t     handler_mtx;
-    sem_t     tick_sem;
-    bool      reset_flag;
-    uint32    start_time;
-    uint32    interval_time;
+    tmr_t *tmr;
+    sem_t *tick_sem;
+    mtx_t *handler_mtx;
+    tsk_t *handler_tsk;
+    uint32 start_time;
+    uint32 interval_time;
+    int    assigned_signal;
+    bool   reset_flag;
+
 } OS_impl_timebase_internal_record_t;
+
+/****************************************************************************************
+                                   GLOBAL DATA
+ ***************************************************************************************/
 
 extern OS_impl_timebase_internal_record_t OS_impl_timebase_table[OS_MAX_TIMEBASES];
 
-#endif /* OS_IMPL_TIMEBASE_H  */
+#endif /* OS_IMPL_TIMEBASE_H */

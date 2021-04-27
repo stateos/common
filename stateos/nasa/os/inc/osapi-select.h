@@ -19,7 +19,9 @@
  */
 
 /**
- * @file osapi-select.h
+ * \file
+ *
+ * Declarations and prototypes for select abstraction
  */
 
 #ifndef OSAPI_SELECT_H
@@ -33,6 +35,10 @@
  *
  * This is part of the select API and is manipulated using the
  * related API calls.  It should not be modified directly by applications.
+ *
+ * Note: Math is to determine uint8 array size needed to represent
+ *       single bit OS_MAX_NUM_OPEN_FILES objects, + 7 rounds up
+ *       and 8 is the size of uint8.
  *
  * @sa OS_SelectFdZero(), OS_SelectFdAdd(), OS_SelectFdClear(), OS_SelectFdIsSet()
  */
@@ -154,4 +160,4 @@ int32 OS_SelectFdClear(OS_FdSet *Set, osal_id_t objid);
 bool OS_SelectFdIsSet(OS_FdSet *Set, osal_id_t objid);
 /**@}*/
 
-#endif
+#endif /* OSAPI_SELECT_H */

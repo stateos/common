@@ -31,40 +31,40 @@
 
 #include "os-stateos.h"
 #include "os-shared-idmap.h"
+#include "os-impl-idmap.h"
 
 /****************************************************************************************
                                      GLOBALS
  ***************************************************************************************/
 
-enum
-{
-    MUTEX_TABLE_SIZE = OS_OBJECT_TYPE_USER
+static OS_impl_objtype_lock_t OS_task_table_lock;
+static OS_impl_objtype_lock_t OS_queue_table_lock;
+static OS_impl_objtype_lock_t OS_bin_sem_table_lock;
+static OS_impl_objtype_lock_t OS_mutex_table_lock;
+static OS_impl_objtype_lock_t OS_count_sem_table_lock;
+static OS_impl_objtype_lock_t OS_stream_table_lock;
+static OS_impl_objtype_lock_t OS_dir_table_lock;
+static OS_impl_objtype_lock_t OS_timebase_table_lock;
+static OS_impl_objtype_lock_t OS_timecb_table_lock;
+static OS_impl_objtype_lock_t OS_module_table_lock;
+static OS_impl_objtype_lock_t OS_filesys_table_lock;
+static OS_impl_objtype_lock_t OS_console_lock;
+
+OS_impl_objtype_lock_t *const OS_impl_objtype_lock_table[OS_OBJECT_TYPE_USER] = {
+    [OS_OBJECT_TYPE_UNDEFINED]   = NULL,
+    [OS_OBJECT_TYPE_OS_TASK]     = &OS_task_table_lock,
+    [OS_OBJECT_TYPE_OS_QUEUE]    = &OS_queue_table_lock,
+    [OS_OBJECT_TYPE_OS_COUNTSEM] = &OS_count_sem_table_lock,
+    [OS_OBJECT_TYPE_OS_BINSEM]   = &OS_bin_sem_table_lock,
+    [OS_OBJECT_TYPE_OS_MUTEX]    = &OS_mutex_table_lock,
+    [OS_OBJECT_TYPE_OS_STREAM]   = &OS_stream_table_lock,
+    [OS_OBJECT_TYPE_OS_DIR]      = &OS_dir_table_lock,
+    [OS_OBJECT_TYPE_OS_TIMEBASE] = &OS_timebase_table_lock,
+    [OS_OBJECT_TYPE_OS_TIMECB]   = &OS_timecb_table_lock,
+    [OS_OBJECT_TYPE_OS_MODULE]   = &OS_module_table_lock,
+    [OS_OBJECT_TYPE_OS_FILESYS]  = &OS_filesys_table_lock,
+    [OS_OBJECT_TYPE_OS_CONSOLE]  = &OS_console_lock,
 };
-
-static mtx_t MUTEX_TABLE[MUTEX_TABLE_SIZE];
-
-/****************************************************************************************
-                                INITIALIZATION FUNCTION
- ***************************************************************************************/
-
-/*---------------------------------------------------------------------------------------
-   Name: OS_TableMutex_Init
-
-   Purpose: Initialize the tables that the OS API uses to keep track of information
-            about objects
-
-   returns: OS_SUCCESS or OS_ERROR
----------------------------------------------------------------------------------------*/
-int32 OS_TableMutex_Init(osal_objtype_t idtype)
-{
-    if (idtype >= MUTEX_TABLE_SIZE)
-        return OS_ERROR;
-    
-    mtx_init(&MUTEX_TABLE[idtype], mtxPrioInherit, 0);
-
-    return OS_SUCCESS;
-
-} /* end OS_TableMutex_Init */
 
 /****************************************************************************************
                                        API
@@ -80,8 +80,11 @@ int32 OS_TableMutex_Init(osal_objtype_t idtype)
  *-----------------------------------------------------------------*/
 void OS_Lock_Global_Impl(osal_objtype_t idtype)
 {
-    if (idtype < MUTEX_TABLE_SIZE)
-		mtx_lock(&MUTEX_TABLE[idtype]);
+    OS_impl_objtype_lock_t *impl;
+
+    impl = OS_impl_objtype_lock_table[idtype];
+
+    mtx_lock(impl->mtx);
 
 } /* end OS_Lock_Global_Impl */
 
@@ -95,8 +98,11 @@ void OS_Lock_Global_Impl(osal_objtype_t idtype)
  *-----------------------------------------------------------------*/
 void OS_Unlock_Global_Impl(osal_objtype_t idtype)
 {
-    if (idtype < MUTEX_TABLE_SIZE)
-		mtx_unlock(&MUTEX_TABLE[idtype]);
+    OS_impl_objtype_lock_t *impl;
+
+    impl = OS_impl_objtype_lock_table[idtype];
+
+    mtx_unlock(impl->mtx);
 
 } /* end OS_Unlock_Global_Impl */
 
@@ -125,3 +131,35 @@ void OS_WaitForStateChange_Impl(osal_objtype_t idtype, uint32 attempts)
     OS_TaskDelay(wait_ms);
     OS_Lock_Global_Impl(idtype);
 }
+
+/****************************************************************************************
+                                INITIALIZATION FUNCTION
+ ***************************************************************************************/
+
+/*---------------------------------------------------------------------------------------
+   Name: OS_TableMutex_Init
+
+   Purpose: Initialize the tables that the OS API uses to keep track of information
+            about objects
+
+   returns: OS_SUCCESS or OS_ERROR
+---------------------------------------------------------------------------------------*/
+int32 OS_TableMutex_Init(osal_objtype_t idtype)
+{
+    OS_impl_objtype_lock_t *impl;
+
+    impl = OS_impl_objtype_lock_table[idtype];
+    if (impl == NULL)
+    {
+        return OS_SUCCESS;
+    }
+
+    impl->mtx = mtx_create(mtxNormal + mtxPrioInherit, 0);
+    if (impl->mtx == NULL)
+    {
+        return OS_ERROR;
+    }
+    
+    return OS_SUCCESS;
+
+} /* end OS_TableMutex_Init */

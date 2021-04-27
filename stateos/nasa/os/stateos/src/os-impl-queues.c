@@ -82,12 +82,11 @@ int32 OS_QueueCreate_Impl(const OS_object_token_t *token, uint32 flags)
 
     (void) flags;
 
-    void *data_buffer = malloc(queue->max_depth * queue->max_size);
-    if (data_buffer == NULL)
+    local->box = box_create(queue->max_depth, queue->max_size);
+    if (local->box == NULL)
+    {
         return OS_ERROR;
-
-    box_init(&local->box, queue->max_size, data_buffer, queue->max_depth * queue->max_size);
-    local->box.obj.res = data_buffer;
+    }
 
     return OS_SUCCESS;
 
@@ -105,7 +104,8 @@ int32 OS_QueueDelete_Impl(const OS_object_token_t *token)
 {
     OS_impl_queue_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_queue_table, *token);
 
-    box_delete(&local->box);
+    box_delete(local->box);
+    local->box = NULL;
 
     return OS_SUCCESS;
 
@@ -128,14 +128,14 @@ int32 OS_QueueGet_Impl(const OS_object_token_t *token, void *data, size_t size, 
                   /* else */            MSEC * (uint32)timeout;
 
     *size_copied = 0;
-    if (size < local->box.size)
+    if (size < local->box->size)
         return OS_QUEUE_INVALID_SIZE;
     
-    int status = box_waitFor(&local->box, data, ticks);
+    int status = box_waitFor(local->box, data, ticks);
 
     switch (status)
     {
-        case E_SUCCESS: *size_copied = local->box.size; return OS_SUCCESS;
+        case E_SUCCESS: *size_copied = local->box->size; return OS_SUCCESS;
         case E_TIMEOUT: return timeout != IMMEDIATE ? OS_QUEUE_TIMEOUT : OS_QUEUE_EMPTY;
         default:        return OS_ERROR;
     }
@@ -155,10 +155,10 @@ int32 OS_QueuePut_Impl(const OS_object_token_t *token, const void *data, size_t 
 
     (void) flags;
 
-    if (size > local->box.size)
+    if (size > local->box->size)
         return OS_QUEUE_INVALID_SIZE;
 
-    int status = box_give(&local->box, data);
+    int status = box_give(local->box, data);
 
     switch (status)
     {
