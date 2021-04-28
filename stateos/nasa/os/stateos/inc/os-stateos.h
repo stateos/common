@@ -63,9 +63,6 @@
 #if     OS_TASK_EXIT == 0
 #error  osconfig.h: Invalid OS_TASK_EXIT value! It must be a value other than 0.
 #endif
-#if     OS_MAIN_PRIO < OS_MAX_TASK_PRIORITY
-#error  osconfig.h: Invalid OS_MAIN_PRIO value! It must be a value other than OS_MAX_TASK_PRIORITY.
-#endif
 
 /****************************************************************************************
                                 INLINE FUNCTIONS
