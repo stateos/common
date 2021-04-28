@@ -107,14 +107,12 @@ void OS_ConsoleWakeup_Impl(const OS_object_token_t *token)
  *           Implements the console output task
  *
  *-----------------------------------------------------------------*/
-static void OS_ConsoleTaskEntryPoint(void *arg)
+static void OS_ConsoleTaskEntryPoint(osal_id_t console_id)
 {
     OS_impl_console_internal_record_t *local;
     OS_object_token_t                  token;
-    OS_VoidPtrValueWrapper_t           local_arg = {0};
 
-    local_arg.opaque_arg = arg;
-    if (OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, OS_OBJECT_TYPE_OS_CONSOLE, local_arg.id, &token) == OS_SUCCESS)
+    if (OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, OS_OBJECT_TYPE_OS_CONSOLE, console_id, &token) == OS_SUCCESS)
     {
         local = OS_OBJECT_TABLE_GET(OS_impl_console_table, token);
 
@@ -155,7 +153,7 @@ int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
         local->data_sem = sem_create(0, semCounting);
         if (local->data_sem == NULL)
             return OS_SEM_FAILURE;
-        tsk = thd_create(OS_PriorityRemap(OS_CONSOLE_TASK_PRIORITY), OS_ConsoleTaskEntryPoint, local_arg.opaque_arg, OS_CONSOLE_TASK_STACKSIZE);
+        tsk = tsk_setup(OS_PriorityRemap(OS_CONSOLE_TASK_PRIORITY), OS_ConsoleTaskEntryPoint, local_arg.opaque_arg, OS_CONSOLE_TASK_STACKSIZE);
         if (tsk == NULL)
         {
             sem_delete(local->data_sem);

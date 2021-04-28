@@ -92,38 +92,18 @@ void OS_TimeBaseUnlock_Impl(const OS_object_token_t *token)
  *
  *-----------------------------------------------------------------*/
 
-static void OS_TimeBaseHandlerISR(void *arg)
+static void OS_TimeBaseHandlerISR(osal_id_t timebase_id)
 {
     OS_object_token_t                   token;
     OS_impl_timebase_internal_record_t *local;
-    OS_VoidPtrValueWrapper_t            local_arg = {0};
 
-    local_arg.opaque_arg = arg;
-
-    if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMEBASE, local_arg.id, &token) == OS_SUCCESS)
+    if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMEBASE, timebase_id, &token) == OS_SUCCESS)
     {
         local = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, token);
         /* no action is required for the periodic timer */
         sem_post(local->tick_sem);
     }
 } /* end OS_TimeBaseHandlerISR */
-
-/*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseHandler
- *
- *  Purpose: Local helper routine, not part of OSAL API.
- *
- *-----------------------------------------------------------------*/
-static void OS_TimeBaseHandler(void *arg)
-{
-    OS_VoidPtrValueWrapper_t local_arg = {0};
-
-    local_arg.opaque_arg = arg;
-
-    OS_TimeBase_CallbackThread(local_arg.id);
-
-} /* end OS_TimeBaseHandler */
 
 /*----------------------------------------------------------------
  *
@@ -139,7 +119,9 @@ static uint32 OS_TimeBaseWait_Impl(osal_id_t timebase_id)
     OS_impl_timebase_internal_record_t *impl;
 
     if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMEBASE, timebase_id, &token) != OS_SUCCESS)
+    {
         return 0;
+    }
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, token);
 
@@ -228,7 +210,7 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
 	    }
 	}
 
-    impl->handler_tsk = thd_create(OS_PriorityRemap(1), OS_TimeBaseHandler, impl_arg.opaque_arg, OS_STACK_SIZE);
+    impl->handler_tsk = tsk_setup(OS_PriorityRemap(1), OS_TimeBase_CallbackThread, impl_arg.opaque_arg, OS_STACK_SIZE);
     if (impl->handler_tsk == NULL)
     {
         mtx_delete(impl->handler_mtx); impl->handler_mtx = NULL;

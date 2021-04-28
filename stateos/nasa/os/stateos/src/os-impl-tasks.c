@@ -63,16 +63,6 @@ int32 OS_TaskAPI_Impl_Init(void)
                                     TASK API
  ***************************************************************************************/
 
-static void OS_TaskEntry(void *arg)
-{
-    OS_VoidPtrValueWrapper_t local_arg = {0};
-
-    local_arg.opaque_arg = arg;
-
-    OS_TaskEntryPoint(local_arg.id);
-
-} /* end OS_RtemsEntry */
-
 /*----------------------------------------------------------------
  *
  * Function: OS_TaskCreate_Impl
@@ -93,7 +83,7 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
     task = OS_OBJECT_TABLE_GET(OS_task_table, *token);
 
     impl_arg.id = OS_ObjectIdFromToken(token);
-    impl->tsk = thd_create(OS_PriorityRemap(task->priority), OS_TaskEntry, impl_arg.opaque_arg, task->stack_size);
+    impl->tsk = tsk_setup(OS_PriorityRemap(task->priority), OS_TaskEntryPoint, impl_arg.opaque_arg, task->stack_size);
     if (impl->tsk == NULL)
     {
         return OS_ERROR;

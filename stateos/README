@@ -60,9 +60,9 @@ Features:
 - various updates
 - updated sys_init procedure
 - added tmr_setup internal function
-- upgraded thd_create internal function
+- added tsk_setup internal function
 - upgraded wrk_create function
-- removed wrk_detached function
+- removed thd_create and wrk_detached functions
 - updated os version
 - preventing sign-conversion warnings
 - added core_tsk_exec procedure as an alternative for core_tsk_loop

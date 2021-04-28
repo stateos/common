@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    26.04.2021
+    @date    28.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -702,7 +702,7 @@ tsk_t *wrk_new( unsigned prio, fun_t *state, size_t size, bool detached, bool au
 
 /******************************************************************************
  *
- * Name              : thd_create
+ * Name              : tsk_setup
  *
  * Description       : create and initialize complete work area for task object
  *                     and start the task
@@ -720,7 +720,7 @@ tsk_t *wrk_new( unsigned prio, fun_t *state, size_t size, bool detached, bool au
  *
  ******************************************************************************/
 
-tsk_t *thd_create( unsigned prio, thd_t *proc, void *arg, size_t size );
+tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size );
 
 /******************************************************************************
  *

@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.c
     @author  Rajmund Szymanski
-    @date    26.04.2021
+    @date    28.04.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -127,7 +127,7 @@ tsk_t *wrk_create( unsigned prio, fun_t *state, size_t size, bool detached, bool
 }
 
 /* -------------------------------------------------------------------------- */
-tsk_t *thd_create( unsigned prio, thd_t *proc, void *arg, size_t size )
+tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	tsk_t *tsk;
@@ -138,7 +138,7 @@ tsk_t *thd_create( unsigned prio, thd_t *proc, void *arg, size_t size )
 
 	sys_lock();
 	{
-		tsk = priv_wrk_create(prio, (fun_t *)proc, size, false);
+		tsk = priv_wrk_create(prio, proc, size, false);
 		if (tsk)
 		{
 			tsk->arg = arg;
