@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    27.04.2021
+    @date    28.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -359,7 +359,7 @@ tmr_t *tmr_new( fun_t *state ) { return tmr_create(state); }
 
 /******************************************************************************
  *
- * Name              : tim_create
+ * Name              : tmr_setup
  *
  * Description       : create and initialize a new timer object
  *
@@ -374,7 +374,7 @@ tmr_t *tmr_new( fun_t *state ) { return tmr_create(state); }
  *
  ******************************************************************************/
 
-tmr_t *tim_create( thd_t *proc, void *arg );
+tmr_t *tmr_setup( fun_t *proc, void *arg );
 
 /******************************************************************************
  *

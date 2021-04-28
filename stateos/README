@@ -59,7 +59,7 @@ Features:
 - updated onceflag
 - various updates
 - updated sys_init procedure
-- added tim_create internal function
+- added tmr_setup internal function
 - upgraded thd_create internal function
 - upgraded wrk_create function
 - removed wrk_detached function

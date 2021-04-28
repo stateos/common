@@ -206,7 +206,7 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
 
 	    impl_arg.id = OS_ObjectIdFromToken(token);
 
-	    impl->tmr = tim_create(OS_TimeBaseHandlerISR, impl_arg.opaque_arg);
+	    impl->tmr = tmr_setup(OS_TimeBaseHandlerISR, impl_arg.opaque_arg);
 	    if (impl->tmr == NULL)
 	    {
 	        return OS_TIMER_ERR_UNAVAILABLE;
