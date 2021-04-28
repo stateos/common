@@ -19,24 +19,13 @@
  */
 
 /**
- * \file     os-impl-queues.h
+ * \file     os-impl-file.h
  * \ingroup  stateos
  * \author   Rajmund Szymanski
  *
  */
 
-#ifndef OS_IMPL_QUEUES_H
-#define OS_IMPL_QUEUES_H
+#ifndef OS_IMPL_FILE_H
+#define OS_IMPL_FILE_H
 
-#include "osconfig.h"
-#include "os.h"
-
-typedef struct
-{
-    box_t *box;
-} OS_impl_queue_internal_record_t;
-
-/* Tables where the OS object information is stored */
-extern OS_impl_queue_internal_record_t OS_impl_queue_table[OS_MAX_QUEUES];
-
-#endif /* OS_IMPL_QUEUES_H */
+#endif /* OS_IMPL_FILE_H */

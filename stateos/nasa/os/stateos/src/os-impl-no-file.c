@@ -19,7 +19,7 @@
  */
 
 /**
- * \file     os-impl-no-files.c
+ * \file     os-impl-no-file.c
  * \ingroup  stateos
  * \author   Rajmund Szymanski
  *
@@ -29,7 +29,7 @@
                                         INCLUDES
  ***************************************************************************************/
 
-#include "os-impl-files.h"
+#include "os-impl-file.h"
 #include "os-shared-file.h"
 
 /****************************************************************************************

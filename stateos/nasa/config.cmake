@@ -49,8 +49,8 @@ target_sources(stateos-nasa
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-errors.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-idmap.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-mutex.c
-	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-dirs.c
-	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-files.c
+	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-dir.c
+	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-file.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-filesys.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-heap.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-io.c
@@ -60,8 +60,8 @@ target_sources(stateos-nasa
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-shell.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-sockets.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-no-symtab.c
-	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-queues.c
-	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-tasks.c
+	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-queue.c
+	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-task.c
 	${STATEOS_PATH}/nasa/os/stateos/src/os-impl-timebase.c
 )
 

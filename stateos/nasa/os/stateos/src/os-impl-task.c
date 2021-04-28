@@ -19,7 +19,7 @@
  */
 
 /**
- * \file     os-impl-tasks.c
+ * \file     os-impl-task.c
  * \ingroup  stateos
  * \author   Rajmund Szymanski
  *
@@ -30,7 +30,7 @@
  ***************************************************************************************/
 
 #include "os-stateos.h"
-#include "os-impl-tasks.h"
+#include "os-impl-task.h"
 #include "os-shared-task.h"
 #include "os-shared-idmap.h"
 

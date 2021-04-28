@@ -47,8 +47,8 @@ SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-countsem.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-errors.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-idmap.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-mutex.c
-SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-dirs.c
-SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-files.c
+SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-dir.c
+SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-file.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-filesys.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-heap.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-io.c
@@ -58,8 +58,8 @@ SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-select.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-shell.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-sockets.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-no-symtab.c
-SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-queues.c
-SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-tasks.c
+SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-queue.c
+SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-task.c
 SRCS += $(COMMON)/stateos/nasa/os/stateos/src/os-impl-timebase.c
 
 include $(COMMON)/stateos/makefile

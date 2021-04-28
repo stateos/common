@@ -19,13 +19,13 @@
  */
 
 /**
- * \file     os-impl-files.h
+ * \file     os-impl-dir.h
  * \ingroup  stateos
  * \author   Rajmund Szymanski
  *
  */
 
-#ifndef OS_IMPL_FILES_H
-#define OS_IMPL_FILES_H
+#ifndef OS_IMPL_DIR_H
+#define OS_IMPL_DIR_H
 
-#endif /* OS_IMPL_FILES_H */
+#endif /* OS_IMPL_DIR_H */

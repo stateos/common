@@ -19,7 +19,7 @@
  */
 
 /**
- * \file     os-impl-queues.c
+ * \file     os-impl-queue.c
  * \ingroup  stateos
  * \author   Rajmund Szymanski
  *
@@ -30,7 +30,7 @@
  ***************************************************************************************/
 
 #include "os-stateos.h"
-#include "os-impl-queues.h"
+#include "os-impl-queue.h"
 #include "os-shared-queue.h"
 #include "os-shared-idmap.h"
 
