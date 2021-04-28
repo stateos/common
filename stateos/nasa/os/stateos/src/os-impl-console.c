@@ -26,7 +26,7 @@
  */
 
 /****************************************************************************************
-                                    INCLUDE FILES
+                                        INCLUDES
  ***************************************************************************************/
 
 #include "os-stateos.h"
@@ -36,7 +36,7 @@
 #include "os-shared-common.h"
 
 /****************************************************************************************
-                                     DEFINES
+                                   LOCAL DEFINITIONS
  ***************************************************************************************/
 
 #define OS_CONSOLE_ASYNC          true
@@ -44,14 +44,14 @@
 #define OS_CONSOLE_TASK_STACKSIZE OS_UTILITYTASK_STACK_SIZE
 
 /****************************************************************************************
-                                   GLOBAL DATA
+                                    GLOBAL VARIABLES
  ***************************************************************************************/
 
 /* Tables where the OS object information is stored */
 OS_impl_console_internal_record_t OS_impl_console_table[OS_MAX_CONSOLES];
 
 /****************************************************************************************
-                                INITIALIZATION FUNCTION
+                                     IMPLEMENTATION
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
@@ -69,10 +69,6 @@ int32 OS_ConsoleAPI_Impl_Init(void)
 
 } /* end OS_ConsoleAPI_Impl_Init */
 
-/****************************************************************************************
-                                  CONSOLE OUTPUT
- ***************************************************************************************/
-
 /*----------------------------------------------------------------
  *
  * Function: OS_ConsoleWakeup_Impl
@@ -83,9 +79,7 @@ int32 OS_ConsoleAPI_Impl_Init(void)
  *-----------------------------------------------------------------*/
 void OS_ConsoleWakeup_Impl(const OS_object_token_t *token)
 {
-    OS_impl_console_internal_record_t *local;
-
-    local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
+    OS_impl_console_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
 
     if (local->is_async)
     {
@@ -136,23 +130,26 @@ static void OS_ConsoleTaskEntryPoint(osal_id_t console_id)
  *-----------------------------------------------------------------*/
 int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
 {
-    OS_impl_console_internal_record_t *local;
+    OS_impl_console_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
     OS_VoidPtrValueWrapper_t           local_arg = {0};
     tsk_t                             *tsk;
 
-    local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
-
     if (OS_ObjectIndexFromToken(token) != 0)
+    {
         return OS_ERR_NOT_IMPLEMENTED;
+    }
 
     local->is_async = OS_CONSOLE_ASYNC;
 
     if (local->is_async)
     {
-        local_arg.id = OS_ObjectIdFromToken(token);
         local->data_sem = sem_create(0, semCounting);
         if (local->data_sem == NULL)
+        {
             return OS_SEM_FAILURE;
+        }
+
+        local_arg.id = OS_ObjectIdFromToken(token);
         tsk = tsk_setup(OS_PriorityRemap(OS_CONSOLE_TASK_PRIORITY), OS_ConsoleTaskEntryPoint, local_arg.opaque_arg, OS_CONSOLE_TASK_STACKSIZE);
         if (tsk == NULL)
         {

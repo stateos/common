@@ -26,7 +26,7 @@
  */
 
 /****************************************************************************************
-                                    INCLUDE FILES
+                                        INCLUDES
  ***************************************************************************************/
 
 #include "os-stateos.h"
@@ -35,13 +35,14 @@
 #include "os-shared-idmap.h"
 
 /****************************************************************************************
-                                   GLOBAL DATA
+                                    GLOBAL VARIABLES
  ***************************************************************************************/
+
 /* Tables where the OS object information is stored */
 OS_impl_task_internal_record_t OS_impl_task_table[OS_MAX_TASKS];
 
 /****************************************************************************************
-                                INITIALIZATION FUNCTION
+                                     IMPLEMENTATION
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
@@ -59,10 +60,6 @@ int32 OS_TaskAPI_Impl_Init(void)
 
 } /* end OS_TaskAPI_Impl_Init */
 
-/****************************************************************************************
-                                    TASK API
- ***************************************************************************************/
-
 /*----------------------------------------------------------------
  *
  * Function: OS_TaskCreate_Impl
@@ -73,18 +70,15 @@ int32 OS_TaskAPI_Impl_Init(void)
  *-----------------------------------------------------------------*/
 int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
 {
-    OS_impl_task_internal_record_t *impl;
-    OS_task_internal_record_t      *task;
+    OS_impl_task_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+    OS_task_internal_record_t      *task = OS_OBJECT_TABLE_GET(OS_task_table, *token);
     OS_VoidPtrValueWrapper_t        impl_arg = {0};
 
     (void) flags;
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
-    task = OS_OBJECT_TABLE_GET(OS_task_table, *token);
-
     impl_arg.id = OS_ObjectIdFromToken(token);
-    impl->tsk = tsk_setup(OS_PriorityRemap(task->priority), OS_TaskEntryPoint, impl_arg.opaque_arg, task->stack_size);
-    if (impl->tsk == NULL)
+    impl->id = tsk_setup(OS_PriorityRemap(task->priority), OS_TaskEntryPoint, impl_arg.opaque_arg, task->stack_size);
+    if (impl->id == NULL)
     {
         return OS_ERROR;
     }
@@ -103,12 +97,10 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
  *-----------------------------------------------------------------*/
 int32 OS_TaskDelete_Impl(const OS_object_token_t *token)
 {
-    OS_impl_task_internal_record_t *impl;
+    OS_impl_task_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
-
-    tsk_delete(impl->tsk);
-    impl->tsk = NULL;
+    tsk_delete(impl->id);
+    impl->id = NULL;
 
     return OS_SUCCESS;
 
@@ -124,14 +116,14 @@ int32 OS_TaskDelete_Impl(const OS_object_token_t *token)
  *-----------------------------------------------------------------*/
 int32 OS_TaskDetach_Impl(const OS_object_token_t *token)
 {
-    OS_impl_task_internal_record_t *impl;
+    OS_impl_task_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
-
-    if (tsk_detach(impl->tsk) != E_SUCCESS)
-        return OS_ERROR;
-
-    return OS_SUCCESS;
+    int status = tsk_detach(impl->id);
+    switch (status)
+    {
+        case E_SUCCESS: return OS_SUCCESS;
+        default:        return OS_ERROR;
+    }
 
 } /* end OS_TaskDetach_Impl */
 
@@ -175,11 +167,13 @@ int32 OS_TaskDelay_Impl(uint32 millis)
  *-----------------------------------------------------------------*/
 int32 OS_TaskSetPriority_Impl(const OS_object_token_t *token, osal_priority_t new_priority)
 {
-    OS_impl_task_internal_record_t *impl;
+    OS_impl_task_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
-
-    core_tsk_prio(impl->tsk, impl->tsk->basic = OS_PriorityRemap(new_priority));
+    sys_lock();
+    {
+        core_tsk_prio(impl->id, impl->id->basic = OS_PriorityRemap(new_priority));
+    }
+    sys_unlock();
 
     return OS_SUCCESS;
 
@@ -195,11 +189,9 @@ int32 OS_TaskSetPriority_Impl(const OS_object_token_t *token, osal_priority_t ne
  *-----------------------------------------------------------------*/
 int32 OS_TaskMatch_Impl(const OS_object_token_t *token)
 {
-    OS_impl_task_internal_record_t *impl;
+    OS_impl_task_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
-
-    if (impl->tsk != tsk_this())
+    if (impl->id != tsk_this())
     {
         return OS_ERROR;
     }
@@ -269,8 +261,10 @@ int32 OS_TaskGetInfo_Impl(const OS_object_token_t *token, OS_task_prop_t *task_p
  *-----------------------------------------------------------------*/
 int32 OS_TaskValidateSystemData_Impl(const void *sysdata, size_t sysdata_size)
 {
-    if (sysdata == NULL || sysdata_size != sizeof(tsk_t))
+    if (sysdata == NULL || sysdata_size != sizeof(tsk_t *))
+    {
         return OS_INVALID_POINTER;
+    }
 
     return OS_SUCCESS;
 
@@ -286,12 +280,11 @@ int32 OS_TaskValidateSystemData_Impl(const void *sysdata, size_t sysdata_size)
  *-----------------------------------------------------------------*/
 bool OS_TaskIdMatchSystemData_Impl(void *ref, const OS_object_token_t *token, const OS_common_record_t *obj)
 {
-    OS_impl_task_internal_record_t *impl;
-
-    impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
+    const tsk_t                   **target = (const tsk_t **)ref;
+    OS_impl_task_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
 
     (void) obj;
 
-    return (impl->tsk == ref);
+    return (*target == impl->id);
 
 } /* end OS_TaskIdMatchSystemData_Impl */

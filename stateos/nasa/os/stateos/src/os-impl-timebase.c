@@ -26,7 +26,7 @@
  */
 
 /****************************************************************************************
-                                    INCLUDE FILES
+                                        INCLUDES
  ***************************************************************************************/
 
 #include "os-stateos.h"
@@ -37,14 +37,33 @@
 #include "os-shared-idmap.h"
 
 /****************************************************************************************
-                                   GLOBAL DATA
+                                    GLOBAL VARIABLES
  ***************************************************************************************/
 
+/* Tables where the OS object information is stored */
 OS_impl_timebase_internal_record_t OS_impl_timebase_table[OS_MAX_TIMEBASES];
 
 /****************************************************************************************
-                                INTERNAL FUNCTIONS
+                                     IMPLEMENTATION
  ***************************************************************************************/
+
+/*----------------------------------------------------------------
+ *
+ * Function: OS_TimeBaseAPI_Impl_Init
+ *
+ *  Purpose: Local helper routine, not part of OSAL API.
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_TimeBaseAPI_Impl_Init(void)
+{
+    memset(OS_impl_timebase_table, 0, sizeof(OS_impl_timebase_table));
+
+    OS_SharedGlobalVars.TicksPerSecond  = OS_FREQUENCY;
+    OS_SharedGlobalVars.MicroSecPerTick = 1000000U / (OS_FREQUENCY);
+
+    return OS_SUCCESS;
+
+} /* end OS_TimeBaseAPI_Impl_Init */
 
 /*----------------------------------------------------------------
  *
@@ -56,11 +75,9 @@ OS_impl_timebase_internal_record_t OS_impl_timebase_table[OS_MAX_TIMEBASES];
  *-----------------------------------------------------------------*/
 void OS_TimeBaseLock_Impl(const OS_object_token_t *token)
 {
-    OS_impl_timebase_internal_record_t *impl;
+    OS_impl_timebase_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
-
-    mtx_lock(impl->handler_mtx);
+    mtx_lock(impl->mtx);
 
 } /* end OS_TimeBaseLock_Impl */
 
@@ -74,36 +91,11 @@ void OS_TimeBaseLock_Impl(const OS_object_token_t *token)
  *-----------------------------------------------------------------*/
 void OS_TimeBaseUnlock_Impl(const OS_object_token_t *token)
 {
-    OS_impl_timebase_internal_record_t *impl;
+    OS_impl_timebase_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
-
-    mtx_unlock(impl->handler_mtx);
+    mtx_unlock(impl->mtx);
 
 } /* end OS_TimeBaseUnlock_Impl */
-
-/*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseHandlerISR
- *
- *  Purpose: Local helper routine, not part of OSAL API.
- *           An ISR to service a timer tick interrupt, which in turn
- *           posts a semaphore so the user task can execute
- *
- *-----------------------------------------------------------------*/
-
-static void OS_TimeBaseHandlerISR(osal_id_t timebase_id)
-{
-    OS_object_token_t                   token;
-    OS_impl_timebase_internal_record_t *local;
-
-    if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMEBASE, timebase_id, &token) == OS_SUCCESS)
-    {
-        local = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, token);
-        /* no action is required for the periodic timer */
-        sem_post(local->tick_sem);
-    }
-} /* end OS_TimeBaseHandlerISR */
 
 /*----------------------------------------------------------------
  *
@@ -125,7 +117,10 @@ static uint32 OS_TimeBaseWait_Impl(osal_id_t timebase_id)
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, token);
 
-    sem_wait(impl->tick_sem);
+    if (tmr_wait(impl->tmr) != E_SUCCESS)
+    {
+    	return 0;
+    }
 
     if (impl->reset_flag)
     {
@@ -139,32 +134,6 @@ static uint32 OS_TimeBaseWait_Impl(osal_id_t timebase_id)
 
 } /* end OS_TimeBaseWait_Impl */
 
-/****************************************************************************************
-                                INITIALIZATION FUNCTION
- ***************************************************************************************/
-
-/*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseAPI_Impl_Init
- *
- *  Purpose: Local helper routine, not part of OSAL API.
- *
- *-----------------------------------------------------------------*/
-int32 OS_TimeBaseAPI_Impl_Init(void)
-{
-    memset(OS_impl_timebase_table, 0, sizeof(OS_impl_timebase_table));
-
-    OS_SharedGlobalVars.TicksPerSecond  = OS_FREQUENCY;
-    OS_SharedGlobalVars.MicroSecPerTick = 1000000U / (OS_FREQUENCY);
-
-    return OS_SUCCESS;
-
-} /* end OS_TimeBaseAPI_Impl_Init */
-
-/****************************************************************************************
-                                   TIME BASE API
- ***************************************************************************************/
-
 /*----------------------------------------------------------------
  *
  * Function: OS_TimeBaseCreate_Impl
@@ -175,47 +144,40 @@ int32 OS_TimeBaseAPI_Impl_Init(void)
  *-----------------------------------------------------------------*/
 int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
 {
-    OS_impl_timebase_internal_record_t *impl;
-    OS_timebase_internal_record_t      *timebase;
+    OS_impl_timebase_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
+    OS_timebase_internal_record_t      *timebase = OS_OBJECT_TABLE_GET(OS_timebase_table, *token);
     OS_VoidPtrValueWrapper_t            impl_arg = {0};
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
-    timebase = OS_OBJECT_TABLE_GET(OS_timebase_table, *token);
+    impl_arg.id = OS_ObjectIdFromToken(token);
 
     if (timebase->external_sync == NULL)
     {
-        timebase->external_sync = OS_TimeBaseWait_Impl;
-
-	    impl_arg.id = OS_ObjectIdFromToken(token);
-
-	    impl->tmr = tmr_setup(OS_TimeBaseHandlerISR, impl_arg.opaque_arg);
+	    impl->tmr = tmr_create(NULL);
 	    if (impl->tmr == NULL)
 	    {
 	        return OS_TIMER_ERR_UNAVAILABLE;
 	    }
 
-	    impl->tick_sem = sem_create(0, semBinary);
-	    if (impl->tick_sem == NULL)
+	    impl->mtx = mtx_create(mtxNormal + mtxPrioInherit, 0);
+	    if (impl->mtx == NULL)
 	    {
 	        tmr_delete(impl->tmr); impl->tmr = NULL;
 	        return OS_TIMER_ERR_INTERNAL;
 	    }
 
-	    impl->handler_mtx = mtx_create(mtxNormal + mtxPrioInherit, 0);
-	    if (impl->handler_mtx == NULL)
-	    {
-	        sem_delete(impl->tick_sem); impl->tick_sem = NULL;
-	        tmr_delete(impl->tmr);      impl->tmr = NULL;
-	        return OS_TIMER_ERR_INTERNAL;
-	    }
+        timebase->external_sync = OS_TimeBaseWait_Impl;
+        impl->simulate_flag = true;
 	}
 
-    impl->handler_tsk = tsk_setup(OS_PriorityRemap(1), OS_TimeBase_CallbackThread, impl_arg.opaque_arg, OS_STACK_SIZE);
-    if (impl->handler_tsk == NULL)
+    impl->tsk = tsk_setup(0, OS_TimeBase_CallbackThread, impl_arg.opaque_arg, OS_STACK_SIZE);
+    if (impl->tsk == NULL)
     {
-        mtx_delete(impl->handler_mtx); impl->handler_mtx = NULL;
-        sem_delete(impl->tick_sem);    impl->tick_sem = NULL;
-        tmr_delete(impl->tmr);         impl->tmr = NULL;
+        if (impl->simulate_flag)
+        {
+            mtx_delete(impl->mtx); impl->mtx = NULL;
+            tmr_delete(impl->tmr); impl->tmr = NULL;
+        }
+
         return OS_TIMER_ERR_INTERNAL;
     }
 
@@ -236,13 +198,17 @@ int32 OS_TimeBaseSet_Impl(const OS_object_token_t *token, uint32 start_time, uin
     OS_impl_timebase_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
     OS_timebase_internal_record_t *timebase = OS_OBJECT_TABLE_GET(OS_timebase_table, *token);
 
+    if (impl->simulate_flag)
+    {
+        impl->start_time = start_time;
+        impl->interval_time = interval_time;
+
+        timebase->accuracy_usec = interval_time == 0 ? start_time : interval_time;
+
+        tmr_start(impl->tmr, start_time / OS_SharedGlobalVars.MicroSecPerTick, interval_time / OS_SharedGlobalVars.MicroSecPerTick);
+    }
+
     impl->reset_flag = true;
-    impl->start_time = start_time;
-    impl->interval_time = interval_time;
-
-    timebase->accuracy_usec = interval_time == 0 ? start_time : interval_time;
-
-    tmr_start(impl->tmr, start_time / OS_SharedGlobalVars.MicroSecPerTick, interval_time / OS_SharedGlobalVars.MicroSecPerTick);
 
     return OS_SUCCESS;
 
@@ -258,14 +224,15 @@ int32 OS_TimeBaseSet_Impl(const OS_object_token_t *token, uint32 start_time, uin
  *-----------------------------------------------------------------*/
 int32 OS_TimeBaseDelete_Impl(const OS_object_token_t *token)
 {
-    OS_impl_timebase_internal_record_t *impl;
+    OS_impl_timebase_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
 
-    impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
+    tsk_delete(impl->tsk); impl->tsk = NULL;
 
-    tsk_delete(impl->handler_tsk); impl->handler_tsk = NULL;
-    mtx_delete(impl->handler_mtx); impl->handler_mtx = NULL;
-    sem_delete(impl->tick_sem);    impl->tick_sem = NULL;
-    tmr_delete(impl->tmr);         impl->tmr = NULL;
+    if (impl->simulate_flag)
+    {
+        mtx_delete(impl->mtx); impl->mtx = NULL;
+        tmr_delete(impl->tmr); impl->tmr = NULL;
+    }
 
     return OS_SUCCESS;
 

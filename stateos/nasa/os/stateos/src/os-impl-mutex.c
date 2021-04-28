@@ -26,7 +26,7 @@
  */
 
 /****************************************************************************************
-                                    INCLUDE FILES
+                                        INCLUDES
  ***************************************************************************************/
 
 #include "os-stateos.h"
@@ -35,13 +35,14 @@
 #include "os-shared-idmap.h"
 
 /****************************************************************************************
-                                   GLOBAL DATA
+                                    GLOBAL VARIABLES
  ***************************************************************************************/
 
+/* Tables where the OS object information is stored */
 OS_impl_mutex_internal_record_t OS_impl_mutex_table[OS_MAX_MUTEXES];
 
 /****************************************************************************************
-                                INITIALIZATION FUNCTION
+                                     IMPLEMENTATION
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
@@ -58,10 +59,6 @@ int32 OS_MutexAPI_Impl_Init(void)
     return OS_SUCCESS;
 
 } /* end OS_MutexAPI_Impl_Init */
-
-/****************************************************************************************
-                                  MUTEX API
- ***************************************************************************************/
 
 /*----------------------------------------------------------------
  *
@@ -119,7 +116,6 @@ int32 OS_MutSemGive_Impl(const OS_object_token_t *token)
     OS_impl_mutex_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_mutex_table, *token);
 
     int status = mtx_give(local->mtx);
-
     switch (status)
     {
         case E_SUCCESS: return OS_SUCCESS;
@@ -140,7 +136,6 @@ int32 OS_MutSemTake_Impl(const OS_object_token_t *token)
     OS_impl_mutex_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_mutex_table, *token);
 
     int status = mtx_wait(local->mtx);
-
     switch (status)
     {
         case E_SUCCESS: return OS_SUCCESS;

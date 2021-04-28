@@ -26,7 +26,7 @@
  */
 
 /****************************************************************************************
-                                    INCLUDE FILES
+                                        INCLUDES
  ***************************************************************************************/
 
 #include "os-stateos.h"
@@ -35,13 +35,14 @@
 #include "os-shared-idmap.h"
 
 /****************************************************************************************
-                                   GLOBAL DATA
+                                    GLOBAL VARIABLES
  ***************************************************************************************/
 
+/* Tables where the OS object information is stored */
 OS_impl_countsem_internal_record_t OS_impl_count_sem_table[OS_MAX_COUNT_SEMAPHORES];
 
 /****************************************************************************************
-                                INITIALIZATION FUNCTION
+                                     IMPLEMENTATION
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
@@ -58,10 +59,6 @@ int32 OS_CountSemAPI_Impl_Init(void)
     return OS_SUCCESS;
 
 } /* end OS_CountSemAPI_Impl_Init */
-
-/****************************************************************************************
-                               COUNTING SEMAPHORE API
- ***************************************************************************************/
 
 /*----------------------------------------------------------------
  *
@@ -119,7 +116,6 @@ int32 OS_CountSemGive_Impl(const OS_object_token_t *token)
     OS_impl_countsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_count_sem_table, *token);
 
     int status = sem_give(local->sem);
-
     switch(status)
     {
         case E_SUCCESS: return OS_SUCCESS;
@@ -140,7 +136,6 @@ int32 OS_CountSemTake_Impl(const OS_object_token_t *token)
     OS_impl_countsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_count_sem_table, *token);
 
     int status = sem_wait(local->sem);
-
     switch(status)
     {
         case E_SUCCESS: return OS_SUCCESS;
@@ -161,7 +156,6 @@ int32 OS_CountSemTimedWait_Impl(const OS_object_token_t *token, uint32 millis)
     OS_impl_countsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_count_sem_table, *token);
 
     int status = sem_waitFor(local->sem, millis * MSEC);
-
     switch(status)
     {
         case E_SUCCESS: return OS_SUCCESS;

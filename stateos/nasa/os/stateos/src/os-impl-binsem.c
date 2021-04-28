@@ -26,25 +26,23 @@
  */
 
 /****************************************************************************************
-                                    INCLUDE FILES
+                                        INCLUDES
  ***************************************************************************************/
 
 #include "os-stateos.h"
 #include "os-impl-binsem.h"
 #include "os-shared-binsem.h"
 #include "os-shared-idmap.h"
-#include "os-shared-timebase.h"
 
 /****************************************************************************************
-                                   GLOBAL DATA
+                                    GLOBAL VARIABLES
  ***************************************************************************************/
-/*  tables for the properties of objects */
 
 /* Tables where the OS object information is stored */
 OS_impl_binsem_internal_record_t OS_impl_bin_sem_table[OS_MAX_BIN_SEMAPHORES];
 
 /****************************************************************************************
-                                  SEMAPHORE API
+                                     IMPLEMENTATION
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
@@ -173,11 +171,11 @@ int32 OS_BinSemTake_Impl(const OS_object_token_t *token)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemTimedWait_Impl(const OS_object_token_t *token, uint32 msecs)
+int32 OS_BinSemTimedWait_Impl(const OS_object_token_t *token, uint32 millis)
 {
     OS_impl_binsem_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_bin_sem_table, *token);
 
-    int status = sem_waitFor(local->sem, msecs * MSEC);
+    int status = sem_waitFor(local->sem, millis * MSEC);
     switch(status)
     {
         case E_SUCCESS: return OS_SUCCESS;

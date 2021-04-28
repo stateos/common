@@ -26,7 +26,7 @@
  */
 
 /****************************************************************************************
-                                    INCLUDE FILES
+                                        INCLUDES
  ***************************************************************************************/
 
 #include "os-stateos.h"
@@ -35,17 +35,14 @@
 #include "os-shared-idmap.h"
 
 /****************************************************************************************
-                                     DEFINES
+                                    GLOBAL VARIABLES
  ***************************************************************************************/
 
-/****************************************************************************************
-                                   GLOBAL DATA
- ***************************************************************************************/
-
+/* Tables where the OS object information is stored */
 OS_impl_queue_internal_record_t OS_impl_queue_table[OS_MAX_QUEUES];
 
 /****************************************************************************************
-                                INITIALIZATION FUNCTION
+                                     IMPLEMENTATION
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
@@ -63,10 +60,6 @@ int32 OS_QueueAPI_Impl_Init(void)
 
 } /* end OS_QueueAPI_Impl_Init */
 
-/****************************************************************************************
-                                MESSAGE QUEUE API
- ***************************************************************************************/
-
 /*----------------------------------------------------------------
  *
  * Function: OS_QueueCreate_Impl
@@ -78,7 +71,7 @@ int32 OS_QueueAPI_Impl_Init(void)
 int32 OS_QueueCreate_Impl(const OS_object_token_t *token, uint32 flags)
 {
 	OS_impl_queue_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_queue_table, *token);
-	OS_queue_internal_record_t *     queue = OS_OBJECT_TABLE_GET(OS_queue_table, *token);
+	OS_queue_internal_record_t      *queue = OS_OBJECT_TABLE_GET(OS_queue_table, *token);
 
     (void) flags;
 
@@ -129,13 +122,15 @@ int32 OS_QueueGet_Impl(const OS_object_token_t *token, void *data, size_t size, 
 
     *size_copied = 0;
     if (size < local->box->size)
+    {
         return OS_QUEUE_INVALID_SIZE;
+    }
     
     int status = box_waitFor(local->box, data, ticks);
-
     switch (status)
     {
-        case E_SUCCESS: *size_copied = local->box->size; return OS_SUCCESS;
+        case E_SUCCESS: *size_copied = local->box->size;
+                        return OS_SUCCESS;
         case E_TIMEOUT: return timeout != IMMEDIATE ? OS_QUEUE_TIMEOUT : OS_QUEUE_EMPTY;
         default:        return OS_ERROR;
     }
@@ -156,10 +151,11 @@ int32 OS_QueuePut_Impl(const OS_object_token_t *token, const void *data, size_t 
     (void) flags;
 
     if (size > local->box->size)
+    {
         return OS_QUEUE_INVALID_SIZE;
+    }
 
     int status = box_give(local->box, data);
-
     switch (status)
     {
         case E_SUCCESS: return OS_SUCCESS;

@@ -34,12 +34,11 @@
 typedef struct
 {
     tmr_t *tmr;
-    sem_t *tick_sem;
-    mtx_t *handler_mtx;
-    tsk_t *handler_tsk;
+    mtx_t *mtx;
+    tsk_t *tsk;
     uint32 start_time;
     uint32 interval_time;
-    int    assigned_signal;
+    bool   simulate_flag;
     bool   reset_flag;
 
 } OS_impl_timebase_internal_record_t;

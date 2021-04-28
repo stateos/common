@@ -33,7 +33,7 @@
 
 typedef struct
 {
-    tsk_t *tsk;
+    tsk_t *id;
 } OS_impl_task_internal_record_t;
 
 /* Tables where the OS object information is stored */
