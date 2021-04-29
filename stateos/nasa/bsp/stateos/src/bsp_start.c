@@ -69,7 +69,7 @@ int OS_BSP_GetReturnStatus(void)
    --------------------------------------------------------- */
 void OS_BSP_Shutdown_Impl(void)
 {
-    tsk_exit();
+    abort();
 }
 
 /* ---------------------------------------------------------
@@ -108,5 +108,5 @@ int OS_BSP_Main(void)
     OS_Application_Run();
 
     /* Should typically never get here */
-    return OS_BSP_GetReturnStatus();
+    OS_BSP_Shutdown_Impl();
 }
