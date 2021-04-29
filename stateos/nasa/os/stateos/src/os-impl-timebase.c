@@ -117,21 +117,25 @@ static uint32 OS_TimeBaseWait_Impl(osal_id_t timebase_id)
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, token);
 
-    if (tmr_wait(impl->tmr) != E_SUCCESS)
+    if (impl->start_flag)
     {
-        return 0;
-    }
+        if (sem_wait(impl->sem) != E_SUCCESS)
+        {
+            return 0;
+        }
 
-    if (impl->reset_flag)
-    {
-        impl->reset_flag = false;
+        tsk_sleepUntil(impl->start_time_point + impl->start_time / OS_SharedGlobalVars.MicroSecPerTick);
+
+        impl->start_flag = false;
+
         return impl->start_time;
     }
     else
     {
+        tsk_sleepNext(impl->interval_time / OS_SharedGlobalVars.MicroSecPerTick);
+
         return impl->interval_time;
     }
-
 } /* end OS_TimeBaseWait_Impl */
 
 /*----------------------------------------------------------------
@@ -152,31 +156,30 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
 
     if (timebase->external_sync == NULL)
     {
-        impl->tmr = tmr_create(NULL);
-        if (impl->tmr == NULL)
-        {
-            return OS_TIMER_ERR_UNAVAILABLE;
-        }
-
-        impl->mtx = mtx_create(mtxNormal + mtxPrioInherit, 0);
-        if (impl->mtx == NULL)
-        {
-            tmr_delete(impl->tmr); impl->tmr = NULL;
-            return OS_TIMER_ERR_INTERNAL;
-        }
-
         timebase->external_sync = OS_TimeBaseWait_Impl;
-        impl->simulate_flag = true;
+    }
+
+    impl->start_flag = true;
+
+    impl->sem = sem_create(0, semBinary);
+    if (impl->sem == NULL)
+    {
+        return OS_TIMER_ERR_INTERNAL;
+    }
+
+    impl->mtx = mtx_create(mtxNormal + mtxPrioInherit, 0);
+    if (impl->mtx == NULL)
+    {
+        sem_delete(impl->sem); impl->sem = NULL;
+
+        return OS_TIMER_ERR_INTERNAL;
     }
 
     impl->tsk = tsk_setup(0, OS_TimeBase_CallbackThread, impl_arg.opaque_arg, OS_STACK_SIZE);
     if (impl->tsk == NULL)
     {
-        if (impl->simulate_flag)
-        {
-            mtx_delete(impl->mtx); impl->mtx = NULL;
-            tmr_delete(impl->tmr); impl->tmr = NULL;
-        }
+        mtx_delete(impl->mtx); impl->mtx = NULL;
+        sem_delete(impl->sem); impl->sem = NULL;
 
         return OS_TIMER_ERR_INTERNAL;
     }
@@ -196,19 +199,12 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
 int32 OS_TimeBaseSet_Impl(const OS_object_token_t *token, uint32 start_time, uint32 interval_time)
 {
     OS_impl_timebase_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
-    OS_timebase_internal_record_t *timebase = OS_OBJECT_TABLE_GET(OS_timebase_table, *token);
 
-    if (impl->simulate_flag)
-    {
-        impl->start_time = start_time;
-        impl->interval_time = interval_time;
+    impl->start_time = start_time;
+    impl->interval_time = interval_time;
+    impl->start_time_point = sys_time();
 
-        timebase->accuracy_usec = interval_time == 0 ? start_time : interval_time;
-
-        tmr_start(impl->tmr, start_time / OS_SharedGlobalVars.MicroSecPerTick, interval_time / OS_SharedGlobalVars.MicroSecPerTick);
-    }
-
-    impl->reset_flag = true;
+    sem_post(impl->sem);
 
     return OS_SUCCESS;
 
@@ -227,12 +223,8 @@ int32 OS_TimeBaseDelete_Impl(const OS_object_token_t *token)
     OS_impl_timebase_internal_record_t *impl = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
 
     tsk_delete(impl->tsk); impl->tsk = NULL;
-
-    if (impl->simulate_flag)
-    {
-        mtx_delete(impl->mtx); impl->mtx = NULL;
-        tmr_delete(impl->tmr); impl->tmr = NULL;
-    }
+    mtx_delete(impl->mtx); impl->mtx = NULL;
+    sem_delete(impl->sem); impl->sem = NULL;
 
     return OS_SUCCESS;
 

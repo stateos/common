@@ -33,13 +33,13 @@
 
 typedef struct
 {
-    tmr_t *tmr;
+    sem_t *sem;
     mtx_t *mtx;
     tsk_t *tsk;
     uint32 start_time;
     uint32 interval_time;
-    bool   simulate_flag;
-    bool   reset_flag;
+    cnt_t  start_time_point;
+    bool   start_flag;
 
 } OS_impl_timebase_internal_record_t;
 
