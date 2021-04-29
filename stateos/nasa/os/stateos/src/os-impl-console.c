@@ -39,7 +39,6 @@
                                    LOCAL DEFINITIONS
  ***************************************************************************************/
 
-#define OS_CONSOLE_ASYNC          true
 #define OS_CONSOLE_TASK_PRIORITY  OS_UTILITYTASK_PRIORITY
 #define OS_CONSOLE_TASK_STACKSIZE OS_UTILITYTASK_STACK_SIZE
 
@@ -81,30 +80,22 @@ void OS_ConsoleWakeup_Impl(const OS_object_token_t *token)
 {
     OS_impl_console_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
 
-    if (local->is_async)
-    {
-        /* post the sem for the utility task to run */
-        sem_post(local->data_sem);
-    }
-    else
-    {
-        /* output directly */
-        OS_ConsoleOutput_Impl(token);
-    }
+    /* post the sem for the utility task to run */
+    sem_post(local->data_sem);
+
 } /* end OS_ConsoleWakeup_Impl */
 
 /*----------------------------------------------------------------
  *
  * Function: OS_ConsoleTask_Entry
  *
- *  Purpose: Local Helper function
- *           Implements the console output task
+ *  Purpose: Local helper routine, not part of OSAL API.
  *
  *-----------------------------------------------------------------*/
 static void OS_ConsoleTaskEntryPoint(osal_id_t console_id)
 {
-    OS_impl_console_internal_record_t *local;
     OS_object_token_t                  token;
+    OS_impl_console_internal_record_t *local;
 
     if (OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, OS_OBJECT_TYPE_OS_CONSOLE, console_id, &token) == OS_SUCCESS)
     {
@@ -131,6 +122,7 @@ static void OS_ConsoleTaskEntryPoint(osal_id_t console_id)
 int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
 {
     OS_impl_console_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_console_table, *token);
+    OS_console_internal_record_t *     console = OS_OBJECT_TABLE_GET(OS_console_table, *token);
     OS_VoidPtrValueWrapper_t           local_arg = {0};
     tsk_t                             *tsk;
 
@@ -139,9 +131,7 @@ int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
         return OS_ERR_NOT_IMPLEMENTED;
     }
 
-    local->is_async = OS_CONSOLE_ASYNC;
-
-    if (local->is_async)
+    if (console->IsAsync)
     {
         local->data_sem = sem_create(0, semCounting);
         if (local->data_sem == NULL)
@@ -154,6 +144,7 @@ int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
         if (tsk == NULL)
         {
             sem_delete(local->data_sem);
+
             return OS_ERROR;
         }
         tsk_detach(tsk);

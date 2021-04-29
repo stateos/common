@@ -137,7 +137,9 @@ int32 OS_BinSemFlush_Impl(const OS_object_token_t *token)
 
     unsigned value = sem_getValue(local->sem);
     if (value == 0)
+    {
         sem_reset(local->sem);
+    }
 
     return OS_SUCCESS;
 

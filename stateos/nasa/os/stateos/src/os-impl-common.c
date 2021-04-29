@@ -55,7 +55,9 @@ int32 OS_API_Impl_Init(osal_objtype_t idtype)
 {
     int32 return_code = OS_TableMutex_Init(idtype);
     if (return_code != OS_SUCCESS)
+    {
         return return_code;
+    }
 
     switch (idtype)
     {

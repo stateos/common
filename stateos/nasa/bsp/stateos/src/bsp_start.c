@@ -34,13 +34,21 @@
 #include "bsp_internal.h"
 
 /* ---------------------------------------------------------
-    OS_BSP_Initialize()
+    OS_BSP_Setup()
 
      Helper function
    --------------------------------------------------------- */
-void OS_BSP_Initialize(void)
+__WEAK void OS_BSP_Setup(void)
 {
-    memset(&OS_BSP_Global, 0, sizeof(OS_BSP_Global));
+}
+
+/* ---------------------------------------------------------
+    OS_Application_Setup()
+
+     Helper function
+   --------------------------------------------------------- */
+__WEAK void OS_Application_Setup(void)
+{
 }
 
 /* ---------------------------------------------------------
@@ -74,12 +82,23 @@ int OS_BSP_Main(void)
     /*
      * Initially clear the global object (this contains return code)
      */
-    OS_BSP_Initialize();
+    memset(&OS_BSP_Global, 0, sizeof(OS_BSP_Global));
+
+    /*
+     * Hardware setup
+     */
+    OS_BSP_Setup();
+
     /*
      * Call application specific entry point.
      * This should set up all user tasks and resources, then return
      */
     OS_Application_Startup();
+
+    /*
+     * Application setup
+     */
+    OS_Application_Setup();
 
     /*
      * OS_Application_Run() implements the background task.
