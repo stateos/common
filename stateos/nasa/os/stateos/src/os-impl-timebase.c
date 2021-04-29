@@ -119,7 +119,7 @@ static uint32 OS_TimeBaseWait_Impl(osal_id_t timebase_id)
 
     if (tmr_wait(impl->tmr) != E_SUCCESS)
     {
-    	return 0;
+        return 0;
     }
 
     if (impl->reset_flag)
@@ -152,22 +152,22 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
 
     if (timebase->external_sync == NULL)
     {
-	    impl->tmr = tmr_create(NULL);
-	    if (impl->tmr == NULL)
-	    {
-	        return OS_TIMER_ERR_UNAVAILABLE;
-	    }
+        impl->tmr = tmr_create(NULL);
+        if (impl->tmr == NULL)
+        {
+            return OS_TIMER_ERR_UNAVAILABLE;
+        }
 
-	    impl->mtx = mtx_create(mtxNormal + mtxPrioInherit, 0);
-	    if (impl->mtx == NULL)
-	    {
-	        tmr_delete(impl->tmr); impl->tmr = NULL;
-	        return OS_TIMER_ERR_INTERNAL;
-	    }
+        impl->mtx = mtx_create(mtxNormal + mtxPrioInherit, 0);
+        if (impl->mtx == NULL)
+        {
+            tmr_delete(impl->tmr); impl->tmr = NULL;
+            return OS_TIMER_ERR_INTERNAL;
+        }
 
         timebase->external_sync = OS_TimeBaseWait_Impl;
         impl->simulate_flag = true;
-	}
+    }
 
     impl->tsk = tsk_setup(0, OS_TimeBase_CallbackThread, impl_arg.opaque_arg, OS_STACK_SIZE);
     if (impl->tsk == NULL)

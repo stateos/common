@@ -70,8 +70,8 @@ int32 OS_QueueAPI_Impl_Init(void)
  *-----------------------------------------------------------------*/
 int32 OS_QueueCreate_Impl(const OS_object_token_t *token, uint32 flags)
 {
-	OS_impl_queue_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_queue_table, *token);
-	OS_queue_internal_record_t      *queue = OS_OBJECT_TABLE_GET(OS_queue_table, *token);
+    OS_impl_queue_internal_record_t *local = OS_OBJECT_TABLE_GET(OS_impl_queue_table, *token);
+    OS_queue_internal_record_t      *queue = OS_OBJECT_TABLE_GET(OS_queue_table, *token);
 
     (void) flags;
 
