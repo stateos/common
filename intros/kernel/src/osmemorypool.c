@@ -37,17 +37,17 @@ static
 void priv_mem_bind( mem_t *mem )
 /* -------------------------------------------------------------------------- */
 {
-	que_t *ptr = mem->data;
+	que_t *ptr = mem->lst.head.next;
+	size_t cnt = mem->limit;
 
+	assert(ptr);
 	assert(mem->size);
-	assert(mem->data);
 
-	do
-	{
-		mem_give(mem, ++ptr);
-		ptr += mem->size;
-	}
-	while (--mem->limit);
+	while (--cnt > 0)
+		ptr = ptr->next = ptr + 1 + mem->size;
+
+	ptr->next = NULL;
+	mem->limit = 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -63,9 +63,9 @@ void mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize )
 	{
 		memset(mem, 0, sizeof(mem_t));
 
-		mem->limit = bufsize / (1 + MEM_SIZE(size)) / sizeof(que_t);
+		mem->lst.head.next = data;
 		mem->size  = MEM_SIZE(size);
-		mem->data  = data;
+		mem->limit = bufsize / (1 + mem->size) / sizeof(que_t);
 	}
 	sys_unlock();
 }
@@ -103,6 +103,27 @@ void *mem_wait( mem_t *mem )
 	while (result = mem_take(mem), result == NULL) core_ctx_switch();
 
 	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+void mem_give( mem_t *mem, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	que_t *ptr;
+
+	assert(mem);
+	assert(data);
+
+	sys_lock();
+	{
+		if (mem->limit)
+			priv_mem_bind(mem);
+
+		ptr = (que_t *)data - 1;
+		ptr->next = mem->lst.head.next;
+		mem->lst.head.next = ptr;
+	}
+	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */

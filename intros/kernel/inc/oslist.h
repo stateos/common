@@ -2,7 +2,7 @@
 
     @file    IntrOS: oslist.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    30.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -57,7 +57,8 @@ extern "C" {
  *
  * Description       : create and initialize a queue object
  *
- * Parameters        : none
+ * Parameters
+ *   data            : list head
  *
  * Return            : queue object
  *
@@ -65,7 +66,7 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define               _QUE_INIT() { NULL }
+#define               _QUE_INIT( data ) { data }
 
 /******************************************************************************
  *
@@ -86,7 +87,8 @@ struct __lst
  *
  * Description       : create and initialize a list object
  *
- * Parameters        : none
+ * Parameters
+ *   data            : list head
  *
  * Return            : list object
  *
@@ -94,7 +96,7 @@ struct __lst
  *
  ******************************************************************************/
 
-#define               _LST_INIT() { _QUE_INIT() }
+#define               _LST_INIT( head ) { _QUE_INIT(head) }
 
 /******************************************************************************
  *
@@ -107,8 +109,8 @@ struct __lst
  *
  ******************************************************************************/
 
-#define             OS_LST( lst )                     \
-                       lst_t lst##__lst = _LST_INIT(); \
+#define             OS_LST( lst )                         \
+                       lst_t lst##__lst = _LST_INIT(NULL); \
                        lst_id lst = & lst##__lst
 
 /******************************************************************************
@@ -122,8 +124,8 @@ struct __lst
  *
  ******************************************************************************/
 
-#define         static_LST( lst )                     \
-                static lst_t lst##__lst = _LST_INIT(); \
+#define         static_LST( lst )                         \
+                static lst_t lst##__lst = _LST_INIT(NULL); \
                 static lst_id lst = & lst##__lst
 
 /******************************************************************************
@@ -142,7 +144,7 @@ struct __lst
 
 #ifndef __cplusplus
 #define                LST_INIT() \
-                      _LST_INIT()
+                      _LST_INIT(NULL)
 #endif
 
 /******************************************************************************
@@ -259,7 +261,7 @@ template<class C>
 struct ListTT : public __lst
 {
 	constexpr
-	ListTT(): __lst _LST_INIT() {}
+	ListTT(): __lst _LST_INIT(NULL) {}
 
 	ListTT( ListTT&& ) = default;
 	ListTT( const ListTT& ) = delete;

@@ -88,9 +88,9 @@ void lst_give( lst_t *lst, void *data )
 
 	sys_lock();
 	{
-		for (ptr = &lst->head; ptr->next; ptr = ptr->next);
-		ptr->next = (que_t *)data - 1;
-		ptr->next->next = 0;
+		ptr = (que_t *)data - 1;
+		ptr->next = lst->head.next;
+		lst->head.next = ptr;
 	}
 	sys_unlock();
 }
