@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    30.04.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -52,7 +52,7 @@ struct __mem
 {
 	lst_t    lst;   // memory pool list
 
-	unsigned limit; // size of a memory pool (max number of objects)
+	unsigned limit; // size of a memory pool (depth of memory pool buffer)
 	unsigned size;  // size of memory object (in sizeof(que_t) units)
 	que_t  * data;  // pointer to memory pool buffer
 };
@@ -183,21 +183,6 @@ extern "C" {
 
 /******************************************************************************
  *
- * Name              : mem_bind
- *
- * Description       : initialize data buffer of a memory pool object
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *
- * Return            : none
- *
- ******************************************************************************/
-
-void mem_bind( mem_t *mem );
-
-/******************************************************************************
- *
  * Name              : mem_init
  *
  * Description       : initialize a memory pool object
@@ -230,8 +215,7 @@ void mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize );
  *
  ******************************************************************************/
 
-__STATIC_INLINE
-void *mem_take( mem_t *mem ) { return lst_take(&mem->lst); }
+void *mem_take( mem_t *mem );
 
 __STATIC_INLINE
 void *mem_tryWait( mem_t *mem ) { return mem_take(mem); }
@@ -250,8 +234,7 @@ void *mem_tryWait( mem_t *mem ) { return mem_take(mem); }
  *
  ******************************************************************************/
 
-__STATIC_INLINE
-void *mem_wait( mem_t *mem ) { return lst_wait(&mem->lst); }
+void *mem_wait( mem_t *mem );
 
 /******************************************************************************
  *
@@ -294,7 +277,7 @@ namespace intros {
 template<unsigned limit_, size_t size_>
 struct MemoryPoolT : public __mem
 {
-	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) { mem_bind(this); }
+	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) {}
 
 	MemoryPoolT( MemoryPoolT&& ) = default;
 	MemoryPoolT( const MemoryPoolT& ) = delete;

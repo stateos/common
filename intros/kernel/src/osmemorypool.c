@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.c
     @author  Rajmund Szymanski
-    @date    25.05.2020
+    @date    30.04.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -33,26 +33,22 @@
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
-void mem_bind( mem_t *mem )
+static
+void priv_mem_bind( mem_t *mem )
 /* -------------------------------------------------------------------------- */
 {
-	que_t  * ptr;
-	unsigned cnt;
+	que_t *ptr = mem->data;
 
-	assert(mem);
-	assert(mem->limit);
 	assert(mem->size);
 	assert(mem->data);
 
-	sys_lock();
+	mem->lst.head.next = 0;
+	do
 	{
-		ptr = mem->data;
-		cnt = mem->limit;
-
-		mem->lst.head.next = 0;
-		while (cnt--) { mem_give(mem, ++ptr); ptr += mem->size; }
+		mem_give(mem, ++ptr);
+		ptr += mem->size;
 	}
-	sys_unlock();
+	while (--mem->limit);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -71,10 +67,43 @@ void mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize )
 		mem->limit = bufsize / (1 + MEM_SIZE(size)) / sizeof(que_t);
 		mem->size  = MEM_SIZE(size);
 		mem->data  = data;
-
-		mem_bind(mem);
 	}
 	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+void *mem_take( mem_t *mem )
+/* -------------------------------------------------------------------------- */
+{
+	void *result = NULL;
+
+	assert(mem);
+
+	sys_lock();
+	{
+		if (mem->limit)
+			priv_mem_bind(mem);
+
+		if (mem->lst.head.next)
+		{
+			result = mem->lst.head.next + 1;
+			mem->lst.head.next = mem->lst.head.next->next;
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+void *mem_wait( mem_t *mem )
+/* -------------------------------------------------------------------------- */
+{
+	void *result;
+
+	while (result = mem_take(mem), result == NULL) core_ctx_switch();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
