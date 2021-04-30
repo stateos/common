@@ -38,17 +38,17 @@ static
 void priv_mem_bind( mem_t *mem )
 /* -------------------------------------------------------------------------- */
 {
-	que_t *ptr = mem->data;
+	que_t *ptr = mem->lst.head.next = mem->data;
+	size_t cnt = mem->limit;
 
 	assert(mem->size);
 	assert(mem->data);
 
-	do
-	{
-		mem_give(mem, ++ptr);
-		ptr += mem->size;
-	}
-	while (--mem->limit);
+	while (--cnt > 0)
+		ptr = ptr->next = ptr + 1 + mem->size;
+
+	ptr->next = NULL;
+	mem->limit = 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -60,9 +60,9 @@ void priv_mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize, void *
 
 	core_obj_init(&mem->lst.obj, res);
 
-	mem->limit = bufsize / (1 + MEM_SIZE(size)) / sizeof(que_t);
-	mem->size  = MEM_SIZE(size);
 	mem->data  = data;
+	mem->size  = MEM_SIZE(size);
+	mem->limit = bufsize / (1 + mem->size) / sizeof(que_t);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -232,6 +232,37 @@ int mem_waitUntil( mem_t *mem, void **data, cnt_t time )
 	sys_unlock();
 
 	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+void mem_give( mem_t *mem, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk;
+	que_t *ptr;
+
+	assert(mem);
+	assert(mem->lst.obj.res!=RELEASED);
+	assert(data);
+
+	sys_lock();
+	{
+		tsk = core_one_wakeup(mem->lst.obj.queue, E_SUCCESS);
+		if (tsk)
+		{
+			tsk->tmp.lst.data = data;
+		}
+		else
+		{
+			if (mem->limit)
+				priv_mem_bind(mem);
+
+			for (ptr = &mem->lst.head; ptr->next; ptr = ptr->next);
+			ptr->next = (que_t *)data - 1;
+			ptr->next->next = NULL;
+		}
+	}
+	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */

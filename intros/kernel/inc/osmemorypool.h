@@ -50,9 +50,11 @@ typedef struct __mem mem_t, * const mem_id;
 
 struct __mem
 {
-	lst_t    lst;   // memory pool list (memory pool buffer)
-	unsigned size;  // size of memory object (in sizeof(que_t) units)
+	lst_t    lst;   // memory pool list
+
 	unsigned limit; // size of a memory pool (depth of memory pool buffer)
+	unsigned size;  // size of memory object (in sizeof(que_t) units)
+	que_t  * data;  // pointer to memory pool buffer
 };
 
 #ifdef __cplusplus
@@ -76,7 +78,7 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define               _MEM_INIT( _limit, _size, _data ) { _LST_INIT(_data), _size, _limit }
+#define               _MEM_INIT( _limit, _size, _data ) { _LST_INIT(), _limit, _size, _data }
 
 /******************************************************************************
  *

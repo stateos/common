@@ -2,7 +2,7 @@
 
     @file    StateOS: oslist.c
     @author  Rajmund Szymanski
-    @date    02.07.2020
+    @date    30.04.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -223,7 +223,7 @@ void lst_give( lst_t *lst, void *data )
 		{
 			for (ptr = &lst->head; ptr->next; ptr = ptr->next);
 			ptr->next = (que_t *)data - 1;
-			ptr->next->next = 0;
+			ptr->next->next = NULL;
 		}
 	}
 	sys_unlock();

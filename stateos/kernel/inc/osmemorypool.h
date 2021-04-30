@@ -388,11 +388,10 @@ int mem_wait( mem_t *mem, void **data ) { return mem_waitFor(mem, data, INFINITE
  *
  ******************************************************************************/
 
-__STATIC_INLINE
-void mem_give( mem_t *mem, void *data ) { lst_give(&mem->lst, data); }
+void mem_give( mem_t *mem, void *data );
 
 __STATIC_INLINE
-void mem_giveISR( mem_t *mem, void *data ) { lst_giveISR(&mem->lst, data); }
+void mem_giveISR( mem_t *mem, void *data ) { mem_give(mem, data); }
 
 #ifdef __cplusplus
 }
