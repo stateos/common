@@ -2,7 +2,7 @@
 
     @file    IntrOS: oslist.c
     @author  Rajmund Szymanski
-    @date    30.06.2020
+    @date    30.04.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -72,7 +72,7 @@ void *lst_wait( lst_t *lst )
 {
 	void *result;
 
-	while (result = lst_take(lst), result != NULL) core_ctx_switch();
+	while (result = lst_take(lst), result == NULL) core_ctx_switch();
 
 	return result;
 }
