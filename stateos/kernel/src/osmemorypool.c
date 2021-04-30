@@ -2,7 +2,7 @@
 
     @file    StateOS: osmemorypool.c
     @author  Rajmund Szymanski
-    @date    24.06.2020
+    @date    30.04.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -34,27 +34,22 @@
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
-void mem_bind( mem_t *mem )
+static
+void priv_mem_bind( mem_t *mem )
 /* -------------------------------------------------------------------------- */
 {
-	que_t  * ptr;
-	unsigned cnt;
+	que_t *ptr = mem->data;
 
-	assert_tsk_context();
-	assert(mem);
-	assert(mem->limit);
 	assert(mem->size);
 	assert(mem->data);
 
-	sys_lock();
+	mem->lst.head.next = 0;
+	do
 	{
-		ptr = mem->data;
-		cnt = mem->limit;
-
-		mem->lst.head.next = 0;
-		while (cnt--) { mem_give(mem, ++ptr); ptr += mem->size; }
+		mem_give(mem, ++ptr);
+		ptr += mem->size;
 	}
-	sys_unlock();
+	while (--mem->limit);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -69,8 +64,6 @@ void priv_mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize, void *
 	mem->limit = bufsize / (1 + MEM_SIZE(size)) / sizeof(que_t);
 	mem->size  = MEM_SIZE(size);
 	mem->data  = data;
-
-	mem_bind(mem);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -151,6 +144,95 @@ void mem_destroy( mem_t *mem )
 		core_res_free(&mem->lst.obj);
 	}
 	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_mem_take( mem_t *mem, void **data )
+/* -------------------------------------------------------------------------- */
+{
+	if (mem->limit)
+		priv_mem_bind(mem);
+
+	if (mem->lst.head.next != NULL)
+	{
+		*data = mem->lst.head.next + 1;
+		mem->lst.head.next = mem->lst.head.next->next;
+		return E_SUCCESS;
+	}
+
+	return E_TIMEOUT;
+}
+
+/* -------------------------------------------------------------------------- */
+int mem_take( mem_t *mem, void **data )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(mem);
+	assert(mem->lst.obj.res!=RELEASED);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_mem_take(mem, data);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int mem_waitFor( mem_t *mem, void **data, cnt_t delay )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert_tsk_context();
+	assert(mem);
+	assert(mem->lst.obj.res!=RELEASED);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_mem_take(mem, data);
+		if (result == E_TIMEOUT)
+		{
+			result = core_tsk_waitFor(&mem->lst.obj.queue, delay);
+			if (result == E_SUCCESS)
+				*data = System.cur->tmp.lst.data;
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int mem_waitUntil( mem_t *mem, void **data, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert_tsk_context();
+	assert(mem);
+	assert(mem->lst.obj.res!=RELEASED);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_mem_take(mem, data);
+		if (result == E_TIMEOUT)
+		{
+			result = core_tsk_waitUntil(&mem->lst.obj.queue, time);
+			if (result == E_SUCCESS)
+				*data = System.cur->tmp.lst.data;
+		}
+	}
+	sys_unlock();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -2,7 +2,7 @@
 
     @file    StateOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    30.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -53,7 +53,7 @@ struct __mem
 {
 	lst_t    lst;   // memory pool list
 
-	unsigned limit; // size of a memory pool (max number of objects)
+	unsigned limit; // size of a memory pool (depth of memory pool buffer)
 	unsigned size;  // size of memory object (in sizeof(que_t) units)
 	que_t  * data;  // pointer to memory pool buffer
 };
@@ -184,23 +184,6 @@ extern "C" {
 
 /******************************************************************************
  *
- * Name              : mem_bind
- *
- * Description       : initialize data buffer of a memory pool object
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
-
-void mem_bind( mem_t *mem );
-
-/******************************************************************************
- *
  * Name              : mem_init
  *
  * Description       : initialize a memory pool object
@@ -306,14 +289,13 @@ void mem_delete( mem_t *mem ) { mem_destroy(mem); }
  *
  ******************************************************************************/
 
-__STATIC_INLINE
-int mem_take( mem_t *mem, void **data ) { return lst_take(&mem->lst, data); }
+int mem_take( mem_t *mem, void **data );
 
 __STATIC_INLINE
-int mem_tryWait( mem_t *mem, void **data ) { return lst_take(&mem->lst, data); }
+int mem_tryWait( mem_t *mem, void **data ) { return mem_take(mem, data); }
 
 __STATIC_INLINE
-int mem_takeISR( mem_t *mem, void **data ) { return lst_takeISR(&mem->lst, data); }
+int mem_takeISR( mem_t *mem, void **data ) { return mem_take(mem, data); }
 
 /******************************************************************************
  *
@@ -339,8 +321,7 @@ int mem_takeISR( mem_t *mem, void **data ) { return lst_takeISR(&mem->lst, data)
  *
  ******************************************************************************/
 
-__STATIC_INLINE
-int mem_waitFor( mem_t *mem, void **data, cnt_t delay ) { return lst_waitFor(&mem->lst, data, delay); }
+int mem_waitFor( mem_t *mem, void **data, cnt_t delay );
 
 /******************************************************************************
  *
@@ -364,8 +345,7 @@ int mem_waitFor( mem_t *mem, void **data, cnt_t delay ) { return lst_waitFor(&me
  *
  ******************************************************************************/
 
-__STATIC_INLINE
-int mem_waitUntil( mem_t *mem, void **data, cnt_t time ) { return lst_waitUntil(&mem->lst, data, time); }
+int mem_waitUntil( mem_t *mem, void **data, cnt_t time );
 
 /******************************************************************************
  *
@@ -388,7 +368,7 @@ int mem_waitUntil( mem_t *mem, void **data, cnt_t time ) { return lst_waitUntil(
  ******************************************************************************/
 
 __STATIC_INLINE
-int mem_wait( mem_t *mem, void **data ) { return lst_wait(&mem->lst, data); }
+int mem_wait( mem_t *mem, void **data ) { return mem_waitFor(mem, data, INFINITE); }
 
 /******************************************************************************
  *
@@ -438,7 +418,7 @@ namespace stateos {
 template<unsigned limit_, size_t size_>
 struct MemoryPoolT : public __mem
 {
-	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) { mem_bind(this); }
+	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) {}
 
 	~MemoryPoolT() { assert(__mem::lst.obj.queue == nullptr); }
 
