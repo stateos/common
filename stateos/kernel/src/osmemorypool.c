@@ -43,7 +43,6 @@ void priv_mem_bind( mem_t *mem )
 	assert(mem->size);
 	assert(mem->data);
 
-	mem->lst.head.next = 0;
 	do
 	{
 		mem_give(mem, ++ptr);
