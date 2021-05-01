@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    25.04.2021
+    @date    01.05.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -347,6 +347,7 @@ void core_tsk_loop( void )
 }
 
 /* -------------------------------------------------------------------------- */
+#if OS_TASK_EXIT
 
 void core_tsk_exec( void )
 {
@@ -355,6 +356,7 @@ void core_tsk_exec( void )
 	tsk_stop();
 }
 
+#endif
 /* -------------------------------------------------------------------------- */
 
 void core_tsk_append( tsk_t *tsk, tsk_t **que )
