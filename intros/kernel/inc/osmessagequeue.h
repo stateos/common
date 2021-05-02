@@ -445,7 +445,24 @@ struct MessageQueueT : public __msg
  ******************************************************************************/
 
 template<unsigned limit_, class C>
-using MessageQueueTT = MessageQueueT<limit_, sizeof(C)>;
+struct MessageQueueTT : public MessageQueueT<limit_, sizeof(C)>
+{
+	constexpr
+	MessageQueueTT(): MessageQueueT<limit_, sizeof(C)>() {}
+
+	unsigned take     (       C *_data ) { return msg_take     (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned tryWait  (       C *_data ) { return msg_tryWait  (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned wait     (       C *_data ) { return msg_wait     (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned give     ( const C *_data ) { return msg_give     (this, _data, sizeof(C)); }
+	unsigned send     ( const C *_data ) { return msg_send     (this, _data, sizeof(C)); }
+	unsigned push     ( const C *_data ) { return msg_push     (this, _data, sizeof(C)); }
+#if OS_ATOMICS
+	unsigned takeAsync(       C *_data ) { return msg_takeAsync(this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned waitAsync(       C *_data ) { return msg_waitAsync(this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned giveAsync( const C *_data ) { return msg_giveAsync(this, _data, sizeof(C)); }
+	unsigned sendAsync( const C *_data ) { return msg_sendAsync(this, _data, sizeof(C)); }
+#endif
+};
 
 }     //  namespace
 #endif//__cplusplus
