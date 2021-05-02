@@ -749,6 +749,30 @@ struct MessageQueueTT : public MessageQueueT<limit_, sizeof(C)>
 	constexpr
 	MessageQueueTT(): MessageQueueT<limit_, sizeof(C)>() {}
 
+	int      take     (       C *_data, size_t *_read = nullptr )         { return msg_take     (this, _data, sizeof(C), _read); }
+	int      tryWait  (       C *_data, size_t *_read = nullptr )         { return msg_tryWait  (this, _data, sizeof(C), _read); }
+	int      takeISR  (       C *_data, size_t *_read = nullptr )         { return msg_takeISR  (this, _data, sizeof(C), _read); }
+	template<typename T>
+	int      waitFor  (       C *_data, size_t *_read,  const T& _delay ) { return msg_waitFor  (this, _data, sizeof(C), _read, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil(       C *_data, size_t *_read,  const T& _time )  { return msg_waitUntil(this, _data, sizeof(C), _read, Clock::until(_time)); }
+	int      wait     (       C *_data, size_t *_read = nullptr )         { return msg_wait     (this, _data, sizeof(C), _read); }
+	int      give     ( const C *_data )                                  { return msg_give     (this, _data, sizeof(C)); }
+	int      giveISR  ( const C *_data )                                  { return msg_giveISR  (this, _data, sizeof(C)); }
+	template<typename T>
+	int      sendFor  ( const C *_data, const T& _delay )                 { return msg_sendFor  (this, _data, sizeof(C), Clock::count(_delay)); }
+	template<typename T>
+	int      sendUntil( const C *_data, const T& _time )                  { return msg_sendUntil(this, _data, sizeof(C), Clock::until(_time)); }
+	int      send     ( const C *_data )                                  { return msg_send     (this, _data, sizeof(C)); }
+	int      push     ( const C *_data )                                  { return msg_push     (this, _data, sizeof(C)); }
+	int      pushISR  ( const C *_data )                                  { return msg_pushISR  (this, _data, sizeof(C)); }
+#if OS_ATOMICS
+	int      takeAsync(       C *_data, size_t *_read = nullptr )         { return msg_takeAsync(this, _data, sizeof(C), _read); }
+	int      waitAsync(       C *_data, size_t *_read = nullptr )         { return msg_waitAsync(this, _data, sizeof(C), _read); }
+	int      giveAsync( const C *_data )                                  { return msg_giveAsync(this, _data, sizeof(C)); }
+	int      sendAsync( const C *_data )                                  { return msg_sendAsync(this, _data, sizeof(C)); }
+#endif
+
 #if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<MessageQueueTT<limit_, C>>;
 #else
