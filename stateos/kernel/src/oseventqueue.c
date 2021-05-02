@@ -2,7 +2,7 @@
 
     @file    StateOS: oseventqueue.c
     @author  Rajmund Szymanski
-    @date    26.12.2020
+    @date    02.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -215,17 +215,16 @@ static
 int priv_evq_take( evq_t *evq, unsigned *event )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned tmp;
+	unsigned evt;
 
-	if (evq->count > 0)
-	{
-		tmp = priv_evq_getUpdate(evq);
-		if (event != NULL)
-			*event = tmp;
-		return E_SUCCESS;
-	}
+	if (evq->count == 0)
+		return E_TIMEOUT;
 
-	return E_TIMEOUT;
+	evt = priv_evq_getUpdate(evq);
+	if (event != NULL)
+		*event = evt;
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -307,13 +306,12 @@ static
 int priv_evq_give( evq_t *evq, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	if (evq->count < evq->limit)
-	{
-		priv_evq_putUpdate(evq, event);
-		return E_SUCCESS;
-	}
+	if (evq->count == evq->limit)
+		return E_TIMEOUT;
 
-	return E_TIMEOUT;
+	priv_evq_putUpdate(evq, event);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -2,7 +2,7 @@
 
     @file    StateOS: osalloc.h
     @author  Rajmund Szymanski
-    @date    12.06.2020
+    @date    02.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -37,20 +37,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/******************************************************************************
- *
- * Name              : memory segment header
- *
- ******************************************************************************/
-
-typedef struct __seg seg_t;
-
-struct __seg
-{
-	seg_t  * next;  // next memory block
-	seg_t  * owner; // owner of memory block (used as free / occupied flag)
-};
 
 /******************************************************************************
  *

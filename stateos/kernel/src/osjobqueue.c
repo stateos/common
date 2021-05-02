@@ -215,13 +215,12 @@ static
 int priv_job_take( job_t *job, fun_t **fun )
 /* -------------------------------------------------------------------------- */
 {
-	if (job->count > 0)
-	{
-		*fun = priv_job_getUpdate(job);
-		return E_SUCCESS;
-	}
+	if (job->count == 0)
+		return E_TIMEOUT;
 
-	return E_TIMEOUT;
+	*fun = priv_job_getUpdate(job);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -305,13 +304,12 @@ static
 int priv_job_give( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	if (job->count < job->limit)
-	{
-		priv_job_putUpdate(job, fun);
-		return E_SUCCESS;
-	}
+	if (job->count == job->limit)
+		return E_TIMEOUT;
 
-	return E_TIMEOUT;
+	priv_job_putUpdate(job, fun);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */

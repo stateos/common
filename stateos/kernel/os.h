@@ -2,7 +2,7 @@
 
     @file    StateOS: os.h
     @author  Rajmund Szymanski
-    @date    25.03.2021
+    @date    02.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -51,7 +51,7 @@
 #include "inc/oslist.h"
 #include "inc/osmemorypool.h"
 #include "inc/osstreambuffer.h"
-#include "inc/osmessagebuffer.h"
+#include "inc/osmessagequeue.h"
 #include "inc/osmailboxqueue.h"
 #include "inc/oseventqueue.h"
 #include "inc/osjobqueue.h"

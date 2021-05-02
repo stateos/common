@@ -38,7 +38,7 @@ target_sources(stateos
 	${STATEOS_PATH}/kernel/src/oslist.c
 	${STATEOS_PATH}/kernel/src/osmailboxqueue.c
 	${STATEOS_PATH}/kernel/src/osmemorypool.c
-	${STATEOS_PATH}/kernel/src/osmessagebuffer.c
+	${STATEOS_PATH}/kernel/src/osmessagequeue.c
 	${STATEOS_PATH}/kernel/src/osmutex.c
 	${STATEOS_PATH}/kernel/src/osrwlock.c
 	${STATEOS_PATH}/kernel/src/ossemaphore.c

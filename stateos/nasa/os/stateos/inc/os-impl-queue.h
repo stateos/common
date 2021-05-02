@@ -33,7 +33,7 @@
 
 typedef struct
 {
-    box_t *box;
+    msg_t *msg;
 } OS_impl_queue_internal_record_t;
 
 /* Tables where the OS object information is stored */

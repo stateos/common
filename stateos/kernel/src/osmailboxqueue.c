@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    26.12.2020
+    @date    02.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -42,9 +42,9 @@ void priv_box_init( box_t *box, size_t size, void *data, size_t bufsize, void *r
 
 	core_obj_init(&box->obj, res);
 
-	box->limit = (bufsize / size) * size;
-	box->size  = size;
 	box->data  = data;
+	box->size  = size;
+	box->limit = (bufsize / size) * size;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -214,13 +214,12 @@ static
 int priv_box_take( box_t *box, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (box->count > 0)
-	{
-		priv_box_getUpdate(box, data);
-		return E_SUCCESS;
-	}
+	if (box->count == 0)
+		return E_TIMEOUT;
 
-	return E_TIMEOUT;
+	priv_box_getUpdate(box, data);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -303,13 +302,12 @@ static
 int priv_box_give( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (box->count < box->limit)
-	{
-		priv_box_putUpdate(box, data);
-		return E_SUCCESS;
-	}
+	if (box->count == box->limit)
+		return E_TIMEOUT;
 
-	return E_TIMEOUT;
+	priv_box_putUpdate(box, data);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -2,7 +2,7 @@
 
     @file    StateOS: osalloc.c
     @author  Rajmund Szymanski
-    @date    22.04.2021
+    @date    02.05.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -42,6 +42,14 @@
 /* -------------------------------------------------------------------------- */
 
 #if OS_HEAP_SIZE
+
+typedef struct __seg seg_t;
+
+struct __seg        // memory segment header
+{
+	seg_t  * next;  // next memory block
+	seg_t  * owner; // owner of memory block (used as free / occupied flag)
+};
 
 static
 seg_t            Heap[SEG_SIZE(OS_HEAP_SIZE)] __ALIGNED(sizeof(stk_t));

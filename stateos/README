@@ -50,6 +50,8 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 6.8
+- added message queue
+- removed message buffer
 - added support for libstdc++
 - updated Clock class
 - updated OnceFlag class
