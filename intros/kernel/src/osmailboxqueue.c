@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    26.12.2020
+    @date    02.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -45,9 +45,9 @@ void box_init( box_t *box, size_t size, void *data, size_t bufsize )
 	{
 		memset(box, 0, sizeof(box_t));
 
-		box->limit = (bufsize / size) * size;
-		box->size  = size;
 		box->data  = data;
+		box->size  = size;
+		box->limit = (bufsize / size) * size;
 	}
 	sys_unlock();
 }
@@ -268,7 +268,8 @@ unsigned box_takeAsync( box_t *box, void *data )
 void box_waitAsync( box_t *box, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	while (box_takeAsync(box, data) != SUCCESS) core_ctx_switch();
+	while (box_takeAsync(box, data) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -313,7 +314,8 @@ unsigned box_giveAsync( box_t *box, const void *data )
 void box_sendAsync( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
-	while (box_giveAsync(box, data) != SUCCESS) core_ctx_switch();
+	while (box_giveAsync(box, data) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

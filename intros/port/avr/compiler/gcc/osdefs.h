@@ -2,7 +2,7 @@
 
     @file    IntrOS: osdefs.h
     @author  Rajmund Szymanski
-    @date    27.12.2020
+    @date    02.05.2021
     @brief   IntrOS port file for AVR8 uC.
 
  ******************************************************************************
@@ -45,6 +45,9 @@
 #endif
 #ifndef __COMPILER_BARRIER
 #define __COMPILER_BARRIER()  asm volatile ("" ::: "memory")
+#endif
+#ifndef __PACKED
+#define __PACKED
 #endif
 
 /* -------------------------------------------------------------------------- */

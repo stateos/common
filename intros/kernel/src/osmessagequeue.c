@@ -1,8 +1,8 @@
 /******************************************************************************
 
-    @file    IntrOS: osmessagebuffer.c
+    @file    IntrOS: osmessagequeue.c
     @author  Rajmund Szymanski
-    @date    30.06.2020
+    @date    02.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -29,14 +29,24 @@
 
  ******************************************************************************/
 
-#include "inc/osmessagebuffer.h"
+#include "inc/osmessagequeue.h"
 #include "inc/oscriticalsection.h"
 
+typedef struct __mqh mqh_t;
+
+struct __mqh         // message queue header
+{
+	__PACKED
+	size_t   size;   // size of the message
+	char     data[]; // message data
+};
+
 /* -------------------------------------------------------------------------- */
-void msg_init( msg_t *msg, void *data, size_t bufsize )
+void msg_init( msg_t *msg, size_t size, void *data, size_t bufsize )
 /* -------------------------------------------------------------------------- */
 {
 	assert(msg);
+	assert(size);
 	assert(data);
 	assert(bufsize);
 
@@ -44,80 +54,11 @@ void msg_init( msg_t *msg, void *data, size_t bufsize )
 	{
 		memset(msg, 0, sizeof(msg_t));
 
-		msg->limit = bufsize;
 		msg->data  = data;
+		msg->size  = sizeof(size_t) + size;
+		msg->limit = (bufsize / msg->size) * msg->size;
 	}
 	sys_unlock();
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_msg_peek( msg_t *msg, char *data, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	size_t i = msg->head;
-
-	while (size--)
-	{
-		*data++ = msg->data[i++];
-		if (i == msg->limit) i = 0;
-	}
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_msg_get( msg_t *msg, char *data, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	size_t i = msg->head;
-
-	msg->count -= size;
-	while (size--)
-	{
-		*data++ = msg->data[i++];
-		if (i == msg->limit) i = 0;
-	}
-	msg->head = i;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_msg_put( msg_t *msg, const char *data, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	size_t i = msg->tail;
-
-	msg->count += size;
-	while (size--)
-	{
-		msg->data[i++] = *data++;
-		if (i == msg->limit) i = 0;
-	}
-	msg->tail = i;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_msg_skip( msg_t *msg, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	msg->count -= size;
-	msg->head  += size;
-	if (msg->head >= msg->limit) msg->head -= msg->limit;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-size_t priv_msg_size( msg_t *msg )
-/* -------------------------------------------------------------------------- */
-{
-	size_t size;
-
-	assert(msg->count);
-
-	priv_msg_peek(msg, (void *)&size, sizeof(size_t));
-
-	return size;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -125,13 +66,7 @@ static
 size_t priv_msg_getSize( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	size_t size;
-
-	assert(msg->count);
-
-	priv_msg_get(msg, (void *)&size, sizeof(size_t));
-
-	return size;
+	return ((mqh_t *)(msg->data + msg->head))->size;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -139,37 +74,63 @@ static
 void priv_msg_putSize( msg_t *msg, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	priv_msg_put(msg, (const void *)&size, sizeof(size_t));
+	((mqh_t *)(msg->data + msg->tail))->size = size;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-size_t priv_msg_getUpdate( msg_t *msg, char *data )
+char *priv_msg_getIData( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	size_t size = priv_msg_getSize(msg);
-	priv_msg_get(msg, data, size);
-	return size;
+	return ((mqh_t *)(msg->data + msg->head))->data;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_msg_putUpdate( msg_t *msg, const char *data, size_t size )
+char *priv_msg_getOData( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	priv_msg_putSize(msg, size);
-	priv_msg_put(msg, data, size);
+	return ((mqh_t *)(msg->data + msg->tail))->data;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_msg_skipUpdate( msg_t *msg, size_t size )
+void priv_msg_get( msg_t *msg, char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	while (msg->count + sizeof(size_t) + size > msg->limit)
-	{
-		priv_msg_skip(msg, priv_msg_getSize(msg));
-	}
+	const char *ptr = priv_msg_getIData(msg);
+
+	while (size--)
+		*data++ = *ptr++;
+
+	msg->head += msg->size;
+	if (msg->head == msg->limit) msg->head = 0;
+	msg->count -= msg->size;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_msg_put( msg_t *msg, const char *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	char *ptr = priv_msg_getOData(msg);
+
+	while (size--)
+		*ptr++ = *data++;
+
+	msg->tail += msg->size;
+	if (msg->tail == msg->limit) msg->tail = 0;
+	msg->count += msg->size;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_msg_skip( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	msg->head += msg->size;
+	if (msg->head == msg->limit) msg->head = 0;
+	msg->count -= msg->size;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -181,13 +142,18 @@ size_t msg_take( msg_t *msg, void *data, size_t size )
 	assert(msg);
 	assert(msg->data);
 	assert(msg->limit);
-	assert(data);
-	assert(size);
+	assert(data||size==0);
+
+	if (sizeof(size_t) + size < msg->size)
+		return 0;
 
 	sys_lock();
 	{
-		if (msg->count > 0 && size >= priv_msg_size(msg))
-			result = priv_msg_getUpdate(msg, data);
+		if (msg->count > 0)
+		{
+			result = priv_msg_getSize(msg);
+			priv_msg_get(msg, data, result);
+		}
 	}
 	sys_unlock();
 
@@ -198,7 +164,10 @@ size_t msg_take( msg_t *msg, void *data, size_t size )
 size_t msg_wait( msg_t *msg, void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t result = 0;
+	size_t result;
+
+	if (sizeof(size_t) + size < msg->size)
+		return 0;
 
 	while (result = msg_take(msg, data, size), result == 0) core_ctx_switch();
 
@@ -217,11 +186,15 @@ unsigned msg_give( msg_t *msg, const void *data, size_t size )
 	assert(data);
 	assert(size);
 
+	if (sizeof(size_t) + size > msg->size)
+		return FAILURE;
+
 	sys_lock();
 	{
-		if (msg->count + sizeof(size_t) + size <= msg->limit)
+		if (msg->count < msg->limit)
 		{
-			priv_msg_putUpdate(msg, data, size);
+			priv_msg_putSize(msg, size);
+			priv_msg_put(msg, data, size);
 			result = SUCCESS;
 		}
 	}
@@ -234,7 +207,7 @@ unsigned msg_give( msg_t *msg, const void *data, size_t size )
 unsigned msg_send( msg_t *msg, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (sizeof(size_t) + size > msg->limit)
+	if (sizeof(size_t) + size > msg->size)
 		return FAILURE;
 
 	while (msg_give(msg, data, size) != SUCCESS) core_ctx_switch();
@@ -246,19 +219,174 @@ unsigned msg_send( msg_t *msg, const void *data, size_t size )
 unsigned msg_push( msg_t *msg, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result = FAILURE;
-
 	assert(msg);
 	assert(msg->data);
 	assert(msg->limit);
 	assert(data||size==0);
 
+	if (sizeof(size_t) + size > msg->size)
+		return FAILURE;
+
 	sys_lock();
 	{
-		if (sizeof(size_t) + size <= msg->limit)
+		if (msg->count == msg->limit)
+			priv_msg_skip(msg);
+		priv_msg_putSize(msg, size);
+		priv_msg_put(msg, data, size);
+	}
+	sys_unlock();
+
+	return SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+unsigned msg_count( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	size_t count;
+
+	assert(msg);
+
+	sys_lock();
+	{
+		count = msg->count / msg->size;
+	}
+	sys_unlock();
+
+	return count;
+}
+
+/* -------------------------------------------------------------------------- */
+unsigned msg_space( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	size_t space;
+
+	assert(msg);
+
+	sys_lock();
+	{
+		space = (msg->limit - msg->count) / msg->size;
+	}
+	sys_unlock();
+
+	return space;
+}
+
+/* -------------------------------------------------------------------------- */
+unsigned msg_limit( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	size_t limit;
+
+	assert(msg);
+
+	sys_lock();
+	{
+		limit = msg->limit / msg->size;
+	}
+	sys_unlock();
+
+	return limit;
+}
+
+/* -------------------------------------------------------------------------- */
+
+#if OS_ATOMICS
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_msg_getAsync( msg_t *msg, char *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	const char *ptr = priv_msg_getIData(msg);
+
+	while (size--)
+		*data++ = *ptr++;
+
+	msg->head += msg->size;
+	if (msg->head == msg->limit) msg->head = 0;
+	atomic_fetch_sub((atomic_size_t *)&msg->count, msg->size);
+}
+
+/* -------------------------------------------------------------------------- */
+size_t msg_takeAsync( msg_t *msg, void *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	size_t result = 0;
+
+	assert(msg);
+	assert(msg->data);
+	assert(msg->limit);
+	assert(data);
+	assert(size);
+
+	if (sizeof(size_t) + size < msg->size)
+		return 0;
+
+	sys_lock();
+	{
+		if (atomic_load((atomic_size_t *)&msg->count) > 0)
 		{
-			priv_msg_skipUpdate(msg, size);
-			priv_msg_putUpdate(msg, data, size);
+			result = priv_msg_getSize(msg);
+			priv_msg_getAsync(msg, data, result);
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+size_t msg_waitAsync( msg_t *msg, void *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	size_t result;
+
+	if (sizeof(size_t) + size < msg->size)
+		return 0;
+
+	while (result = msg_takeAsync(msg, data, size), result == 0) core_ctx_switch();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_msg_putAsync( msg_t *msg, const char *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	char *ptr = priv_msg_getOData(msg);
+
+	while (size--)
+		*ptr++ = *data++;
+
+	msg->tail += msg->size;
+	if (msg->tail == msg->limit) msg->tail = 0;
+	atomic_fetch_add((atomic_size_t *)&msg->count, msg->size);
+}
+
+/* -------------------------------------------------------------------------- */
+unsigned msg_giveAsync( msg_t *msg, const void *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	unsigned result = FAILURE;
+
+	assert(msg);
+	assert(msg->data);
+	assert(msg->limit);
+	assert(data);
+	assert(size);
+
+	if (sizeof(size_t) + size > msg->size)
+		return FAILURE;
+
+	sys_lock();
+	{
+		if (atomic_load((atomic_size_t *)&msg->count) < msg->limit)
+		{
+			priv_msg_putSize(msg, size);
+			priv_msg_putAsync(msg, data, size);
 			result = SUCCESS;
 		}
 	}
@@ -268,72 +396,17 @@ unsigned msg_push( msg_t *msg, const void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t msg_count( msg_t *msg )
+unsigned msg_sendAsync( msg_t *msg, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t count;
+	if (sizeof(size_t) + size > msg->size)
+		return FAILURE;
 
-	assert(msg);
+	while (msg_giveAsync(msg, data, size) != SUCCESS) core_ctx_switch();
 
-	sys_lock();
-	{
-		count = msg->count;
-	}
-	sys_unlock();
-
-	return count;
+	return SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-size_t msg_space( msg_t *msg )
-/* -------------------------------------------------------------------------- */
-{
-	size_t space;
 
-	assert(msg);
-
-	sys_lock();
-	{
-		space = (msg->limit >= msg->count + sizeof(size_t)) ? msg->limit - msg->count - sizeof(size_t) : 0;
-	}
-	sys_unlock();
-
-	return space;
-}
-
-/* -------------------------------------------------------------------------- */
-size_t msg_limit( msg_t *msg )
-/* -------------------------------------------------------------------------- */
-{
-	size_t limit;
-
-	assert(msg);
-
-	sys_lock();
-	{
-		limit = (msg->limit >= sizeof(size_t)) ? msg->limit - sizeof(size_t) : 0;
-	}
-	sys_unlock();
-
-	return limit;
-}
-
-/* -------------------------------------------------------------------------- */
-size_t msg_size( msg_t *msg )
-/* -------------------------------------------------------------------------- */
-{
-	size_t size = 0;
-
-	assert(msg);
-
-	sys_lock();
-	{
-		if (msg->count > 0)
-			size = priv_msg_size(msg);
-	}
-	sys_unlock();
-
-	return size;
-}
-
-/* -------------------------------------------------------------------------- */
+#endif//OS_ATOMICS

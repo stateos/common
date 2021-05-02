@@ -49,7 +49,7 @@
 #include "inc/oslist.h"
 #include "inc/osmemorypool.h"
 #include "inc/osstreambuffer.h"
-#include "inc/osmessagebuffer.h"
+#include "inc/osmessagequeue.h"
 #include "inc/osmailboxqueue.h"
 #include "inc/oseventqueue.h"
 #include "inc/osjobqueue.h"

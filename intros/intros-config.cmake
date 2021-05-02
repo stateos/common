@@ -36,7 +36,7 @@ target_sources(intros
 	${INTROS_PATH}/kernel/src/oslist.c
 	${INTROS_PATH}/kernel/src/osmailboxqueue.c
 	${INTROS_PATH}/kernel/src/osmemorypool.c
-	${INTROS_PATH}/kernel/src/osmessagebuffer.c
+	${INTROS_PATH}/kernel/src/osmessagequeue.c
 	${INTROS_PATH}/kernel/src/osmutex.c
 	${INTROS_PATH}/kernel/src/osrwlock.c
 	${INTROS_PATH}/kernel/src/ossemaphore.c
