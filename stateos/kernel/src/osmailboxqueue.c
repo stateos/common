@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    02.05.2021
+    @date    04.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -137,11 +137,12 @@ void priv_box_get( box_t *box, char *data )
 /* -------------------------------------------------------------------------- */
 {
 	size_t size = box->size;
-	size_t i = box->head;
+	size_t head = box->head;
 
 	while (size--)
-		*data++ = box->data[i++];
-	box->head = (i < box->limit) ? i : 0;
+		*data++ = box->data[head++];
+
+	box->head = head < box->limit ? head : 0;
 	box->count -= box->size;
 }
 
@@ -151,11 +152,12 @@ void priv_box_put( box_t *box, const char *data )
 /* -------------------------------------------------------------------------- */
 {
 	size_t size = box->size;
-	size_t i = box->tail;
+	size_t tail = box->tail;
 
 	while (size--)
-		box->data[i++] = *data++;
-	box->tail = (i < box->limit) ? i : 0;
+		box->data[tail++] = *data++;
+
+	box->tail = tail < box->limit ? tail : 0;
 	box->count += box->size;
 }
 
@@ -164,9 +166,9 @@ static
 void priv_box_skip( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
-	size_t i = box->head + box->size;
+	size_t head = box->head + box->size;
 
-	box->head = (i < box->limit) ? i : 0;
+	box->head = head < box->limit ? head : 0;
 	box->count -= box->size;
 }
 
@@ -467,19 +469,33 @@ void priv_box_getAsync( box_t *box, char *data )
 /* -------------------------------------------------------------------------- */
 {
 	size_t size = box->size;
-	size_t i = box->head;
+	size_t head = box->head;
 
 	while (size--)
-		*data++ = box->data[i++];
-	box->head = (i < box->limit) ? i : 0;
+		*data++ = box->data[head++];
+
+	box->head = head < box->limit ? head : 0;
 	atomic_fetch_sub((atomic_uint *)&box->count, box->size);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_box_takeAsync( box_t *box, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	if (atomic_load((atomic_uint *)&box->count) == 0)
+		return E_TIMEOUT;
+
+	priv_box_getAsync(box, data);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
 int box_takeAsync( box_t *box, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	int result = E_TIMEOUT;
+	int result;
 
 	assert(box);
 	assert(box->obj.res!=RELEASED);
@@ -489,11 +505,7 @@ int box_takeAsync( box_t *box, void *data )
 
 	sys_lock();
 	{
-		if (atomic_load((atomic_uint *)&box->count) > 0)
-		{
-			priv_box_getAsync(box, data);
-			result = E_SUCCESS;
-		}
+		result = priv_box_takeAsync(box, data);
 	}
 	sys_unlock();
 
@@ -518,19 +530,33 @@ void priv_box_putAsync( box_t *box, const char *data )
 /* -------------------------------------------------------------------------- */
 {
 	size_t size = box->size;
-	size_t i = box->tail;
+	size_t tail = box->tail;
 
 	while (size--)
-		box->data[i++] = *data++;
-	box->tail = (i < box->limit) ? i : 0;
+		box->data[tail++] = *data++;
+
+	box->tail = tail < box->limit ? tail : 0;
 	atomic_fetch_add((atomic_uint *)&box->count, box->size);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_box_giveAsync( box_t *box, const void *data )
+/* -------------------------------------------------------------------------- */
+{
+	if (atomic_load((atomic_uint *)&box->count) == box->limit)
+		return E_TIMEOUT;
+
+	priv_box_putAsync(box, data);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
 int box_giveAsync( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
-	int result = E_TIMEOUT;
+	int result;
 
 	assert(box);
 	assert(box->obj.res!=RELEASED);
@@ -540,11 +566,7 @@ int box_giveAsync( box_t *box, const void *data )
 
 	sys_lock();
 	{
-		if (atomic_load((atomic_uint *)&box->count) < box->limit)
-		{
-			priv_box_putAsync(box, data);
-			result = E_SUCCESS;
-		}
+		result = priv_box_giveAsync(box, data);
 	}
 	sys_unlock();
 

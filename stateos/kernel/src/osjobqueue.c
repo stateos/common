@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.c
     @author  Rajmund Szymanski
-    @date    27.12.2020
+    @date    04.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -133,11 +133,11 @@ static
 fun_t *priv_job_get( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->head;
+	unsigned head = job->head;
 
-	fun_t *fun = job->data[i++];
+	fun_t *fun = job->data[head++];
 
-	job->head = (i < job->limit) ? i : 0;
+	job->head = head < job->limit ? head : 0;
 	job->count--;
 
 	return fun;
@@ -148,11 +148,11 @@ static
 void priv_job_put( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->tail;
+	unsigned tail = job->tail;
 
-	job->data[i++] = fun;
+	job->data[tail++] = fun;
 
-	job->tail = (i < job->limit) ? i : 0;
+	job->tail = tail < job->limit ? tail : 0;
 	job->count++;
 }
 
@@ -161,9 +161,9 @@ static
 void priv_job_skip( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->head + 1;
+	unsigned head = job->head + 1;
 
-	job->head = (i < job->limit) ? i : 0;
+	job->head = head < job->limit ? head : 0;
 	job->count--;
 }
 
@@ -227,8 +227,8 @@ int priv_job_take( job_t *job, fun_t **fun )
 int job_take( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	fun_t *fun = NULL;
 	int result;
+	fun_t *fun = NULL;
 
 	assert(job);
 	assert(job->obj.res!=RELEASED);
@@ -468,22 +468,35 @@ static
 fun_t *priv_job_getAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->head;
+	unsigned head = job->head;
 
-	fun_t *fun = job->data[i++];
+	fun_t *fun = job->data[head++];
 
-	job->head = (i < job->limit) ? i : 0;
+	job->head = head < job->limit ? head : 0;
 	atomic_fetch_sub((atomic_uint *)&job->count, 1);
 
 	return fun;
 }
 
 /* -------------------------------------------------------------------------- */
+static
+int priv_job_takeAsync( job_t *job, fun_t **fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (atomic_load((atomic_uint *)&job->count) == 0)
+		return E_TIMEOUT;
+
+	*fun = priv_job_getAsync(job);
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
 int job_takeAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
+	int result;
 	fun_t *fun = NULL;
-	int result = E_TIMEOUT;
 
 	assert(job);
 	assert(job->obj.res!=RELEASED);
@@ -492,11 +505,7 @@ int job_takeAsync( job_t *job )
 
 	sys_lock();
 	{
-		if (atomic_load((atomic_uint *)&job->count) > 0)
-		{
-			fun = priv_job_getAsync(job);
-			result = E_SUCCESS;
-		}
+		result = priv_job_takeAsync(job, &fun);
 	}
 	sys_unlock();
 
@@ -523,32 +532,42 @@ static
 void priv_job_putAsync( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->tail;
+	unsigned tail = job->tail;
 
-	job->data[i++] = fun;
+	job->data[tail++] = fun;
 
-	job->tail = (i < job->limit) ? i : 0;
+	job->tail = tail < job->limit ? tail : 0;
 	atomic_fetch_add((atomic_uint *)&job->count, 1);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_job_giveAsync( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (atomic_load((atomic_uint *)&job->count) == job->limit)
+		return E_TIMEOUT;
+
+	priv_job_putAsync(job, fun);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
 int job_giveAsync( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	int result = E_TIMEOUT;
+	int result;
 
 	assert(job);
 	assert(job->obj.res!=RELEASED);
 	assert(job->data);
 	assert(job->limit);
+	assert(fun);
 
 	sys_lock();
 	{
-		if (atomic_load((atomic_uint *)&job->count) < job->limit)
-		{
-			priv_job_putAsync(job, fun);
-			result = E_SUCCESS;
-		}
+		result = priv_job_giveAsync(job, fun);
 	}
 	sys_unlock();
 

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.c
     @author  Rajmund Szymanski
-    @date    27.12.2020
+    @date    04.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -55,11 +55,11 @@ static
 fun_t *priv_job_get( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->head;
+	unsigned head = job->head;
 
-	fun_t *fun = job->data[i++];
+	fun_t *fun = job->data[head++];
 
-	job->head = (i < job->limit) ? i : 0;
+	job->head = head < job->limit ? head : 0;
 	job->count--;
 
 	return fun;
@@ -70,11 +70,11 @@ static
 void priv_job_put( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->tail;
+	unsigned tail = job->tail;
 
-	job->data[i++] = fun;
+	job->data[tail++] = fun;
 
-	job->tail = (i < job->limit) ? i : 0;
+	job->tail = tail < job->limit ? tail : 0;
 	job->count++;
 }
 
@@ -83,18 +83,31 @@ static
 void priv_job_skip( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->head + 1;
+	unsigned head = job->head + 1;
 
-	job->head = (i < job->limit) ? i : 0;
+	job->head = head < job->limit ? head : 0;
 	job->count--;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+unsigned priv_job_take( job_t *job, fun_t **fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (job->count == 0)
+		return FAILURE;
+
+	*fun = priv_job_get(job);
+
+	return SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
 unsigned job_take( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
+	unsigned result;
 	fun_t *fun = NULL;
-	unsigned result = FAILURE;
 
 	assert(job);
 	assert(job->data);
@@ -102,11 +115,7 @@ unsigned job_take( job_t *job )
 
 	sys_lock();
 	{
-		if (job->count > 0)
-		{
-			fun = priv_job_get(job);
-			result = SUCCESS;
-		}
+		result = priv_job_take(job, &fun);
 	}
 	sys_unlock();
 
@@ -120,14 +129,28 @@ unsigned job_take( job_t *job )
 void job_wait( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	while (job_take(job) != SUCCESS) core_ctx_switch();
+	while (job_take(job) != SUCCESS)
+		core_ctx_switch();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+unsigned priv_job_give( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (job->count == job->limit)
+		return FAILURE;
+
+	priv_job_put(job, fun);
+
+	return SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
 unsigned job_give( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result = FAILURE;
+	unsigned result;
 
 	assert(job);
 	assert(job->data);
@@ -136,11 +159,7 @@ unsigned job_give( job_t *job, fun_t *fun )
 
 	sys_lock();
 	{
-		if (job->count < job->limit)
-		{
-			priv_job_put(job, fun);
-			result = SUCCESS;
-		}
+		result = priv_job_give(job, fun);
 	}
 	sys_unlock();
 
@@ -151,7 +170,8 @@ unsigned job_give( job_t *job, fun_t *fun )
 void job_send( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	while (job_give(job, fun) != SUCCESS) core_ctx_switch();
+	while (job_give(job, fun) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -232,22 +252,35 @@ static
 fun_t *priv_job_getAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->head;
+	unsigned head = job->head;
 
-	fun_t *fun = job->data[i++];
+	fun_t *fun = job->data[head++];
 
-	job->head = (i < job->limit) ? i : 0;
+	job->head = head < job->limit ? head : 0;
 	atomic_fetch_sub((atomic_uint *)&job->count, 1);
 
 	return fun;
 }
 
 /* -------------------------------------------------------------------------- */
+static
+unsigned priv_job_takeAsync( job_t *job, fun_t **fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (atomic_load((atomic_uint *)&job->count) == 0)
+		return FAILURE;
+
+	*fun = priv_job_getAsync(job);
+
+	return SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
 unsigned job_takeAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
+	unsigned result;
 	fun_t *fun = NULL;
-	unsigned result = FAILURE;
 
 	assert(job);
 	assert(job->data);
@@ -255,11 +288,7 @@ unsigned job_takeAsync( job_t *job )
 
 	sys_lock();
 	{
-		if (atomic_load((atomic_uint *)&job->count) > 0)
-		{
-			fun = priv_job_getAsync(job);
-			result = SUCCESS;
-		}
+		result = priv_job_takeAsync(job, &fun);
 	}
 	sys_unlock();
 
@@ -273,7 +302,8 @@ unsigned job_takeAsync( job_t *job )
 void job_waitAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	while (job_takeAsync(job) != SUCCESS) core_ctx_switch();
+	while (job_takeAsync(job) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -281,19 +311,32 @@ static
 void priv_job_putAsync( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned i = job->tail;
+	unsigned tail = job->tail;
 
-	job->data[i++] = fun;
+	job->data[tail++] = fun;
 
-	job->tail = (i < job->limit) ? i : 0;
+	job->tail = tail < job->limit ? tail : 0;
 	atomic_fetch_add((atomic_uint *)&job->count, 1);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+unsigned priv_job_giveAsync( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (atomic_load((atomic_uint *)&job->count) == job->limit)
+		return FAILURE;
+
+	priv_job_putAsync(job, fun);
+
+	return SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
 unsigned job_giveAsync( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result = FAILURE;
+	unsigned result;
 
 	assert(job);
 	assert(job->data);
@@ -302,11 +345,7 @@ unsigned job_giveAsync( job_t *job, fun_t *fun )
 
 	sys_lock();
 	{
-		if (atomic_load((atomic_uint *)&job->count) < job->limit)
-		{
-			priv_job_putAsync(job, fun);
-			result = SUCCESS;
-		}
+		result = priv_job_giveAsync(job, fun);
 	}
 	sys_unlock();
 
@@ -317,7 +356,8 @@ unsigned job_giveAsync( job_t *job, fun_t *fun )
 void job_sendAsync( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	while (job_giveAsync(job, fun) != SUCCESS) core_ctx_switch();
+	while (job_giveAsync(job, fun) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.c
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    04.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -59,6 +59,7 @@ unsigned priv_sem_take( sem_t *sem )
 		return FAILURE;
 
 	sem->count--;
+
 	return SUCCESS;
 }
 
@@ -85,7 +86,8 @@ unsigned sem_take( sem_t *sem )
 void sem_wait( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
-	while (sem_take(sem) != SUCCESS) core_ctx_switch();
+	while (sem_take(sem) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -97,6 +99,7 @@ unsigned priv_sem_give( sem_t *sem )
 		return FAILURE;
 
 	sem->count++;
+
 	return SUCCESS;
 }
 
@@ -127,10 +130,12 @@ unsigned priv_sem_giveNum( sem_t *sem, unsigned num )
 	if (num > sem->limit - sem->count)
 	{
 		sem->count = sem->limit;
+
 		return FAILURE;
 	}
 
 	sem->count += num;
+
 	return SUCCESS;
 }
 
@@ -211,7 +216,8 @@ unsigned sem_takeAsync( sem_t *sem )
 void sem_waitAsync( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
-	while (sem_takeAsync(sem) != SUCCESS) core_ctx_switch();
+	while (sem_takeAsync(sem) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

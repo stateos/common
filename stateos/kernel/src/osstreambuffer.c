@@ -2,7 +2,7 @@
 
     @file    StateOS: osstreambuffer.c
     @author  Rajmund Szymanski
-    @date    02.07.2020
+    @date    04.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -133,15 +133,15 @@ static
 void priv_stm_get( stm_t *stm, char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t i = stm->head;
+	size_t head = stm->head;
 
 	stm->count -= size;
 	while (size--)
 	{
-		*data++ = stm->data[i++];
-		if (i == stm->limit) i = 0;
+		*data++ = stm->data[head++];
+		if (head == stm->limit) head = 0;
 	}
-	stm->head = i;
+	stm->head = head;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -149,15 +149,15 @@ static
 void priv_stm_put( stm_t *stm, const char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t i = stm->tail;
+	size_t tail = stm->tail;
 
 	stm->count += size;
 	while (size--)
 	{
-		stm->data[i++] = *data++;
-		if (i == stm->limit) i = 0;
+		stm->data[tail++] = *data++;
+		if (tail == stm->limit) tail = 0;
 	}
-	stm->tail = i;
+	stm->tail = tail;
 }
 
 /* -------------------------------------------------------------------------- */
