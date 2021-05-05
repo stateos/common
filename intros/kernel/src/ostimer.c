@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.c
     @author  Rajmund Szymanski
-    @date    30.06.2020
+    @date    05.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -156,7 +156,8 @@ void tmr_wait( tmr_t *tmr )
 	}
 	sys_unlock();
 
-	while (tmr->signal == signal) core_ctx_switch();
+	while (tmr->signal == signal)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

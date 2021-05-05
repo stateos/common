@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.c
     @author  Rajmund Szymanski
-    @date    03.07.2020
+    @date    05.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -71,7 +71,8 @@ unsigned mtx_take( mtx_t *mtx )
 void mtx_wait( mtx_t *mtx )
 /* -------------------------------------------------------------------------- */
 {
-	while (mtx_take(mtx) != SUCCESS) core_ctx_switch();
+	while (mtx_take(mtx) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

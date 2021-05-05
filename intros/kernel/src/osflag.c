@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.c
     @author  Rajmund Szymanski
-    @date    30.06.2020
+    @date    05.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -72,7 +72,8 @@ unsigned flg_take( flg_t *flg, unsigned flags, bool all )
 void flg_wait( flg_t *flg, unsigned flags, bool all )
 /* -------------------------------------------------------------------------- */
 {
-	while (flags = flg_take(flg, flags, all), flags != 0) core_ctx_switch();
+	while (flags = flg_take(flg, flags, all), flags != 0)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

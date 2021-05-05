@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossignal.c
     @author  Rajmund Szymanski
-    @date    30.06.2020
+    @date    05.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -77,7 +77,8 @@ unsigned sig_wait( sig_t *sig, unsigned sigset )
 {
 	unsigned result;
 
-	while (result = sig_take(sig, sigset), result == FAILURE) core_ctx_switch();
+	while (result = sig_take(sig, sigset), result == FAILURE)
+		core_ctx_switch();
 
 	return result;
 }

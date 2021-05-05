@@ -2,7 +2,7 @@
 
     @file    IntrOS: osconditionvariable.c
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    05.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -62,7 +62,8 @@ void cnd_wait( cnd_t *cnd, mtx_t *mtx )
 	}
 	sys_unlock();
 
-	while (cnd->signal == signal) core_ctx_switch();
+	while (cnd->signal == signal)
+		core_ctx_switch();
 
 	mtx_wait(mtx);
 }

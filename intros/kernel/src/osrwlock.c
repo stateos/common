@@ -2,7 +2,7 @@
 
     @file    StateOS: osrwlock.c
     @author  Rajmund Szymanski
-    @date    08.07.2020
+    @date    05.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -70,7 +70,8 @@ unsigned rwl_takeRead( rwl_t *rwl )
 void rwl_waitRead( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	while (rwl_takeRead(rwl) != SUCCESS) core_ctx_switch();
+	while (rwl_takeRead(rwl) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -113,7 +114,8 @@ unsigned rwl_takeWrite( rwl_t *rwl )
 void rwl_waitWrite( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	while (rwl_takeWrite(rwl) != SUCCESS) core_ctx_switch();
+	while (rwl_takeWrite(rwl) != SUCCESS)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbarrier.c
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    05.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -70,7 +70,8 @@ void bar_wait( bar_t *bar )
 	}
 	sys_unlock();
 
-	while (bar->signal == signal) core_ctx_switch();
+	while (bar->signal == signal)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

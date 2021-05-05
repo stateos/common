@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.c
     @author  Rajmund Szymanski
-    @date    30.04.2021
+    @date    05.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -100,7 +100,8 @@ void *mem_wait( mem_t *mem )
 {
 	void *result;
 
-	while (result = mem_take(mem), result == NULL) core_ctx_switch();
+	while (result = mem_take(mem), result == NULL)
+		core_ctx_switch();
 
 	return result;
 }
