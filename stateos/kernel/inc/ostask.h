@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    28.04.2021
+    @date    05.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -60,10 +60,10 @@ struct __tsk
 	hdr_t    hdr;   // timer / task header
 
 	fun_t  * state; // task state (initial task function, doesn't have to be noreturn-type)
+	void   * arg;   // reserved for internal use
 	cnt_t    start; // inherited from timer
 	cnt_t    delay; // inherited from timer
 	cnt_t    slice;	// time slice
-	void   * arg;   // reserved for internal use
 
 	tsk_t ** back;  // previous object in the BLOCKED queue
 	stk_t  * stack; // base of stack
@@ -179,7 +179,7 @@ extern "C" {
  ******************************************************************************/
 
 #define               _TSK_INIT( _prio, _state, _stack, _size )                                               \
-                       { _OBJ_INIT(), _HDR_INIT(), _state, 0, 0, 0, NULL, NULL, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
+                       { _OBJ_INIT(), _HDR_INIT(), _state, NULL, 0, 0, 0, NULL, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
                        { NULL, NULL }, { 0, NULL, { NULL, NULL } }, { { 0 } }, _PORT_DATA_INIT() }
 
 /******************************************************************************

@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    28.04.2021
+    @date    05.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -47,10 +47,10 @@ struct __tmr
 	hdr_t    hdr;   // timer / task header
 
 	fun_t  * state; // callback procedure
+	void   * arg;   // reserved for internal use
 	cnt_t    start;
 	cnt_t    delay;
 	cnt_t    period;
-	void   * arg;   // reserved for internal use
 };
 
 #ifdef __cplusplus
@@ -74,7 +74,7 @@ extern "C" {
  ******************************************************************************/
 
 #define               _TMR_INIT( _state ) \
-                    { _OBJ_INIT(), _HDR_INIT(), _state, 0, 0, 0, NULL }
+                    { _OBJ_INIT(), _HDR_INIT(), _state, NULL, 0, 0, 0 }
 
 /******************************************************************************
  *
