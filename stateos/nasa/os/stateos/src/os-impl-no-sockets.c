@@ -87,6 +87,21 @@ int32 OS_SocketConnect_Impl(const OS_object_token_t *token, const OS_SockAddr_t 
 } /* end OS_SocketConnect_Impl */
 
 /*----------------------------------------------------------------
+   Function: OS_SocketShutdown_Impl
+
+    Purpose: Graceful shutdown of a stream socket
+
+ ------------------------------------------------------------------*/
+int32 OS_SocketShutdown_Impl(const OS_object_token_t *token, OS_SocketShutdownMode_t Mode)
+{
+	(void) token;
+	(void) Mode;
+
+    return OS_ERR_NOT_IMPLEMENTED;
+
+} /* end OS_SocketShutdown_Impl */
+
+/*----------------------------------------------------------------
  *
  * Function: OS_SocketAccept_Impl
  *
