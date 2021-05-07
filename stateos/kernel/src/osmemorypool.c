@@ -154,9 +154,9 @@ static
 void *priv_lst_popFront( lst_t *lst )
 /* -------------------------------------------------------------------------- */
 {
-	void *data = lst->head.next + 1;
-	lst->head.next = lst->head.next->next;
-	return data;
+	que_t *ptr = lst->head.next;
+	lst->head.next = ptr->next;
+	return ptr + 1;
 }
 
 /* -------------------------------------------------------------------------- */
