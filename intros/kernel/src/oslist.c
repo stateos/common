@@ -2,7 +2,7 @@
 
     @file    IntrOS: oslist.c
     @author  Rajmund Szymanski
-    @date    05.05.2021
+    @date    07.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -46,20 +46,37 @@ void lst_init( lst_t *lst )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void *priv_lst_popFront( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	void *data = lst->head.next + 1;
+	lst->head.next = lst->head.next->next;
+	return data;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void *priv_lst_take( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	if (lst->head.next == NULL)
+		return NULL;
+
+	return priv_lst_popFront(lst);
+}
+
+/* -------------------------------------------------------------------------- */
 void *lst_take( lst_t *lst )
 /* -------------------------------------------------------------------------- */
 {
-	void *result = NULL;
+	void *result;
 
 	assert(lst);
 
 	sys_lock();
 	{
-		if (lst->head.next)
-		{
-			result = lst->head.next + 1;
-			lst->head.next = lst->head.next->next;
-		}
+		result = priv_lst_take(lst);
 	}
 	sys_unlock();
 
@@ -79,19 +96,34 @@ void *lst_wait( lst_t *lst )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_lst_pushBack( lst_t *lst, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	que_t *ptr = &lst->head;
+	while (ptr->next) ptr = ptr->next;
+	ptr = ptr->next = (que_t *)data - 1;
+	ptr->next = NULL;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_lst_give( lst_t *lst, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	priv_lst_pushBack(lst, data);
+}
+
+/* -------------------------------------------------------------------------- */
 void lst_give( lst_t *lst, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	que_t *ptr;
-
 	assert(lst);
 	assert(data);
 
 	sys_lock();
 	{
-		for (ptr = &lst->head; ptr->next; ptr = ptr->next);
-		ptr->next = (que_t *)data - 1;
-		ptr->next->next = NULL;
+		priv_lst_give(lst, data);
 	}
 	sys_unlock();
 }

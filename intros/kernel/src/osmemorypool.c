@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.c
     @author  Rajmund Szymanski
-    @date    05.05.2021
+    @date    07.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -71,23 +71,40 @@ void mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void *priv_lst_popFront( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	void *data = lst->head.next + 1;
+	lst->head.next = lst->head.next->next;
+	return data;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void *priv_mem_take( mem_t *mem )
+/* -------------------------------------------------------------------------- */
+{
+	if (mem->limit)
+		priv_mem_bind(mem);
+
+	if (mem->lst.head.next == NULL)
+		return NULL;
+
+	return priv_lst_popFront(&mem->lst);
+}
+
+/* -------------------------------------------------------------------------- */
 void *mem_take( mem_t *mem )
 /* -------------------------------------------------------------------------- */
 {
-	void *result = NULL;
+	void *result;
 
 	assert(mem);
 
 	sys_lock();
 	{
-		if (mem->limit)
-			priv_mem_bind(mem);
-
-		if (mem->lst.head.next)
-		{
-			result = mem->lst.head.next + 1;
-			mem->lst.head.next = mem->lst.head.next->next;
-		}
+		result = priv_mem_take(mem);
 	}
 	sys_unlock();
 
@@ -107,22 +124,37 @@ void *mem_wait( mem_t *mem )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_lst_pushBack( lst_t *lst, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	que_t *ptr = &lst->head;
+	while (ptr->next) ptr = ptr->next;
+	ptr = ptr->next = (que_t *)data - 1;
+	ptr->next = NULL;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_mem_give( mem_t *mem, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	if (mem->limit)
+		priv_mem_bind(mem);
+
+	priv_lst_pushBack(&mem->lst, data);
+}
+
+/* -------------------------------------------------------------------------- */
 void mem_give( mem_t *mem, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	que_t *ptr;
-
 	assert(mem);
 	assert(data);
 
 	sys_lock();
 	{
-		if (mem->limit)
-			priv_mem_bind(mem);
-
-		for (ptr = &mem->lst.head; ptr->next; ptr = ptr->next);
-		ptr->next = (que_t *)data - 1;
-		ptr->next->next = NULL;
+		priv_mem_give(mem, data);
 	}
 	sys_unlock();
 }
