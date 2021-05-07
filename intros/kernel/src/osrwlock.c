@@ -2,7 +2,7 @@
 
     @file    StateOS: osrwlock.c
     @author  Rajmund Szymanski
-    @date    05.05.2021
+    @date    07.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -46,20 +46,29 @@ void rwl_init( rwl_t *rwl )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+unsigned priv_rwl_takeRead( rwl_t *rwl )
+/* -------------------------------------------------------------------------- */
+{
+	if (rwl->write || rwl->count == RDR_LIMIT)
+		return FAILURE;
+
+	rwl->count++;
+
+	return SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
 unsigned rwl_takeRead( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result = FAILURE;
+	unsigned result;
 
 	assert(rwl);
 
 	sys_lock();
 	{
-		if (!rwl->write && rwl->count < RDR_LIMIT)
-		{
-			rwl->count++;
-			result = SUCCESS;
-		}
+		result = priv_rwl_takeRead(rwl);
 	}
 	sys_unlock();
 
@@ -90,20 +99,29 @@ void rwl_giveRead( rwl_t *rwl )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+unsigned priv_rwl_takeWrite( rwl_t *rwl )
+/* -------------------------------------------------------------------------- */
+{
+	if (rwl->write || rwl->count > 0)
+		return FAILURE;
+
+	rwl->write = true;
+
+	return SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
 unsigned rwl_takeWrite( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result = FAILURE;
+	unsigned result;
 
 	assert(rwl);
 
 	sys_lock();
 	{
-		if (!rwl->write && rwl->count == 0)
-		{
-			rwl->write = true;
-			result = SUCCESS;
-		}
+		result = priv_rwl_takeWrite(rwl);
 	}
 	sys_unlock();
 

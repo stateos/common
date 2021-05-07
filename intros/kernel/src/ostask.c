@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.c
     @author  Rajmund Szymanski
-    @date    13.12.2020
+    @date    07.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -239,6 +239,7 @@ unsigned tsk_suspend( tsk_t *tsk )
 	tsk->delay = INFINITE;
 	if (tsk == System.cur)
 		core_ctx_switch();
+
 	return SUCCESS;
 }
 
@@ -252,6 +253,7 @@ unsigned tsk_resume( tsk_t *tsk )
 		return FAILURE;
 
 	tsk->delay = 0;
+
 	return SUCCESS;
 }
 

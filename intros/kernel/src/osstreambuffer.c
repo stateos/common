@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstreambuffer.c
     @author  Rajmund Szymanski
-    @date    04.05.2021
+    @date    07.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -120,10 +120,21 @@ void priv_stm_skipUpdate( stm_t *stm, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+size_t priv_stm_take( stm_t *stm, void *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	if (stm->count == 0)
+		return 0;
+
+	return priv_stm_getUpdate(stm, data, size);
+}
+
+/* -------------------------------------------------------------------------- */
 size_t stm_take( stm_t *stm, void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t result = 0;
+	size_t result;
 
 	assert(stm);
 	assert(stm->data);
@@ -133,8 +144,7 @@ size_t stm_take( stm_t *stm, void *data, size_t size )
 
 	sys_lock();
 	{
-		if (stm->count > 0)
-			result = priv_stm_getUpdate(stm, data, size);
+		result = priv_stm_take(stm, data, size);
 	}
 	sys_unlock();
 
@@ -154,10 +164,23 @@ size_t stm_wait( stm_t *stm, void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+unsigned priv_stm_give( stm_t *stm, const void *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	if (stm->count + size > stm->limit)
+		return FAILURE;
+
+	priv_stm_putUpdate(stm, data, size);
+
+	return SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
 unsigned stm_give( stm_t *stm, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result = FAILURE;
+	unsigned result;
 
 	assert(stm);
 	assert(stm->data);
@@ -167,11 +190,7 @@ unsigned stm_give( stm_t *stm, const void *data, size_t size )
 
 	sys_lock();
 	{
-		if (stm->count + size <= stm->limit)
-		{
-			priv_stm_putUpdate(stm, data, size);
-			result = SUCCESS;
-		}
+		result = priv_stm_give(stm, data, size);
 	}
 	sys_unlock();
 
@@ -192,10 +211,24 @@ unsigned stm_send( stm_t *stm, const void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+unsigned priv_stm_push( stm_t *stm, const void *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	if (size > stm->limit)
+		return FAILURE;
+
+	priv_stm_skipUpdate(stm, size);
+	priv_stm_putUpdate(stm, data, size);
+
+	return SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
 unsigned stm_push( stm_t *stm, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result = FAILURE;
+	unsigned result;
 
 	assert(stm);
 	assert(stm->data);
@@ -205,12 +238,7 @@ unsigned stm_push( stm_t *stm, const void *data, size_t size )
 
 	sys_lock();
 	{
-		if (size <= stm->limit)
-		{
-			priv_stm_skipUpdate(stm, size);
-			priv_stm_putUpdate(stm, data, size);
-			result = SUCCESS;
-		}
+		result = priv_stm_push(stm, data, size);
 	}
 	sys_unlock();
 
