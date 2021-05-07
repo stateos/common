@@ -102,7 +102,7 @@ unsigned rwl_takeWrite( rwl_t *rwl )
 		if (!rwl->write && rwl->count == 0)
 		{
 			rwl->write = true;
-			return SUCCESS;
+			result = SUCCESS;
 		}
 	}
 	sys_unlock();
