@@ -2,7 +2,7 @@
 
     @file    StateOS: oslist.c
     @author  Rajmund Szymanski
-    @date    30.04.2021
+    @date    07.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -117,17 +117,25 @@ void lst_destroy( lst_t *lst )
 
 /* -------------------------------------------------------------------------- */
 static
+void *priv_lst_popFront( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	void *data = lst->head.next + 1;
+	lst->head.next = lst->head.next->next;
+	return data;
+}
+
+/* -------------------------------------------------------------------------- */
+static
 int priv_lst_take( lst_t *lst, void **data )
 /* -------------------------------------------------------------------------- */
 {
-	if (lst->head.next != NULL)
-	{
-		*data = lst->head.next + 1;
-		lst->head.next = lst->head.next->next;
-		return E_SUCCESS;
-	}
+	if (lst->head.next == NULL)
+		return E_TIMEOUT;
 
-	return E_TIMEOUT;
+	*data = priv_lst_popFront(lst);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -202,29 +210,44 @@ int lst_waitUntil( lst_t *lst, void **data, cnt_t time )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_lst_pushBack( lst_t *lst, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	que_t *ptr = &lst->head;
+	while (ptr->next) ptr = ptr->next;
+	ptr = ptr->next = (que_t *)data - 1;
+	ptr->next = NULL;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_lst_give( lst_t *lst, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk = core_one_wakeup(lst->obj.queue, E_SUCCESS);
+
+	if (tsk)
+	{
+		tsk->tmp.lst.data = data;
+	}
+	else
+	{
+		priv_lst_pushBack(lst, data);
+	}
+}
+
+/* -------------------------------------------------------------------------- */
 void lst_give( lst_t *lst, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *tsk;
-	que_t *ptr;
-
 	assert(lst);
 	assert(lst->obj.res!=RELEASED);
 	assert(data);
 
 	sys_lock();
 	{
-		tsk = core_one_wakeup(lst->obj.queue, E_SUCCESS);
-		if (tsk)
-		{
-			tsk->tmp.lst.data = data;
-		}
-		else
-		{
-			for (ptr = &lst->head; ptr->next; ptr = ptr->next);
-			ptr->next = (que_t *)data - 1;
-			ptr->next->next = NULL;
-		}
+		priv_lst_give(lst, data);
 	}
 	sys_unlock();
 }

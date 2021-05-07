@@ -2,7 +2,7 @@
 
     @file    StateOS: osmemorypool.c
     @author  Rajmund Szymanski
-    @date    30.04.2021
+    @date    07.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -38,17 +38,21 @@ static
 void priv_mem_bind( mem_t *mem )
 /* -------------------------------------------------------------------------- */
 {
-	que_t *ptr = mem->lst.head.next = mem->data;
-	size_t cnt = mem->limit;
+	que_t *ptr = &mem->lst.head;
+	que_t *data = mem->data;
 
+	assert(mem->limit);
 	assert(mem->size);
 	assert(mem->data);
 
-	while (--cnt > 0)
-		ptr = ptr->next = ptr + 1 + mem->size;
+	do
+	{
+		ptr = ptr->next = data;
+		data += 1 + mem->size;
+	}
+	while (--mem->limit > 0);
 
 	ptr->next = NULL;
-	mem->limit = 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -147,20 +151,28 @@ void mem_destroy( mem_t *mem )
 
 /* -------------------------------------------------------------------------- */
 static
+void *priv_lst_popFront( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	void *data = lst->head.next + 1;
+	lst->head.next = lst->head.next->next;
+	return data;
+}
+
+/* -------------------------------------------------------------------------- */
+static
 int priv_mem_take( mem_t *mem, void **data )
 /* -------------------------------------------------------------------------- */
 {
 	if (mem->limit)
 		priv_mem_bind(mem);
 
-	if (mem->lst.head.next != NULL)
-	{
-		*data = mem->lst.head.next + 1;
-		mem->lst.head.next = mem->lst.head.next->next;
-		return E_SUCCESS;
-	}
+	if (mem->lst.head.next == NULL)
+		return E_TIMEOUT;
 
-	return E_TIMEOUT;
+	*data = priv_lst_popFront(&mem->lst);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -235,32 +247,47 @@ int mem_waitUntil( mem_t *mem, void **data, cnt_t time )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_lst_pushBack( lst_t *lst, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	que_t *ptr = &lst->head;
+	while (ptr->next) ptr = ptr->next;
+	ptr = ptr->next = (que_t *)data - 1;
+	ptr->next = NULL;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_mem_give( mem_t *mem, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk = core_one_wakeup(mem->lst.obj.queue, E_SUCCESS);
+
+	if (tsk)
+	{
+		tsk->tmp.lst.data = data;
+	}
+	else
+	{
+		if (mem->limit)
+			priv_mem_bind(mem);
+
+		priv_lst_pushBack(&mem->lst, data);
+	}
+}
+
+/* -------------------------------------------------------------------------- */
 void mem_give( mem_t *mem, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *tsk;
-	que_t *ptr;
-
 	assert(mem);
 	assert(mem->lst.obj.res!=RELEASED);
 	assert(data);
 
 	sys_lock();
 	{
-		tsk = core_one_wakeup(mem->lst.obj.queue, E_SUCCESS);
-		if (tsk)
-		{
-			tsk->tmp.lst.data = data;
-		}
-		else
-		{
-			if (mem->limit)
-				priv_mem_bind(mem);
-
-			for (ptr = &mem->lst.head; ptr->next; ptr = ptr->next);
-			ptr->next = (que_t *)data - 1;
-			ptr->next->next = NULL;
-		}
+		priv_mem_give(mem, data);
 	}
 	sys_unlock();
 }
