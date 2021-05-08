@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.c
     @author  Rajmund Szymanski
-    @date    07.05.2021
+    @date    08.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -55,7 +55,7 @@ unsigned priv_mtx_take( mtx_t *mtx )
 	
 	mtx->owner = System.cur;
 
-	result = SUCCESS;
+	return SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
