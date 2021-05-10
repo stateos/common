@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.c
     @author  Rajmund Szymanski
-    @date    28.04.2021
+    @date    10.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -34,7 +34,7 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_tmr_init( tmr_t *tmr, fun_t *state, void *res )
+void priv_tmr_init( tmr_t *tmr, fun_t *state, void *arg, void *res )
 /* -------------------------------------------------------------------------- */
 {
 	memset(tmr, 0, sizeof(tmr_t));
@@ -43,6 +43,7 @@ void priv_tmr_init( tmr_t *tmr, fun_t *state, void *res )
 	core_hdr_init(&tmr->hdr);
 
 	tmr->state = state;
+	tmr->arg   = arg;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -54,7 +55,7 @@ void tmr_init( tmr_t *tmr, fun_t *state )
 
 	sys_lock();
 	{
-		priv_tmr_init(tmr, state, NULL);
+		priv_tmr_init(tmr, state, NULL, NULL);
 	}
 	sys_unlock();
 }
@@ -71,7 +72,7 @@ tmr_t *tmr_create( fun_t *state )
 	{
 		tmr = malloc(sizeof(tmr_t));
 		if (tmr)
-			priv_tmr_init(tmr, state, tmr);
+			priv_tmr_init(tmr, state, NULL, tmr);
 	}
 	sys_unlock();
 
@@ -90,10 +91,7 @@ tmr_t *tmr_setup( fun_t *proc, void *arg )
 	{
 		tmr = malloc(sizeof(tmr_t));
 		if (tmr)
-		{
-			priv_tmr_init(tmr, proc, tmr);
-			tmr->arg = arg;
-		}
+			priv_tmr_init(tmr, proc, arg, tmr);
 	}
 	sys_unlock();
 
