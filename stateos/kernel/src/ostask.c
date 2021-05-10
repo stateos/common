@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.c
     @author  Rajmund Szymanski
-    @date    28.04.2021
+    @date    10.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -34,7 +34,7 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t size, void *res, bool detached )
+void priv_wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, void *arg, stk_t *stack, size_t size, void *res, bool detached )
 /* -------------------------------------------------------------------------- */
 {
 	memset(tsk, 0, sizeof(tsk_t));
@@ -45,6 +45,7 @@ void priv_wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_
 	tsk->prio  = prio;
 	tsk->basic = prio;
 	tsk->state = state;
+	tsk->arg   = arg;
 	tsk->stack = stack;
 	tsk->size  = size;
 	tsk->owner = detached ? tsk : NULL;
@@ -52,7 +53,7 @@ void priv_wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_
 
 /* -------------------------------------------------------------------------- */
 static
-tsk_t *priv_wrk_create( unsigned prio, fun_t *state, size_t size, bool detached )
+tsk_t *priv_wrk_create( unsigned prio, fun_t *state, void *arg, size_t size, bool detached )
 /* -------------------------------------------------------------------------- */
 {
 	struct tsk_T { tsk_t tsk; stk_t buf[]; } *tmp;
@@ -62,7 +63,7 @@ tsk_t *priv_wrk_create( unsigned prio, fun_t *state, size_t size, bool detached 
 	bufsize = STK_OVER(size);
 	tmp = malloc(sizeof(struct tsk_T) + bufsize);
 	if (tmp)
-		priv_wrk_init(tsk = &tmp->tsk, prio, state, tmp->buf, bufsize, tmp, detached);
+		priv_wrk_init(tsk = &tmp->tsk, prio, state, arg, tmp->buf, bufsize, tmp, detached);
 
 	return tsk;
 }
@@ -78,7 +79,7 @@ void wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
 
 	sys_lock();
 	{
-		priv_wrk_init(tsk, prio, state, stack, size, NULL, false);
+		priv_wrk_init(tsk, prio, state, NULL, stack, size, NULL, false);
 	}
 	sys_unlock();
 }
@@ -95,7 +96,7 @@ void tsk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
 
 	sys_lock();
 	{
-		priv_wrk_init(tsk, prio, state, stack, size, NULL, false);
+		priv_wrk_init(tsk, prio, state, NULL, stack, size, NULL, false);
 		core_ctx_init(tsk);
 		core_tsk_insert(tsk);
 	}
@@ -113,7 +114,7 @@ tsk_t *wrk_create( unsigned prio, fun_t *state, size_t size, bool detached, bool
 
 	sys_lock();
 	{
-		tsk = priv_wrk_create(prio, state, size, detached);
+		tsk = priv_wrk_create(prio, state, NULL, size, detached);
 		if (tsk && autostart)
 		{
 			assert(state);
@@ -138,10 +139,9 @@ tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size )
 
 	sys_lock();
 	{
-		tsk = priv_wrk_create(prio, proc, size, false);
+		tsk = priv_wrk_create(prio, proc, arg, size, false);
 		if (tsk)
 		{
-			tsk->arg = arg;
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
 		}
