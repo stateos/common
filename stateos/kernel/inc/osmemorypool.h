@@ -2,7 +2,7 @@
 
     @file    StateOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    30.04.2021
+    @date    11.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -56,6 +56,9 @@ struct __mem
 	unsigned limit; // size of a memory pool (depth of memory pool buffer)
 	unsigned size;  // size of memory object (in sizeof(que_t) units)
 	que_t  * data;  // pointer to memory pool buffer
+#ifndef __cplusplus
+	que_t    buffer[];
+#endif
 };
 
 #ifdef __cplusplus

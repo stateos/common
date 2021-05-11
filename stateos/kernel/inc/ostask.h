@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    05.05.2021
+    @date    11.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -152,6 +152,9 @@ struct __tsk
 #define _PORT_DATA_INIT()
 #else
 	    _PORT_DATA();
+#endif
+#ifndef __cplusplus
+	stk_t    buffer[];
 #endif
 };
 

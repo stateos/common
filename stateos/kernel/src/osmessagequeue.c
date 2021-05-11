@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.c
     @author  Rajmund Szymanski
-    @date    04.05.2021
+    @date    11.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -77,8 +77,7 @@ void msg_init( msg_t *msg, size_t size, void *data, size_t bufsize )
 msg_t *msg_create( unsigned limit, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	struct msg_T { msg_t msg; char buf[]; } *tmp;
-	msg_t *msg = NULL;
+	msg_t *msg;
 	size_t bufsize;
 
 	assert_tsk_context();
@@ -88,9 +87,9 @@ msg_t *msg_create( unsigned limit, size_t size )
 	sys_lock();
 	{
 		bufsize = limit * (sizeof(size_t) + size);
-		tmp = malloc(sizeof(struct msg_T) + bufsize);
-		if (tmp)
-			priv_msg_init(msg = &tmp->msg, size, tmp->buf, bufsize, tmp);
+		msg = malloc(sizeof(msg_t) + bufsize);
+		if (msg)
+			priv_msg_init(msg, size, msg->buffer, bufsize, msg);
 	}
 	sys_unlock();
 

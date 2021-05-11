@@ -2,7 +2,7 @@
 
     @file    StateOS: osstreambuffer.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    11.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -53,6 +53,9 @@ struct __stm
 	size_t   head;  // first element to read from data buffer
 	size_t   tail;  // first element to write into data buffer
 	char *   data;  // data buffer
+#ifndef __cplusplus
+	char     buffer[];
+#endif
 };
 
 #ifdef __cplusplus
