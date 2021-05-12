@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    11.05.2021
+    @date    02.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -54,9 +54,6 @@ struct __msg
 	size_t   head;  // index to read from the data buffer (in bytes)
 	size_t   tail;  // index to write to the data buffer (in bytes)
 	char *   data;  // data buffer
-#ifndef __cplusplus
-	char     buffer[];
-#endif
 };
 
 #ifdef __cplusplus

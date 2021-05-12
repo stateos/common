@@ -2,7 +2,7 @@
 
     @file    StateOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    11.05.2021
+    @date    03.04.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -53,9 +53,6 @@ struct __evq
 	unsigned head;  // first element to read from data buffer
 	unsigned tail;  // first element to write into data buffer
 	unsigned*data;  // data buffer
-#ifndef __cplusplus
-	unsigned buffer[];
-#endif
 };
 
 #ifdef __cplusplus
