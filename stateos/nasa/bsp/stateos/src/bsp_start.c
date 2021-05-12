@@ -119,11 +119,13 @@ int OS_BSP_Main(void)
 {
     /*
      * Perform BSP-specific initialization
+     * Currently BSP-specific initialization is performed in the API_Init function
      */
     // OS_BSP_Init();
 
     /*
      * Call application specific entry point.
+     * This should set up all user tasks and resources, then return
      */
     OS_Application_Startup();
 
