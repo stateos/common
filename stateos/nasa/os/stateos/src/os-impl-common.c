@@ -43,6 +43,8 @@ OS_impl_GlobalVars_t OS_impl_GlobalVars;
                                      IMPLEMENTATION
  ***************************************************************************************/
 
+void OS_BSP_Init(void);
+
 /*----------------------------------------------------------------
  *
  * Function: OS_API_Impl_Init
@@ -63,6 +65,7 @@ int32 OS_API_Impl_Init(osal_objtype_t idtype)
     {
         case OS_OBJECT_TYPE_UNDEFINED:
             memset(&OS_impl_GlobalVars, 0, sizeof(OS_impl_GlobalVars));
+            OS_BSP_Init();
             break;
         case OS_OBJECT_TYPE_OS_TASK:
             return_code = OS_TaskAPI_Impl_Init();

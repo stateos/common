@@ -33,22 +33,60 @@
 #include "os.h"
 #include "bsp_internal.h"
 
+/*
+** Global variables
+*/
+OS_BSP_impl_GlobalData_t OS_BSP_impl_Global;
+
 /* ---------------------------------------------------------
-    OS_BSP_Setup()
+    OS_BSP_Init()
 
      Helper function
    --------------------------------------------------------- */
-__WEAK void OS_BSP_Setup(void)
+void OS_BSP_Init(void)
 {
+    /*
+     * Initially clear the global objects
+     */
+    memset(&OS_BSP_Global, 0, sizeof(OS_BSP_Global));
+    memset(&OS_BSP_impl_Global, 0, sizeof(OS_BSP_impl_Global));
+
+    /* Initialize the low level access mutex (w/priority inheritance) */
+    OS_BSP_impl_Global.AccessMutex = mtx_create(mtxErrorCheck + mtxPrioInherit, 0);
+    if (OS_BSP_impl_Global.AccessMutex == NULL)
+    {
+        BSP_DEBUG("mutex create failed\n");
+    }
 }
 
-/* ---------------------------------------------------------
-    OS_Application_Setup()
-
-     Helper function
-   --------------------------------------------------------- */
-__WEAK void OS_Application_Setup(void)
+/*----------------------------------------------------------------
+   OS_BSP_Lock_Impl
+   See full description in header
+ ------------------------------------------------------------------*/
+void OS_BSP_Lock_Impl(void)
 {
+    int status;
+
+    status = mtx_lock(OS_BSP_impl_Global.AccessMutex);
+    if (status != E_SUCCESS)
+    {
+        BSP_DEBUG("mutex lock errno: %d\n", status);
+    }
+}
+
+/*----------------------------------------------------------------
+   OS_BSP_Unlock_Impl
+   See full description in header
+ ------------------------------------------------------------------*/
+void OS_BSP_Unlock_Impl(void)
+{
+    int status;
+
+    status = mtx_unlock(OS_BSP_impl_Global.AccessMutex);
+    if (status != E_SUCCESS)
+    {
+        BSP_DEBUG("mutex unlock errno: %d\n", status);
+    }
 }
 
 /* ---------------------------------------------------------
@@ -80,25 +118,14 @@ void OS_BSP_Shutdown_Impl(void)
 int OS_BSP_Main(void)
 {
     /*
-     * Initially clear the global object (this contains return code)
+     * Perform BSP-specific initialization
      */
-    memset(&OS_BSP_Global, 0, sizeof(OS_BSP_Global));
-
-    /*
-     * Hardware setup
-     */
-    OS_BSP_Setup();
+    // OS_BSP_Init();
 
     /*
      * Call application specific entry point.
-     * This should set up all user tasks and resources, then return
      */
     OS_Application_Startup();
-
-    /*
-     * Application setup
-     */
-    OS_Application_Setup();
 
     /*
      * OS_Application_Run() implements the background task.

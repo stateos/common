@@ -32,5 +32,19 @@
 ** OSAL includes
 */
 #include "bsp-impl.h"
+#include "os.h"
+
+/*
+** BSP types
+*/
+typedef struct
+{
+    mtx_t *AccessMutex;
+} OS_BSP_impl_GlobalData_t;
+
+/*
+ * Global Data object
+ */
+extern OS_BSP_impl_GlobalData_t OS_BSP_impl_Global;
 
 #endif /* BSP_INTERNAL_H */
