@@ -1,103 +1,97 @@
-/******************************************************************************
+// <semaphore> -*- C++ -*-
 
-    @file    StateOS: semaphore.hh
-    @author  Rajmund Szymanski
-    @date    09.04.2021
-    @brief   This file contains definitions for StateOS.
+// Copyright (C) 2020-2021 Free Software Foundation, Inc.
+//
+// This file is part of the GNU ISO C++ Library.  This library is free
+// software; you can redistribute it and/or modify it under the
+// terms of the GNU General Public License as published by the
+// Free Software Foundation; either version 3, or (at your option)
+// any later version.
 
- ******************************************************************************
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-   Copyright (c) 2018-2021 Rajmund Szymanski. All rights reserved.
+// Under Section 7 of GPL version 3, you are granted additional
+// permissions described in the GCC Runtime Library Exception, version
+// 3.1, as published by the Free Software Foundation.
 
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to
-   deal in the Software without restriction, including without limitation the
-   rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-   sell copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
+// You should have received a copy of the GNU General Public License and
+// a copy of the GCC Runtime Library Exception along with this program;
+// see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+// <http://www.gnu.org/licenses/>.
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+// ---------------------------------------------------
+// Modified by Rajmund Szymanski @ StateOS, 12.05.2021
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-   IN THE SOFTWARE.
+#ifndef _GLIBCXX_SEMAPHORE
+#define _GLIBCXX_SEMAPHORE 1
 
- ******************************************************************************/
+#pragma GCC system_header
 
-#ifndef __STATEOS_SEMAPHORE_HH
-#define __STATEOS_SEMAPHORE_HH
-
+#if __cplusplus > 201703L
 #include "inc/ossemaphore.h"
 #include "inc/chrono.hh"
 
-namespace std {
-
-/******************************************************************************
- *
- * Class             : std::counting_semaphore
- *                   : std::binary_semaphore
- *                   : std::semaphore
- *
- ******************************************************************************/
-
-template<ptrdiff_t least_max_value = numeric_limits<ptrdiff_t>::max()>
-struct counting_semaphore : public __sem
+namespace std _GLIBCXX_VISIBILITY(default)
 {
-	constexpr explicit
-	counting_semaphore( const ptrdiff_t desired = 0 ) :
-	__sem _SEM_INIT(static_cast<unsigned>(desired), static_cast<unsigned>(least_max_value))
-	{ static_assert(least_max_value >= 0 && least_max_value <= semCounting); }
+_GLIBCXX_BEGIN_NAMESPACE_VERSION
 
-	~counting_semaphore() = default;
+  using __semaphore_impl = sem_t;
 
-	counting_semaphore( counting_semaphore&& ) = default;
-	counting_semaphore( const counting_semaphore& ) = delete;
-	counting_semaphore& operator=( counting_semaphore&& ) = delete;
-	counting_semaphore& operator=( const counting_semaphore& ) = delete;
+  #define __cpp_lib_semaphore 201907L
 
-	void release()
-	{
-		sem_post(this);
-	}
-	
-	void release( ptrdiff_t _num )
-	{
-		sem_giveNum(this, static_cast<unsigned>(_num));
-	}
-	
-	void acquire()
-	{
-		sem_wait(this);
-	}
-	
-	bool try_acquire() noexcept
-	{
-		return sem_tryWait(this) == E_SUCCESS;
-	}
+  template<ptrdiff_t __least_max_value = numeric_limits<ptrdiff_t>::max()>
+  class counting_semaphore
+  {
+    static_assert(__least_max_value >= 0);
+    static_assert(__least_max_value <= semCounting);
 
-	template<class Rep, class Period>
-	bool try_acquire_for( const chrono::duration<Rep, Period>& _delay )
-	{
-		return sem_waitFor(this, chrono::systick::count(_delay)) == E_SUCCESS;
-	}
-	
-	template<class Clock, class Duration>
-	bool try_acquire_until( const chrono::time_point<Clock, Duration>& _time )
-	{
-		return sem_waitUntil(this, chrono::systick::until(_time)) == E_SUCCESS;
-	}
+    __semaphore_impl _M_sem;
 
-	static constexpr ptrdiff_t max() noexcept { return least_max_value; }
-};
+  public:
+    explicit counting_semaphore(ptrdiff_t __desired = 0) noexcept
+    : _M_sem(_SEM_INIT(__desired, __least_max_value))
+    { }
 
-using direct_semaphore = counting_semaphore<0>;
-using binary_semaphore = counting_semaphore<1>;
-using        semaphore = counting_semaphore<>;
+    ~counting_semaphore() = default;
 
-}     //  namespace std
-#endif//__STATEOS_SEMAPHORE_HH
+    counting_semaphore(const counting_semaphore&) = delete;
+    counting_semaphore& operator=(const counting_semaphore&) = delete;
+
+    static constexpr ptrdiff_t
+    max() noexcept
+    { return __least_max_value; }
+
+    void
+    release(ptrdiff_t __update = 1) noexcept(noexcept(sem_giveNum(&_M_sem, 1)))
+    { sem_giveNum(&_M_sem, static_cast<unsigned>(__update)); }
+
+    void
+    acquire() noexcept(noexcept(sem_wait(&_M_sem)))
+    { sem_wait(&_M_sem); }
+
+    bool
+    try_acquire() noexcept(noexcept(sem_tryWait(&_M_sem)))
+    { return sem_tryWait(&_M_sem) == E_SUCCESS; }
+
+    template<typename _Rep, typename _Period>
+    bool
+    try_acquire_for(const std::chrono::duration<_Rep, _Period>& __rtime)
+    { return sem_waitFor(&_M_sem, chrono::systick::count(__rtime)) == E_SUCCESS; }
+
+    template<typename _Clock, typename _Dur>
+    bool
+    try_acquire_until(const std::chrono::time_point<_Clock, _Dur>& __atime)
+    { return sem_waitUntil(&_M_sem, chrono::systick::until(__atime)) == E_SUCCESS; }
+  };
+
+  using direct_semaphore = std::counting_semaphore<0>;
+  using binary_semaphore = std::counting_semaphore<1>;
+  using        semaphore = std::counting_semaphore< >;
+
+_GLIBCXX_END_NAMESPACE_VERSION
+} // namespace
+#endif // C++20
+#endif // _GLIBCXX_SEMAPHORE
