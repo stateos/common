@@ -19,7 +19,4 @@ jobs:
       uses: deep5050/cppcheck-action@main
       with:
         github_token: ${{ secrets.GITHUB_TOKEN}}
-        exclude_check:
-          ./api
-          ./cmsis
-          ./hal
+        exclude_check: ['./api/' './cmsis/' './hal/']
