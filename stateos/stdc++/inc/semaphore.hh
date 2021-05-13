@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 12.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 13.05.2021
 
 #ifndef _GLIBCXX_SEMAPHORE
 #define _GLIBCXX_SEMAPHORE 1
@@ -65,8 +65,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     { return __least_max_value; }
 
     void
-    release(ptrdiff_t __update = 1) noexcept(noexcept(sem_giveNum(&_M_sem, 1)))
-    { sem_giveNum(&_M_sem, static_cast<unsigned>(__update)); }
+    release(ptrdiff_t __update = 1) noexcept(noexcept(sem_release(&_M_sem, 1)))
+    { sem_release(&_M_sem, static_cast<unsigned>(__update)); }
 
     void
     acquire() noexcept(noexcept(sem_wait(&_M_sem)))

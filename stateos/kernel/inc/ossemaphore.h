@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    13.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -431,8 +431,8 @@ int sem_giveAsync( sem_t *sem );
 
 /******************************************************************************
  *
- * Name              : sem_giveNum
- * ISR alias         : sem_giveNumISR
+ * Name              : sem_release
+ * ISR alias         : sem_releaseISR
  *
  * Description       : try to increment the internal semaphore counter by the value of num
  *
@@ -449,10 +449,10 @@ int sem_giveAsync( sem_t *sem );
  *
  ******************************************************************************/
 
-int sem_giveNum( sem_t *sem, unsigned num );
+int sem_release( sem_t *sem, unsigned num );
 
 __STATIC_INLINE
-int sem_giveNumISR( sem_t *sem, unsigned num ) { return sem_giveNum(sem, num); }
+int sem_releaseISR( sem_t *sem, unsigned num ) { return sem_release(sem, num); }
 
 /******************************************************************************
  *
@@ -522,8 +522,8 @@ struct Semaphore : public __sem
 	int      give      ()                  { return sem_give      (this); }
 	int      post      ()                  { return sem_post      (this); }
 	int      giveISR   ()                  { return sem_giveISR   (this); }
-	int      giveNum   ( unsigned _num )   { return sem_giveNum   (this, _num); }
-	int      giveNumISR( unsigned _num )   { return sem_giveNumISR(this, _num); }
+	int      release   ( unsigned _num )   { return sem_release   (this, _num); }
+	int      releaseISR( unsigned _num )   { return sem_releaseISR(this, _num); }
 	unsigned getValue  ()                  { return sem_getValue  (this); }
 #if OS_ATOMICS
 	int      takeAsync ()                  { return sem_takeAsync (this); }

@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.c
     @author  Rajmund Szymanski
-    @date    04.05.2021
+    @date    13.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -124,7 +124,7 @@ unsigned sem_give( sem_t *sem )
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_sem_giveNum( sem_t *sem, unsigned num )
+unsigned priv_sem_release( sem_t *sem, unsigned num )
 /* -------------------------------------------------------------------------- */
 {
 	if (num > sem->limit - sem->count)
@@ -140,7 +140,7 @@ unsigned priv_sem_giveNum( sem_t *sem, unsigned num )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned sem_giveNum( sem_t *sem, unsigned num )
+unsigned sem_release( sem_t *sem, unsigned num )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned result;
@@ -151,7 +151,7 @@ unsigned sem_giveNum( sem_t *sem, unsigned num )
 
 	sys_lock();
 	{
-		result = priv_sem_giveNum(sem, num);
+		result = priv_sem_release(sem, num);
 	}
 	sys_unlock();
 
