@@ -1,4 +1,5 @@
 ## Common submodule for embedded applications
+  [![CI](https://github.com/stateos/common/actions/workflows/cppcheck.yml/badge.svg)](https://github.com/stateos/common/actions/workflows/cppcheck.yml)
 
 ### OS / RTOS
 
