@@ -53,7 +53,7 @@ DEPS       := $(OBJS:.o=.d)
 
 ifneq (clean,$(MAKECMDGOALS))
 COMMON_F   += -mmcu=$(TARGET_DEVICE)
-COMMON_F   += -O$(OPTF) -ffunction-sections -fdata-sections
+COMMON_F   += -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 COMMON_F   += -mno-gas-isr-prologues
@@ -90,8 +90,17 @@ CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
-COMMON_F   += -g -ggdb
+COMMON_F   += -O$(OPTF) -g -ggdb
+DEFS       := $(DEFS:NDEBUG=)
+DEFS       := $(DEFS:MINSIZE=)
 else
+ifneq ($(filter MINSIZE,$(DEFS)),)
+$(info Using minsize)
+DEFS       := $(DEFS:MINSIZE=)
+COMMON_F   += -Os
+else
+COMMON_F   += -O$(OPTF)
+endif
 ifeq  ($(filter NDEBUG,$(DEFS)),)
 DEFS       += NDEBUG
 endif

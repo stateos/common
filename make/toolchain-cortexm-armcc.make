@@ -63,7 +63,7 @@ INCS       += $(abspath $(ARMCC)../../RV31/INC)
 ifneq (clean,$(MAKECMDGOALS))
 COMMON_F   += --thumb --cpu=$(TARGET_CORE)
 COMMON_F   += --md --depend=$(@:.o=.d) # --feedback=$(FED)
-OPTIM_F    += -O$(OPTF) --split_sections # --interleave
+OPTIM_F    += --split_sections # --interleave
 AS_FLAGS   +=#--list=$(@:.o=.lst)
 C_FLAGS    += --c$(STDC)     --forceinline # --asm --asm_dir=$(@D) # --list --list_dir=$(@D)
 CXX_FLAGS  += --cpp$(STDCXX) --forceinline # --asm --asm_dir=$(@D) # --list --list_dir=$(@D)
@@ -79,8 +79,17 @@ LD_FLAGS   += --library_type=microlib
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
-COMMON_F   += --debug
+COMMON_F   += -O$(OPTF) --debug
+DEFS       := $(DEFS:NDEBUG=)
+DEFS       := $(DEFS:MINSIZE=)
 else
+ifneq ($(filter MINSIZE,$(DEFS)),)
+$(info Using minsize)
+DEFS       := $(DEFS:MINSIZE=)
+COMMON_F   += -Ospace
+else
+COMMON_F   += -O$(OPTF)
+endif
 ifeq  ($(filter NDEBUG,$(DEFS)),)
 DEFS       += NDEBUG
 endif

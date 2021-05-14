@@ -62,7 +62,7 @@ INCS       += $(abspath $(CLANG)../../RV31/INC)
 
 ifneq (clean,$(MAKECMDGOALS))
 COMMON_F   += --target=arm-arm-none-eabi -mthumb -mcpu=$(TARGET_CORE)
-COMMON_F   += -O$(OPTF) -ffunction-sections -fdata-sections
+COMMON_F   += -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 AS_FLAGS   += -xassembler-with-cpp
 LD_FLAGS   += --strict
@@ -110,8 +110,17 @@ COMMON_F   += -Wno-gnu-zero-variadic-macro-arguments
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
-COMMON_F   += --debug
+COMMON_F   += -O$(OPTF) --debug
+DEFS       := $(DEFS:NDEBUG=)
+DEFS       := $(DEFS:MINSIZE=)
 else
+ifneq ($(filter MINSIZE,$(DEFS)),)
+$(info Using minsize)
+DEFS       := $(DEFS:MINSIZE=)
+COMMON_F   += -Oz
+else
+COMMON_F   += -O$(OPTF)
+endif
 ifeq  ($(filter NDEBUG,$(DEFS)),)
 DEFS       += NDEBUG
 endif

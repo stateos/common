@@ -56,7 +56,7 @@ DEPS       := $(OBJS:.o=.d)
 
 ifneq (clean,$(MAKECMDGOALS))
 CORE_F     += --cpu $(TARGET_CORE)
-COMMON_F   += --thumb -O$(OPTF) -e --dependencies=m $(BUILD)$<.d
+COMMON_F   += --thumb -e --dependencies=m $(BUILD)$<.d
 AS_FLAGS   += -S -s+ -w+
 C_FLAGS    += --silent
 CXX_FLAGS  += --silent --c++ --enable_restrict --no_rtti
@@ -81,8 +81,17 @@ LD_FLAGS   += --semihosting
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
-COMMON_F   += --debug
+COMMON_F   += -O$(OPTF) --debug
+DEFS       := $(DEFS:NDEBUG=)
+DEFS       := $(DEFS:MINSIZE=)
 else
+ifneq ($(filter MINSIZE,$(DEFS)),)
+$(info Using minsize)
+DEFS       := $(DEFS:MINSIZE=)
+COMMON_F   += -Ohz
+else
+COMMON_F   += -O$(OPTF)
+endif
 ifeq  ($(filter NDEBUG,$(DEFS)),)
 DEFS       += NDEBUG
 endif
