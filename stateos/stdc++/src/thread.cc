@@ -47,17 +47,19 @@ int __gthread_key_create(__gthread_key_t *keyp, void (*dtor)(void *))
 {
   assert(keyp);
   std::lock_guard<std::mutex> lock(key_mutex);
-  return key_map.insert({ *keyp = new oskey_t(), dtor }).second ? 0 : 1;
+  auto ptr = std::make_unique<oskey_t>();
+  if (!ptr || !key_map.insert({ ptr.get(), dtor }).second)
+    return 1;
+  *keyp = ptr.release();
+  return 0;
 }
 
 int __gthread_key_delete(__gthread_key_t key)
 {
   assert(key);
   std::lock_guard<std::mutex> lock(key_mutex);
-  if (key_map.erase(key) == 0)
-    return 1;
-  delete key;
-  return 0;
+  auto ptr = std::unique_ptr<oskey_t>(key);
+  return key_map.erase(key) != 0 ? 0 : 1;
 }
 
 void *__gthread_getspecific(__gthread_key_t key)
