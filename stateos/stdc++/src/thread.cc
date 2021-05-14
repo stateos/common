@@ -59,7 +59,7 @@ int __gthread_key_delete(__gthread_key_t key)
   assert(key);
   std::lock_guard<std::mutex> lock(key_mutex);
   auto ptr = std::unique_ptr<oskey_t>(key);
-  return key_map.erase(key) != 0 ? 0 : 1;
+  return key_map.erase(ptr.get()) != 0 ? 0 : 1;
 }
 
 void *__gthread_getspecific(__gthread_key_t key)
