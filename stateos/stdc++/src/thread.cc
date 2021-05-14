@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 23.04.2021
+// Modified by Rajmund Szymanski @ StateOS, 14.05.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
@@ -54,8 +54,10 @@ int __gthread_key_delete(__gthread_key_t key)
 {
   assert(key);
   std::lock_guard<std::mutex> lock(key_mutex);
+  if (key_map.erase(key) == 0)
+    return 1;
   delete key;
-  return key_map.erase(key) != 0 ? 0 : 1;
+  return 0;
 }
 
 void *__gthread_getspecific(__gthread_key_t key)
