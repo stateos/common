@@ -2,7 +2,7 @@
 
     @file    StateOS: osalloc.c
     @author  Rajmund Szymanski
-    @date    02.05.2021
+    @date    15.05.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -96,9 +96,9 @@ void *priv_alloc( size_t alignment, size_t size )
 	//	memory segment has already been allocated
 			continue;
 
-		while (nxt = mem->next, nxt->owner != NULL)
+		while (mem->next->owner != NULL)
 	//	it is possible to merge adjacent free memory segments
-			mem->next = nxt->next;
+			mem->next = mem->next->next;
 
 		nxt = (seg_t *)ALIGNED_OFFSET(mem, sizeof(seg_t), alignment);
 
@@ -183,9 +183,9 @@ void *priv_realloc( void *ptr, size_t size )
 	//	memory segment is not allocated
 			return NULL;
 
-		while (nxt = mem->next, nxt->owner != NULL)
+		while (mem->next->owner != NULL)
 	//	it is possible to attach adjacent free memory segment
-			mem->next = nxt->next;
+			mem->next = mem->next->next;
 
 		if (mem + len < mem->next)
 		{
@@ -226,7 +226,6 @@ static
 size_t priv_size( void )
 {
 	seg_t *mem;
-	seg_t *nxt;
 	size_t size = 0;
 
 	for (mem = priv_init(); mem != NULL; mem = mem->next)
@@ -235,9 +234,9 @@ size_t priv_size( void )
 	//	memory segment has already been allocated
 			continue;
 
-		while (nxt = mem->next, nxt->owner != NULL)
+		while (mem->next->owner != NULL)
 	//	it is possible to merge adjacent free memory segments
-			mem->next = nxt->next;
+			mem->next = mem->next->next;
 
 		size += (uintptr_t)mem->next - (uintptr_t)mem - sizeof(seg_t);
 	}
