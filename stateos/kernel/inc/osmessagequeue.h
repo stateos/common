@@ -49,7 +49,7 @@ struct __msg
 
 	size_t   count; // size of used memory in the message queue buffer (in bytes)
 	size_t   limit; // size of the message queue buffer (in bytes)
-	size_t   size;  // max size of a single message with precedind size of the maeesage (in bytes)
+	size_t   size;  // max size of a single message with preceding size of the maeesage (in bytes)
 
 	size_t   head;  // index to read from the data buffer (in bytes)
 	size_t   tail;  // index to write to the data buffer (in bytes)
