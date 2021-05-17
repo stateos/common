@@ -113,7 +113,7 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_MEM_BUFFER( buf, limit, size ) \
+#define             OS_MSG_BUFFER( buf, limit, size ) \
                        char buf[limit * (sizeof(size_t) + size)]
 
 /******************************************************************************
