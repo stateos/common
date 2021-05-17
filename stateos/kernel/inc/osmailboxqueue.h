@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    17.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -101,7 +101,24 @@ extern "C" {
 
 /******************************************************************************
  *
+ * Name              : OS_BOX_BUFFER
+ *
+ * Description       : define mailbox queue data buffer
+ *
+ * Parameters
+ *   buf             : name of the buffer (passed to the init function)
+ *   limit           : size of a queue (max number of stored mails)
+ *   size            : size of a single mail (in bytes)
+ *
+ ******************************************************************************/
+
+#define             OS_BOX_BUFFER( buf, limit, size ) \
+                       char buf[limit * size]
+
+/******************************************************************************
+ *
  * Name              : OS_BOX
+ * Static alias      : static_BOX
  *
  * Description       : define and initialize a mailbox queue object
  *
@@ -116,19 +133,6 @@ extern "C" {
                        char box##__buf[limit * size];                          \
                        box_t box##__box = _BOX_INIT( limit, size, box##__buf ); \
                        box_id box = & box##__box
-
-/******************************************************************************
- *
- * Name              : static_BOX
- *
- * Description       : define and initialize a static mailbox queue object
- *
- * Parameters
- *   box             : name of a pointer to mailbox queue object
- *   limit           : size of a queue (max number of stored mails)
- *   size            : size of a single mail (in bytes)
- *
- ******************************************************************************/
 
 #define         static_BOX( box, limit, size )                                \
                 static char box##__buf[limit * size];                          \

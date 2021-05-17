@@ -244,7 +244,7 @@ extern "C" {
  * Description       : define task stack
  *
  * Parameters
- *   stk             : name of the stack
+ *   stk             : name of the stack (passed to the init function)
  *   size            : (optional) size of task stack (in bytes); default: OS_STACK_SIZE
  *
  ******************************************************************************/
@@ -378,7 +378,7 @@ extern "C" {
  * Description       : define task static stack
  *
  * Parameters
- *   stk             : name of the stack
+ *   stk             : name of the stack (passed to the init function)
  *   size            : (optional) size of task stack (in bytes); default: OS_STACK_SIZE
  *
  ******************************************************************************/

@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    17.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -95,7 +95,23 @@ extern "C" {
 
 /******************************************************************************
  *
+ * Name              : OS_EVQ_BUFFER
+ *
+ * Description       : define event queue data buffer
+ *
+ * Parameters
+ *   buf             : name of the buffer (passed to the init function)
+ *   limit           : size of a queue (max number of stored events)
+ *
+ ******************************************************************************/
+
+#define             OS_EVQ_BUFFER( buf, limit ) \
+                       unsigned buf[limit]
+
+/******************************************************************************
+ *
  * Name              : OS_EVQ
+ * Static alias      : static_EVQ
  *
  * Description       : define and initialize an event queue object
  *
@@ -109,18 +125,6 @@ extern "C" {
                        unsigned evq##__buf[limit];                       \
                        evq_t evq##__evq = _EVQ_INIT( limit, evq##__buf ); \
                        evq_id evq = & evq##__evq
-
-/******************************************************************************
- *
- * Name              : static_EVQ
- *
- * Description       : define and initialize a static event queue object
- *
- * Parameters
- *   evq             : name of a pointer to event queue object
- *   limit           : size of a queue (max number of stored events)
- *
- ******************************************************************************/
 
 #define         static_EVQ( evq, limit )                                \
                 static unsigned evq##__buf[limit];                       \

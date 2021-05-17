@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    02.05.2021
+    @date    17.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -102,7 +102,24 @@ extern "C" {
 
 /******************************************************************************
  *
+ * Name              : OS_MSG_BUFFER
+ *
+ * Description       : define message queue data buffer
+ *
+ * Parameters
+ *   buf             : name of the buffer (passed to the init function)
+ *   limit           : size of a queue (max number of stored messages)
+ *   size            : max size of a single message (in bytes)
+ *
+ ******************************************************************************/
+
+#define             OS_MEM_BUFFER( buf, limit, size ) \
+                       char buf[limit * (sizeof(size_t) + size)]
+
+/******************************************************************************
+ *
  * Name              : OS_MSG
+ * Static alias      : static_MSG
  *
  * Description       : define and initialize a message queue object
  *
@@ -117,19 +134,6 @@ extern "C" {
                        char msg##__buf[limit * (sizeof(size_t) + size)];       \
                        msg_t msg##__msg = _MSG_INIT( limit, size, msg##__buf ); \
                        msg_id msg = & msg##__msg
-
-/******************************************************************************
- *
- * Name              : static_MSG
- *
- * Description       : define and initialize a static message queue object
- *
- * Parameters
- *   msg             : name of a pointer to message queue object
- *   limit           : size of a queue (max number of stored messages)
- *   size            : max size of a single message (in bytes)
- *
- ******************************************************************************/
 
 #define         static_MSG( msg, limit, size )                                \
                 static char msg##__buf[limit * (sizeof(size_t) + size)];       \

@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    17.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -98,7 +98,23 @@ extern "C" {
 
 /******************************************************************************
  *
+ * Name              : OS_JOB_BUFFER
+ *
+ * Description       : define job queue data buffer
+ *
+ * Parameters
+ *   buf             : name of the buffer (passed to the init function)
+ *   size            : size of a queue (max number of stored job procedures)
+ *
+ ******************************************************************************/
+
+#define             OS_JOB_BUFFER( buf, size ) \
+                       fun_t *buf[size]
+
+/******************************************************************************
+ *
  * Name              : OS_JOB
+ * Static alias      : static_JOB
  *
  * Description       : define and initialize a job queue object
  *
@@ -112,18 +128,6 @@ extern "C" {
                        fun_t *job##__buf[limit];                         \
                        job_t job##__job = _JOB_INIT( limit, job##__buf ); \
                        job_id job = & job##__job
-
-/******************************************************************************
- *
- * Name              : static_JOB
- *
- * Description       : define and initialize a static job queue object
- *
- * Parameters
- *   job             : name of a pointer to job queue object
- *   limit           : size of a queue (max number of stored job procedures)
- *
- ******************************************************************************/
 
 #define         static_JOB( job, limit )                                \
                 static fun_t *job##__buf[limit];                         \

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    30.04.2021
+    @date    17.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -102,7 +102,24 @@ extern "C" {
 
 /******************************************************************************
  *
+ * Name              : OS_MEM_BUFFER
+ *
+ * Description       : define memory pool data buffer
+ *
+ * Parameters
+ *   buf             : name of the buffer (passed to the init function)
+ *   limit           : size of a buffer (max number of objects)
+ *   size            : size of memory object (in bytes)
+ *
+ ******************************************************************************/
+
+#define             OS_MEM_BUFFER( buf, limit, size ) \
+                       que_t buf[limit * (1 + MEM_SIZE(size))]
+
+/******************************************************************************
+ *
  * Name              : OS_MEM
+ * Static alias      : static_MEM
  *
  * Description       : define and initialize a memory pool object
  *
@@ -117,19 +134,6 @@ extern "C" {
                        que_t mem##__buf[limit * (1 + MEM_SIZE(size))];                   \
                        mem_t mem##__mem = _MEM_INIT( limit, MEM_SIZE(size), mem##__buf ); \
                        mem_id mem = & mem##__mem
-
-/******************************************************************************
- *
- * Name              : static_MEM
- *
- * Description       : define and initialize a static memory pool object
- *
- * Parameters
- *   mem             : name of a pointer to memory pool object
- *   limit           : size of a buffer (max number of objects)
- *   size            : size of memory object (in bytes)
- *
- ******************************************************************************/
 
 #define         static_MEM( mem, limit, size )                                          \
                 static que_t mem##__buf[limit * (1 + MEM_SIZE(size))];                   \

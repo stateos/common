@@ -2,7 +2,7 @@
 
     @file    StateOS: osstreambuffer.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    17.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -110,14 +110,31 @@ extern "C" {
 
 /******************************************************************************
  *
+ * Name              : OS_STM_BUFFER
+ *
+ * Description       : define stream data buffer
+ *
+ * Parameters
+ *   buf             : name of the buffer (passed to the init function)
+ *   limit           : size of a buffer (max number of stored bytes / objects)
+ *   size            : (optional) size of the object (in bytes); default: 1
+ *
+ ******************************************************************************/
+
+#define             OS_STM_BUFFER( buf, limit, ... ) \
+                       char buf[_VA_STM(limit, __VA_ARGS__)]
+
+/******************************************************************************
+ *
  * Name              : OS_STM
+ * Static alias      : static_STM
  *
  * Description       : define and initialize a stream buffer object
  *
  * Parameters
  *   stm             : name of a pointer to stream buffer object
  *   limit           : size of a buffer (max number of stored bytes / objects)
- *   type            : (optional) size of the object (in bytes); default: 1
+ *   size            : (optional) size of the object (in bytes); default: 1
  *
  ******************************************************************************/
 
@@ -125,19 +142,6 @@ extern "C" {
                        char stm##__buf[_VA_STM(limit, __VA_ARGS__)];                           \
                        stm_t stm##__stm = _STM_INIT( _VA_STM(limit, __VA_ARGS__), stm##__buf ); \
                        stm_id stm = & stm##__stm
-
-/******************************************************************************
- *
- * Name              : static_STM
- *
- * Description       : define and initialize a static stream buffer object
- *
- * Parameters
- *   stm             : name of a pointer to stream buffer object
- *   limit           : size of a buffer (max number of stored bytes / objects)
- *   type            : (optional) size of the object (in bytes); default: 1
- *
- ******************************************************************************/
 
 #define         static_STM( stm, limit, ... )                                                 \
                 static char stm##__buf[_VA_STM(limit, __VA_ARGS__)];                           \
