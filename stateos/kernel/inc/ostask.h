@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    05.05.2021
+    @date    17.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -239,7 +239,7 @@ extern "C" {
 
 /******************************************************************************
  *
- * Name              : OS_STK
+ * Name              : OS_TSK_STACK
  *
  * Description       : define task stack
  *
@@ -249,7 +249,7 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_STK( stk, ... ) \
+#define             OS_TSK_STACK( stk, ... ) \
                        stk_t stk[ STK_SIZE( _VA_STK(__VA_ARGS__) ) ] __STKALIGN
 
 /******************************************************************************
@@ -373,7 +373,7 @@ extern "C" {
 
 /******************************************************************************
  *
- * Name              : static_STK
+ * Name              : static_TSK_STACK
  *
  * Description       : define task static stack
  *
@@ -383,7 +383,7 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define         static_STK( stk, ... ) \
+#define         static_TSK_STACK( stk, ... ) \
                 static stk_t stk[ STK_SIZE( _VA_STK(__VA_ARGS__) ) ] __STKALIGN
 
 /******************************************************************************
