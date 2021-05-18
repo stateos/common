@@ -79,16 +79,16 @@ LD_FLAGS   += --library_type=microlib
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
-COMMON_F   += -O$(OPTF) --debug
+OPTIMF_F   += -O$(OPTF) --debug
 DEFS       := $(DEFS:NDEBUG=)
 DEFS       := $(DEFS:MINSIZE=)
 else
 ifneq ($(filter MINSIZE,$(DEFS)),)
 $(info Using minsize)
 DEFS       := $(DEFS:MINSIZE=)
-COMMON_F   += -Ospace
+OPTIMF_F   += -Ospace
 else
-COMMON_F   += -O$(OPTF)
+OPTIMF_F   += -O$(OPTF)
 endif
 ifeq  ($(filter NDEBUG,$(DEFS)),)
 DEFS       += NDEBUG
