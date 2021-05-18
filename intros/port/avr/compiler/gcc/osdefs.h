@@ -2,7 +2,7 @@
 
     @file    IntrOS: osdefs.h
     @author  Rajmund Szymanski
-    @date    02.05.2021
+    @date    18.05.2021
     @brief   IntrOS port file for AVR8 uC.
 
  ******************************************************************************
@@ -48,6 +48,9 @@
 #endif
 #ifndef __PACKED
 #define __PACKED
+#endif
+#ifndef __PACKED_STRUCT
+#define __PACKED_STRUCT       struct
 #endif
 
 /* -------------------------------------------------------------------------- */
