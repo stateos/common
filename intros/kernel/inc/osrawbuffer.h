@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrawbuffer.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
