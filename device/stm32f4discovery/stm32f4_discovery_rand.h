@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_discovery_rand.h
  * @author  Rajmund Szymanski
- * @date    04.03.2021
+ * @date    18.05.2021
  * @brief   This file contains definitions for STM32F4-Discovery Kit.
  ******************************************************************************/
 
@@ -21,8 +21,7 @@ extern "C" {
 static inline
 void RND_Init( void )
 {
-	REG_SET_BITS(RCC->AHB2ENR, RCC_AHB2ENR_RNGEN);
-	RCC->AHB2ENR;
+	REG_SET_WAIT(RCC->AHB2ENR, RCC_AHB2ENR_RNGEN);
 
 	RNG->CR = RNG_CR_RNGEN;
 }

@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_discovery_btns.h
  * @author  Rajmund Szymanski
- * @date    04.03.2021
+ * @date    18.05.2021
  * @brief   This file contains definitions for STM32F4-Discovery Kit.
  ******************************************************************************/
 
@@ -48,8 +48,7 @@ void EXTI_BTN_Init( void )
 {
 	GPIO_Init(GPIOA, GPIO_Pins(0), GPIO_Input_NoPull);
 
-	REG_SET_BITS(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
-	RCC->APB2ENR;
+	REG_SET_WAIT(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
 
 //	REG_SET_BITS(SYSCFG->EXTICR[0], SYSCFG_EXTICR1_EXTI0_PA); // SYSCFG->EXTI0(PIN_0) = 0(PORT_A)
 	REG_SET_BITS(EXTI->IMR,  EXTI_IMR_MR0);  // interrupt

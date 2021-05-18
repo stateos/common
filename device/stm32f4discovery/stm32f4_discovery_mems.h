@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_discovery_mems.h
  * @author  Rajmund Szymanski
- * @date    04.03.2021
+ * @date    18.05.2021
  * @brief   This file contains definitions for STM32F4-Discovery Kit.
  ******************************************************************************/
 
@@ -29,8 +29,7 @@ void MEMS_Init( void )
 	GPIO_Init(GPIOE, GPIO_Pins(0,1),   GPIO_Input);                                           // INT1, INT2
 	GPIO_Init(GPIOE, GPIO_Pins(3),     GPIO_Output_PushPull | GPIO_Set);                      // CS
 
-	REG_SET_BITS(RCC->APB2ENR, RCC_APB2ENR_SPI1EN);
-	RCC->APB2ENR;
+	REG_SET_WAIT(RCC->APB2ENR, RCC_APB2ENR_SPI1EN);
 
 	SPI1->CR1 = SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR | SPI_CR1_BR_0;
 	SPI1->CR1 = SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR | SPI_CR1_BR_0 | SPI_CR1_SPE;

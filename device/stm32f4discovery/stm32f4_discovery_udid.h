@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_discovery_udid.h
  * @author  Rajmund Szymanski
- * @date    27.05.2018
+ * @date    18.05.2021
  * @brief   This file contains definitions for STM32F4-Discovery Kit.
  ******************************************************************************/
 
@@ -35,8 +35,7 @@ typedef struct {
 static inline
 uint32_t UDID_Get( void )
 {
-	REG_SET_BITS(RCC->AHB1ENR, RCC_AHB1ENR_CRCEN);
-	RCC->AHB1ENR;
+	REG_SET_WAIT(RCC->AHB1ENR, RCC_AHB1ENR_CRCEN);
 
 	CRC->CR = CRC_CR_RESET; __DSB();
 	CRC->DR = UDID->ID[0];

@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_discovery_bkps.h
  * @author  Rajmund Szymanski
- * @date    04.03.2021
+ * @date    18.05.2021
  * @brief   This file contains definitions for STM32F4-Discovery Kit.
  ******************************************************************************/
 
@@ -31,11 +31,9 @@ extern "C" {
 static inline
 void BKP_Init( void )
 {
-	REG_SET_BITS(RCC->APB1ENR, RCC_APB1ENR_PWREN);
-	RCC->APB1ENR;
+	REG_SET_WAIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
 	REG_SET_BITS(PWR->CR,      PWR_CR_DBP);
-	REG_SET_BITS(RCC->AHB1ENR, RCC_AHB1ENR_BKPSRAMEN);
-	RCC->AHB1ENR;
+	REG_SET_WAIT(RCC->AHB1ENR, RCC_AHB1ENR_BKPSRAMEN);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_io.h
  * @author  Rajmund Szymanski
- * @date    24.03.2021
+ * @date    18.05.2021
  * @brief   This file contains macro definitions for the STM32F4XX GPIO ports.
  ******************************************************************************/
 
@@ -25,9 +25,10 @@
 
 /* -------------------------------------------------------------------------- */
 
-#define REG_SET_BITS(REG, VALUE) do (REG) = (REG) |  (VALUE); while (0)
-#define REG_CLR_BITS(REG, VALUE) do (REG) = (REG) & ~(VALUE); while (0)
-#define REG_REV_BITS(REG, VALUE) do (REG) = (REG) ^  (VALUE); while (0)
+#define REG_SET_BITS(REG, VALUE) do { (REG) = (REG) |  (VALUE);              } while (0)
+#define REG_SET_WAIT(REG, VALUE) do { (REG) = (REG) |  (VALUE); (void)(REG); } while (0)
+#define REG_CLR_BITS(REG, VALUE) do { (REG) = (REG) & ~(VALUE);              } while (0)
+#define REG_REV_BITS(REG, VALUE) do { (REG) = (REG) ^  (VALUE);              } while (0)
 
 /* -------------------------------------------------------------------------- */
 /*
@@ -297,7 +298,7 @@ void __pinlck( GPIO_TypeDef *gpio, uint32_t pins )
 __STATIC_FORCEINLINE
 void GPIO_Init( GPIO_TypeDef *gpio, uint32_t pins, uint32_t cfg )
 {
-	REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); RCC->AHB1ENR;
+	REG_SET_WAIT(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio));
 
 	__pinini(gpio, pins, cfg);
 }
@@ -307,7 +308,7 @@ void GPIO_Init( GPIO_TypeDef *gpio, uint32_t pins, uint32_t cfg )
 static inline
 void GPIO_Config( GPIO_TypeDef *gpio, uint32_t pins, uint32_t cfg )
 {
-	REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); RCC->AHB1ENR;
+	REG_SET_WAIT(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio));
 
 	__pincfg(gpio, pins, cfg);
 }
@@ -337,7 +338,7 @@ template<const unsigned gpio>
 class PortT
 {
 public:
-	PortT( void ) { REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); RCC->AHB1ENR; }
+	PortT( void ) { REG_SET_WAIT(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); }
 	
 	void init  ( const unsigned pins, const unsigned cfg ) { __pinini((GPIO_TypeDef *)gpio, pins, cfg); }
 	void config( const unsigned pins, const unsigned cfg ) { __pincfg((GPIO_TypeDef *)gpio, pins, cfg); }
@@ -385,7 +386,7 @@ template<const unsigned gpio, const unsigned pin>
 class PinT
 {
 public:
-	PinT( void ) { REG_SET_BITS(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); RCC->AHB1ENR; }
+	PinT( void ) { REG_SET_WAIT(RCC->AHB1ENR, 1UL << GPIO_PORT_Val(gpio)); }
 
 	void init  ( const unsigned cfg ) { __pinini((GPIO_TypeDef *)gpio, 1 << pin, cfg); }
 	void config( const unsigned cfg ) { __pincfg((GPIO_TypeDef *)gpio, 1 << pin, cfg); }

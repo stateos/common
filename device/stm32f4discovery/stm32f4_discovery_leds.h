@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_discovery_leds.h
  * @author  Rajmund Szymanski
- * @date    04.03.2021
+ * @date    18.05.2021
  * @brief   This file contains definitions for STM32F4-Discovery Kit.
  ******************************************************************************/
 
@@ -189,8 +189,7 @@ void PWM_LED_Init( void )
 {
 	GPIO_Init(GPIOD, GPIO_Pins(12,13,14,15), GPIO_Alternate_100MHz | GPIO_AF2_TIM4);
 
-	REG_SET_BITS(RCC->APB1ENR, RCC_APB1ENR_TIM4EN);
-	RCC->APB1ENR;
+	REG_SET_WAIT(RCC->APB1ENR, RCC_APB1ENR_TIM4EN);
 
 	TIM4->PSC   = 0;
 	TIM4->ARR   = 99;
