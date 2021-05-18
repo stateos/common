@@ -50,6 +50,7 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 6.8
+- stream buffer renamed to raw buffer
 - added message queue
 - removed message buffer
 - added support for libstdc++

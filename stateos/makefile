@@ -40,9 +40,9 @@ SRCS += $(COMMON)/stateos/kernel/src/osmemorypool.c
 SRCS += $(COMMON)/stateos/kernel/src/osmessagequeue.c
 SRCS += $(COMMON)/stateos/kernel/src/osmutex.c
 SRCS += $(COMMON)/stateos/kernel/src/osrwlock.c
+SRCS += $(COMMON)/stateos/kernel/src/osrawbuffer.c
 SRCS += $(COMMON)/stateos/kernel/src/ossemaphore.c
 SRCS += $(COMMON)/stateos/kernel/src/ossignal.c
-SRCS += $(COMMON)/stateos/kernel/src/osstreambuffer.c
 SRCS += $(COMMON)/stateos/kernel/src/ostask.c
 SRCS += $(COMMON)/stateos/kernel/src/ostimer.c
 ifneq ($(wildcard $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)/oscore.s),)

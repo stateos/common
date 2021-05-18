@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    18.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -119,7 +119,7 @@ struct __tsk
 	char   * in;
 	}        data;
 	size_t   size;
-	}        stm;   // temporary data used by stream buffer object
+	}        raw;   // temporary data used by raw buffer object
 
 	struct {
 	union  {

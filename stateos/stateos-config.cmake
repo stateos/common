@@ -41,9 +41,9 @@ target_sources(stateos
 	${STATEOS_PATH}/kernel/src/osmessagequeue.c
 	${STATEOS_PATH}/kernel/src/osmutex.c
 	${STATEOS_PATH}/kernel/src/osrwlock.c
+	${STATEOS_PATH}/kernel/src/osrawbuffer.c
 	${STATEOS_PATH}/kernel/src/ossemaphore.c
 	${STATEOS_PATH}/kernel/src/ossignal.c
-	${STATEOS_PATH}/kernel/src/osstreambuffer.c
 	${STATEOS_PATH}/kernel/src/ostask.c
 	${STATEOS_PATH}/kernel/src/ostimer.c
 )
