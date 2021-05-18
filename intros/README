@@ -35,6 +35,7 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 4.8
+- stream buffer renamed to raw buffer
 - added message queue
 - removed message buffer
 - updated Clock class

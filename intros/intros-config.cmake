@@ -39,9 +39,9 @@ target_sources(intros
 	${INTROS_PATH}/kernel/src/osmessagequeue.c
 	${INTROS_PATH}/kernel/src/osmutex.c
 	${INTROS_PATH}/kernel/src/osrwlock.c
+	${INTROS_PATH}/kernel/src/osrawbuffer.c
 	${INTROS_PATH}/kernel/src/ossemaphore.c
 	${INTROS_PATH}/kernel/src/ossignal.c
-	${INTROS_PATH}/kernel/src/osstreambuffer.c
 	${INTROS_PATH}/kernel/src/ostask.c
 	${INTROS_PATH}/kernel/src/ostimer.c
 )

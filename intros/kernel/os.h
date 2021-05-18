@@ -48,7 +48,7 @@
 #include "inc/osrwlock.h"
 #include "inc/oslist.h"
 #include "inc/osmemorypool.h"
-#include "inc/osstreambuffer.h"
+#include "inc/osrawbuffer.h"
 #include "inc/osmessagequeue.h"
 #include "inc/osmailboxqueue.h"
 #include "inc/oseventqueue.h"

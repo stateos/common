@@ -1,6 +1,6 @@
 /******************************************************************************
 
-    @file    IntrOS: osstreambuffer.c
+    @file    IntrOS: osrawbuffer.c
     @author  Rajmund Szymanski
     @date    07.05.2021
     @brief   This file provides set of functions for IntrOS.
@@ -29,122 +29,122 @@
 
  ******************************************************************************/
 
-#include "inc/osstreambuffer.h"
+#include "inc/osrawbuffer.h"
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
-void stm_init( stm_t *stm, void *data, size_t bufsize )
+void raw_init( raw_t *raw, void *data, size_t bufsize )
 /* -------------------------------------------------------------------------- */
 {
-	assert(stm);
+	assert(raw);
 	assert(data);
 	assert(bufsize);
 
 	sys_lock();
 	{
-		memset(stm, 0, sizeof(stm_t));
+		memset(raw, 0, sizeof(raw_t));
 
-		stm->limit = bufsize;
-		stm->data  = data;
+		raw->limit = bufsize;
+		raw->data  = data;
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_stm_get( stm_t *stm, char *data, size_t size )
+void priv_raw_get( raw_t *raw, char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t head = stm->head;
+	size_t head = raw->head;
 
-	stm->count -= size;
+	raw->count -= size;
 	while (size--)
 	{
-		*data++ = stm->data[head++];
-		if (head == stm->limit) head = 0;
+		*data++ = raw->data[head++];
+		if (head == raw->limit) head = 0;
 	}
-	stm->head = head;
+	raw->head = head;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_stm_put( stm_t *stm, const char *data, size_t size )
+void priv_raw_put( raw_t *raw, const char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t tail = stm->tail;
+	size_t tail = raw->tail;
 
-	stm->count += size;
+	raw->count += size;
 	while (size--)
 	{
-		stm->data[tail++] = *data++;
-		if (tail == stm->limit) tail = 0;
+		raw->data[tail++] = *data++;
+		if (tail == raw->limit) tail = 0;
 	}
-	stm->tail = tail;
+	raw->tail = tail;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_stm_skip( stm_t *stm, size_t size )
+void priv_raw_skip( raw_t *raw, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	stm->count -= size;
-	stm->head  += size;
-	if (stm->head >= stm->limit) stm->head -= stm->limit;
+	raw->count -= size;
+	raw->head  += size;
+	if (raw->head >= raw->limit) raw->head -= raw->limit;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-size_t priv_stm_getUpdate( stm_t *stm, char *data, size_t size )
+size_t priv_raw_getUpdate( raw_t *raw, char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (size > stm->count) size = stm->count;
-	priv_stm_get(stm, data, size);
+	if (size > raw->count) size = raw->count;
+	priv_raw_get(raw, data, size);
 	return size;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_stm_putUpdate( stm_t *stm, const char *data, size_t size )
+void priv_raw_putUpdate( raw_t *raw, const char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	priv_stm_put(stm, data, size);
+	priv_raw_put(raw, data, size);
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_stm_skipUpdate( stm_t *stm, size_t size )
+void priv_raw_skipUpdate( raw_t *raw, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (stm->count + size > stm->limit)
-		priv_stm_skip(stm, stm->count + size - stm->limit);
+	if (raw->count + size > raw->limit)
+		priv_raw_skip(raw, raw->count + size - raw->limit);
 }
 
 /* -------------------------------------------------------------------------- */
 static
-size_t priv_stm_take( stm_t *stm, void *data, size_t size )
+size_t priv_raw_take( raw_t *raw, void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (stm->count == 0)
+	if (raw->count == 0)
 		return 0;
 
-	return priv_stm_getUpdate(stm, data, size);
+	return priv_raw_getUpdate(raw, data, size);
 }
 
 /* -------------------------------------------------------------------------- */
-size_t stm_take( stm_t *stm, void *data, size_t size )
+size_t raw_take( raw_t *raw, void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	size_t result;
 
-	assert(stm);
-	assert(stm->data);
-	assert(stm->limit);
+	assert(raw);
+	assert(raw->data);
+	assert(raw->limit);
 	assert(data);
 	assert(size);
 
 	sys_lock();
 	{
-		result = priv_stm_take(stm, data, size);
+		result = priv_raw_take(raw, data, size);
 	}
 	sys_unlock();
 
@@ -152,12 +152,12 @@ size_t stm_take( stm_t *stm, void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t stm_wait( stm_t *stm, void *data, size_t size )
+size_t raw_wait( raw_t *raw, void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	size_t result;
 
-	while (result = stm_take(stm, data, size), result == 0)
+	while (result = raw_take(raw, data, size), result == 0)
 		core_ctx_switch();
 
 	return result;
@@ -165,32 +165,32 @@ size_t stm_wait( stm_t *stm, void *data, size_t size )
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_stm_give( stm_t *stm, const void *data, size_t size )
+unsigned priv_raw_give( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (stm->count + size > stm->limit)
+	if (raw->count + size > raw->limit)
 		return FAILURE;
 
-	priv_stm_putUpdate(stm, data, size);
+	priv_raw_putUpdate(raw, data, size);
 
 	return SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned stm_give( stm_t *stm, const void *data, size_t size )
+unsigned raw_give( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned result;
 
-	assert(stm);
-	assert(stm->data);
-	assert(stm->limit);
+	assert(raw);
+	assert(raw->data);
+	assert(raw->limit);
 	assert(data);
 	assert(size);
 
 	sys_lock();
 	{
-		result = priv_stm_give(stm, data, size);
+		result = priv_raw_give(raw, data, size);
 	}
 	sys_unlock();
 
@@ -198,13 +198,13 @@ unsigned stm_give( stm_t *stm, const void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned stm_send( stm_t *stm, const void *data, size_t size )
+unsigned raw_send( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (size > stm->limit)
+	if (size > raw->limit)
 		return FAILURE;
 
-	while (stm_give(stm, data, size) != SUCCESS)
+	while (raw_give(raw, data, size) != SUCCESS)
 		core_ctx_switch();
 
 	return SUCCESS;
@@ -212,33 +212,33 @@ unsigned stm_send( stm_t *stm, const void *data, size_t size )
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_stm_push( stm_t *stm, const void *data, size_t size )
+unsigned priv_raw_push( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (size > stm->limit)
+	if (size > raw->limit)
 		return FAILURE;
 
-	priv_stm_skipUpdate(stm, size);
-	priv_stm_putUpdate(stm, data, size);
+	priv_raw_skipUpdate(raw, size);
+	priv_raw_putUpdate(raw, data, size);
 
 	return SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned stm_push( stm_t *stm, const void *data, size_t size )
+unsigned raw_push( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned result;
 
-	assert(stm);
-	assert(stm->data);
-	assert(stm->limit);
+	assert(raw);
+	assert(raw->data);
+	assert(raw->limit);
 	assert(data);
 	assert(size);
 
 	sys_lock();
 	{
-		result = priv_stm_push(stm, data, size);
+		result = priv_raw_push(raw, data, size);
 	}
 	sys_unlock();
 
@@ -246,16 +246,16 @@ unsigned stm_push( stm_t *stm, const void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t stm_count( stm_t *stm )
+size_t raw_count( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t count;
 
-	assert(stm);
+	assert(raw);
 
 	sys_lock();
 	{
-		count = stm->count;
+		count = raw->count;
 	}
 	sys_unlock();
 
@@ -263,16 +263,16 @@ size_t stm_count( stm_t *stm )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t stm_space( stm_t *stm )
+size_t raw_space( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t space;
 
-	assert(stm);
+	assert(raw);
 
 	sys_lock();
 	{
-		space = stm->limit - stm->count;
+		space = raw->limit - raw->count;
 	}
 	sys_unlock();
 
@@ -280,16 +280,16 @@ size_t stm_space( stm_t *stm )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t stm_limit( stm_t *stm )
+size_t raw_limit( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t limit;
 
-	assert(stm);
+	assert(raw);
 
 	sys_lock();
 	{
-		limit = stm->limit;
+		limit = raw->limit;
 	}
 	sys_unlock();
 
