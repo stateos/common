@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    13.05.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -94,6 +94,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_SEM
+ * Static alias      : static_SEM
  *
  * Description       : define and initialize a semaphore object
  *
@@ -110,22 +111,6 @@ extern "C" {
 #define             OS_SEM( sem, init, ... )                                      \
                        sem_t sem##__sem = _SEM_INIT( init, _VA_SEM(__VA_ARGS__) ); \
                        sem_id sem = & sem##__sem
-
-/******************************************************************************
- *
- * Name              : static_SEM
- *
- * Description       : define and initialize a static semaphore object
- *
- * Parameters
- *   sem             : name of a pointer to semaphore object
- *   init            : initial value of semaphore counter
- *   limit           : (optional) maximum value of semaphore counter
- *                     semBinary: binary semaphore
- *                     semCounting: counting semaphore (default)
- *                     otherwise: limited semaphore
- *
- ******************************************************************************/
 
 #define         static_SEM( sem, init, ... )                                      \
                 static sem_t sem##__sem = _SEM_INIT( init, _VA_SEM(__VA_ARGS__) ); \

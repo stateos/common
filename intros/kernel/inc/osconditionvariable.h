@@ -2,7 +2,7 @@
 
     @file    IntrOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -71,6 +71,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_CND
+ * Static alias      : static_CND
  *
  * Description       : define and initialize a condition variable object
  *
@@ -82,17 +83,6 @@ extern "C" {
 #define             OS_CND( cnd )                     \
                        cnd_t cnd##__cnd = _CND_INIT(); \
                        cnd_id cnd = & cnd##__cnd
-
-/******************************************************************************
- *
- * Name              : static_CND
- *
- * Description       : define and initialize a static condition variable object
- *
- * Parameters
- *   cnd             : name of a pointer to condition variable object
- *
- ******************************************************************************/
 
 #define         static_CND( cnd )                     \
                 static cnd_t cnd##__cnd = _CND_INIT(); \

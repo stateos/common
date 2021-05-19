@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -79,6 +79,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_TMR
+ * Static alias      : static_TMR
  *
  * Description       : define and initialize a timer object
  *
@@ -93,9 +94,14 @@ extern "C" {
                        tmr_t tmr##__tmr = _TMR_INIT( state ); \
                        tmr_id tmr = & tmr##__tmr
 
+#define         static_TMR( tmr, state )                     \
+                static tmr_t tmr##__tmr = _TMR_INIT( state ); \
+                static tmr_id tmr = & tmr##__tmr
+
 /******************************************************************************
  *
  * Name              : OS_TMR_DEF
+ * Static alias      : static_TMR_DEF
  *
  * Description       : define and initialize complete timer object
  *                     timer callback procedure (function body) must be defined immediately below
@@ -111,9 +117,16 @@ extern "C" {
                        tmr_id tmr = & tmr##__tmr;                   \
                        void tmr##__fun( void )
 
+#define         static_TMR_DEF( tmr )                            \
+                static void tmr##__fun( void );                   \
+                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun ); \
+                static tmr_id tmr = & tmr##__tmr;                   \
+                static void tmr##__fun( void )
+
 /******************************************************************************
  *
  * Name              : OS_TMR_START
+ * Static alias      : static_TMR_START
  *
  * Description       : define, initialize and start complete timer object
  *                     timer callback procedure (function body) must be defined immediately below
@@ -140,9 +153,19 @@ extern "C" {
                        void tmr##__fun( void )
 #endif
 
+#ifdef __CONSTRUCTOR
+#define         static_TMR_START( tmr, delay, period )                          \
+                static void tmr##__fun( void );                                  \
+                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                \
+                static tmr_id tmr = & tmr##__tmr;                                  \
+  __CONSTRUCTOR static void tmr##__start( void ) { tmr_start(tmr, delay, period); } \
+                static void tmr##__fun( void )
+#endif
+
 /******************************************************************************
  *
  * Name              : OS_TMR_UNTIL
+ * Static alias      : static_TMR_UNTIL
  *
  * Description       : define, initialize and start complete timer object
  *                     timer callback procedure (function body) must be defined immediately below
@@ -163,86 +186,6 @@ extern "C" {
          __CONSTRUCTOR void tmr##__start( void ) { tmr_startUntil(tmr, time); } \
                        void tmr##__fun( void )
 #endif
-
-/******************************************************************************
- *
- * Name              : static_TMR
- *
- * Description       : define and initialize static timer object
- *                     timer callback procedure (function body) must be defined immediately below
- *
- * Parameters
- *   tmr             : name of a pointer to timer object
- *   state           : callback procedure
- *                     NULL: no callback
- *
- ******************************************************************************/
-
-#define         static_TMR( tmr, state )                     \
-                static tmr_t tmr##__tmr = _TMR_INIT( state ); \
-                static tmr_id tmr = & tmr##__tmr
-
-/******************************************************************************
- *
- * Name              : static_TMR_DEF
- *
- * Description       : define and initialize static timer object
- *                     timer callback procedure (function body) must be defined immediately below
- *
- * Parameters
- *   tmr             : name of a pointer to timer object
- *
- ******************************************************************************/
-
-#define         static_TMR_DEF( tmr )                            \
-                static void tmr##__fun( void );                   \
-                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun ); \
-                static tmr_id tmr = & tmr##__tmr;                   \
-                static void tmr##__fun( void )
-
-/******************************************************************************
- *
- * Name              : static_TMR_START
- *
- * Description       : define, initialize and start static timer object
- *                     timer callback procedure (function body) must be defined immediately below
- *
- * Parameters
- *   tmr             : name of a pointer to timer object
- *   delay           : duration of time (maximum number of ticks to countdown) for first expiration
- *                     IMMEDIATE: don't countdown
- *                     INFINITE:  countdown indefinitely
- *   period          : duration of time (maximum number of ticks to countdown) for all next expirations
- *                     IMMEDIATE: don't countdown
- *                     INFINITE:  countdown indefinitely
- *
- * Note              : only available for compilers supporting the "constructor" function attribute or its equivalent
- *
- ******************************************************************************/
-
-#ifdef __CONSTRUCTOR
-#define         static_TMR_START( tmr, delay, period )                          \
-                static void tmr##__fun( void );                                  \
-                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                \
-                static tmr_id tmr = & tmr##__tmr;                                  \
-  __CONSTRUCTOR static void tmr##__start( void ) { tmr_start(tmr, delay, period); } \
-                static void tmr##__fun( void )
-#endif
-
-/******************************************************************************
- *
- * Name              : static_TMR_UNTIL
- *
- * Description       : define, initialize and start static timer object
- *                     timer callback procedure (function body) must be defined immediately below
- *
- * Parameters
- *   tmr             : name of a pointer to timer object
- *   time            : timepoint value
- *
- * Note              : only available for compilers supporting the "constructor" function attribute or its equivalent
- *
- ******************************************************************************/
 
 #ifdef __CONSTRUCTOR
 #define         static_TMR_UNTIL( tmr, time )                               \

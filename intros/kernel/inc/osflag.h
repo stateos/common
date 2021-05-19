@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -88,6 +88,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_FLG
+ * Static alias      : static_FLG
  *
  * Description       : define and initialize a flag object
  *
@@ -100,18 +101,6 @@ extern "C" {
 #define             OS_FLG( flg, ... )                                      \
                        flg_t flg##__flg = _FLG_INIT( _VA_FLG(__VA_ARGS__) ); \
                        flg_id flg = & flg##__flg
-
-/******************************************************************************
- *
- * Name              : static_FLG
- *
- * Description       : define and initialize a static flag object
- *
- * Parameters
- *   flg             : name of a pointer to flag object
- *   init            : (optional) initial value of flag; default: 0
- *
- ******************************************************************************/
 
 #define         static_FLG( flg, ... )                                      \
                 static flg_t flg##__flg = _FLG_INIT( _VA_FLG(__VA_ARGS__) ); \

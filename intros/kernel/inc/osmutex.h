@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    02.04.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -70,6 +70,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_MTX
+ * Static alias      : static_MTX
  *
  * Description       : define and initialize a mutex object
  *
@@ -81,17 +82,6 @@ extern "C" {
 #define             OS_MTX( mtx )                     \
                        mtx_t mtx##__mtx = _MTX_INIT(); \
                        mtx_id mtx = & mtx##__mtx
-
-/******************************************************************************
- *
- * Name              : static_MTX
- *
- * Description       : define and initialize a static mutex object
- *
- * Parameters
- *   mtx             : name of a pointer to mutex object
- *
- ******************************************************************************/
 
 #define         static_MTX( mtx )                     \
                 static mtx_t mtx##__mtx = _MTX_INIT(); \

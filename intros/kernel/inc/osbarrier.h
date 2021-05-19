@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbarrier.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -74,6 +74,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_BAR
+ * Static alias      : static_BAR
  *
  * Description       : define and initialize a barrier object
  *
@@ -86,18 +87,6 @@ extern "C" {
 #define             OS_BAR( bar, limit )                     \
                        bar_t bar##__bar = _BAR_INIT( limit ); \
                        bar_id bar = & bar##__bar
-
-/******************************************************************************
- *
- * Name              : static_BAR
- *
- * Description       : define and initialize a static barrier object
- *
- * Parameters
- *   bar             : name of a pointer to barrier object
- *   limit           : number of tasks that must call bar_wait function to release the barrier object
- *
- ******************************************************************************/
 
 #define         static_BAR( bar, limit )                     \
                 static bar_t bar##__bar = _BAR_INIT( limit ); \

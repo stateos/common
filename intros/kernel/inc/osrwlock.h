@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    01.04.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -75,6 +75,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_RWL
+ * Static alias      : static_RWL
  *
  * Description       : define and initialize a read/write lock object
  *
@@ -86,17 +87,6 @@ extern "C" {
 #define             OS_RWL( rwl )                     \
                        rwl_t rwl##__rwl = _RWL_INIT(); \
                        rwl_id rwl = & rwl##__rwl
-
-/******************************************************************************
- *
- * Name              : static_RWL
- *
- * Description       : define and initialize a static read/write lock object
- *
- * Parameters
- *   rwl             : name of a pointer to read/write lock object
- *
- ******************************************************************************/
 
 #define         static_RWL( rwl )                     \
                 static rwl_t rwl##__rwl = _RWL_INIT(); \
