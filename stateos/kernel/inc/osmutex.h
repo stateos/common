@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -122,6 +122,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_MTX
+ * Static alias      : static_MTX
  *
  * Description       : define and initialize a mutex object
  *
@@ -138,22 +139,6 @@ extern "C" {
 #define             OS_MTX( mtx, mode, ... )                                    \
                        mtx_t mtx##__mtx = _MTX_INIT(mode, _VA_MTX(__VA_ARGS__)); \
                        mtx_id mtx = & mtx##__mtx
-
-/******************************************************************************
- *
- * Name              : static_MTX
- *
- * Description       : define and initialize a static mutex object
- *
- * Parameters
- *   mtx             : name of a pointer to mutex object
- *   mode            : mutex mode (mutex type + mutex protocol + mutex robustness)
- *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
- *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
- *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
- *
- ******************************************************************************/
 
 #define         static_MTX( mtx, mode, ... )                                    \
                 static mtx_t mtx##__mtx = _MTX_INIT(mode, _VA_MTX(__VA_ARGS__)); \

@@ -2,7 +2,7 @@
 
     @file    StateOS: osevent.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -71,6 +71,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_EVT
+ * Static alias      : static_EVT
  *
  * Description       : define and initialize an event object
  *
@@ -82,17 +83,6 @@ extern "C" {
 #define             OS_EVT( evt )                     \
                        evt_t evt##__evt = _EVT_INIT(); \
                        evt_id evt = & evt##__evt
-
-/******************************************************************************
- *
- * Name              : static_EVT
- *
- * Description       : define and initialize a static event object
- *
- * Parameters
- *   evt             : name of a pointer to event object
- *
- ******************************************************************************/
 
 #define         static_EVT( evt )                     \
                 static evt_t evt##__evt = _EVT_INIT(); \

@@ -2,7 +2,7 @@
 
     @file    StateOS: oslist.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -102,6 +102,7 @@ struct __lst
 /******************************************************************************
  *
  * Name              : OS_LST
+ * Static alias      : static_LST
  *
  * Description       : define and initialize a list object
  *
@@ -113,17 +114,6 @@ struct __lst
 #define             OS_LST( lst )                     \
                        lst_t lst##__lst = _LST_INIT(); \
                        lst_id lst = & lst##__lst
-
-/******************************************************************************
- *
- * Name              : static_LST
- *
- * Description       : define and initialize a static list object
- *
- * Parameters
- *   lst             : name of a pointer to list object
- *
- ******************************************************************************/
 
 #define         static_LST( lst )                     \
                 static lst_t lst##__lst = _LST_INIT(); \

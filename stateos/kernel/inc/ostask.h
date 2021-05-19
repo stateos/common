@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    18.05.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -240,6 +240,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_TSK_STACK
+ * Static alias      : static_TSK_STACK
  *
  * Description       : define task stack
  *
@@ -252,9 +253,13 @@ extern "C" {
 #define             OS_TSK_STACK( stk, ... ) \
                        stk_t stk[ STK_SIZE( _VA_STK(__VA_ARGS__) ) ] __STKALIGN
 
+#define         static_TSK_STACK( stk, ... ) \
+                static stk_t stk[ STK_SIZE( _VA_STK(__VA_ARGS__) ) ] __STKALIGN
+
 /******************************************************************************
  *
  * Name              : OS_WRK
+ * Static alias      : static_WRK
  *
  * Description       : define and initialize complete work area for task object
  *
@@ -272,9 +277,15 @@ extern "C" {
                        tsk_t tsk##__tsk = _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ); \
                        tsk_id tsk = & tsk##__tsk
 
+#define         static_WRK( tsk, prio, state, size )                                            \
+                static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN;                            \
+                static tsk_t tsk##__tsk = _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ); \
+                static tsk_id tsk = & tsk##__tsk
+
 /******************************************************************************
  *
  * Name              : OS_TSK
+ * Static alias      : static_TSK
  *
  * Description       : define and initialize complete work area for task object with default stack size
  *
@@ -290,9 +301,13 @@ extern "C" {
 #define             OS_TSK( tsk, prio, state, ... ) \
                     OS_WRK( tsk, prio, state, _VA_STK(__VA_ARGS__) )
 
+#define         static_TSK( tsk, prio, state, ... ) \
+                static_WRK( tsk, prio, state, _VA_STK(__VA_ARGS__) )
+
 /******************************************************************************
  *
  * Name              : OS_WRK_DEF
+ * Static alias      : static_WRK_DEF
  *
  * Description       : define and initialize complete work area for task object
  *                     task state (function body) must be defined immediately below
@@ -309,9 +324,15 @@ extern "C" {
                     OS_WRK( tsk, prio, tsk##__fun, size ); \
                        void tsk##__fun( void )
 
+#define         static_WRK_DEF( tsk, prio, size )        \
+                static void tsk##__fun( void );           \
+                static_WRK( tsk, prio, tsk##__fun, size ); \
+                static void tsk##__fun( void )
+
 /******************************************************************************
  *
  * Name              : OS_TSK_DEF
+ * Static alias      : static_TSK_DEF
  *
  * Description       : define and initialize complete work area for task object with default stack size
  *                     task state (function body) must be defined immediately below
@@ -326,9 +347,13 @@ extern "C" {
 #define             OS_TSK_DEF( tsk, prio, ... ) \
                     OS_WRK_DEF( tsk, prio, _VA_STK(__VA_ARGS__) )
 
+#define         static_TSK_DEF( tsk, prio, ... ) \
+                static_WRK_DEF( tsk, prio, _VA_STK(__VA_ARGS__) )
+
 /******************************************************************************
  *
  * Name              : OS_WRK_START
+ * Static alias      : static_WRK_START
  *
  * Description       : define, initialize and start complete work area for task object
  *                     task state (function body) must be defined immediately below
@@ -350,9 +375,18 @@ extern "C" {
                        void tsk##__fun( void )
 #endif
 
+#ifdef __CONSTRUCTOR
+#define         static_WRK_START( tsk, prio, size )                              \
+                static void tsk##__fun( void );                                   \
+                static_WRK( tsk, prio, tsk##__fun, size );                         \
+  __CONSTRUCTOR static void tsk##__run( void ) { core_sys_init(); tsk_start(tsk); } \
+                static void tsk##__fun( void )
+#endif
+
 /******************************************************************************
  *
  * Name              : OS_TSK_START
+ * Static alias      : static_TSK_START
  *
  * Description       : define, initialize and start complete work area for task object with default stack size
  *                     task state (function body) must be defined immediately below
@@ -370,135 +404,6 @@ extern "C" {
 #define             OS_TSK_START( tsk, prio, ... ) \
                     OS_WRK_START( tsk, prio, _VA_STK(__VA_ARGS__) )
 #endif
-
-/******************************************************************************
- *
- * Name              : static_TSK_STACK
- *
- * Description       : define task static stack
- *
- * Parameters
- *   stk             : name of the stack (passed to the init function)
- *   size            : (optional) size of task stack (in bytes); default: OS_STACK_SIZE
- *
- ******************************************************************************/
-
-#define         static_TSK_STACK( stk, ... ) \
-                static stk_t stk[ STK_SIZE( _VA_STK(__VA_ARGS__) ) ] __STKALIGN
-
-/******************************************************************************
- *
- * Name              : static_WRK
- *
- * Description       : define and initialize static work area for task object
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
- *                     it will be executed into an infinite system-implemented loop
- *   size            : size of task private stack (in bytes)
- *
- ******************************************************************************/
-
-#define         static_WRK( tsk, prio, state, size )                                            \
-                static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN;                            \
-                static tsk_t tsk##__tsk = _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ); \
-                static tsk_id tsk = & tsk##__tsk
-
-/******************************************************************************
- *
- * Name              : static_TSK
- *
- * Description       : define and initialize static work area for task object with default stack size
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
- *                     it will be executed into an infinite system-implemented loop
- *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
- *
- ******************************************************************************/
-
-#define         static_TSK( tsk, prio, state, ... ) \
-                static_WRK( tsk, prio, state, _VA_STK(__VA_ARGS__) )
-
-/******************************************************************************
- *
- * Name              : static_WRK_DEF
- *
- * Description       : define and initialize static work area for task object
- *                     task state (function body) must be defined immediately below
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   prio            : initial task priority (any unsigned int value)
- *   size            : size of task private stack (in bytes)
- *
- ******************************************************************************/
-
-#define         static_WRK_DEF( tsk, prio, size )        \
-                static void tsk##__fun( void );           \
-                static_WRK( tsk, prio, tsk##__fun, size ); \
-                static void tsk##__fun( void )
-
-/******************************************************************************
- *
- * Name              : static_TSK_DEF
- *
- * Description       : define and initialize static work area for task object with default stack size
- *                     task state (function body) must be defined immediately below
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   prio            : initial task priority (any unsigned int value)
- *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
- *
- ******************************************************************************/
-
-#define         static_TSK_DEF( tsk, prio, ... ) \
-                static_WRK_DEF( tsk, prio, _VA_STK(__VA_ARGS__) )
-
-/******************************************************************************
- *
- * Name              : static_WRK_START
- *
- * Description       : define, initialize and start static work area for task object
- *                     task state (function body) must be defined immediately below
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   prio            : initial task priority (any unsigned int value)
- *   size            : size of task private stack (in bytes)
- *
- * Note              : only available for compilers supporting the "constructor" function attribute or its equivalent
- *
- ******************************************************************************/
-
-#ifdef __CONSTRUCTOR
-#define         static_WRK_START( tsk, prio, size )                              \
-                static void tsk##__fun( void );                                   \
-                static_WRK( tsk, prio, tsk##__fun, size );                         \
-  __CONSTRUCTOR static void tsk##__run( void ) { core_sys_init(); tsk_start(tsk); } \
-                static void tsk##__fun( void )
-#endif
-
-/******************************************************************************
- *
- * Name              : static_TSK_START
- *
- * Description       : define, initialize and start static work area for task object with default stack size
- *                     task state (function body) must be defined immediately below
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   prio            : initial task priority (any unsigned int value)
- *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
- *
- * Note              : only available for compilers supporting the "constructor" function attribute or its equivalent
- *
- ******************************************************************************/
 
 #ifdef __CONSTRUCTOR
 #define         static_TSK_START( tsk, prio, ... ) \

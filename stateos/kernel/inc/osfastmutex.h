@@ -2,7 +2,7 @@
 
     @file    StateOS: osfastmutex.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -75,6 +75,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_MUT
+ * Static alias      : static_MUT
  *
  * Description       : define and initialize a fast mutex object
  *
@@ -86,17 +87,6 @@ extern "C" {
 #define             OS_MUT( mut )                     \
                        mut_t mut##__mut = _MUT_INIT(); \
                        mut_id mut = & mut##__mut
-
-/******************************************************************************
- *
- * Name              : static_MUT
- *
- * Description       : define and initialize a static fast mutex object
- *
- * Parameters
- *   mut             : name of a pointer to fast mutex object
- *
- ******************************************************************************/
 
 #define         static_MUT( mut )                     \
                 static mut_t mut##__mut = _MUT_INIT(); \

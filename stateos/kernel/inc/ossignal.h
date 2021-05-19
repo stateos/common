@@ -2,7 +2,7 @@
 
     @file    StateOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    26.04.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -92,6 +92,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_SIG
+ * Static alias      : static_SIG
  *
  * Description       : define and initialize a signal object
  *
@@ -104,18 +105,6 @@ extern "C" {
 #define             OS_SIG( sig, ... )                                      \
                        sig_t sig##__sig = _SIG_INIT( _VA_SIG(__VA_ARGS__) ); \
                        sig_id sig = & sig##__sig
-
-/******************************************************************************
- *
- * Name              : static_SIG
- *
- * Description       : define and initialize a static signal object
- *
- * Parameters
- *   sig             : name of a pointer to signal object
- *   mask            : (optional) protection mask; default: 0
- *
- ******************************************************************************/
 
 #define         static_SIG( sig, ... )                                      \
                 static sig_t sig##__sig = _SIG_INIT( _VA_SIG(__VA_ARGS__) ); \

@@ -2,7 +2,7 @@
 
     @file    StateOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -83,6 +83,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_ONE
+ * Static alias      : static_ONE
  *
  * Description       : define and initialize a once flag object
  *
@@ -94,17 +95,6 @@ extern "C" {
 #define             OS_ONE( one )                     \
                        one_t one##__one = _ONE_INIT(); \
                        one_id one = & one##__one
-
-/******************************************************************************
- *
- * Name              : static_ONE
- *
- * Description       : define and initialize a static once flag object
- *
- * Parameters
- *   one             : name of a pointer to once flag object
- *
- ******************************************************************************/
 
 #define         static_ONE( one )                     \
                 static one_t one##__one = _ONE_INIT(); \

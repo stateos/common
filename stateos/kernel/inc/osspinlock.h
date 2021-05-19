@@ -2,7 +2,7 @@
 
     @file    StateOS: osspinlock.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -66,6 +66,7 @@ extern "C" {
 /******************************************************************************
  *
  * Name              : OS_SPN
+ * Static alias      : static_SPN
  *
  * Description       : define and initialize a spin lock object
  *
@@ -77,17 +78,6 @@ extern "C" {
 #define             OS_SPN( spn )                     \
                        spn_t spn##__spn = _SPN_INIT(); \
                        spn_id spn = & spn##__spn
-
-/******************************************************************************
- *
- * Name              : static_SPN
- *
- * Description       : define and initialize a static spin lock object
- *
- * Parameters
- *   spn             : name of a pointer to spin lock object
- *
- ******************************************************************************/
 
 #define         static_SPN( spn )                     \
                 static spn_t spn##__spn = _SPN_INIT(); \
