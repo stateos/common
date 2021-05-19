@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    19.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -215,7 +215,8 @@ __STATIC_INLINE
 unsigned job_tryWait( job_t *job ) { return job_take(job); }
 
 #if OS_ATOMICS
-unsigned job_takeAsync( job_t *job );
+__STATIC_INLINE
+unsigned job_takeAsync( job_t *job ) { return job_take(job); }
 #endif
 
 /******************************************************************************
@@ -236,7 +237,8 @@ unsigned job_takeAsync( job_t *job );
 void job_wait( job_t *job );
 
 #if OS_ATOMICS
-void job_waitAsync( job_t *job );
+__STATIC_INLINE
+void job_waitAsync( job_t *job ) { job_wait(job); }
 #endif
 
 /******************************************************************************
@@ -260,7 +262,8 @@ void job_waitAsync( job_t *job );
 unsigned job_give( job_t *job, fun_t *fun );
 
 #if OS_ATOMICS
-unsigned job_giveAsync( job_t *job, fun_t *fun );
+__STATIC_INLINE
+unsigned job_giveAsync( job_t *job, fun_t *fun ) { return job_give(job, fun); }
 #endif
 
 /******************************************************************************
@@ -282,7 +285,8 @@ unsigned job_giveAsync( job_t *job, fun_t *fun );
 void job_send( job_t *job, fun_t *fun );
 
 #if OS_ATOMICS
-void job_sendAsync( job_t *job, fun_t *fun );
+__STATIC_INLINE
+void job_sendAsync( job_t *job, fun_t *fun ) { job_send(job, fun); }
 #endif
 
 /******************************************************************************

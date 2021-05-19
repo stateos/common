@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.c
     @author  Rajmund Szymanski
-    @date    04.05.2021
+    @date    19.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -52,15 +52,62 @@ void evq_init( evq_t *evq, unsigned *data, size_t bufsize )
 
 /* -------------------------------------------------------------------------- */
 static
+bool priv_evq_empty( evq_t *evq )
+/* -------------------------------------------------------------------------- */
+{
+#if OS_ATOMICS
+	return atomic_load((atomic_size_t *)&evq->count) == 0;
+#else
+	return evq->count == 0;
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_evq_full( evq_t *evq )
+/* -------------------------------------------------------------------------- */
+{
+#if OS_ATOMICS
+	return atomic_load((atomic_size_t *)&evq->count) == evq->limit;
+#else
+	return evq->count == evq->limit;
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_evq_dec( evq_t *evq )
+/* -------------------------------------------------------------------------- */
+{
+	evq->head = evq->head + 1 < evq->limit ? evq->head + 1 : 0;
+#if OS_ATOMICS
+	atomic_fetch_sub((atomic_size_t *)&evq->count, 1);
+#else
+	evq->count -= 1;
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_evq_inc( evq_t *evq )
+/* -------------------------------------------------------------------------- */
+{
+	evq->tail = evq->tail + 1 < evq->limit ? evq->tail + 1 : 0;
+#if OS_ATOMICS
+	atomic_fetch_add((atomic_size_t *)&evq->count, 1);
+#else
+	evq->count += 1;
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+static
 unsigned priv_evq_get( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned head = evq->head;
+	unsigned event = evq->data[evq->head];
 
-	unsigned event = evq->data[head++];
-
-	evq->head = head < evq->limit ? head : 0;
-	evq->count--;
+	priv_evq_dec(evq);
 
 	return event;
 }
@@ -70,23 +117,9 @@ static
 void priv_evq_put( evq_t *evq, const unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned tail = evq->tail;
+	evq->data[evq->tail] = event;
 
-	evq->data[tail++] = event;
-
-	evq->tail = tail < evq->limit ? tail : 0;
-	evq->count++;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_evq_skip( evq_t *evq )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned head = evq->head + 1;
-
-	evq->head = head < evq->limit ? head : 0;
-	evq->count--;
+	priv_evq_inc(evq);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -94,7 +127,7 @@ static
 unsigned priv_evq_take( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
-	if (evq->count == 0)
+	if (priv_evq_empty(evq))
 		return FAILURE;
 
 	return priv_evq_get(evq);
@@ -136,7 +169,7 @@ static
 unsigned priv_evq_give( evq_t *evq, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	if (evq->count == evq->limit)
+	if (priv_evq_full(evq))
 		return FAILURE;
 
 	priv_evq_put(evq, event);
@@ -181,8 +214,8 @@ void evq_push( evq_t *evq, unsigned event )
 
 	sys_lock();
 	{
-		if (evq->count == evq->limit)
-			priv_evq_skip(evq);
+		if (priv_evq_full(evq))
+			priv_evq_dec(evq);
 		priv_evq_put(evq, event);
 	}
 	sys_unlock();
@@ -240,119 +273,3 @@ unsigned evq_limit( evq_t *evq )
 }
 
 /* -------------------------------------------------------------------------- */
-
-#if OS_ATOMICS
-
-/* -------------------------------------------------------------------------- */
-static
-unsigned priv_evq_getAsync( evq_t *evq )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned head = evq->head;
-
-	unsigned event = evq->data[head++];
-
-	evq->head = head < evq->limit ? head : 0;
-	atomic_fetch_sub((atomic_uint *)&evq->count, 1);
-
-	return event;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-unsigned priv_evq_takeAsync( evq_t *evq )
-/* -------------------------------------------------------------------------- */
-{
-	if (atomic_load((atomic_uint *)&evq->count) == 0)
-		return FAILURE;
-
-	return priv_evq_getAsync(evq);
-}
-
-/* -------------------------------------------------------------------------- */
-unsigned evq_takeAsync( evq_t *evq )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned result;
-
-	assert(evq);
-	assert(evq->data);
-	assert(evq->limit);
-
-	sys_lock();
-	{
-		result = priv_evq_takeAsync(evq);
-	}
-	sys_unlock();
-
-	return result;
-}
-
-/* -------------------------------------------------------------------------- */
-unsigned evq_waitAsync( evq_t *evq )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned result;
-
-	while (result = evq_takeAsync(evq), result == FAILURE)
-		core_ctx_switch();
-
-	return result;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_evq_putAsync( evq_t *evq, const unsigned event )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned tail = evq->tail;
-
-	evq->data[tail++] = event;
-
-	evq->tail = tail < evq->limit ? tail : 0;
-	atomic_fetch_add((atomic_uint *)&evq->count, 1);
-}
-
-/* -------------------------------------------------------------------------- */
-static
-unsigned priv_evq_giveAsync( evq_t *evq, unsigned event )
-/* -------------------------------------------------------------------------- */
-{
-	if (atomic_load((atomic_uint *)&evq->count) == evq->limit)
-		return FAILURE;
-
-	priv_evq_putAsync(evq, event);
-
-	return SUCCESS;
-}
-
-/* -------------------------------------------------------------------------- */
-unsigned evq_giveAsync( evq_t *evq, unsigned event )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned result;
-
-	assert(evq);
-	assert(evq->data);
-	assert(evq->limit);
-
-	sys_lock();
-	{
-		result = priv_evq_giveAsync(evq, event);
-	}
-	sys_unlock();
-
-	return result;
-}
-
-/* -------------------------------------------------------------------------- */
-void evq_sendAsync( evq_t *evq, unsigned event )
-/* -------------------------------------------------------------------------- */
-{
-	while (evq_giveAsync(evq, event) != SUCCESS)
-		core_ctx_switch();
-}
-
-/* -------------------------------------------------------------------------- */
-
-#endif//OS_ATOMICS

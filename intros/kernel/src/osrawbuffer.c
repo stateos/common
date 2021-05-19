@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrawbuffer.c
     @author  Rajmund Szymanski
-    @date    07.05.2021
+    @date    19.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -89,34 +89,8 @@ void priv_raw_skip( raw_t *raw, size_t size )
 {
 	raw->count -= size;
 	raw->head  += size;
-	if (raw->head >= raw->limit) raw->head -= raw->limit;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-size_t priv_raw_getUpdate( raw_t *raw, char *data, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	if (size > raw->count) size = raw->count;
-	priv_raw_get(raw, data, size);
-	return size;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_raw_putUpdate( raw_t *raw, const char *data, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	priv_raw_put(raw, data, size);
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_raw_skipUpdate( raw_t *raw, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	if (raw->count + size > raw->limit)
-		priv_raw_skip(raw, raw->count + size - raw->limit);
+	if (raw->head >= raw->limit)
+		raw->head -= raw->limit;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -127,7 +101,12 @@ size_t priv_raw_take( raw_t *raw, void *data, size_t size )
 	if (raw->count == 0)
 		return 0;
 
-	return priv_raw_getUpdate(raw, data, size);
+	if (size > raw->count)
+		size = raw->count;
+
+	priv_raw_get(raw, data, size);
+
+	return size;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -171,7 +150,7 @@ unsigned priv_raw_give( raw_t *raw, const void *data, size_t size )
 	if (raw->count + size > raw->limit)
 		return FAILURE;
 
-	priv_raw_putUpdate(raw, data, size);
+	priv_raw_put(raw, data, size);
 
 	return SUCCESS;
 }
@@ -218,8 +197,10 @@ unsigned priv_raw_push( raw_t *raw, const void *data, size_t size )
 	if (size > raw->limit)
 		return FAILURE;
 
-	priv_raw_skipUpdate(raw, size);
-	priv_raw_putUpdate(raw, data, size);
+	if (raw->count + size > raw->limit)
+		priv_raw_skip(raw, raw->count + size - raw->limit);
+
+	priv_raw_put(raw, data, size);
 
 	return SUCCESS;
 }

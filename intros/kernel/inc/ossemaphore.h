@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    18.05.2021
+    @date    19.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -211,7 +211,8 @@ __STATIC_INLINE
 unsigned sem_tryWait( sem_t *sem ) { return sem_take(sem); }
 
 #if OS_ATOMICS
-unsigned sem_takeAsync( sem_t *sem );
+__STATIC_INLINE
+unsigned sem_takeAsync( sem_t *sem ) { return sem_take(sem); }
 #endif
 
 /******************************************************************************
@@ -232,7 +233,8 @@ unsigned sem_takeAsync( sem_t *sem );
 void sem_wait( sem_t *sem );
 
 #if OS_ATOMICS
-void sem_waitAsync( sem_t *sem );
+__STATIC_INLINE
+void sem_waitAsync( sem_t *sem ) { sem_wait(sem); }
 #endif
 
 /******************************************************************************
@@ -259,7 +261,8 @@ __STATIC_INLINE
 unsigned sem_post( sem_t *sem ) { return sem_give(sem); }
 
 #if OS_ATOMICS
-unsigned sem_giveAsync( sem_t *sem );
+__STATIC_INLINE
+unsigned sem_giveAsync( sem_t *sem ) { return sem_give(sem); }
 #endif
 
 /******************************************************************************

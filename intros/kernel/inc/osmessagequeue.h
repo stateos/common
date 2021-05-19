@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    18.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,25 @@
 #define __INTROS_MSG_H
 
 #include "oskernel.h"
+
+/******************************************************************************
+ *
+ * Name              : message header
+ *
+ ******************************************************************************/
+
+typedef struct __msh msh_t;
+
+__PACKED_STRUCT __msh
+{
+	size_t   size;   // size of a message (in bytes)
+#ifndef __cplusplus  // ISO C++ forbids flexible array member
+	char     data[]; // message data
+#endif
+};
+
+#define MSG_SIZE( size ) \
+                ( size + sizeof(msh_t) )
 
 /******************************************************************************
  *
@@ -75,7 +94,7 @@ extern "C" {
  ******************************************************************************/
 
 #define               _MSG_INIT( _limit, _size, _data ) \
-                     { 0, _limit * (sizeof(size_t) + _size), sizeof(size_t) + _size, 0, 0, _data }
+                     { 0, _limit * MSG_SIZE(_size), MSG_SIZE(_size), 0, 0, _data }
 
 /******************************************************************************
  *
@@ -94,7 +113,7 @@ extern "C" {
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define               _MSG_DATA( _limit, _size ) (char[_limit * (sizeof(size_t) + _size)]){ 0 }
+#define               _MSG_DATA( _limit, _size ) (char[_limit * MSG_SIZE(_size)]){ 0 }
 #endif
 
 /******************************************************************************
@@ -111,7 +130,7 @@ extern "C" {
  ******************************************************************************/
 
 #define             OS_MSG_BUFFER( buf, limit, size ) \
-                       char buf[limit * (sizeof(size_t) + size)]
+                       char buf[limit * MSG_SIZE(size)]
 
 /******************************************************************************
  *
@@ -128,12 +147,12 @@ extern "C" {
  ******************************************************************************/
 
 #define             OS_MSG( msg, limit, size )                                \
-                       char msg##__buf[limit * (sizeof(size_t) + size)];       \
+                       char msg##__buf[limit * MSG_SIZE(size)];                \
                        msg_t msg##__msg = _MSG_INIT( limit, size, msg##__buf ); \
                        msg_id msg = & msg##__msg
 
 #define         static_MSG( msg, limit, size )                                \
-                static char msg##__buf[limit * (sizeof(size_t) + size)];       \
+                static char msg##__buf[limit * MSG_SIZE(size)];                \
                 static msg_t msg##__msg = _MSG_INIT( limit, size, msg##__buf ); \
                 static msg_id msg = & msg##__msg
 
@@ -225,7 +244,8 @@ __STATIC_INLINE
 size_t msg_tryWait( msg_t *msg, void *data, size_t size ) { return msg_take(msg, data, size); }
 
 #if OS_ATOMICS
-size_t msg_takeAsync( msg_t *msg, void *data, size_t size );
+__STATIC_INLINE
+size_t msg_takeAsync( msg_t *msg, void *data, size_t size ) { return msg_take(msg, data, size); }
 #endif
 
 /******************************************************************************
@@ -249,7 +269,8 @@ size_t msg_takeAsync( msg_t *msg, void *data, size_t size );
 size_t msg_wait( msg_t *msg, void *data, size_t size );
 
 #if OS_ATOMICS
-size_t msg_waitAsync( msg_t *msg, void *data, size_t size );
+__STATIC_INLINE
+size_t msg_waitAsync( msg_t *msg, void *data, size_t size ) { return msg_wait(msg, data, size); }
 #endif
 
 /******************************************************************************
@@ -274,7 +295,8 @@ size_t msg_waitAsync( msg_t *msg, void *data, size_t size );
 unsigned msg_give( msg_t *msg, const void *data, size_t size );
 
 #if OS_ATOMICS
-unsigned msg_giveAsync( msg_t *msg, const void *data, size_t size );
+__STATIC_INLINE
+unsigned msg_giveAsync( msg_t *msg, const void *data, size_t size ) { return msg_give(msg, data, size); }
 #endif
 
 /******************************************************************************
@@ -299,7 +321,8 @@ unsigned msg_giveAsync( msg_t *msg, const void *data, size_t size );
 unsigned msg_send( msg_t *msg, const void *data, size_t size );
 
 #if OS_ATOMICS
-unsigned msg_sendAsync( msg_t *msg, const void *data, size_t size );
+__STATIC_INLINE
+unsigned msg_sendAsync( msg_t *msg, const void *data, size_t size ) { return msg_send(msg, data, size); }
 #endif
 
 /******************************************************************************
@@ -433,7 +456,7 @@ struct MessageQueueT : public __msg
 #endif
 
 	private:
-	char data_[limit_ * (sizeof(size_t) + size_)];
+	char data_[limit_ * MSG_SIZE(size_)];
 };
 
 /******************************************************************************

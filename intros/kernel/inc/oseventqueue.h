@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    19.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -214,7 +214,8 @@ __STATIC_INLINE
 unsigned evq_tryWait( evq_t *evq ) { return evq_take(evq); }
 
 #if OS_ATOMICS
-unsigned evq_takeAsync( evq_t *evq );
+__STATIC_INLINE
+unsigned evq_takeAsync( evq_t *evq ) { return evq_take(evq); }
 #endif
 
 /******************************************************************************
@@ -235,7 +236,8 @@ unsigned evq_takeAsync( evq_t *evq );
 unsigned evq_wait( evq_t *evq );
 
 #if OS_ATOMICS
-unsigned evq_waitAsync( evq_t *evq );
+__STATIC_INLINE
+unsigned evq_waitAsync( evq_t *evq ) { return evq_wait(evq); }
 #endif
 
 /******************************************************************************
@@ -259,7 +261,8 @@ unsigned evq_waitAsync( evq_t *evq );
 unsigned evq_give( evq_t *evq, unsigned event );
 
 #if OS_ATOMICS
-unsigned evq_giveAsync( evq_t *evq, unsigned event );
+__STATIC_INLINE
+unsigned evq_giveAsync( evq_t *evq, unsigned event ) { return evq_give(evq, event); }
 #endif
 
 /******************************************************************************
@@ -281,7 +284,8 @@ unsigned evq_giveAsync( evq_t *evq, unsigned event );
 void evq_send( evq_t *evq, unsigned event );
 
 #if OS_ATOMICS
-void evq_sendAsync( evq_t *evq, unsigned event );
+__STATIC_INLINE
+void evq_sendAsync( evq_t *evq, unsigned event ) { evq_send(evq); }
 #endif
 
 /******************************************************************************

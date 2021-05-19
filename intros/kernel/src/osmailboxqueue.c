@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    04.05.2021
+    @date    19.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -54,17 +54,61 @@ void box_init( box_t *box, size_t size, void *data, size_t bufsize )
 
 /* -------------------------------------------------------------------------- */
 static
+bool priv_box_empty( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+#if OS_ATOMICS
+	return atomic_load((atomic_size_t *)&box->count) == 0;
+#else
+	return box->count == 0;
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_box_full( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+#if OS_ATOMICS
+	return atomic_load((atomic_size_t *)&box->count) == box->limit;
+#else
+	return box->count == box->limit;
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_dec( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	box->head = box->head + box->size < box->limit ? box->head + box->size : 0;
+#if OS_ATOMICS
+	atomic_fetch_sub((atomic_size_t *)&box->count, box->size);
+#else
+	box->count -= box->size;
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_inc( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	box->tail = box->tail + box->size < box->limit ? box->tail + box->size : 0;
+#if OS_ATOMICS
+	atomic_fetch_add((atomic_size_t *)&box->count, box->size);
+#else
+	box->count += box->size;
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+static
 void priv_box_get( box_t *box, char *data )
 /* -------------------------------------------------------------------------- */
 {
-	size_t size = box->size;
-	size_t head = box->head;
-
-	while (size--)
-		*data++ = box->data[head++];
-
-	box->head = head < box->limit ? head : 0;
-	box->count -= box->size;
+	memcpy(data, &box->data[box->head], box->size);
+	priv_box_dec(box);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -72,25 +116,8 @@ static
 void priv_box_put( box_t *box, const char *data )
 /* -------------------------------------------------------------------------- */
 {
-	size_t size = box->size;
-	size_t tail = box->tail;
-
-	while (size--)
-		box->data[tail++] = *data++;
-
-	box->tail = tail < box->limit ? tail : 0;
-	box->count += box->size;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_box_skip( box_t *box )
-/* -------------------------------------------------------------------------- */
-{
-	size_t head = box->head + box->size;
-
-	box->head = head < box->limit ? head : 0;
-	box->count -= box->size;
+	memcpy(&box->data[box->tail], data, box->size);
+	priv_box_inc(box);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -98,7 +125,7 @@ static
 unsigned priv_box_take( box_t *box, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (box->count == 0)
+	if (priv_box_empty(box))
 		return FAILURE;
 
 	priv_box_get(box, data);
@@ -139,7 +166,7 @@ static
 unsigned priv_box_give( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (box->count == box->limit)
+	if (priv_box_full(box))
 		return FAILURE;
 
 	priv_box_put(box, data);
@@ -186,8 +213,8 @@ void box_push( box_t *box, const void *data )
 
 	sys_lock();
 	{
-		if (box->count == box->limit)
-			priv_box_skip(box);
+		if (priv_box_full(box))
+			priv_box_dec(box);
 		priv_box_put(box, data);
 	}
 	sys_unlock();
@@ -245,121 +272,3 @@ unsigned box_limit( box_t *box )
 }
 
 /* -------------------------------------------------------------------------- */
-
-#if OS_ATOMICS
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_box_getAsync( box_t *box, char *data )
-/* -------------------------------------------------------------------------- */
-{
-	size_t size = box->size;
-	size_t head = box->head;
-
-	while (size--)
-		*data++ = box->data[head++];
-
-	box->head = head < box->limit ? head : 0;
-	atomic_fetch_sub((atomic_uint *)&box->count, box->size);
-}
-
-/* -------------------------------------------------------------------------- */
-static
-unsigned priv_box_takeAsync( box_t *box, void *data )
-/* -------------------------------------------------------------------------- */
-{
-	if (atomic_load((atomic_uint *)&box->count) == 0)
-		return FAILURE;
-
-	priv_box_getAsync(box, data);
-
-	return SUCCESS;
-}
-
-/* -------------------------------------------------------------------------- */
-unsigned box_takeAsync( box_t *box, void *data )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned result;
-
-	assert(box);
-	assert(box->data);
-	assert(box->limit);
-	assert(data);
-
-	sys_lock();
-	{
-		result = priv_box_takeAsync(box, data);
-	}
-	sys_unlock();
-
-	return result;
-}
-
-/* -------------------------------------------------------------------------- */
-void box_waitAsync( box_t *box, void *data )
-/* -------------------------------------------------------------------------- */
-{
-	while (box_takeAsync(box, data) != SUCCESS)
-		core_ctx_switch();
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_box_putAsync( box_t *box, const char *data )
-/* -------------------------------------------------------------------------- */
-{
-	size_t size = box->size;
-	size_t tail = box->tail;
-
-	while (size--)
-		box->data[tail++] = *data++;
-
-	box->tail = tail < box->limit ? tail : 0;
-	atomic_fetch_add((atomic_uint *)&box->count, box->size);
-}
-
-/* -------------------------------------------------------------------------- */
-static
-unsigned priv_box_giveAsync( box_t *box, const void *data )
-/* -------------------------------------------------------------------------- */
-{
-	if (atomic_load((atomic_uint *)&box->count) == box->limit)
-		return FAILURE;
-
-	priv_box_putAsync(box, data);
-
-	return SUCCESS;
-}
-
-/* -------------------------------------------------------------------------- */
-unsigned box_giveAsync( box_t *box, const void *data )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned result;
-
-	assert(box);
-	assert(box->data);
-	assert(box->limit);
-	assert(data);
-
-	sys_lock();
-	{
-		result = priv_box_giveAsync(box, data);
-	}
-	sys_unlock();
-
-	return result;
-}
-
-/* -------------------------------------------------------------------------- */
-void box_sendAsync( box_t *box, const void *data )
-/* -------------------------------------------------------------------------- */
-{
-	while (box_giveAsync(box, data) != SUCCESS)
-		core_ctx_switch();
-}
-
-/* -------------------------------------------------------------------------- */
-
-#endif//OS_ATOMICS

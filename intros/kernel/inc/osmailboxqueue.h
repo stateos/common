@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    19.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -224,7 +224,8 @@ __STATIC_INLINE
 unsigned box_tryWait( box_t *box, void *data ) { return box_take(box, data); }
 
 #if OS_ATOMICS
-unsigned box_takeAsync( box_t *box, void *data );
+__STATIC_INLINE
+unsigned box_takeAsync( box_t *box, void *data ) { return box_take(box, data); }
 #endif
 
 /******************************************************************************
@@ -246,7 +247,8 @@ unsigned box_takeAsync( box_t *box, void *data );
 void box_wait( box_t *box, void *data );
 
 #if OS_ATOMICS
-void box_waitAsync( box_t *box, void *data );
+__STATIC_INLINE
+void box_waitAsync( box_t *box, void *data ) { box_wait(box, data); }
 #endif
 
 /******************************************************************************
@@ -270,7 +272,8 @@ void box_waitAsync( box_t *box, void *data );
 unsigned box_give( box_t *box, const void *data );
 
 #if OS_ATOMICS
-unsigned box_giveAsync( box_t *box, const void *data );
+__STATIC_INLINE
+unsigned box_giveAsync( box_t *box, const void *data ) { return box_give(box, data); }
 #endif
 
 /******************************************************************************
@@ -292,7 +295,8 @@ unsigned box_giveAsync( box_t *box, const void *data );
 void box_send( box_t *box, const void *data );
 
 #if OS_ATOMICS
-void box_sendAsync( box_t *box, const void *data );
+__STATIC_INLINE
+void box_sendAsync( box_t *box, const void *data ) { box_send(box, data); }
 #endif
 
 /******************************************************************************
