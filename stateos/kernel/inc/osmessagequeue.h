@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    19.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -34,6 +34,25 @@
 
 #include "oskernel.h"
 #include "osclock.h"
+
+/******************************************************************************
+ *
+ * Name              : message header
+ *
+ ******************************************************************************/
+
+typedef struct __msh msh_t;
+
+__PACKED_STRUCT __msh
+{
+	size_t   size;   // size of a message (in bytes)
+#ifndef __cplusplus  // ISO C++ forbids flexible array member
+	char     data[]; // message data
+#endif
+};
+
+#define MSG_SIZE( size ) \
+                ( size + sizeof(msh_t) )
 
 /******************************************************************************
  *
@@ -78,7 +97,7 @@ extern "C" {
  ******************************************************************************/
 
 #define               _MSG_INIT( _limit, _size, _data ) \
-                    { _OBJ_INIT(), 0, _limit * (sizeof(size_t) + _size), sizeof(size_t) + _size, 0, 0, _data }
+                    { _OBJ_INIT(), 0, _limit * MSG_SIZE(_size), MSG_SIZE(_size), 0, 0, _data }
 
 /******************************************************************************
  *
@@ -97,7 +116,7 @@ extern "C" {
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define               _MSG_DATA( _limit, _size ) (char[_limit * (sizeof(size_t) + _size)]){ 0 }
+#define               _MSG_DATA( _limit, _size ) (char[_limit * MSG_SIZE(_size)]){ 0 }
 #endif
 
 /******************************************************************************
@@ -114,7 +133,7 @@ extern "C" {
  ******************************************************************************/
 
 #define             OS_MSG_BUFFER( buf, limit, size ) \
-                       char buf[limit * (sizeof(size_t) + size)]
+                       char buf[limit * MSG_SIZE(size)]
 
 /******************************************************************************
  *
@@ -131,12 +150,12 @@ extern "C" {
  ******************************************************************************/
 
 #define             OS_MSG( msg, limit, size )                                \
-                       char msg##__buf[limit * (sizeof(size_t) + size)];       \
+                       char msg##__buf[limit * MSG_SIZE(size)];                \
                        msg_t msg##__msg = _MSG_INIT( limit, size, msg##__buf ); \
                        msg_id msg = & msg##__msg
 
 #define         static_MSG( msg, limit, size )                                \
-                static char msg##__buf[limit * (sizeof(size_t) + size)];       \
+                static char msg##__buf[limit * MSG_SIZE(size)];                \
                 static msg_t msg##__msg = _MSG_INIT( limit, size, msg##__buf ); \
                 static msg_id msg = & msg##__msg
 
@@ -732,7 +751,7 @@ struct MessageQueueT : public __msg
 	}
 
 	private:
-	char data_[limit_ * (sizeof(size_t) + size_)];
+	char data_[limit_ * MSG_SIZE(size_)];
 };
 
 /******************************************************************************
@@ -743,7 +762,7 @@ struct MessageQueueT : public __msg
  *
  * Constructor parameters
  *   limit           : size of a buffer (max number of stored objects)
- *   C               : class of an object
+ *   C               : class of a single message
  *
  ******************************************************************************/
 

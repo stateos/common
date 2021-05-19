@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.c
     @author  Rajmund Szymanski
-    @date    04.05.2021
+    @date    19.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -33,15 +33,6 @@
 #include "inc/ostask.h"
 #include "inc/oscriticalsection.h"
 
-typedef struct __mqh mqh_t;
-
-struct __mqh         // message queue header
-{
-	__PACKED
-	size_t   size;   // size of the message
-	char     data[]; // message data
-};
-
 /* -------------------------------------------------------------------------- */
 static
 void priv_msg_init( msg_t *msg, size_t size, void *data, size_t bufsize, void *res )
@@ -52,7 +43,7 @@ void priv_msg_init( msg_t *msg, size_t size, void *data, size_t bufsize, void *r
 	core_obj_init(&msg->obj, res);
 
 	msg->data  = data;
-	msg->size  = sizeof(size_t) + size;
+	msg->size  = MSG_SIZE(size);
 	msg->limit = (bufsize / msg->size) * msg->size;
 }
 
@@ -87,7 +78,7 @@ msg_t *msg_create( unsigned limit, size_t size )
 
 	sys_lock();
 	{
-		bufsize = limit * (sizeof(size_t) + size);
+		bufsize = limit * MSG_SIZE(size);
 		tmp = malloc(sizeof(struct msg_T) + bufsize);
 		if (tmp)
 			priv_msg_init(msg = &tmp->msg, size, tmp->buf, bufsize, tmp);
@@ -142,32 +133,53 @@ void msg_destroy( msg_t *msg )
 
 /* -------------------------------------------------------------------------- */
 static
-size_t priv_msg_getSize( msg_t *msg )
+bool priv_msg_empty( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	return ((mqh_t *)(msg->data + msg->head))->size;
+	return msg->count == 0;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_msg_putSize( msg_t *msg, size_t size )
+bool priv_msg_full( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	((mqh_t *)(msg->data + msg->tail))->size = size;
+	return msg->count == msg->limit;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_msg_get( msg_t *msg, char *data, size_t size )
+void priv_msg_dec( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	size_t head = msg->head + sizeof(size_t);
-
-	while (size--)
-		*data++ = msg->data[head++];
-
-	msg->head = head < msg->limit ? head : 0;
+	msg->head = msg->head + msg->size < msg->limit ? msg->head + msg->size : 0;
 	msg->count -= msg->size;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_msg_inc( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	msg->tail = msg->tail + msg->size < msg->limit ? msg->tail + msg->size : 0;
+	msg->count += msg->size;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+size_t priv_msg_get( msg_t *msg, char *data )
+/* -------------------------------------------------------------------------- */
+{
+	size_t size;
+
+	msh_t *msh = (msh_t *)&msg->data[msg->head];
+
+	size = msh->size;
+	memcpy(data, msh->data, size);
+
+	priv_msg_dec(msg);
+
+	return size;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -175,24 +187,12 @@ static
 void priv_msg_put( msg_t *msg, const char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t tail = msg->tail + sizeof(size_t);
+	msh_t *msh = (msh_t *)&msg->data[msg->tail];
 
-	while (size--)
-		msg->data[tail++] = *data++;
+	msh->size = size;
+	memcpy(msh->data, data, size);
 
-	msg->tail = tail < msg->limit ? tail : 0;
-	msg->count += msg->size;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_msg_skip( msg_t *msg )
-/* -------------------------------------------------------------------------- */
-{
-	size_t head = msg->head + msg->size;
-
-	msg->head = head < msg->limit ? head : 0;
-	msg->count -= msg->size;
+	priv_msg_inc(msg);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -201,16 +201,11 @@ size_t priv_msg_getUpdate( msg_t *msg, char *data )
 /* -------------------------------------------------------------------------- */
 {
 	tsk_t *tsk;
-	size_t size;
 
-	size = priv_msg_getSize(msg);
-	priv_msg_get(msg, data, size);
+	size_t size = priv_msg_get(msg, data);
 	tsk = core_one_wakeup(msg->obj.queue, E_SUCCESS);
 	if (tsk)
-	{
-		priv_msg_putSize(msg, tsk->tmp.msg.size);
 		priv_msg_put(msg, tsk->tmp.msg.data.out, tsk->tmp.msg.size);
-	}
 
 	return size;
 }
@@ -222,14 +217,10 @@ void priv_msg_putUpdate( msg_t *msg, const char *data, size_t size )
 {
 	tsk_t *tsk;
 
-	priv_msg_putSize(msg, size);
 	priv_msg_put(msg, data, size);
 	tsk = core_one_wakeup(msg->obj.queue, E_SUCCESS);
 	if (tsk)
-	{
-		tsk->tmp.msg.size = size;
-		priv_msg_get(msg, tsk->tmp.msg.data.in, size);
-	}
+		tsk->tmp.msg.size = priv_msg_get(msg, tsk->tmp.msg.data.in);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -239,15 +230,12 @@ void priv_msg_skipUpdate( msg_t *msg )
 {
 	tsk_t *tsk;
 
-	while (msg->count == msg->limit)
+	while (priv_msg_full(msg))
 	{
-		priv_msg_skip(msg);
+		priv_msg_dec(msg);
 		tsk = core_one_wakeup(msg->obj.queue, E_SUCCESS);
 		if (tsk)
-		{
-			priv_msg_putSize(msg, tsk->tmp.msg.size);
 			priv_msg_put(msg, tsk->tmp.msg.data.out, tsk->tmp.msg.size);
-		}
 	}
 }
 
@@ -256,10 +244,10 @@ static
 int priv_msg_take( msg_t *msg, char *data, size_t size, size_t *read )
 /* -------------------------------------------------------------------------- */
 {
-	if (sizeof(size_t) + size < msg->size)
+	if (MSG_SIZE(size) < msg->size)
 		return E_FAILURE;
 
-	if (msg->count == 0)
+	if (priv_msg_empty(msg))
 		return E_TIMEOUT;
 
 	size = priv_msg_getUpdate(msg, data);
@@ -358,10 +346,10 @@ static
 int priv_msg_give( msg_t *msg, const char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (sizeof(size_t) + size > msg->size)
+	if (MSG_SIZE(size) > msg->size)
 		return E_FAILURE;
 
-	if (msg->count == msg->limit)
+	if (priv_msg_full(msg))
 		return E_TIMEOUT;
 
 	priv_msg_putUpdate(msg, data, size);
@@ -454,7 +442,7 @@ static
 int priv_msg_push( msg_t *msg, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (sizeof(size_t) + size > msg->limit)
+	if (MSG_SIZE(size) > msg->limit)
 		return E_FAILURE;
 
 	priv_msg_skipUpdate(msg);
@@ -545,16 +533,53 @@ size_t msg_limit( msg_t *msg )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_msg_getAsync( msg_t *msg, char *data, size_t size )
+bool priv_msg_emptyAsync( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	size_t head = msg->head + sizeof(size_t);
+	return atomic_load((atomic_size_t *)&msg->count) == 0;
+}
 
-	while (size--)
-		*data++ = msg->data[head++];
+/* -------------------------------------------------------------------------- */
+static
+bool priv_msg_fullAsync( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load((atomic_size_t *)&msg->count) == msg->limit;
+}
 
-	msg->head = head < msg->limit ? head : 0;
+/* -------------------------------------------------------------------------- */
+static
+void priv_msg_decAsync( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	msg->head = msg->head + msg->size < msg->limit ? msg->head + msg->size : 0;
 	atomic_fetch_sub((atomic_size_t *)&msg->count, msg->size);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_msg_incAsync( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	msg->tail = msg->tail + msg->size < msg->limit ? msg->tail + msg->size : 0;
+	atomic_fetch_add((atomic_size_t *)&msg->count, msg->size);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+size_t priv_msg_getAsync( msg_t *msg, char *data )
+/* -------------------------------------------------------------------------- */
+{
+	size_t size;
+
+	msh_t *msh = (msh_t *)&msg->data[msg->head];
+
+	size = msh->size;
+	memcpy(data, msh->data, size);
+
+	priv_msg_decAsync(msg);
+
+	return size;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -562,14 +587,13 @@ static
 int priv_msg_takeAsync( msg_t *msg, void *data, size_t size, size_t *read )
 /* -------------------------------------------------------------------------- */
 {
-	if (sizeof(size_t) + size < msg->size)
+	if (MSG_SIZE(size) < msg->size)
 		return E_FAILURE;
 
-	if (atomic_load((atomic_size_t *)&msg->count) == 0)
+	if (priv_msg_emptyAsync(msg))
 		return E_TIMEOUT;
 
-	size = priv_msg_getSize(msg);
-	priv_msg_getAsync(msg, data, size);
+	size = priv_msg_getAsync(msg, data);
 	if (read != NULL)
 		*read = size;
 
@@ -616,13 +640,12 @@ static
 void priv_msg_putAsync( msg_t *msg, const char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	size_t tail = msg->tail + sizeof(size_t);
+	msh_t *msh = (msh_t *)&msg->data[msg->tail];
 
-	while (size--)
-		msg->data[tail++] = *data++;
+	msh->size = size;
+	memcpy(msh->data, data, size);
 
-	msg->tail = tail < msg->limit ? tail : 0;
-	atomic_fetch_add((atomic_size_t *)&msg->count, msg->size);
+	priv_msg_incAsync(msg);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -630,13 +653,12 @@ static
 int priv_msg_giveAsync( msg_t *msg, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (sizeof(size_t) + size > msg->size)
+	if (MSG_SIZE(size) > msg->size)
 		return E_FAILURE;
 
-	if (atomic_load((atomic_size_t *)&msg->count) == msg->limit)
+	if (priv_msg_fullAsync(msg))
 		return E_TIMEOUT;
 
-	priv_msg_putSize(msg, size);
 	priv_msg_putAsync(msg, data, size);
 
 	return E_SUCCESS;
