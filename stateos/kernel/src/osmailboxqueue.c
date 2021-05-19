@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    04.05.2021
+    @date    19.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -133,17 +133,45 @@ void box_destroy( box_t *box )
 
 /* -------------------------------------------------------------------------- */
 static
+bool priv_box_empty( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	return box->count == 0;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_box_full( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	return box->count == box->limit;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_dec( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	box->head = box->head + box->size < box->limit ? box->head + box->size : 0;
+	box->count -= box->size;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_inc( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	box->tail = box->tail + box->size < box->limit ? box->tail + box->size : 0;
+	box->count += box->size;
+}
+
+/* -------------------------------------------------------------------------- */
+static
 void priv_box_get( box_t *box, char *data )
 /* -------------------------------------------------------------------------- */
 {
-	size_t size = box->size;
-	size_t head = box->head;
-
-	while (size--)
-		*data++ = box->data[head++];
-
-	box->head = head < box->limit ? head : 0;
-	box->count -= box->size;
+	memcpy(data, &box->data[box->head], box->size);
+	priv_box_dec(box);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -151,25 +179,8 @@ static
 void priv_box_put( box_t *box, const char *data )
 /* -------------------------------------------------------------------------- */
 {
-	size_t size = box->size;
-	size_t tail = box->tail;
-
-	while (size--)
-		box->data[tail++] = *data++;
-
-	box->tail = tail < box->limit ? tail : 0;
-	box->count += box->size;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_box_skip( box_t *box )
-/* -------------------------------------------------------------------------- */
-{
-	size_t head = box->head + box->size;
-
-	box->head = head < box->limit ? head : 0;
-	box->count -= box->size;
+	memcpy(&box->data[box->tail], data, box->size);
+	priv_box_inc(box);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -181,7 +192,8 @@ void priv_box_getUpdate( box_t *box, char *data )
 
 	priv_box_get(box, data);
 	tsk = core_one_wakeup(box->obj.queue, E_SUCCESS);
-	if (tsk) priv_box_put(box, tsk->tmp.box.data.out);
+	if (tsk)
+		priv_box_put(box, tsk->tmp.box.data.out);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -193,7 +205,8 @@ void priv_box_putUpdate( box_t *box, const char *data )
 
 	priv_box_put(box, data);
 	tsk = core_one_wakeup(box->obj.queue, E_SUCCESS);
-	if (tsk) priv_box_get(box, tsk->tmp.box.data.in);
+	if (tsk)
+		priv_box_get(box, tsk->tmp.box.data.in);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -203,11 +216,12 @@ void priv_box_skipUpdate( box_t *box )
 {
 	tsk_t *tsk;
 
-	while (box->count == box->limit)
+	while (priv_box_full(box))
 	{
-		priv_box_skip(box);
+		priv_box_dec(box);
 		tsk = core_one_wakeup(box->obj.queue, E_SUCCESS);
-		if (tsk) priv_box_put(box, tsk->tmp.box.data.out);
+		if (tsk)
+			priv_box_put(box, tsk->tmp.box.data.out);
 	}
 }
 
@@ -216,7 +230,7 @@ static
 int priv_box_take( box_t *box, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (box->count == 0)
+	if (priv_box_empty(box))
 		return E_TIMEOUT;
 
 	priv_box_getUpdate(box, data);
@@ -304,7 +318,7 @@ static
 int priv_box_give( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (box->count == box->limit)
+	if (priv_box_full(box))
 		return E_TIMEOUT;
 
 	priv_box_putUpdate(box, data);
@@ -465,17 +479,54 @@ unsigned box_limit( box_t *box )
 
 /* -------------------------------------------------------------------------- */
 static
+bool priv_box_emptyAsync( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load((atomic_size_t *)&box->count) == 0;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_box_fullAsync( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load((atomic_size_t *)&box->count) == box->limit;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_decAsync( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	box->head = box->head + box->size < box->limit ? box->head + box->size : 0;
+	atomic_fetch_sub((atomic_size_t *)&box->count, box->size);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_incAsync( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	box->tail = box->tail + box->size < box->limit ? box->tail + box->size : 0;
+	atomic_fetch_add((atomic_size_t *)&box->count, box->size);
+}
+
+/* -------------------------------------------------------------------------- */
+static
 void priv_box_getAsync( box_t *box, char *data )
 /* -------------------------------------------------------------------------- */
 {
-	size_t size = box->size;
-	size_t head = box->head;
+	memcpy(data, &box->data[box->head], box->size);
+	priv_box_decAsync(box);
+}
 
-	while (size--)
-		*data++ = box->data[head++];
-
-	box->head = head < box->limit ? head : 0;
-	atomic_fetch_sub((atomic_uint *)&box->count, box->size);
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_putAsync( box_t *box, const char *data )
+/* -------------------------------------------------------------------------- */
+{
+	memcpy(&box->data[box->tail], data, box->size);
+	priv_box_incAsync(box);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -483,7 +534,7 @@ static
 int priv_box_takeAsync( box_t *box, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (atomic_load((atomic_uint *)&box->count) == 0)
+	if (priv_box_emptyAsync(box))
 		return E_TIMEOUT;
 
 	priv_box_getAsync(box, data);
@@ -526,25 +577,10 @@ int box_waitAsync( box_t *box, void *data )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_box_putAsync( box_t *box, const char *data )
-/* -------------------------------------------------------------------------- */
-{
-	size_t size = box->size;
-	size_t tail = box->tail;
-
-	while (size--)
-		box->data[tail++] = *data++;
-
-	box->tail = tail < box->limit ? tail : 0;
-	atomic_fetch_add((atomic_uint *)&box->count, box->size);
-}
-
-/* -------------------------------------------------------------------------- */
-static
 int priv_box_giveAsync( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (atomic_load((atomic_uint *)&box->count) == box->limit)
+	if (priv_box_fullAsync(box))
 		return E_TIMEOUT;
 
 	priv_box_putAsync(box, data);
