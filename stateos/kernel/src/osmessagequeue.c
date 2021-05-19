@@ -87,6 +87,7 @@ msg_t *msg_create( unsigned limit, size_t size )
 
 	return msg;
 }
+
 /* -------------------------------------------------------------------------- */
 static
 void priv_msg_reset( msg_t *msg, int event )
@@ -98,7 +99,6 @@ void priv_msg_reset( msg_t *msg, int event )
 
 	core_all_wakeup(msg->obj.queue, event);
 }
-
 
 /* -------------------------------------------------------------------------- */
 void msg_reset( msg_t *msg )
@@ -584,6 +584,19 @@ size_t priv_msg_getAsync( msg_t *msg, char *data )
 
 /* -------------------------------------------------------------------------- */
 static
+void priv_msg_putAsync( msg_t *msg, const char *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	msh_t *msh = (msh_t *)&msg->data[msg->tail];
+
+	msh->size = size;
+	memcpy(msh->data, data, size);
+
+	priv_msg_incAsync(msg);
+}
+
+/* -------------------------------------------------------------------------- */
+static
 int priv_msg_takeAsync( msg_t *msg, void *data, size_t size, size_t *read )
 /* -------------------------------------------------------------------------- */
 {
@@ -633,19 +646,6 @@ int msg_waitAsync( msg_t *msg, void *data, size_t size, size_t *read )
 		core_ctx_switch();
 
 	return result;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_msg_putAsync( msg_t *msg, const char *data, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	msh_t *msh = (msh_t *)&msg->data[msg->tail];
-
-	msh->size = size;
-	memcpy(msh->data, data, size);
-
-	priv_msg_incAsync(msg);
 }
 
 /* -------------------------------------------------------------------------- */
