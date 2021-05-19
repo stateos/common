@@ -285,7 +285,7 @@ void evq_send( evq_t *evq, unsigned event );
 
 #if OS_ATOMICS
 __STATIC_INLINE
-void evq_sendAsync( evq_t *evq, unsigned event ) { evq_send(evq); }
+void evq_sendAsync( evq_t *evq, unsigned event ) { evq_send(evq, event); }
 #endif
 
 /******************************************************************************
