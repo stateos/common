@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.c
     @author  Rajmund Szymanski
-    @date    04.05.2021
+    @date    20.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -130,15 +130,46 @@ void job_destroy( job_t *job )
 
 /* -------------------------------------------------------------------------- */
 static
+bool priv_job_empty( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	return job->count == 0;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_job_full( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	return job->count == job->limit;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_dec( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	job->head = job->head + 1 < job->limit ? job->head + 1 : 0;
+	job->count -= 1;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_inc( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	job->tail = job->tail + 1 < job->limit ? job->tail + 1 : 0;
+	job->count += 1;
+}
+
+/* -------------------------------------------------------------------------- */
+static
 fun_t *priv_job_get( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned head = job->head;
+	fun_t *fun = job->data[job->head];
 
-	fun_t *fun = job->data[head++];
-
-	job->head = head < job->limit ? head : 0;
-	job->count--;
+	priv_job_dec(job);
 
 	return fun;
 }
@@ -148,23 +179,9 @@ static
 void priv_job_put( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned tail = job->tail;
+	job->data[job->tail] = fun;
 
-	job->data[tail++] = fun;
-
-	job->tail = tail < job->limit ? tail : 0;
-	job->count++;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_job_skip( job_t *job )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned head = job->head + 1;
-
-	job->head = head < job->limit ? head : 0;
-	job->count--;
+	priv_job_inc(job);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -202,9 +219,10 @@ void priv_job_skipUpdate( job_t *job )
 {
 	tsk_t *tsk;
 
-	while (job->count == job->limit)
+	while (priv_job_full(job))
 	{
-		priv_job_skip(job);
+		priv_job_dec(job);
+
 		tsk = core_one_wakeup(job->obj.queue, E_SUCCESS);
 		if (tsk) priv_job_put(job, tsk->tmp.job.fun);
 	}
@@ -215,7 +233,7 @@ static
 int priv_job_take( job_t *job, fun_t **fun )
 /* -------------------------------------------------------------------------- */
 {
-	if (job->count == 0)
+	if (priv_job_empty(job))
 		return E_TIMEOUT;
 
 	*fun = priv_job_getUpdate(job);
@@ -304,7 +322,7 @@ static
 int priv_job_give( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	if (job->count == job->limit)
+	if (priv_job_full(job))
 		return E_TIMEOUT;
 
 	priv_job_putUpdate(job, fun);
@@ -465,17 +483,58 @@ unsigned job_limit( job_t *job )
 
 /* -------------------------------------------------------------------------- */
 static
+bool priv_job_emptyAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load((atomic_size_t *)&job->count) == 0;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_job_fullAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load((atomic_size_t *)&job->count) == job->limit;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_decAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	job->head = job->head + 1 < job->limit ? job->head + 1 : 0;
+	atomic_fetch_sub((atomic_size_t *)&job->count, 1);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_incAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	job->tail = job->tail + 1 < job->limit ? job->tail + 1 : 0;
+	atomic_fetch_add((atomic_size_t *)&job->count, 1);
+}
+
+/* -------------------------------------------------------------------------- */
+static
 fun_t *priv_job_getAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned head = job->head;
+	fun_t *fun = job->data[job->head];
 
-	fun_t *fun = job->data[head++];
-
-	job->head = head < job->limit ? head : 0;
-	atomic_fetch_sub((atomic_uint *)&job->count, 1);
+	priv_job_decAsync(job);
 
 	return fun;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_putAsync( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	job->data[job->tail] = fun;
+
+	priv_job_incAsync(job);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -483,7 +542,7 @@ static
 int priv_job_takeAsync( job_t *job, fun_t **fun )
 /* -------------------------------------------------------------------------- */
 {
-	if (atomic_load((atomic_uint *)&job->count) == 0)
+	if (priv_job_emptyAsync(job))
 		return E_TIMEOUT;
 
 	*fun = priv_job_getAsync(job);
@@ -529,23 +588,10 @@ int job_waitAsync( job_t *job )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_job_putAsync( job_t *job, fun_t *fun )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned tail = job->tail;
-
-	job->data[tail++] = fun;
-
-	job->tail = tail < job->limit ? tail : 0;
-	atomic_fetch_add((atomic_uint *)&job->count, 1);
-}
-
-/* -------------------------------------------------------------------------- */
-static
 int priv_job_giveAsync( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	if (atomic_load((atomic_uint *)&job->count) == job->limit)
+	if (priv_job_fullAsync(job))
 		return E_TIMEOUT;
 
 	priv_job_putAsync(job, fun);
