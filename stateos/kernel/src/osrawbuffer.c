@@ -2,7 +2,7 @@
 
     @file    StateOS: osrawbuffer.c
     @author  Rajmund Szymanski
-    @date    18.05.2021
+    @date    19.05.2021
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -167,15 +167,18 @@ void priv_raw_skip( raw_t *raw, size_t size )
 {
 	raw->count -= size;
 	raw->head  += size;
-	if (raw->head >= raw->limit) raw->head -= raw->limit;
+	if (raw->head >= raw->limit)
+		raw->head -= raw->limit;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-size_t priv_raw_getUpdate( raw_t *raw, char *data, size_t size )
+size_t priv_raw_getUpdate( raw_t *raw, void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (size > raw->count) size = raw->count;
+	if (size > raw->count)
+		size = raw->count;
+
 	priv_raw_get(raw, data, size);
 
 	while (raw->obj.queue != 0 && raw->count + raw->obj.queue->tmp.raw.size <= raw->limit)
@@ -189,7 +192,7 @@ size_t priv_raw_getUpdate( raw_t *raw, char *data, size_t size )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_raw_putUpdate( raw_t *raw, const char *data, size_t size )
+void priv_raw_putUpdate( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	priv_raw_put(raw, data, size);
@@ -223,7 +226,7 @@ void priv_raw_skipUpdate( raw_t *raw, size_t size )
 
 /* -------------------------------------------------------------------------- */
 static
-int priv_raw_take( raw_t *raw, char *data, size_t size, size_t *read )
+int priv_raw_take( raw_t *raw, void *data, size_t size, size_t *read )
 /* -------------------------------------------------------------------------- */
 {
 	if (raw->count == 0)
@@ -322,7 +325,7 @@ int raw_waitUntil( raw_t *raw, void *data, size_t size, size_t *read, cnt_t time
 
 /* -------------------------------------------------------------------------- */
 static
-int priv_raw_give( raw_t *raw, const char *data, size_t size )
+int priv_raw_give( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	if (size > raw->limit)
