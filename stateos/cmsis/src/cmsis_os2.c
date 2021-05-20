@@ -24,7 +24,7 @@
 
     @file    StateOS: cmsis_os2.c
     @author  Rajmund Szymanski
-    @date    28.04.2021
+    @date    20.05.2021
     @brief   CMSIS-RTOS2 API implementation for StateOS.
 
  ******************************************************************************
@@ -1226,7 +1226,7 @@ osMessageQueueId_t osMessageQueueNew (uint32_t msg_count, uint32_t msg_size, con
 
 	sys_lock();
 	{
-		box_init(&mq->box, msg_count, data, msg_size);
+		box_init(&mq->box, msg_size, data, size);
 		if (attr == NULL || attr->cb_mem == NULL || attr->cb_size == 0U) mq->box.obj.res = mq;
 		else if (attr->mq_mem == NULL || attr->mq_size == 0U) mq->box.obj.res = data;
 		mq->flags = flags;
@@ -1294,7 +1294,7 @@ uint32_t osMessageQueueGetCapacity (osMessageQueueId_t mq_id)
 	if (mq_id == NULL)
 		return 0U;
 
-	return mq->box.limit;
+	return box_limit(&mq->box);
 }
 
 uint32_t osMessageQueueGetMsgSize (osMessageQueueId_t mq_id)
@@ -1304,7 +1304,7 @@ uint32_t osMessageQueueGetMsgSize (osMessageQueueId_t mq_id)
 	if (mq_id == NULL)
 		return 0U;
 
-	return mq->box.size;
+	return box_size(&mq->box);
 }
 
 uint32_t osMessageQueueGetCount (osMessageQueueId_t mq_id)
@@ -1314,24 +1314,17 @@ uint32_t osMessageQueueGetCount (osMessageQueueId_t mq_id)
 	if (mq_id == NULL)
 		return 0U;
 
-	return mq->box.count;
+	return box_count(&mq->box);
 }
 
 uint32_t osMessageQueueGetSpace (osMessageQueueId_t mq_id)
 {
 	osMessageQueue_t *mq = mq_id;
-	uint32_t       count;
 
 	if (mq_id == NULL)
 		return 0U;
 
-	sys_lock();
-	{
-		count = mq->box.limit - mq->box.count;
-	}
-	sys_unlock();
-
-	return count;
+	return box_space(&mq->box);
 }
 
 osStatus_t osMessageQueueReset (osMessageQueueId_t mq_id)
