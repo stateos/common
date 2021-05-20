@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    20.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -361,6 +361,22 @@ unsigned box_space( box_t *box );
 
 unsigned box_limit( box_t *box );
 
+/******************************************************************************
+ *
+ * Name              : box_size
+ *
+ * Description       : return size of a single mail
+ *
+ * Parameters
+ *   box             : pointer to mailbox queue object
+ *
+ * Return            : size of a single mail in the mailbox queue
+ *
+ ******************************************************************************/
+
+__STATIC_INLINE
+size_t box_size( box_t *box ) { return box->size; }
+
 #ifdef __cplusplus
 }
 #endif
@@ -399,9 +415,10 @@ struct MailBoxQueueT : public __box
 	unsigned give     ( const void *_data ) { return box_give     (this, _data); }
 	void     send     ( const void *_data ) {        box_send     (this, _data); }
 	void     push     ( const void *_data ) {        box_push     (this, _data); }
-	unsigned count    (       void )        { return box_count    (this); }
-	unsigned space    (       void )        { return box_space    (this); }
-	unsigned limit    (       void )        { return box_limit    (this); }
+	unsigned count    ()                    { return box_count    (this); }
+	unsigned space    ()                    { return box_space    (this); }
+	unsigned limit    ()                    { return box_limit    (this); }
+	size_t   size     ()                    { return box_size     (this); }
 #if OS_ATOMICS
 	unsigned takeAsync(       void *_data ) { return box_takeAsync(this, _data); }
 	void     waitAsync(       void *_data ) {        box_waitAsync(this, _data); }

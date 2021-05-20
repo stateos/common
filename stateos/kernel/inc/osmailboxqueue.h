@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    20.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -585,6 +585,29 @@ unsigned box_limit( box_t *box );
 __STATIC_INLINE
 unsigned box_limitISR( box_t *box ) { return box_limit(box); }
 
+/******************************************************************************
+ *
+ * Name              : box_size
+ * ISR alias         : box_sizeISR
+ *
+ * Description       : return size of a single mail
+ *
+ * Parameters
+ *   box             : pointer to mailbox queue object
+ *
+ * Return            : size of a single mail in the mailbox queue
+ *
+ * Note              : can be used in both thread and handler mode (for blockable interrupts)
+ *                     use ISR alias in blockable interrupt handlers
+ *
+ ******************************************************************************/
+
+__STATIC_INLINE
+size_t box_size( box_t *box ) { return box->size; }
+
+__STATIC_INLINE
+size_t box_sizeISR( box_t *box ) { return box_size(box); }
+
 #ifdef __cplusplus
 }
 #endif
@@ -645,6 +668,8 @@ struct MailBoxQueueT : public __box
 	unsigned spaceISR ()                                     { return box_spaceISR (this); }
 	unsigned limit    ()                                     { return box_limit    (this); }
 	unsigned limitISR ()                                     { return box_limitISR (this); }
+	size_t   size     ()                                     { return box_size     (this); }
+	size_t   sizeISR  ()                                     { return box_sizeISR  (this); }
 #if OS_ATOMICS
 	int      takeAsync(       void *_data )                  { return box_takeAsync(this, _data); }
 	int      waitAsync(       void *_data )                  { return box_waitAsync(this, _data); }
