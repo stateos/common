@@ -65,7 +65,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       critical_section cs;
       _M_latch -= __update;
       if (_M_latch == 0)
-	    core_all_wakeup(_M_wait, E_SUCCESS);
+        core_all_wakeup(_M_wait, E_SUCCESS);
     }
 
     _GLIBCXX_ALWAYS_INLINE bool
@@ -78,7 +78,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       if (!try_wait())
       {
         critical_section cs;
-      	core_tsk_waitFor(const_cast<tsk_t **>(&_M_wait), INFINITE);
+        core_tsk_waitFor(const_cast<tsk_t **>(&_M_wait), INFINITE);
       }
     }
 
