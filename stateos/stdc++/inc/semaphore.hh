@@ -38,8 +38,6 @@ namespace std _GLIBCXX_VISIBILITY(default)
 {
 _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
-  using __semaphore_impl = sem_t;
-
   #define __cpp_lib_semaphore 201907L
 
   template<ptrdiff_t __least_max_value = numeric_limits<ptrdiff_t>::max()>
