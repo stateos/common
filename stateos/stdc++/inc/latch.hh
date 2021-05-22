@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 21.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 22.05.2021
 
 #ifndef _GLIBCXX_LATCH
 #define _GLIBCXX_LATCH 1
@@ -34,10 +34,6 @@
 #include "inc/ostask.h"
 #include "inc/critical_section.hh"
 #include <limits>
-
-#ifndef  _GLIBCXX_ALWAYS_INLINE
-#define  _GLIBCXX_ALWAYS_INLINE inline __attribute__((__always_inline__))
-#endif
 
 namespace std _GLIBCXX_VISIBILITY(default)
 {
@@ -59,7 +55,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     latch(const latch&) = delete;
     latch& operator=(const latch&) = delete;
 
-    _GLIBCXX_ALWAYS_INLINE void
+    void
     count_down(ptrdiff_t __update = 1)
     {
       critical_section cs;
@@ -68,11 +64,11 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
         core_all_wakeup(_M_wait, E_SUCCESS);
     }
 
-    _GLIBCXX_ALWAYS_INLINE bool
+    bool
     try_wait() const noexcept
     { return _M_latch == 0; }
 
-    _GLIBCXX_ALWAYS_INLINE void
+    void
     wait() const noexcept
     {
       if (!try_wait())
@@ -82,7 +78,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       }
     }
 
-    _GLIBCXX_ALWAYS_INLINE void
+    void
     arrive_and_wait(ptrdiff_t __update = 1) noexcept
     {
       count_down(__update);

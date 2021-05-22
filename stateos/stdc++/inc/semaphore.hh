@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 13.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 22.05.2021
 
 #ifndef _GLIBCXX_SEMAPHORE
 #define _GLIBCXX_SEMAPHORE 1
@@ -47,8 +47,6 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
   {
     static_assert(__least_max_value >= 0);
     static_assert(__least_max_value <= semCounting);
-
-    __semaphore_impl _M_sem;
 
   public:
     explicit counting_semaphore(ptrdiff_t __desired = 0) noexcept
@@ -85,6 +83,9 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     bool
     try_acquire_until(const std::chrono::time_point<_Clock, _Dur>& __atime)
     { return sem_waitUntil(&_M_sem, chrono::systick::until(__atime)) == E_SUCCESS; }
+
+  private:
+    sem_t _M_sem;
   };
 
   using direct_semaphore = std::counting_semaphore<0>;
