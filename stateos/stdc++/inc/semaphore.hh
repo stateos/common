@@ -61,23 +61,14 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     max() noexcept
     { return __least_max_value; }
 
-    bool
-    release() noexcept
-    {
-      critical_section cs;
-      if (core_one_wakeup(_M_wait, E_SUCCESS) != nullptr)
-        return true;
-      if (_M_sem >= max())
-        return false;
-      ++_M_sem;
-      return true;
-    }
-
     void
-    release(ptrdiff_t __update) noexcept
+    release(ptrdiff_t __update = 1) noexcept
     {
       assert(__update >= 0 && __update <= max() - _M_sem);
-      while (__update-- > 0 && release());
+      critical_section cs;
+      _M_sem += __update;
+      while (_M_sem > 0 && core_one_wakeup(_M_wait, E_SUCCESS) != nullptr)
+        --_M_sem;
     }
 
     void
