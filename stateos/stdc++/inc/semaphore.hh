@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 22.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 23.05.2021
 
 #ifndef _GLIBCXX_SEMAPHORE
 #define _GLIBCXX_SEMAPHORE 1
@@ -31,8 +31,8 @@
 #pragma GCC system_header
 
 #if __cplusplus > 201703L
-#include "inc/ossemaphore.h"
-#include "inc/chrono.hh"
+#include "critical_section.hh"
+#include "chrono.hh"
 
 namespace std _GLIBCXX_VISIBILITY(default)
 {
@@ -40,18 +40,19 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
   #define __cpp_lib_semaphore 201907L
 
-  template<ptrdiff_t __least_max_value = numeric_limits<ptrdiff_t>::max()>
+  template<ptrdiff_t __least_max_value = __PTRDIFF_MAX__>
   class counting_semaphore
   {
     static_assert(__least_max_value >= 0);
-    static_assert(__least_max_value <= semCounting);
+  //static_assert(__least_max_value <= __PTRDIFF_MAX__);
 
   public:
     explicit counting_semaphore(ptrdiff_t __desired = 0) noexcept
-    : _M_sem(_SEM_INIT(__desired, __least_max_value))
-    { }
+    : _M_sem(__desired), _M_wait(nullptr)
+	{ assert(__desired >= 0 && __desired <= max()); }
 
-    ~counting_semaphore() = default;
+	~counting_semaphore()
+	{ assert(_M_wait == nullptr); }
 
     counting_semaphore(const counting_semaphore&) = delete;
     counting_semaphore& operator=(const counting_semaphore&) = delete;
@@ -60,30 +61,70 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     max() noexcept
     { return __least_max_value; }
 
-    void
-    release(ptrdiff_t __update = 1) noexcept(noexcept(sem_release(&_M_sem, 1)))
-    { sem_release(&_M_sem, static_cast<unsigned>(__update)); }
+    bool
+    release() noexcept
+    {
+      critical_section cs;
+      if (core_one_wakeup(_M_wait, E_SUCCESS) != nullptr)
+        return true;
+      if (_M_sem >= max())
+        return false;
+      ++_M_sem;
+      return true;
+    }
 
     void
-    acquire() noexcept(noexcept(sem_wait(&_M_sem)))
-    { sem_wait(&_M_sem); }
+    release(ptrdiff_t __update) noexcept
+    {
+      assert(__update >= 0 && __update <= max() - _M_sem);
+      while (__update-- > 0 && release());
+    }
+
+    void
+    acquire() noexcept
+    {
+      critical_section cs;
+      if (_M_sem == 0)
+        core_tsk_waitFor(&_M_wait, INFINITE);
+      else
+        --_M_sem;
+    }
 
     bool
-    try_acquire() noexcept(noexcept(sem_tryWait(&_M_sem)))
-    { return sem_tryWait(&_M_sem) == E_SUCCESS; }
+    try_acquire() noexcept
+    {
+      critical_section cs;
+      if (_M_sem == 0)
+        return false;
+      --_M_sem;
+      return true;
+    }
 
     template<typename _Rep, typename _Period>
     bool
     try_acquire_for(const std::chrono::duration<_Rep, _Period>& __rtime)
-    { return sem_waitFor(&_M_sem, chrono::systick::count(__rtime)) == E_SUCCESS; }
+    {
+      critical_section cs;
+      if (_M_sem == 0)
+        return core_tsk_waitFor(&_M_wait, chrono::systick::count(__rtime)) == E_SUCCESS;
+      --_M_sem;
+      return true;
+    }
 
     template<typename _Clock, typename _Dur>
     bool
     try_acquire_until(const std::chrono::time_point<_Clock, _Dur>& __atime)
-    { return sem_waitUntil(&_M_sem, chrono::systick::until(__atime)) == E_SUCCESS; }
+    {
+      critical_section cs;
+      if (_M_sem == 0)
+        return core_tsk_waitUntil(&_M_wait, chrono::systick::until(__atime)) == E_SUCCESS;
+      --_M_sem;
+      return true;
+    }
 
   private:
-    sem_t _M_sem;
+    ptrdiff_t _M_sem;
+    tsk_t    *_M_wait;
   };
 
   using direct_semaphore = std::counting_semaphore<0>;
