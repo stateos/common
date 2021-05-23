@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 22.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 23.05.2021
 
 #ifndef _GLIBCXX_LATCH
 #define _GLIBCXX_LATCH 1
@@ -31,9 +31,7 @@
 #pragma GCC system_header
 
 #if __cplusplus > 201703L
-#include "inc/ostask.h"
-#include "inc/critical_section.hh"
-#include <limits>
+#include "critical_section.hh"
 
 namespace std _GLIBCXX_VISIBILITY(default)
 {
@@ -46,17 +44,19 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
   public:
     static constexpr ptrdiff_t
     max() noexcept
-    { return numeric_limits<ptrdiff_t>::max(); }
+    { return __PTRDIFF_MAX__; }
 
     constexpr explicit latch(ptrdiff_t __expected) noexcept
     : _M_latch(__expected), _M_wait(nullptr) { }
 
-    ~latch() = default;
+	~latch()
+	{ assert(_M_wait == nullptr); }
+
     latch(const latch&) = delete;
     latch& operator=(const latch&) = delete;
 
     void
-    count_down(ptrdiff_t __update = 1)
+    count_down(ptrdiff_t __update = 1) noexcept
     {
       critical_section cs;
       _M_latch -= __update;
@@ -65,17 +65,18 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     }
 
     bool
-    try_wait() const noexcept
-    { return _M_latch == 0; }
+    try_wait() noexcept
+    {
+      critical_section cs;
+      return _M_latch == 0;
+    }
 
     void
-    wait() const noexcept
+    wait() noexcept
     {
-      if (!try_wait())
-      {
-        critical_section cs;
-        core_tsk_waitFor(const_cast<tsk_t **>(&_M_wait), INFINITE);
-      }
+      critical_section cs;
+      if (_M_latch != 0)
+        core_tsk_waitFor(&_M_wait, INFINITE);
     }
 
     void
@@ -89,6 +90,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     ptrdiff_t _M_latch;
     tsk_t    *_M_wait;
   };
+
 _GLIBCXX_END_NAMESPACE_VERSION
 } // namespace
 #endif // C++20
