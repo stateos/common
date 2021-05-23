@@ -44,7 +44,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
   class counting_semaphore
   {
     static_assert(__least_max_value >= 0);
-  //static_assert(__least_max_value <= __PTRDIFF_MAX__);
+    static_assert(__least_max_value <= __PTRDIFF_MAX__);
 
   public:
     explicit counting_semaphore(ptrdiff_t __desired = 0) noexcept

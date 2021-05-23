@@ -47,7 +47,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     { return __PTRDIFF_MAX__; }
 
     constexpr explicit latch(ptrdiff_t __expected) noexcept
-    : _M_latch(__expected), _M_wait(nullptr) { }
+    : _M_latch(__expected), _M_wait(nullptr)
+	{ assert(__expected >= 0 && __expected <= max()); }
 
 	~latch()
 	{ assert(_M_wait == nullptr); }
@@ -58,6 +59,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     void
     count_down(ptrdiff_t __update = 1) noexcept
     {
+      assert(__update >= 0 && __update <= _M_latch);
       critical_section cs;
       _M_latch -= __update;
       if (_M_latch == 0)
