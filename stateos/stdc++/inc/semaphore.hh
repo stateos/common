@@ -62,13 +62,19 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     { return __least_max_value; }
 
     void
-    release(ptrdiff_t __update = 1) noexcept
+    release() noexcept
     {
-      assert(__update >= 0 && __update <= max() - _M_sem);
       critical_section cs;
-      _M_sem += __update;
-      while (_M_sem > 0 && core_one_wakeup(_M_wait, E_SUCCESS) != nullptr)
-        --_M_sem;
+      if (core_one_wakeup(_M_wait, E_SUCCESS) == nullptr && _M_sem < max())
+        ++_M_sem;
+    }
+
+    void
+    release(ptrdiff_t __update) noexcept
+    {
+      assert(__update >= 0);
+      while (__update-- > 0)
+        release();
     }
 
     void
@@ -118,9 +124,9 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     tsk_t    *_M_wait;
   };
 
-  using direct_semaphore = std::counting_semaphore<0>;
+  using direct_semaphore = std::counting_semaphore<0>; // non standard-compliant
   using binary_semaphore = std::counting_semaphore<1>;
-  using        semaphore = std::counting_semaphore< >;
+  using        semaphore = std::counting_semaphore< >; // non standard-compliant
 
 _GLIBCXX_END_NAMESPACE_VERSION
 } // namespace
