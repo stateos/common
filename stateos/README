@@ -50,6 +50,8 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 6.8
+- added support for std::barrier, std::latch, std::binary_semaphore, std::counting_semaphore
+- added support for thread local storage (tls)
 - stream buffer renamed to raw buffer
 - added message queue
 - removed message buffer
