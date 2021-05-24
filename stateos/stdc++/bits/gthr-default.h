@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    21.05.2021
+    @date    24.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -37,13 +37,16 @@
 #include "inc/osonceflag.h"
 #include "inc/osconditionvariable.h"
 #include "inc/critical_section.hh"
+#include "inc/chrono.hh"
+#if    !__has_include(<barrier>)
+#include "inc/barrier.hh"
+#endif
 #if    !__has_include(<latch>)
 #include "inc/latch.hh"
 #endif
 #if    !__has_include(<semaphore>)
 #include "inc/semaphore.hh"
 #endif
-#include "inc/chrono.hh"
 
 //-----------------------------------------------------------------------------
 
