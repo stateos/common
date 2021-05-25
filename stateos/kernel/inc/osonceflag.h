@@ -2,7 +2,7 @@
 
     @file    StateOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    25.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -226,7 +226,7 @@ struct OnceFlag
 	{
 		one_t flag;
 	#if OS_ATOMICS
-		flag = __STD atomic_exchange((__STD atomic_uint_fast8_t *)&flg_, _ONE_DONE());
+		flag = std::atomic_exchange((std::atomic_uint_fast8_t *)&flg_, _ONE_DONE());
 	#else
 		{ CriticalSection cri; flag = flg_; flg_ = _ONE_DONE(); }
 	#endif
