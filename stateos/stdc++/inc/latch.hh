@@ -61,9 +61,15 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     {
       critical_section cs;
       assert(__update >= 0 && __update <= _M_latch);
-      _M_latch -= __update;
-      if (_M_latch == 0)
-        core_all_wakeup(_M_wait, E_SUCCESS);
+      if (__update > 0 && _M_latch > 0)
+      {
+        _M_latch -= __update;
+        if (_M_latch <= 0)
+        {
+          _M_latch = 0;
+          core_all_wakeup(_M_wait, E_SUCCESS);
+        }
+      }
     }
 
     bool
