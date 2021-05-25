@@ -25,7 +25,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===---------------------------------------------------------------===//
-// Modified by Rajmund Szymanski @ StateOS, 24.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 25.05.2021
 
 #ifndef _GLIBCXX_BARRIER
 #define _GLIBCXX_BARRIER 1
@@ -70,8 +70,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     arrival_token
     arrive(ptrdiff_t __update = 1)
     {
-      assert(__update > 0 && __update <= _M_b);
       critical_section cs;
+      assert(__update > 0 && __update <= _M_b);
       arrival_token result = _M_phase;
       _M_b -= __update;
       if (_M_b == 0)
