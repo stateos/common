@@ -101,7 +101,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     {
       critical_section cs;
       --_M_expected;
-      arrive(1);
+      arrive();
     }
 
   private:
