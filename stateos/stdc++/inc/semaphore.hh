@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 23.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 25.05.2021
 
 #ifndef _GLIBCXX_SEMAPHORE
 #define _GLIBCXX_SEMAPHORE 1
@@ -73,7 +73,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     release(ptrdiff_t __update) noexcept
     {
       assert(__update >= 0);
-      while (__update-- > 0)
+      while (--__update >= 0)
         release();
     }
 
