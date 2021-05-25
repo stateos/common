@@ -99,7 +99,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
     template<typename _Rep, typename _Period>
     bool
-    try_acquire_for(const std::chrono::duration<_Rep, _Period>& __rtime)
+    try_acquire_for(const std::chrono::duration<_Rep, _Period>& __rtime) noexcept
     {
       critical_section cs;
       if (_M_sem == 0)
@@ -110,7 +110,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
     template<typename _Clock, typename _Dur>
     bool
-    try_acquire_until(const std::chrono::time_point<_Clock, _Dur>& __atime)
+    try_acquire_until(const std::chrono::time_point<_Clock, _Dur>& __atime) noexcept
     {
       critical_section cs;
       if (_M_sem == 0)
