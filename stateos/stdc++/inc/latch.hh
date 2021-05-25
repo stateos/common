@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 23.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 25.05.2021
 
 #ifndef _GLIBCXX_LATCH
 #define _GLIBCXX_LATCH 1
@@ -59,8 +59,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     void
     count_down(ptrdiff_t __update = 1) noexcept
     {
-      assert(__update >= 0 && __update <= _M_latch);
       critical_section cs;
+      assert(__update >= 0 && __update <= _M_latch);
       _M_latch -= __update;
       if (_M_latch == 0)
         core_all_wakeup(_M_wait, E_SUCCESS);
