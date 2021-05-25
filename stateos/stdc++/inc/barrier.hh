@@ -73,13 +73,16 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       critical_section cs;
       assert(__update > 0 && __update <= _M_barrier);
       arrival_token result = _M_phase;
-      _M_barrier -= __update;
-      if (_M_barrier == 0)
+      if (__update > 0 && _M_barrier > 0)
       {
-        _M_completion();
-        ++_M_phase;
-        _M_barrier = _M_expected;
-        core_all_wakeup(_M_wait, E_SUCCESS);
+        _M_barrier -= __update;
+        if (_M_barrier <= 0)
+        {
+          _M_completion();
+          ++_M_phase;
+          _M_barrier = _M_expected;
+          core_all_wakeup(_M_wait, E_SUCCESS);
+        }
       }
       return result;
     }
@@ -100,7 +103,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     arrive_and_drop() noexcept
     {
       critical_section cs;
-      --_M_expected;
+      if (_M_expected > 0)
+        --_M_expected;
       arrive();
     }
 
