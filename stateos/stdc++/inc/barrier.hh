@@ -61,43 +61,43 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
     explicit
     barrier(ptrdiff_t __count, _CompletionF __completion = _CompletionF())
-    : _M_phase(0), _M_expected(__count), _M_completion(std::move(__completion)), _M_b(__count), _M_wait(nullptr)
+    : _M_phase(0), _M_expected(__count), _M_completion(std::move(__completion)), _M_barrier(__count), _M_wait(nullptr)
 	{ assert(__count >= 0 && __count <= max()); }
 
     barrier(barrier const&) = delete;
     barrier& operator=(barrier const&) = delete;
 
     arrival_token
-    arrive(ptrdiff_t __update = 1)
+    arrive(ptrdiff_t __update = 1) noexcept
     {
       critical_section cs;
-      assert(__update > 0 && __update <= _M_b);
+      assert(__update > 0 && __update <= _M_barrier);
       arrival_token result = _M_phase;
-      _M_b -= __update;
-      if (_M_b == 0)
+      _M_barrier -= __update;
+      if (_M_barrier == 0)
       {
         _M_completion();
         ++_M_phase;
-        _M_b = _M_expected;
+        _M_barrier = _M_expected;
         core_all_wakeup(_M_wait, E_SUCCESS);
       }
       return result;
     }
 
     void
-    wait(arrival_token __phase)
+    wait(arrival_token __phase) noexcept
     {
       critical_section cs;
-      while (__phase == _M_phase)
+      if (__phase == _M_phase)
         core_tsk_waitFor(&_M_wait, INFINITE);
     }
 
     void
-    arrive_and_wait()
+    arrive_and_wait() noexcept
     { wait(arrive()); }
 
     void
-    arrive_and_drop()
+    arrive_and_drop() noexcept
     {
       critical_section cs;
       --_M_expected;
@@ -106,9 +106,9 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
   private:
     arrival_token _M_phase;
-    ptrdiff_t     _M_expected;
     _CompletionF  _M_completion;
-    ptrdiff_t     _M_b;
+    ptrdiff_t     _M_expected;
+    ptrdiff_t     _M_barrier;
     tsk_t        *_M_wait;
   };
 
