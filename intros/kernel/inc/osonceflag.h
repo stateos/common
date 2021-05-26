@@ -2,7 +2,7 @@
 
     @file    IntrOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    25.05.2021
+    @date    26.05.2021
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -221,7 +221,7 @@ struct OnceFlag
 	{
 		one_t flag;
 	#if OS_ATOMICS
-		flag = std::atomic_exchange((std::atomic_uint_fast8_t *)&flg_, _ONE_DONE());
+		flag = std::atomic_exchange(&flg_, _ONE_DONE());
 	#else
 		{ CriticalSection cri; flag = flg_; flg_ = _ONE_DONE(); }
 	#endif
@@ -235,7 +235,11 @@ struct OnceFlag
 #endif
 
 	private:
+#if OS_ATOMICS && __cplusplus >= 201402L
+	std::atomic<one_t> flg_;
+#else
 	one_t flg_;
+#endif
 };
 
 }     //  namespace
