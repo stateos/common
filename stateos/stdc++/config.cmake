@@ -1,9 +1,5 @@
 include_guard(GLOBAL)
 
-if (NOT DEFINED STATEOS_PATH)
-	message(FATAL_ERROR "Please define STATEOS_PATH before including the stateos::cmsis package")
-endif()
-
 project(stateos-stdc++)
 
 add_library(stateos-stdc++ INTERFACE)
@@ -17,15 +13,15 @@ target_compile_definitions(stateos-stdc++
 
 target_sources(stateos-stdc++
 	INTERFACE
-	${STATEOS_PATH}/stdc++/src/emutls.cc
-	${STATEOS_PATH}/stdc++/src/chrono.cc
-	${STATEOS_PATH}/stdc++/src/future.cc
-	${STATEOS_PATH}/stdc++/src/mutex.cc
-	${STATEOS_PATH}/stdc++/src/condition_variable.cc
-	${STATEOS_PATH}/stdc++/src/thread.cc
+	${CMAKE_CURRENT_LIST_DIR}/src/emutls.cc
+	${CMAKE_CURRENT_LIST_DIR}/src/chrono.cc
+	${CMAKE_CURRENT_LIST_DIR}/src/future.cc
+	${CMAKE_CURRENT_LIST_DIR}/src/mutex.cc
+	${CMAKE_CURRENT_LIST_DIR}/src/condition_variable.cc
+	${CMAKE_CURRENT_LIST_DIR}/src/thread.cc
 )
 
 target_include_directories(stateos-stdc++
 	INTERFACE
-	${STATEOS_PATH}/stdc++
+	${CMAKE_CURRENT_LIST_DIR}
 )
