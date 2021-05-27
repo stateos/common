@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    18.04.2021
+    @date    27.05.2021
     @brief   This file defines set of kernel functions for StateOS.
 
  ******************************************************************************
@@ -118,13 +118,6 @@ void core_stk_move( tsk_t *tsk, size_t size );
 
 // initiate and run the system timer
 void port_sys_init( void );
-
-// initiate and run the system timer
-// the core_sys_init procedure is normally called as a static constructor
-#ifdef __CONSTRUCTOR
-__CONSTRUCTOR
-void core_sys_init( void );
-#endif
 
 /* -------------------------------------------------------------------------- */
 

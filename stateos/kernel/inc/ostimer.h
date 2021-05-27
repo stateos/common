@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    27.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -145,20 +145,20 @@ extern "C" {
  ******************************************************************************/
 
 #ifdef __CONSTRUCTOR
-#define             OS_TMR_START( tmr, delay, period )                                           \
-                       void tmr##__fun( void );                                                   \
-                       tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                                 \
-                       tmr_id tmr = & tmr##__tmr;                                                   \
-         __CONSTRUCTOR void tmr##__start( void ) { core_sys_init(); tmr_start(tmr, delay, period); } \
+#define             OS_TMR_START( tmr, delay, period )                                      \
+                       void tmr##__fun( void );                                              \
+                       tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                            \
+                       tmr_id tmr = & tmr##__tmr;                                              \
+         __CONSTRUCTOR void tmr##__start( void ) { sys_init(); tmr_start(tmr, delay, period); } \
                        void tmr##__fun( void )
 #endif
 
 #ifdef __CONSTRUCTOR
-#define         static_TMR_START( tmr, delay, period )                                           \
-                static void tmr##__fun( void );                                                   \
-                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                                 \
-                static tmr_id tmr = & tmr##__tmr;                                                   \
-  __CONSTRUCTOR static void tmr##__start( void ) { core_sys_init(); tmr_start(tmr, delay, period); } \
+#define         static_TMR_START( tmr, delay, period )                                      \
+                static void tmr##__fun( void );                                              \
+                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                            \
+                static tmr_id tmr = & tmr##__tmr;                                              \
+  __CONSTRUCTOR static void tmr##__start( void ) { sys_init(); tmr_start(tmr, delay, period); } \
                 static void tmr##__fun( void )
 #endif
 
@@ -179,20 +179,20 @@ extern "C" {
  ******************************************************************************/
 
 #ifdef __CONSTRUCTOR
-#define             OS_TMR_UNTIL( tmr, time )                                                \
-                       void tmr##__fun( void );                                               \
-                       tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                             \
-                       tmr_id tmr = & tmr##__tmr;                                               \
-         __CONSTRUCTOR void tmr##__start( void ) { core_sys_init(); tmr_startUntil(tmr, time); } \
+#define             OS_TMR_UNTIL( tmr, time )                                           \
+                       void tmr##__fun( void );                                          \
+                       tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                        \
+                       tmr_id tmr = & tmr##__tmr;                                          \
+         __CONSTRUCTOR void tmr##__start( void ) { sys_init(); tmr_startUntil(tmr, time); } \
                        void tmr##__fun( void )
 #endif
 
 #ifdef __CONSTRUCTOR
-#define         static_TMR_UNTIL( tmr, time )                                                \
-                static void tmr##__fun( void );                                               \
-                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                             \
-                static tmr_id tmr = & tmr##__tmr;                                               \
-  __CONSTRUCTOR static void tmr##__start( void ) { core_sys_init(); tmr_startUntil(tmr, time); } \
+#define         static_TMR_UNTIL( tmr, time )                                           \
+                static void tmr##__fun( void );                                          \
+                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                        \
+                static tmr_id tmr = & tmr##__tmr;                                          \
+  __CONSTRUCTOR static void tmr##__start( void ) { sys_init(); tmr_startUntil(tmr, time); } \
                 static void tmr##__fun( void )
 #endif
 

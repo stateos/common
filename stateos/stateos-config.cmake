@@ -25,8 +25,9 @@ target_link_libraries(stateos INTERFACE cmsis)
 
 target_sources(stateos
 	INTERFACE
-	${STATEOS_PATH}/kernel/osalloc.c
 	${STATEOS_PATH}/kernel/oskernel.c
+	${STATEOS_PATH}/kernel/osalloc.c
+	${STATEOS_PATH}/kernel/ossys.c
 	${STATEOS_PATH}/kernel/src/osclock.c
 	${STATEOS_PATH}/kernel/src/osbarrier.c
 	${STATEOS_PATH}/kernel/src/osconditionvariable.c

@@ -1,6 +1,6 @@
 /******************************************************************************
 
-    @file    StateOS: os.h
+    @file    StateOS: ossys.h
     @author  Rajmund Szymanski
     @date    27.05.2021
     @brief   This file contains definitions for StateOS.
@@ -29,34 +29,37 @@
 
  ******************************************************************************/
 
-#ifndef __STATEOS_H
-#define __STATEOS_H
+#ifndef __STATEOS_SYS_H
+#define __STATEOS_SYS_H
 
-#include "osversion.h"
 #include "oskernel.h"
-#include "osalloc.h"
-#include "ossys.h"
-#include "inc/osclock.h"
-#include "inc/oscriticalsection.h"
-#include "inc/osspinlock.h"
-#include "inc/osonceflag.h"
-#include "inc/osevent.h"
-#include "inc/ossignal.h"
-#include "inc/osflag.h"
-#include "inc/osbarrier.h"
-#include "inc/ossemaphore.h"
-#include "inc/osmutex.h"
-#include "inc/osfastmutex.h"
-#include "inc/osconditionvariable.h"
-#include "inc/osrwlock.h"
-#include "inc/oslist.h"
-#include "inc/osmemorypool.h"
-#include "inc/osrawbuffer.h"
-#include "inc/osmessagequeue.h"
-#include "inc/osmailboxqueue.h"
-#include "inc/oseventqueue.h"
-#include "inc/osjobqueue.h"
-#include "inc/ostimer.h"
-#include "inc/ostask.h"
 
-#endif//__STATEOS_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/******************************************************************************
+ *
+ * Name              : sys_init
+ *
+ * Description       : initialize system timer and enable services
+ *
+ * Parameters        : none
+ *
+ * Return            : none
+ *
+ * Note              : function sys_init should be invoked as a static constructor
+ *                   : otherwise, call sys_init as the first instruction in function main
+ *
+ ******************************************************************************/
+
+#ifdef __CONSTRUCTOR
+       __CONSTRUCTOR
+#endif
+void sys_init( void );
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif//__STATEOS_SYS_H

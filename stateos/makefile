@@ -24,8 +24,9 @@ ifneq ($(wildcard $(COMMON)/stateos/port/$(STATEOS_ARCH)/common),)
 INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/common
 endif
 
-SRCS += $(COMMON)/stateos/kernel/osalloc.c
 SRCS += $(COMMON)/stateos/kernel/oskernel.c
+SRCS += $(COMMON)/stateos/kernel/osalloc.c
+SRCS += $(COMMON)/stateos/kernel/ossys.c
 SRCS += $(COMMON)/stateos/kernel/src/osclock.c
 SRCS += $(COMMON)/stateos/kernel/src/osbarrier.c
 SRCS += $(COMMON)/stateos/kernel/src/osconditionvariable.c

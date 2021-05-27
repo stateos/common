@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    25.04.2021
+    @date    27.05.2021
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -30,10 +30,9 @@
  ******************************************************************************/
 
 #include "oskernel.h"
+#include "inc/osmutex.h"
 #include "inc/ostimer.h"
 #include "inc/ostask.h"
-#include "inc/osmutex.h"
-#include "inc/osonceflag.h"
 
 /* -------------------------------------------------------------------------- */
 // SYSTEM INTERNAL SERVICES
@@ -49,10 +48,6 @@ void priv_ctx_switchNow( void )
 
 /* -------------------------------------------------------------------------- */
 // SYSTEM TIMER SERVICES
-/* -------------------------------------------------------------------------- */
-
-tmr_t WAIT = { .hdr={ .prev=&WAIT, .next=&WAIT, .id=ID_TIMER }, .delay=INFINITE }; // timers queue
-
 /* -------------------------------------------------------------------------- */
 
 static
@@ -188,23 +183,6 @@ void core_tmr_handler( void )
 
 /* -------------------------------------------------------------------------- */
 // SYSTEM TASK SERVICES
-/* -------------------------------------------------------------------------- */
-
-#ifndef MAIN_TOP
-static  stk_t     MAIN_STK[STK_SIZE(OS_STACK_SIZE)] __STKALIGN;
-#define MAIN_TOP (MAIN_STK+STK_SIZE(OS_STACK_SIZE))
-#endif
-
-static  union  { stk_t STK[STK_SIZE(OS_IDLE_STACK)] __STKALIGN;
-        struct { char  stk[STK_OVER(OS_IDLE_STACK)-sizeof(ctx_t)]; ctx_t ctx; } CTX; }
-        IDLE_STACK = { .CTX = { .ctx = _CTX_INIT(core_tsk_loop) } };
-#define IDLE_STK  IDLE_STACK.STK
-#define IDLE_SP  &IDLE_STACK.CTX.ctx
-
-tsk_t MAIN = { .hdr={ .prev=&IDLE, .next=&IDLE, .id=ID_READY }, .stack=MAIN_TOP, .basic=OS_MAIN_PRIO, .prio=OS_MAIN_PRIO }; // main task
-tsk_t IDLE = { .hdr={ .prev=&MAIN, .next=&MAIN, .id=ID_READY }, .state=core_tsk_idle, .stack=IDLE_STK, .size=sizeof(IDLE_STK), .sp=IDLE_SP, .owner=&IDLE }; // idle task and tasks queue
-sys_t System = { .cur=&MAIN };
-
 /* -------------------------------------------------------------------------- */
 
 static
@@ -688,21 +666,6 @@ void core_mtx_reset( mtx_t *mtx, int event )
 	core_mtx_unlink(mtx);
 	core_all_wakeup(mtx->obj.queue, event);
 }
-
-/* -------------------------------------------------------------------------- */
-// OTHER SYSTEM SERVICES
-/* -------------------------------------------------------------------------- */
-
-#ifdef __CONSTRUCTOR
-
-void core_sys_init()
-{
-	static one_t init = ONE_INIT();
-
-	one_call(&init, port_sys_init);
-}
-
-#endif
 
 /* -------------------------------------------------------------------------- */
 

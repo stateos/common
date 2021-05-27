@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    27.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -368,18 +368,18 @@ extern "C" {
  ******************************************************************************/
 
 #ifdef __CONSTRUCTOR
-#define             OS_WRK_START( tsk, prio, size )                              \
-                       void tsk##__fun( void );                                   \
-                    OS_WRK( tsk, prio, tsk##__fun, size );                         \
-         __CONSTRUCTOR void tsk##__run( void ) { core_sys_init(); tsk_start(tsk); } \
+#define             OS_WRK_START( tsk, prio, size )                         \
+                       void tsk##__fun( void );                              \
+                    OS_WRK( tsk, prio, tsk##__fun, size );                    \
+         __CONSTRUCTOR void tsk##__run( void ) { sys_init(); tsk_start(tsk); } \
                        void tsk##__fun( void )
 #endif
 
 #ifdef __CONSTRUCTOR
-#define         static_WRK_START( tsk, prio, size )                              \
-                static void tsk##__fun( void );                                   \
-                static_WRK( tsk, prio, tsk##__fun, size );                         \
-  __CONSTRUCTOR static void tsk##__run( void ) { core_sys_init(); tsk_start(tsk); } \
+#define         static_WRK_START( tsk, prio, size )                         \
+                static void tsk##__fun( void );                              \
+                static_WRK( tsk, prio, tsk##__fun, size );                    \
+  __CONSTRUCTOR static void tsk##__run( void ) { sys_init(); tsk_start(tsk); } \
                 static void tsk##__fun( void )
 #endif
 
