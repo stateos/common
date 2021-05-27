@@ -2,7 +2,7 @@
 
     @file    IntrOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    30.04.2021
+    @date    27.05.2021
     @brief   This file defines set of kernel functions for IntrOS.
 
  ******************************************************************************
@@ -108,10 +108,6 @@ bool core_stk_integrity( void );
 /* -------------------------------------------------------------------------- */
 
 // initiate and run the system timer
-// the port_sys_init procedure is normally called as a constructor
-#ifdef __CONSTRUCTOR
-       __CONSTRUCTOR
-#endif
 void port_sys_init( void );
 
 /* -------------------------------------------------------------------------- */

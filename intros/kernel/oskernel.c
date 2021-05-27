@@ -2,7 +2,7 @@
 
     @file    IntrOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    17.12.2020
+    @date    27.05.2021
     @brief   This file provides set of variables and functions for IntrOS.
 
  ******************************************************************************
@@ -66,16 +66,6 @@ void core_tmr_remove( tmr_t *tmr )
 
 /* -------------------------------------------------------------------------- */
 // SYSTEM TASK SERVICES
-/* -------------------------------------------------------------------------- */
-
-#ifndef MAIN_TOP
-static  stk_t     MAIN_STK[STK_SIZE(OS_STACK_SIZE)] __STKALIGN;
-#define MAIN_TOP (MAIN_STK+STK_SIZE(OS_STACK_SIZE))
-#endif
-
-tsk_t MAIN = { .hdr={ .prev=&MAIN, .next=&MAIN, .id=ID_READY }, .stack=MAIN_TOP }; // main task
-sys_t System = { .cur=&MAIN };
-
 /* -------------------------------------------------------------------------- */
 
 void core_tsk_insert( tsk_t *tsk )

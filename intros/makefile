@@ -25,6 +25,7 @@ INCS += $(COMMON)/intros/port/$(INTROS_ARCH)/common
 endif
 
 SRCS += $(COMMON)/intros/kernel/oskernel.c
+SRCS += $(COMMON)/intros/kernel/ossys.c
 SRCS += $(COMMON)/intros/kernel/src/osclock.c
 SRCS += $(COMMON)/intros/kernel/src/osbarrier.c
 SRCS += $(COMMON)/intros/kernel/src/osconditionvariable.c

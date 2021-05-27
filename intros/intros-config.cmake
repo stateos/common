@@ -26,6 +26,7 @@ target_link_libraries(intros INTERFACE cmsis)
 target_sources(intros
 	INTERFACE
 	${INTROS_PATH}/kernel/oskernel.c
+	${INTROS_PATH}/kernel/ossys.c
 	${INTROS_PATH}/kernel/src/osclock.c
 	${INTROS_PATH}/kernel/src/osbarrier.c
 	${INTROS_PATH}/kernel/src/osconditionvariable.c

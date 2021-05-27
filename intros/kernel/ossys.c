@@ -1,9 +1,9 @@
 /******************************************************************************
 
-    @file    IntrOS: os.h
+    @file    IntrOS: ossys.c
     @author  Rajmund Szymanski
     @date    27.05.2021
-    @brief   This file contains definitions for IntrOS.
+    @brief   This file provides set of variables and functions for IntrOS.
 
  ******************************************************************************
 
@@ -29,32 +29,30 @@
 
  ******************************************************************************/
 
-#ifndef __INTROS_H
-#define __INTROS_H
-
-#include "osversion.h"
-#include "oskernel.h"
 #include "ossys.h"
-#include "inc/osclock.h"
-#include "inc/oscriticalsection.h"
-#include "inc/osspinlock.h"
-#include "inc/osonceflag.h"
-#include "inc/osevent.h"
-#include "inc/ossignal.h"
-#include "inc/osflag.h"
-#include "inc/osbarrier.h"
-#include "inc/ossemaphore.h"
-#include "inc/osmutex.h"
-#include "inc/osconditionvariable.h"
-#include "inc/osrwlock.h"
-#include "inc/oslist.h"
-#include "inc/osmemorypool.h"
-#include "inc/osrawbuffer.h"
-#include "inc/osmessagequeue.h"
-#include "inc/osmailboxqueue.h"
-#include "inc/oseventqueue.h"
-#include "inc/osjobqueue.h"
-#include "inc/ostimer.h"
 #include "inc/ostask.h"
+#include "inc/osonceflag.h"
 
-#endif//__INTROS_H
+/* -------------------------------------------------------------------------- */
+
+#ifndef MAIN_TOP
+static  stk_t     MAIN_STK[STK_SIZE(OS_STACK_SIZE)] __STKALIGN;
+#define MAIN_TOP (MAIN_STK+STK_SIZE(OS_STACK_SIZE))
+#endif
+
+/* -------------------------------------------------------------------------- */
+
+tsk_t MAIN = { .hdr={ .prev=&MAIN, .next=&MAIN, .id=ID_READY }, .stack=MAIN_TOP }; // main task
+
+sys_t System = { .cur=&MAIN };
+
+/* -------------------------------------------------------------------------- */
+void sys_init( void )
+/* -------------------------------------------------------------------------- */
+{
+	static one_t init = ONE_INIT();
+
+	one_call(&init, port_sys_init);
+}
+
+/* -------------------------------------------------------------------------- */
