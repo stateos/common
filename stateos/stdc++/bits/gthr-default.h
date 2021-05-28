@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    24.05.2021
+    @date    28.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -50,8 +50,8 @@
 
 //-----------------------------------------------------------------------------
 
-#if   __cplusplus < 201709L
-#error  Required C++20 or above.
+#if   __cplusplus < 201103L
+#error  Required C++11 or above.
 #endif
 
 #if     OS_TASK_EXIT == 0

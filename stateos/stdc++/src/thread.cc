@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 14.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 28.05.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
@@ -47,7 +47,11 @@ int __gthread_key_create(__gthread_key_t *keyp, void (*dtor)(void *))
 {
   assert(keyp);
   std::lock_guard<std::mutex> lock(key_mutex);
+#if __cplusplus < 201402L
+  auto ptr = std::unique_ptr<oskey_t>(new oskey_t());
+#else
   auto ptr = std::make_unique<oskey_t>();
+#endif
   if (!ptr || !key_map.insert({ ptr.get(), dtor }).second)
     return 1;
   *keyp = ptr.release();
@@ -74,7 +78,11 @@ int __gthread_setspecific(__gthread_key_t key, const void *ptr)
 {
   assert(key);
   std::lock_guard<std::mutex> lock(key_mutex);
+#if __cplusplus < 201703L
+  (*key)[__gthread_self()] = const_cast<void *>(ptr);
+#else
   key->insert_or_assign(__gthread_self(), const_cast<void *>(ptr));
+#endif
   return 0;
 }
 
