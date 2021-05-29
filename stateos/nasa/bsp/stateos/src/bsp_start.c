@@ -138,4 +138,7 @@ int OS_BSP_Main(void)
 
     /* Should typically never get here */
     OS_BSP_Shutdown_Impl();
+
+    /* Preventing unwanted warning */
+    return 0;
 }
