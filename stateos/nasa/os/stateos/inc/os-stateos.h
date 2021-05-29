@@ -60,9 +60,6 @@
 #if     OS_TIMER_SIZE != 64
 #error  osconfig.h: Invalid OS_TIMER_SIZE value! It must be a value equal to 64.
 #endif
-#if     OS_TASK_EXIT == 0
-#error  osconfig.h: Invalid OS_TASK_EXIT value! It must be a value other than 0.
-#endif
 
 /****************************************************************************************
                                 INLINE FUNCTIONS
