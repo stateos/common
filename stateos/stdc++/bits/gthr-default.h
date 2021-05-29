@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    28.05.2021
+    @date    29.05.2021
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -52,10 +52,6 @@
 
 #if   __cplusplus < 201103L
 #error  Required C++11 or above.
-#endif
-
-#if     OS_TASK_EXIT == 0
-#error  osconfig.h: Invalid OS_TASK_EXIT value! It must be a value other than 0.
 #endif
 
 //-----------------------------------------------------------------------------
