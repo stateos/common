@@ -2,7 +2,7 @@
 
     @file    IntrOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    27.05.2021
+    @date    30.05.2021
     @brief   This file provides set of variables and functions for IntrOS.
 
  ******************************************************************************
@@ -172,6 +172,7 @@ void core_tsk_loop( void )
 }
 
 /* -------------------------------------------------------------------------- */
+#if OS_TASK_EXIT
 
 void core_tsk_exec( void )
 {
@@ -180,6 +181,7 @@ void core_tsk_exec( void )
 	tsk_stop();
 }
 
+#endif
 /* -------------------------------------------------------------------------- */
 
 static

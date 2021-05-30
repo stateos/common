@@ -2,7 +2,7 @@
 
     @file    IntrOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    27.05.2021
+    @date    30.05.2021
     @brief   This file defines set of kernel functions for IntrOS.
 
  ******************************************************************************
@@ -125,8 +125,10 @@ void core_tsk_loop( void );
 // system procedure for starting the current task
 // this is alternative for core_tsk_loop procedure
 // it executes tsk_exit while return
+#if OS_TASK_EXIT
 __NO_RETURN
 void core_tsk_exec( void );
+#endif
 
 // force yield system control to the next process
 __NO_RETURN
