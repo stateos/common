@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 28.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 31.05.2021
 
 #include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
@@ -90,14 +90,22 @@ static void __gthread_atexit()
 {
   std::lock_guard<std::mutex> lock(key_mutex);
   auto task = __gthread_self();
-  for (auto& item : key_map)
+#if __cplusplus < 201703L
+  for (auto const& item : key_map)
   {
-    auto it = item.first->find(task);
-    if (it != item.first->end())
+    auto const& key = item.first;
+    auto const& dtor = item.second;
+#else
+  for (auto const& [key, dtor] : key_map)
+  {
+#endif
+    auto const& it = key->find(task);
+    if (it != key->end())
     {
-      if (item.second && it->second)
-        item.second(it->second);
-      item.first->erase(it);
+      void *ptr = it->second;
+      if (dtor != nullptr && ptr != nullptr)
+        dtor(ptr);
+      key->erase(it);
     }
   }
 }
