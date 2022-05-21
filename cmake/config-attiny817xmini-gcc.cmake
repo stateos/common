@@ -28,7 +28,7 @@ function(setup_target target)
 		)
 	endif()
 
-	target_compile_definitions(test PRIVATE F_CPU=20000000)
+	target_compile_definitions(${target} PRIVATE F_CPU=20000000)
 
 	setup_target_compiler(${target} ${ARGN})
 

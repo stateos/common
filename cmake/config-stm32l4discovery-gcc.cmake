@@ -64,7 +64,7 @@ function(setup_target target)
 	update_flags(CMAKE_CXX_FLAGS ${FPU_FLAGS})
 	target_link_options(${target} PRIVATE ${FPU_FLAGS})
 
-	target_compile_definitions(test PRIVATE STM32L476xx)
+	target_compile_definitions(${target} PRIVATE STM32L476xx)
 
 	setup_target_compiler(${target} ${ARGN})
 
