@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    28.05.2021
+    @date    07.05.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -38,13 +38,16 @@
 #include "inc/osconditionvariable.h"
 #include "inc/critical_section.hh"
 #include "inc/chrono.hh"
-#if    !__has_include(<barrier>)
+
+#if !__cpp_lib_atomic_wait || !__cpp_aligned_new
 #include "inc/barrier.hh"
 #endif
-#if    !__has_include(<latch>)
+
+#if !__cpp_lib_atomic_wait
 #include "inc/latch.hh"
 #endif
-#if    !__has_include(<semaphore>)
+
+#if !__cpp_lib_atomic_wait && !_GLIBCXX_HAVE_POSIX_SEMAPHORE
 #include "inc/semaphore.hh"
 #endif
 
@@ -209,6 +212,13 @@ static inline
 int __gthread_once(__gthread_once_t *once, void(*func)())
 {
 	one_call(once, func);
+	return 0;
+}
+
+static inline
+int __gthread_cond_destroy(__gthread_cond_t *cond)
+{
+	cnd_destroy(cond);
 	return 0;
 }
 

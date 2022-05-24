@@ -1,0 +1,53 @@
+/*******************************************************************************
+@file     stm32f0xx.icf
+@author   Rajmund Szymanski
+@date     20.05.2022
+@brief    Linker script for STM32F030F4 device with 16KB FLASH and 4KB RAM
+*******************************************************************************/
+
+define symbol __ROM_start__ = 0x08000000;
+define symbol __ROM_size__  = 16K; // 0x00004000
+define symbol __ROM_end__   = __ROM_start__+__ROM_size__;
+
+define symbol __RAM_start__ = 0x20000000;
+define symbol __RAM_size__  = 4K; // 0x00001000
+define symbol __RAM_end__   = __RAM_start__+__RAM_size__;
+
+define memory MEM with size = 4G;
+define region ROM = MEM:[ from __ROM_start__ size __ROM_size__ ];
+define region RAM = MEM:[ from __RAM_start__ size __RAM_size__ ];
+
+if (!isdefinedsymbol(main_stack_size)) {
+define symbol main_stack_size = 0;
+}
+if (!isdefinedsymbol(proc_stack_size)) {
+define symbol proc_stack_size = 0;
+}
+define symbol __main_stack_size = (((main_stack_size)+7)&(~7));
+define symbol __proc_stack_size = (((proc_stack_size)+7)&(~7));
+
+define block IRQ_STACK with alignment = 8, size = __main_stack_size {};
+define block    CSTACK with alignment = 8, size = __proc_stack_size {};
+define block      HEAP with alignment = 8                           {};
+
+initialize by copy    { readwrite       };
+do not initialize     { section .noinit };
+keep                  { section .intvec };
+place at start of ROM { section .intvec };
+place in          ROM { readonly        };
+place at start of RAM { block IRQ_STACK };
+place in          RAM { readwrite       };
+place in          RAM { block HEAP      };
+place at end of   RAM { block CSTACK    };
+
+if (__main_stack_size > 0) {
+define exported symbol __initial_msp = __RAM_start__ + __main_stack_size;
+} else {
+define exported symbol __initial_msp = __RAM_end__   - __proc_stack_size;
+}
+if (__proc_stack_size > 0) {
+define exported symbol __initial_sp  = __RAM_end__;
+} else {
+define exported symbol __initial_sp  = __initial_msp;
+}
+define exported symbol HEAP$$Limit   = __RAM_end__   - __proc_stack_size;

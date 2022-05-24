@@ -35,6 +35,7 @@ DUMP       := $(GNUCC)arm-none-eabi-objdump
 SIZE       := $(GNUCC)arm-none-eabi-size
 LD         := $(GNUCC)arm-none-eabi-g++
 AR         := $(GNUCC)arm-none-eabi-ar
+FC         := $(GNUCC)arm-none-eabi-gfortran
 GDB        := $(GNUCC)arm-none-eabi-gdb
 
 RM         ?= rm -f
@@ -61,7 +62,9 @@ COMMON_F   += -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 AS_FLAGS   += -xassembler-with-cpp
-CXX_FLAGS  += -fno-use-cxa-atexit
+C_FLAGS    += -Wlogical-op
+CXX_FLAGS  += -Wlogical-op -fno-use-cxa-atexit
+F_FLAGS    += -cpp
 LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
@@ -122,7 +125,7 @@ $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
 COMMON_F   += -Wall
 else
-COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op
+COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
@@ -154,6 +157,7 @@ SCRIPT_F   := $(SCRIPT:%=-T%)
 AS_FLAGS   += $(COMMON_F) $(DEFS_F) $(INCS_F)
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 CXX_FLAGS  += $(COMMON_F) $(DEFS_F) $(INCS_F)
+F_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 LD_FLAGS   += $(COMMON_F) $(LIB_DIRS_F) $(SCRIPT_F)
 
 #----------------------------------------------------------#
@@ -216,6 +220,11 @@ $(BUILD)/%.cpp.o : /%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
+$(BUILD)/%.f.o : /%.f
+	$(info $<)
+	mkdir -p $(dir $@)
+	$(FC) $(F_FLAGS) -c $< -o $@
+
 $(ELF) : $(OBJS) $(SCRIPT)
 	$(info $@)
 	$(LD) $(LD_FLAGS) $(OBJS) $(LIBS) -o $@
@@ -256,7 +265,7 @@ flash : all
 	$(info Programing device...)
 	$(OPENOCD) $(OOCD_INIT) $(OOCD_SAVE) $(OOCD_EXEC) $(OOCD_EXIT)
 #	$(CUBE) -q -c port=SWD mode=UR -w $(ELF) -v -hardRst
-#	$(STLINK) -Q -c SWD UR -P $(HEX) -V -Rst
+#	$(STLINK) -Q -c SWD UR -P $(HEX) -V -HardRst
 
 server : all
 	$(info Starting server...)

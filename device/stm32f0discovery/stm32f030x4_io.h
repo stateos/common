@@ -1,12 +1,30 @@
 /******************************************************************************
- * @file    stm32f0_io.h
- * @author  Rajmund Szymanski
- * @date    18.05.2021
- * @brief   This file contains macro definitions for the STM32F0XX GPIO ports.
+
+   @file    stm32f030x4_io.h
+   @author  Rajmund Szymanski
+   @date    24.05.2022
+   @brief   This file contains macro definitions for the STM32F030x4 GPIO ports
+
+ ******************************************************************************
+
+   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
  ******************************************************************************/
 
-#ifndef __STM32F0_IO_H
-#define __STM32F0_IO_H
+#ifndef __STM32F030X4_IO_H
+#define __STM32F030X4_IO_H
 
 #include "stm32f0xx.h"
 
@@ -80,10 +98,10 @@ struct __gpio_config
 #define GPIO_PushPull        _VAL2FLD(GPIO_OTYPE, 0)
 #define GPIO_OpenDrain       _VAL2FLD(GPIO_OTYPE, 1)
 
-#define GPIO_2MHz            _VAL2FLD(GPIO_OSPEED, 0)
-#define GPIO_25MHz           _VAL2FLD(GPIO_OSPEED, 1)
-#define GPIO_50MHz           _VAL2FLD(GPIO_OSPEED, 2)
-#define GPIO_100MHz          _VAL2FLD(GPIO_OSPEED, 3)
+#define GPIO_LowSpeed        _VAL2FLD(GPIO_OSPEED, 0)
+// fine GPIO_LowSpeed        _VAL2FLD(GPIO_OSPEED, 1)
+#define GPIO_MediumSpeed     _VAL2FLD(GPIO_OSPEED, 2)
+#define GPIO_HighSpeed       _VAL2FLD(GPIO_OSPEED, 3)
 
 #define GPIO_NoPull          _VAL2FLD(GPIO_PUPD, 0)
 #define GPIO_PullUp          _VAL2FLD(GPIO_PUPD, 1)
@@ -108,79 +126,32 @@ struct __gpio_config
 
 #ifndef USE_HAL_DRIVER
 
-#define GPIO_AF0_CAN         GPIO_AF0   /* CAN Alternate Function mapping */
-#define GPIO_AF0_CEC         GPIO_AF0   /* CEC Alternate Function mapping */
-#define GPIO_AF0_CRS         GPIO_AF0   /* CRS Alternate Function mapping */
-#define GPIO_AF0_EVENTOUT    GPIO_AF0   /* EVENTOUT Alternate Function mapping */
-#define GPIO_AF0_IR          GPIO_AF0   /* IR Alternate Function mapping */
-#define GPIO_AF0_MCO         GPIO_AF0   /* MCO Alternate Function mapping */
-#define GPIO_AF0_SPI1        GPIO_AF0   /* SPI1/I2S1 Alternate Function mapping */
-#define GPIO_AF0_SPI2        GPIO_AF0   /* SPI2/I2S2 Alternate Function mapping */
-#define GPIO_AF0_SWCLK       GPIO_AF0   /* SWCLK Alternate Function mapping */
-#define GPIO_AF0_SWDAT       GPIO_AF0   /* SWDAT Alternate Function mapping */
-#define GPIO_AF0_SWDIO       GPIO_AF0   /* SWDIO Alternate Function mapping */
-#define GPIO_AF0_TIM1        GPIO_AF0   /* TIM1 Alternate Function mapping */
-#define GPIO_AF0_TIM3        GPIO_AF0   /* TIM3 Alternate Function mapping */
-#define GPIO_AF0_TIM14       GPIO_AF0   /* TIM14 Alternate Function mapping */
-#define GPIO_AF0_TIM15       GPIO_AF0   /* TIM15 Alternate Function mapping */
-#define GPIO_AF0_TIM16       GPIO_AF0   /* TIM16 Alternate Function mapping */
-#define GPIO_AF0_TIM17       GPIO_AF0   /* TIM17 Alternate Function mapping */
-#define GPIO_AF0_TSC         GPIO_AF0   /* TSC Alternate Function mapping */
-#define GPIO_AF0_USART1      GPIO_AF0   /* USART1 Alternate Function mapping */
-#define GPIO_AF0_USART2      GPIO_AF0   /* USART2 Alternate Function mapping */
-#define GPIO_AF0_USART3      GPIO_AF0   /* USART3 Alternate Function mapping */
-#define GPIO_AF0_USART4      GPIO_AF0   /* USART4 Alternate Function mapping */
-#define GPIO_AF0_USART8      GPIO_AF0   /* USART8 Alternate Function mapping */
-#define GPIO_AF1_CEC         GPIO_AF1   /* CEC Alternate Function mapping */
-#define GPIO_AF1_EVENTOUT    GPIO_AF1   /* EVENTOUT Alternate Function mapping */
-#define GPIO_AF1_I2C1        GPIO_AF1   /* I2C1 Alternate Function mapping */
-#define GPIO_AF1_I2C2        GPIO_AF1   /* I2C2 Alternate Function mapping */
-#define GPIO_AF1_IR          GPIO_AF1   /* IR Alternate Function mapping */
-#define GPIO_AF1_SPI1        GPIO_AF1   /* SPI1 Alternate Function mapping */
-#define GPIO_AF1_SPI2        GPIO_AF1   /* SPI2 Alternate Function mapping */
-#define GPIO_AF1_TIM3        GPIO_AF1   /* TIM3 Alternate Function mapping */
-#define GPIO_AF1_TIM15       GPIO_AF1   /* TIM15 Alternate Function mapping */
-#define GPIO_AF1_TSC         GPIO_AF1   /* TSC Alternate Function mapping */
-#define GPIO_AF1_USART1      GPIO_AF1   /* USART1 Alternate Function mapping */
-#define GPIO_AF1_USART2      GPIO_AF1   /* USART2 Alternate Function mapping */
-#define GPIO_AF1_USART3      GPIO_AF1   /* USART4 Alternate Function mapping */
-#define GPIO_AF1_USART4      GPIO_AF1   /* USART4 Alternate Function mapping */
-#define GPIO_AF1_USART5      GPIO_AF1   /* USART5 Alternate Function mapping */
-#define GPIO_AF1_USART6      GPIO_AF1   /* USART6 Alternate Function mapping */
-#define GPIO_AF1_USART7      GPIO_AF1   /* USART7 Alternate Function mapping */
-#define GPIO_AF1_USART8      GPIO_AF1   /* USART8 Alternate Function mapping */
-#define GPIO_AF2_EVENTOUT    GPIO_AF2   /* EVENTOUT Alternate Function mapping */
-#define GPIO_AF2_TIM1        GPIO_AF2   /* TIM1 Alternate Function mapping */
-#define GPIO_AF2_TIM2        GPIO_AF2   /* TIM2 Alternate Function mapping */
-#define GPIO_AF2_TIM16       GPIO_AF2   /* TIM16 Alternate Function mapping */
-#define GPIO_AF2_TIM17       GPIO_AF2   /* TIM17 Alternate Function mapping */
-#define GPIO_AF2_USART5      GPIO_AF2   /* USART5 Alternate Function mapping */
-#define GPIO_AF2_USART6      GPIO_AF2   /* USART6 Alternate Function mapping */
-#define GPIO_AF2_USART7      GPIO_AF2   /* USART7 Alternate Function mapping */
-#define GPIO_AF2_USART8      GPIO_AF2   /* USART8 Alternate Function mapping */
-#define GPIO_AF2_USB         GPIO_AF2   /* USB Alternate Function mapping */
-#define GPIO_AF3_EVENTOUT    GPIO_AF3   /* EVENTOUT Alternate Function mapping */
-#define GPIO_AF3_I2C1        GPIO_AF3   /* I2C1 Alternate Function mapping */
-#define GPIO_AF3_TIM15       GPIO_AF3   /* TIM15 Alternate Function mapping */
-#define GPIO_AF3_TSC         GPIO_AF3   /* TSC Alternate Function mapping */
-#define GPIO_AF4_CAN         GPIO_AF4   /* CAN Alternate Function mapping */
-#define GPIO_AF4_CRS         GPIO_AF4   /* CRS Alternate Function mapping */
-#define GPIO_AF4_I2C1        GPIO_AF4   /* I2C1 Alternate Function mapping */
-#define GPIO_AF4_TIM14       GPIO_AF4   /* TIM14 Alternate Function mapping */
-#define GPIO_AF4_USART3      GPIO_AF4   /* USART3 Alternate Function mapping */
-#define GPIO_AF4_USART4      GPIO_AF4   /* USART4 Alternate Function mapping */
-#define GPIO_AF4_USART5      GPIO_AF4   /* USART5 Alternate Function mapping */
-#define GPIO_AF5_I2C2        GPIO_AF5   /* I2C2 Alternate Function mapping */
-#define GPIO_AF5_MCO         GPIO_AF5   /* MCO Alternate Function mapping */
-#define GPIO_AF5_SPI2        GPIO_AF5   /* SPI2 Alternate Function mapping */
-#define GPIO_AF5_TIM15       GPIO_AF5   /* TIM15 Alternate Function mapping */
-#define GPIO_AF5_TIM16       GPIO_AF5   /* TIM16 Alternate Function mapping */
-#define GPIO_AF5_TIM17       GPIO_AF5   /* TIM17 Alternate Function mapping */
-#define GPIO_AF5_USART6      GPIO_AF5   /* USART6 Alternate Function mapping */
-#define GPIO_AF5_USB         GPIO_AF5   /* USB Alternate Function mapping */
-#define GPIO_AF6_EVENTOUT    GPIO_AF6   /* EVENTOUT Alternate Function mapping */
-#define GPIO_AF7_COMP1       GPIO_AF7   /* COMP1 Alternate Function mapping */
-#define GPIO_AF7_COMP2       GPIO_AF7   /* COMP2 Alternate Function mapping */
+#define GPIO_AF0_EVENTOUT    GPIO_AF0   /* EVENTOUT Alternate Function mapping  */
+#define GPIO_AF0_MCO         GPIO_AF0   /* MCO Alternate Function mapping       */
+#define GPIO_AF0_SPI1        GPIO_AF0   /* SPI1 Alternate Function mapping      */
+#define GPIO_AF0_TIM17       GPIO_AF0   /* TIM17 Alternate Function mapping     */
+#define GPIO_AF0_SWDIO       GPIO_AF0   /* SWDIO Alternate Function mapping     */
+#define GPIO_AF0_SWCLK       GPIO_AF0   /* SWCLK Alternate Function mapping     */
+#define GPIO_AF0_TIM14       GPIO_AF0   /* TIM14 Alternate Function mapping     */
+#define GPIO_AF0_USART1      GPIO_AF0   /* USART1 Alternate Function mapping    */
+#define GPIO_AF0_IR          GPIO_AF0   /* IR Alternate Function mapping        */
+#define GPIO_AF0_TIM3        GPIO_AF0   /* TIM3 Alternate Function mapping      */
+#define GPIO_AF1_TIM3        GPIO_AF1   /* TIM3 Alternate Function mapping      */
+#define GPIO_AF1_USART1      GPIO_AF1   /* USART1 Alternate Function mapping    */
+#define GPIO_AF1_EVENTOUT    GPIO_AF1   /* EVENTOUT Alternate Function mapping  */
+#define GPIO_AF1_I2C1        GPIO_AF1   /* I2C1 Alternate Function mapping      */
+#define GPIO_AF1_IR          GPIO_AF1   /* IR Alternate Function mapping        */
+#define GPIO_AF2_TIM1        GPIO_AF2   /* TIM1 Alternate Function mapping      */
+#define GPIO_AF2_TIM16       GPIO_AF2   /* TIM16 Alternate Function mapping     */
+#define GPIO_AF2_TIM17       GPIO_AF2   /* TIM17 Alternate Function mapping     */
+#define GPIO_AF2_EVENTOUT    GPIO_AF2   /* EVENTOUT Alternate Function mapping  */
+#define GPIO_AF3_EVENTOUT    GPIO_AF3   /* EVENTOUT Alternate Function mapping  */
+#define GPIO_AF3_I2C1        GPIO_AF3   /* I2C1 Alternate Function mapping      */
+#define GPIO_AF4_TIM14       GPIO_AF4   /* TIM14 Alternate Function mapping     */
+#define GPIO_AF4_I2C1        GPIO_AF4   /* I2C1 Alternate Function mapping      */
+#define GPIO_AF5_TIM16       GPIO_AF5   /* TIM16 Alternate Function mapping     */
+#define GPIO_AF5_TIM17       GPIO_AF5   /* TIM17 Alternate Function mapping     */
+#define GPIO_AF6_EVENTOUT    GPIO_AF6   /* EVENTOUT Alternate Function mapping  */
 
 #endif//USE_HAL_DRIVER
 
@@ -210,39 +181,39 @@ struct __gpio_config
 #define GPIO_Input_PullUp                       (GPIO_Input | GPIO_PullUp)
 #define GPIO_Input_PullDown                     (GPIO_Input | GPIO_PullDown)
 
-#define GPIO_Output_2MHz                        (GPIO_Output | GPIO_2MHz)
-#define GPIO_Output_25MHz                       (GPIO_Output | GPIO_25MHz)
-#define GPIO_Output_50MHz                       (GPIO_Output | GPIO_50MHz)
-#define GPIO_Output_100MHz                      (GPIO_Output | GPIO_100MHz)
+#define GPIO_Output_LowSpeed                    (GPIO_Output | GPIO_LowSpeed)
+// fine GPIO_Output_LowSpeed                    (GPIO_Output | GPIO_LowSpeed)
+#define GPIO_Output_50MHz                       (GPIO_Output | GPIO_MediumSpeed)
+#define GPIO_Output_HighSpeed                   (GPIO_Output | GPIO_HighSpeed)
 
 #define GPIO_Output_PushPull                    (GPIO_Output | GPIO_PushPull)
-#define GPIO_Output_PushPull_2MHz               (GPIO_Output | GPIO_PushPull | GPIO_2MHz)
-#define GPIO_Output_PushPull_25MHz              (GPIO_Output | GPIO_PushPull | GPIO_25MHz)
-#define GPIO_Output_PushPull_50MHz              (GPIO_Output | GPIO_PushPull | GPIO_50MHz)
-#define GPIO_Output_PushPull_100MHz             (GPIO_Output | GPIO_PushPull | GPIO_100MHz)
+#define GPIO_Output_PushPull_LowSpeed           (GPIO_Output | GPIO_PushPull | GPIO_LowSpeed)
+// fine GPIO_Output_PushPull_LowSpeed           (GPIO_Output | GPIO_PushPull | GPIO_LowSpeed)
+#define GPIO_Output_PushPull_MediumSpeed        (GPIO_Output | GPIO_PushPull | GPIO_MediumSpeed)
+#define GPIO_Output_PushPull_HighSpeed          (GPIO_Output | GPIO_PushPull | GPIO_HighSpeed)
 
 #define GPIO_Output_OpenDrain                   (GPIO_Output | GPIO_OpenDrain)
-#define GPIO_Output_OpenDrain_2MHz              (GPIO_Output | GPIO_OpenDrain | GPIO_2MHz)
-#define GPIO_Output_OpenDrain_25MHz             (GPIO_Output | GPIO_OpenDrain | GPIO_25MHz)
-#define GPIO_Output_OpenDrain_50MHz             (GPIO_Output | GPIO_OpenDrain | GPIO_50MHz)
-#define GPIO_Output_OpenDrain_100MHz            (GPIO_Output | GPIO_OpenDrain | GPIO_100MHz)
+#define GPIO_Output_OpenDrain_LowSpeed          (GPIO_Output | GPIO_OpenDrain | GPIO_LowSpeed)
+// fine GPIO_Output_OpenDrain_LowSpeed          (GPIO_Output | GPIO_OpenDrain | GPIO_LowSpeed)
+#define GPIO_Output_OpenDrain_MediumSpeed       (GPIO_Output | GPIO_OpenDrain | GPIO_MediumSpeed)
+#define GPIO_Output_OpenDrain_HighSpeed         (GPIO_Output | GPIO_OpenDrain | GPIO_HighSpeed)
 
-#define GPIO_Alternate_2MHz                     (GPIO_Alternate | GPIO_2MHz)
-#define GPIO_Alternate_25MHz                    (GPIO_Alternate | GPIO_25MHz)
-#define GPIO_Alternate_50MHz                    (GPIO_Alternate | GPIO_50MHz)
-#define GPIO_Alternate_100MHz                   (GPIO_Alternate | GPIO_100MHz)
+#define GPIO_Alternate_LowSpeed                 (GPIO_Alternate | GPIO_LowSpeed)
+// fine GPIO_Alternate_LowSpeed                 (GPIO_Alternate | GPIO_LowSpeed)
+#define GPIO_Alternate_MediumSpeed              (GPIO_Alternate | GPIO_MediumSpeed)
+#define GPIO_Alternate_HighSpeed                (GPIO_Alternate | GPIO_HighSpeed)
 
 #define GPIO_Alternate_PushPull                 (GPIO_Alternate | GPIO_PushPull)
-#define GPIO_Alternate_PushPull_2MHz            (GPIO_Alternate | GPIO_PushPull | GPIO_2MHz)
-#define GPIO_Alternate_PushPull_25MHz           (GPIO_Alternate | GPIO_PushPull | GPIO_25MHz)
-#define GPIO_Alternate_PushPull_50MHz           (GPIO_Alternate | GPIO_PushPull | GPIO_50MHz)
-#define GPIO_Alternate_PushPull_100MHz          (GPIO_Alternate | GPIO_PushPull | GPIO_100MHz)
+#define GPIO_Alternate_PushPull_LowSpeed        (GPIO_Alternate | GPIO_PushPull | GPIO_LowSpeed)
+// fine GPIO_Alternate_PushPull_LowSpeed        (GPIO_Alternate | GPIO_PushPull | GPIO_LowSpeed)
+#define GPIO_Alternate_PushPull_MediumSpeed     (GPIO_Alternate | GPIO_PushPull | GPIO_MediumSpeed)
+#define GPIO_Alternate_PushPull_HighSpeed       (GPIO_Alternate | GPIO_PushPull | GPIO_HighSpeed)
 
 #define GPIO_Alternate_OpenDrain                (GPIO_Alternate | GPIO_OpenDrain)
-#define GPIO_Alternate_OpenDrain_2MHz           (GPIO_Alternate | GPIO_OpenDrain | GPIO_2MHz)
-#define GPIO_Alternate_OpenDrain_25MHz          (GPIO_Alternate | GPIO_OpenDrain | GPIO_25MHz)
-#define GPIO_Alternate_OpenDrain_50MHz          (GPIO_Alternate | GPIO_OpenDrain | GPIO_50MHz)
-#define GPIO_Alternate_OpenDrain_100MHz         (GPIO_Alternate | GPIO_OpenDrain | GPIO_100MHz)
+#define GPIO_Alternate_OpenDrain_LowSpeed       (GPIO_Alternate | GPIO_OpenDrain | GPIO_LowSpeed)
+// fine GPIO_Alternate_OpenDrain_LowSpeed       (GPIO_Alternate | GPIO_OpenDrain | GPIO_LowSpeed)
+#define GPIO_Alternate_OpenDrain_MediumSpeed    (GPIO_Alternate | GPIO_OpenDrain | GPIO_MediumSpeed)
+#define GPIO_Alternate_OpenDrain_HighSpeed      (GPIO_Alternate | GPIO_OpenDrain | GPIO_HighSpeed)
 
 /* -------------------------------------------------------------------------- */
 
@@ -412,4 +383,4 @@ public:
 }     //  namespace
 #endif//__cplusplus
 
-#endif//__STM32F0_IO_H
+#endif//__STM32F030X4_IO_H

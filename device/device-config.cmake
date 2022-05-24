@@ -1,7 +1,7 @@
 include_guard(GLOBAL)
 
 if (NOT DEFINED TARGET_PLATFORM)
-    message(FATAL_ERROR "Please define TARGET_PLATFORM before including the device::nosys package")
+    message(FATAL_ERROR "Please define TARGET_PLATFORM before including the device package")
 endif()
 
 project(device)

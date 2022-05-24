@@ -1,11 +1,11 @@
 include_guard(GLOBAL)
 
 if (NOT DEFINED TARGET_ARCH)
-    message(FATAL_ERROR "Please define TARGET_ARCH before including the device package")
+    message(FATAL_ERROR "Please define TARGET_ARCH before including the device::nosys package")
 endif()
 
 if (NOT DEFINED TARGET_COMPILER)
-    message(FATAL_ERROR "Please define TARGET_COMPILER before including the device package")
+    message(FATAL_ERROR "Please define TARGET_COMPILER before including the device::nosys package")
 endif()
 
 project(device-nosys)

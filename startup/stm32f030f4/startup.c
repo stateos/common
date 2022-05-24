@@ -3,7 +3,7 @@
    @file    startup.c
    @author  Rajmund Szymanski
    @date    24.05.2022
-   @brief   STM32F051R8 startup file
+   @brief   STM32F030F4 startup file
 
  ******************************************************************************
 
@@ -31,7 +31,7 @@
 *******************************************************************************/
 
 #define   RAM_start 0x20000000
-#define   RAM_end   0x20002000
+#define   RAM_end   0x20004000
 
 /*******************************************************************************
  Configuration of stacks

@@ -9,7 +9,7 @@
 #define __STM32F0_DISCOVERY_LEDS_H
 
 #include <stdbool.h>
-#include "stm32f0_io.h"
+#include "stm32f051x8_io.h"
 
 #ifdef  __cplusplus
 extern "C" {

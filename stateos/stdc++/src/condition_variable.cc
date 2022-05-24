@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 16.04.2021
+// Modified by Rajmund Szymanski @ StateOS, 07.05.2022
 
 #include <condition_variable>
 
@@ -40,19 +40,19 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
   void
   condition_variable::wait(unique_lock<mutex>& __lock) noexcept
   {
-    cnd_wait(&_M_cond, __lock.mutex()->native_handle());
+    cnd_wait(_M_cond.native_handle(), __lock.mutex()->native_handle());
   }
 
   void
   condition_variable::notify_one() noexcept
   {
-    cnd_notifyOne(&_M_cond);
+    cnd_notifyOne(_M_cond.native_handle());
   }
 
   void
   condition_variable::notify_all() noexcept
   {
-    cnd_notifyAll(&_M_cond);
+    cnd_notifyAll(_M_cond.native_handle());
   }
 
   extern void
