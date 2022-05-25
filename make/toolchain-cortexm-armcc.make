@@ -18,13 +18,13 @@ BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(BUILD),)
-$(error Invalid BUILD definition)
+iifeq ($(PROJECT),)
+PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 endif
 
-#----------------------------------------------------------#
-
-PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
+feq ($(BUILD),)
+$(error Invalid BUILD definition)
+endif
 
 #----------------------------------------------------------#
 

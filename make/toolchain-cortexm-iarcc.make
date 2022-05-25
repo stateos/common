@@ -16,13 +16,13 @@ BUILD      ?= build
 
 #----------------------------------------------------------#
 
+ifeq ($(PROJECT),)
+PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
+endif
+
 ifeq ($(BUILD),)
 $(error Invalid BUILD definition)
 endif
-
-#----------------------------------------------------------#
-
-PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
 
 #----------------------------------------------------------#
 
