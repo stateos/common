@@ -5,22 +5,17 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?= # project name
+BUILD      ?= # build folder name
 GCC        ?= # toolchain path
 PROGRAM    := atprogram
 OPTF       ?=
 STDC       ?= 11
 STDCXX     ?= 11
-BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(PROJECT),)
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-endif
-
-ifeq ($(BUILD),)
-$(error Invalid BUILD definition)
-endif
+BUILD      := $(firstword $(BUILD) build)
 
 #----------------------------------------------------------#
 
@@ -85,7 +80,7 @@ $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
 COMMON_F   += -Wall
 else
-COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op
+COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op -Wsign-conversion
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)

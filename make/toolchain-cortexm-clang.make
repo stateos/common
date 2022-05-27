@@ -5,6 +5,7 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?= # project name
+BUILD      ?= # build folder name
 CLANG      ?= # toolchain path
 GNUCC      ?= # toolchain path
 OPENOCD    := openocd
@@ -13,18 +14,12 @@ CUBE       := stm32_programmer_cli
 QEMU       := qemu-system-gnuarmeclipse
 OPTF       ?=
 STDC       ?= 11
-STDCXX     ?= 17
-BUILD      ?= build
+STDCXX     ?= 20
 
 #----------------------------------------------------------#
 
-ifeq ($(PROJECT),)
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-endif
-
-ifeq ($(BUILD),)
-$(error Invalid BUILD definition)
-endif
+BUILD      := $(firstword $(BUILD) build)
 
 #----------------------------------------------------------#
 
@@ -100,7 +95,7 @@ $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
 COMMON_F   += -Wall
 else
-COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wsign-conversion
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter ISO,$(DEFS)),)

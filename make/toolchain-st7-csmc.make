@@ -5,19 +5,14 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?= # project name
+BUILD      ?= # build folder name
 CSMC       ?= # toolchain path (st7)
 CSTM       ?= # toolchain path (stm8)
-BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(PROJECT),)
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-endif
-
-ifeq ($(BUILD),)
-$(error Invalid BUILD definition)
-endif
+BUILD      := $(firstword $(BUILD) build)
 
 #----------------------------------------------------------#
 

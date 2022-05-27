@@ -5,6 +5,7 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?= # project name
+BUILD      ?= # build folder name
 ARMCC      ?= # toolchain path
 GNUCC      ?= # toolchain path
 OPENOCD    := openocd
@@ -14,17 +15,11 @@ QEMU       := qemu-system-gnuarmeclipse
 OPTF       ?= 2
 STDC       ?= 99
 STDCXX     ?= 11
-BUILD      ?= build
 
 #----------------------------------------------------------#
 
-iifeq ($(PROJECT),)
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-endif
-
-feq ($(BUILD),)
-$(error Invalid BUILD definition)
-endif
+BUILD      := $(firstword $(BUILD) build)
 
 #----------------------------------------------------------#
 

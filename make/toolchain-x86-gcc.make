@@ -5,21 +5,16 @@ endif
 #----------------------------------------------------------#
 
 PROJECT    ?= # project name
+BUILD      ?= # build folder name
 GCC        ?= # toolchain path
 OPTF       ?=
 STDC       ?= 11
 STDCXX     ?= 20
-BUILD      ?= build
 
 #----------------------------------------------------------#
 
-ifeq ($(PROJECT),)
 PROJECT    := $(firstword $(PROJECT) $(notdir $(CURDIR)))
-endif
-
-ifeq ($(BUILD),)
-$(error Invalid BUILD definition)
-endif
+BUILD      := $(firstword $(BUILD) build)
 
 #----------------------------------------------------------#
 
@@ -42,7 +37,6 @@ SIZE       := $(GCC)size
 LD         := $(GCC)g++
 AR         := $(GCC)ar
 endif
-FC         := $(GCC)gfortran
 RES        := $(GCC)windres
 
 RM         ?= rm -f
@@ -80,7 +74,6 @@ else
 C_FLAGS    += -std=gnu$(STDC:20=2x)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
 endif
-F_FLAGS    += -cpp
 LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter CLANG,$(DEFS)),)
 $(info Using clang)
@@ -124,7 +117,7 @@ $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
 COMMON_F   += -Wall
 else
-COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op
+COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op -Wsign-conversion
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
@@ -155,7 +148,6 @@ LIB_DIRS_F := $(LIB_DIRS:%=-L%)
 AS_FLAGS   += $(COMMON_F) $(DEFS_F) $(INCS_F)
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 CXX_FLAGS  += $(COMMON_F) $(DEFS_F) $(INCS_F)
-F_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 LD_FLAGS   += $(COMMON_F) $(LIB_DIRS_F)
 
 #----------------------------------------------------------#
@@ -194,11 +186,6 @@ $(BUILD)/%.cpp.o : /%.cpp
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
-
-$(BUILD)/%.f.o : /%.f
-	$(info $<)
-	mkdir -p $(dir $@)
-	$(FC) $(F_FLAGS) -c $< -o $@
 
 $(BUILD)/%.rc.o : /%.rc
 	$(info $<)
