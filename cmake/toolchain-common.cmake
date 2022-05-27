@@ -4,6 +4,7 @@ set(STARTMSG "■")
 message(STATUS "${STARTMSG} Cmake version: ${CMAKE_VERSION}")
 message(STATUS "${STARTMSG} Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "${STARTMSG} Platform: ${TARGET_PLATFORM}")
+message(STATUS "${STARTMSG} Host: ${CMAKE_HOST_SYSTEM_NAME}")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

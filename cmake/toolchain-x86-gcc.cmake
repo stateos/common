@@ -25,7 +25,7 @@ add_compile_options(${COMMON_OPTIONS})
 add_link_options(${COMMON_OPTIONS} -Wl,--gc-sections)
 
 set(STD_WARNING_FLAGS -Wall)
-set(ALL_WARNING_FLAGS -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op $<$<COMPILE_LANGUAGE:CXX>:-Wzero-as-null-pointer-constant>)
+set(ALL_WARNING_FLAGS -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op -Wsign-conversion $<$<COMPILE_LANGUAGE:CXX>:-Wzero-as-null-pointer-constant>)
 
 include("${CMAKE_CURRENT_LIST_DIR}/toolchain-common.cmake")
 
@@ -72,7 +72,7 @@ function(setup_target_compiler target)
 		target_compile_options(${target} PRIVATE -fdiagnostics-color)
 	endif()
 
-	if (MINGW)
+	if (CMAKE_HOST_SYSTEM_NAME STREQUAL "MSYS")
 	set(elf_file ${target}.exe)
 	else()
 	set(elf_file ${target})
