@@ -53,6 +53,9 @@ COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 COMMON_F   += -mno-gas-isr-prologues
 AS_FLAGS   += -xassembler-with-cpp
+C_FLAGS    += -Wlogical-op
+CXX_FLAGS  += -Wlogical-op -fno-use-cxa-atexit
+LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)
@@ -62,8 +65,6 @@ else
 C_FLAGS    += -std=gnu$(STDC:20=2x)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
 endif
-CXX_FLAGS  += -fno-use-cxa-atexit
-LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter EXCEPTIONS,$(DEFS)),)
 $(info Using exceptions)
 DEFS       := $(DEFS:EXCEPTIONS=)
@@ -80,7 +81,7 @@ $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
 COMMON_F   += -Wall
 else
-COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op -Wsign-conversion
+COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wsign-conversion
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)

@@ -25,6 +25,7 @@ BUILD      := $(firstword $(BUILD) build)
 AS         := $(GNUCC)arm-none-eabi-gcc
 CC         := $(GNUCC)arm-none-eabi-gcc
 CXX        := $(GNUCC)arm-none-eabi-g++
+FC         := $(GNUCC)arm-none-eabi-gfortran
 COPY       := $(GNUCC)arm-none-eabi-objcopy
 DUMP       := $(GNUCC)arm-none-eabi-objdump
 SIZE       := $(GNUCC)arm-none-eabi-size
@@ -56,8 +57,9 @@ COMMON_F   += -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 AS_FLAGS   += -xassembler-with-cpp
-C_FLAGS    +=
-CXX_FLAGS  += -fno-use-cxa-atexit
+C_FLAGS    += -Wlogical-op
+CXX_FLAGS  += -Wlogical-op -fno-use-cxa-atexit
+F_FLAGS    += -cpp
 LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
@@ -118,7 +120,7 @@ $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
 COMMON_F   += -Wall
 else
-COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op -Wsign-conversion
+COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wsign-conversion
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
@@ -150,6 +152,7 @@ SCRIPT_F   := $(SCRIPT:%=-T%)
 AS_FLAGS   += $(COMMON_F) $(DEFS_F) $(INCS_F)
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 CXX_FLAGS  += $(COMMON_F) $(DEFS_F) $(INCS_F)
+F_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 LD_FLAGS   += $(COMMON_F) $(LIB_DIRS_F) $(SCRIPT_F)
 
 #----------------------------------------------------------#
@@ -211,6 +214,11 @@ $(BUILD)/%.cpp.o : /%.cpp
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+$(BUILD)/%.f.o : /%.f
+	$(info $<)
+	mkdir -p $(dir $@)
+	$(FC) $(F_FLAGS) -c $< -o $@
 
 $(ELF) : $(OBJS) $(SCRIPT)
 	$(info $@)

@@ -31,6 +31,7 @@ else
 AS         := $(GCC)gcc
 CC         := $(GCC)gcc
 CXX        := $(GCC)g++
+FC         := $(GCC)gfortran
 COPY       := $(GCC)objcopy
 DUMP       := $(GCC)objdump
 SIZE       := $(GCC)size
@@ -65,6 +66,10 @@ ifeq  ($(filter CLANG,$(DEFS)),)
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 endif
 AS_FLAGS   += -xassembler-with-cpp
+C_FLAGS    += -Wlogical-op
+CXX_FLAGS  += -Wlogical-op
+F_FLAGS    += -cpp
+LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)
@@ -74,7 +79,6 @@ else
 C_FLAGS    += -std=gnu$(STDC:20=2x)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
 endif
-LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter CLANG,$(DEFS)),)
 $(info Using clang)
 else
@@ -117,7 +121,7 @@ $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
 COMMON_F   += -Wall
 else
-COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wlogical-op -Wsign-conversion
+COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wsign-conversion
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter DEBUG,$(DEFS)),)
@@ -144,10 +148,12 @@ endif
 DEFS_F     := $(DEFS:%=-D%)
 INCS_F     := $(INCS:%=-I%)
 LIB_DIRS_F := $(LIB_DIRS:%=-L%)
+SCRIPT_F   := $(SCRIPT:%=-T%)
 
 AS_FLAGS   += $(COMMON_F) $(DEFS_F) $(INCS_F)
 C_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 CXX_FLAGS  += $(COMMON_F) $(DEFS_F) $(INCS_F)
+F_FLAGS    += $(COMMON_F) $(DEFS_F) $(INCS_F)
 LD_FLAGS   += $(COMMON_F) $(LIB_DIRS_F)
 
 #----------------------------------------------------------#
@@ -186,6 +192,11 @@ $(BUILD)/%.cpp.o : /%.cpp
 	$(info $<)
 	mkdir -p $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+$(BUILD)/%.f.o : /%.f
+	$(info $<)
+	mkdir -p $(dir $@)
+	$(FC) $(F_FLAGS) -c $< -o $@
 
 $(BUILD)/%.rc.o : /%.rc
 	$(info $<)
