@@ -72,7 +72,7 @@ function(setup_target_compiler target)
 		target_compile_options(${target} PRIVATE -fdiagnostics-color)
 	endif()
 
-	if (CMAKE_HOST_SYSTEM_NAME STREQUAL "MSYS")
+	if (WIN32 OR CMAKE_HOST_SYSTEM_NAME STREQUAL "MSYS")
 	set(elf_file ${target}.exe)
 	else()
 	set(elf_file ${target})
