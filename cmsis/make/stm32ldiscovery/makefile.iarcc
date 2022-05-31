@@ -6,7 +6,7 @@ endif
 include $(COMMON)/make/stm32ldiscovery/makefile.iarcc
 #----------------------------------------------------------#
 
-CMSISOS_TARGET   := cm3
+CMSISOS_TARGET   := armv7m
 CMSISOS_COMPILER := IAR
 
 #----------------------------------------------------------#

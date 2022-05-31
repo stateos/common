@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2021 Arm Limited. All rights reserved.
+ * Copyright (c) 2013-2021 Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,7 +18,7 @@
  * -----------------------------------------------------------------------------
  *
  * Project:     CMSIS-RTOS RTX
- * Title:       ARMv8-M Baseline Exception handlers
+ * Title:       ARMv6-M Exception handlers
  *
  * -----------------------------------------------------------------------------
  */
@@ -28,15 +28,8 @@
 
         #include "rtx_def.h"
 
-        #ifndef  DOMAIN_NS
-        #define  DOMAIN_NS    0
-        #endif
-
         .equ     I_T_RUN_OFS, 20        // osRtxInfo.thread.run offset
-        .equ     TCB_SM_OFS,  48        // TCB.stack_mem offset
         .equ     TCB_SP_OFS,  56        // TCB.SP offset
-        .equ     TCB_SF_OFS,  34        // TCB.stack_frame offset
-        .equ     TCB_TZM_OFS, 64        // TCB.tz_memory offset
 
         .equ     osRtxErrorStackOverflow, 1 // Stack overflow
 
@@ -86,36 +79,15 @@ SVC_Context:
 
         subs     r3,r3,#8               // Adjust address
         str      r2,[r3]                // osRtxInfo.thread.run: curr = next
-        cbz      r1,SVC_ContextRestore  // Branch if running thread is deleted
+        cmp      r1,#0
+        beq      SVC_ContextRestore     // Branch if running thread is deleted
 
 SVC_ContextSave:
-    #if (DOMAIN_NS != 0)
-        ldr      r0,[r1,#TCB_TZM_OFS]   // Load TrustZone memory identifier
-        cbz      r0,SVC_ContextSave_NS  // Branch if there is no secure context
-        push     {r1,r2,r3,r7}          // Save registers
-        mov      r7,lr                  // Get EXC_RETURN
-        bl       TZ_StoreContext_S      // Store secure context
-        mov      lr,r7                  // Set EXC_RETURN
-        pop      {r1,r2,r3,r7}          // Restore registers
-    #endif
-
-SVC_ContextSave_NS:
         mrs      r0,psp                 // Get PSP
-    #if (DOMAIN_NS != 0)
-        mov      r3,lr                  // Get EXC_RETURN
-        lsls     r3,r3,#25              // Check domain of interrupted thread
-        bmi      SVC_ContextSaveSP      // Branch if secure
-    #endif
+        subs     r0,r0,#32              // Calculate SP: space for R4..R11
+        str      r0,[r1,#TCB_SP_OFS]    // Store SP
 
     #ifdef RTX_STACK_CHECK
-        subs     r0,r0,#32              // Calculate SP: space for R4..R11
-
-SVC_ContextSaveSP:
-        str      r0,[r1,#TCB_SP_OFS]    // Store SP
-        mov      r3,lr                  // Get EXC_RETURN
-        mov      r0,r1                  // osRtxInfo.thread.run.curr
-        adds     r0,r0,#TCB_SF_OFS      // Adjust address
-        strb     r3,[r0]                // Store stack frame information
 
         push     {r1,r2}                // Save osRtxInfo.thread.run: curr & next
         mov      r0,r1                  // Parameter: osRtxInfo.thread.run.curr
@@ -132,80 +104,39 @@ SVC_ContextSaveSP:
         b        SVC_ContextRestore     // Branch to context restore handling
 
 SVC_ContextSaveRegs:
-      #if (DOMAIN_NS != 0)
-        mov      r0,r1                  // osRtxInfo.thread.run.curr
-        adds     r0,r0,#TCB_SF_OFS      // Adjust address
-        ldrb     r3,[r0]                // Load stack frame information
-        lsls     r3,r3,#25              // Check domain of interrupted thread
-        bmi      SVC_ContextRestore     // Branch if secure
-      #endif
         ldr      r0,[r1,#TCB_SP_OFS]    // Load SP
-        stmia    r0!,{r4-r7}            // Save R4..R7
-        mov      r4,r8
-        mov      r5,r9
-        mov      r6,r10
-        mov      r7,r11
-        stmia    r0!,{r4-r7}            // Save R8..R11
-    #else
-        subs     r0,r0,#32              // Calculate SP: space for R4..R11
-        stmia    r0!,{r4-r7}            // Save R4..R7
-        mov      r4,r8
-        mov      r5,r9
-        mov      r6,r10
-        mov      r7,r11
-        stmia    r0!,{r4-r7}            // Save R8..R11
-        subs     r0,r0,#32              // Adjust address
-SVC_ContextSaveSP:
-        str      r0,[r1,#TCB_SP_OFS]    // Store SP
-        mov      r0,lr                  // Get EXC_RETURN
-        adds     r1,r1,#TCB_SF_OFS      // Adjust address
-        strb     r0,[r1]                // Store stack frame information
+
     #endif // RTX_STACK_CHECK
 
+        stmia    r0!,{r4-r7}            // Save R4..R7
+        mov      r4,r8
+        mov      r5,r9
+        mov      r6,r10
+        mov      r7,r11
+        stmia    r0!,{r4-r7}            // Save R8..R11
+
 SVC_ContextRestore:
-    #if (DOMAIN_NS != 0)
-        ldr      r0,[r2,#TCB_TZM_OFS]   // Load TrustZone memory identifier
-        cbz      r0,SVC_ContextRestore_NS // Branch if there is no secure context
-        push     {r2,r3}                // Save registers
-        bl       TZ_LoadContext_S       // Load secure context
-        pop      {r2,r3}                // Restore registers
-    #endif
-
-SVC_ContextRestore_NS:
-        ldr      r0,[r2,#TCB_SM_OFS]    // Load stack memory base
-        msr      psplim,r0              // Set PSPLIM
-        mov      r0,r2                  // osRtxInfo.thread.run.next
-        adds     r0,r0,#TCB_SF_OFS      // Adjust address
-        ldrb     r3,[r0]                // Load stack frame information
-        movs     r0,#0xFF
-        mvns     r0,r0                  // R0=0xFFFFFF00
-        orrs     r3,r3,r0
-        mov      lr,r3                  // Set EXC_RETURN
         ldr      r0,[r2,#TCB_SP_OFS]    // Load SP
-    #if (DOMAIN_NS != 0)
-        lsls     r3,r3,#25              // Check domain of interrupted thread
-        bmi      SVC_ContextRestoreSP   // Branch if secure
-    #endif
-
         adds     r0,r0,#16              // Adjust address
         ldmia    r0!,{r4-r7}            // Restore R8..R11
         mov      r8,r4
         mov      r9,r5
         mov      r10,r6
         mov      r11,r7
+        msr      psp,r0                 // Set PSP
         subs     r0,r0,#32              // Adjust address
         ldmia    r0!,{r4-r7}            // Restore R4..R7
-        adds     r0,r0,#16              // Adjust address
 
-SVC_ContextRestoreSP:
-        msr      psp,r0                 // Set PSP
-
-SVC_Exit:
-        bx       lr                     // Exit from handler
+        movs     r0,#2                  // Binary complement of 0xFFFFFFFD
+        mvns     r0,r0                  // Set EXC_RETURN value
+        bx       r0                     // Exit from handler
 
 SVC_MSP:
         mrs      r0,msp                 // Get MSP
         b        SVC_Number
+
+SVC_Exit:
+        bx       lr                     // Exit from handler
 
 SVC_User:
         ldr      r2,=osRtxUserSVC       // Load address of SVC table

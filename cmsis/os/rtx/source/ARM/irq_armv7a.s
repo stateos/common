@@ -1,5 +1,5 @@
 ;/*
-; * Copyright (c) 2013-2018 Arm Limited. All rights reserved.
+; * Copyright (c) 2013-2021 Arm Limited. All rights reserved.
 ; *
 ; * SPDX-License-Identifier: Apache-2.0
 ; *
@@ -18,12 +18,10 @@
 ; * -----------------------------------------------------------------------------
 ; *
 ; * Project:     CMSIS-RTOS RTX
-; * Title:       Cortex-A Exception handlers
+; * Title:       ARMv7-A Exception handlers
 ; *
 ; * -----------------------------------------------------------------------------
 ; */
-
-                NAME     irq_ca.s
 
 MODE_FIQ        EQU      0x11
 MODE_IRQ        EQU      0x12
@@ -42,23 +40,25 @@ TCB_SP_OFS      EQU      56                         ; osRtxThread_t.sp offset
 
 
                 PRESERVE8
+                ARM
 
 
-                SECTION .rodata:DATA:NOROOT(2)
+                AREA     |.constdata|, DATA, READONLY
                 EXPORT   irqRtxLib
 irqRtxLib       DCB      0                          ; Non weak library reference
 
 
-                SECTION .data:DATA:NOROOT(2)
+                AREA     |.data|, DATA, READWRITE
                 EXPORT   IRQ_PendSV
 IRQ_NestLevel   DCD      0                          ; IRQ nesting level counter
 IRQ_PendSV      DCB      0                          ; Pending SVC flag
 
 
-                SECTION .text:CODE:NOROOT(2)
+                AREA     |.text|, CODE, READONLY
 
 
-Undef_Handler
+Undef_Handler\
+                PROC
                 EXPORT  Undef_Handler
                 IMPORT  CUndefHandler
 
@@ -105,8 +105,11 @@ Undef_Cont
                 ADD     SP, SP, #8                  ; Adjust SP for already-restored banked registers
                 MOVS    PC, LR
 
+                ENDP
 
-PAbt_Handler
+
+PAbt_Handler\
+                PROC
                 EXPORT  PAbt_Handler
                 IMPORT  CPAbtHandler
 
@@ -131,8 +134,11 @@ PAbt_Handler
                 POP     {R0-R4, R12}                ; Restore stack APCS registers
                 RFEFD   SP!                         ; Return from exception
 
+                ENDP
 
-DAbt_Handler
+
+DAbt_Handler\
+                PROC
                 EXPORT  DAbt_Handler
                 IMPORT  CDAbtHandler
 
@@ -157,8 +163,11 @@ DAbt_Handler
                 POP     {R0-R4, R12}                ; Restore stacked APCS registers
                 RFEFD   SP!                         ; Return from exception
 
+                ENDP
 
-IRQ_Handler
+
+IRQ_Handler\
+                PROC
                 EXPORT  IRQ_Handler
                 IMPORT  IRQ_GetActiveIRQ
                 IMPORT  IRQ_GetHandler
@@ -208,8 +217,11 @@ IRQ_End
                 POP     {R0-R3, R12, LR}            ; Restore stacked APCS registers
                 RFEFD   SP!                         ; Return from IRQ handler
 
+                ENDP
 
-SVC_Handler
+
+SVC_Handler\
+                PROC
                 EXPORT  SVC_Handler
                 IMPORT  IRQ_Disable
                 IMPORT  IRQ_Enable
@@ -228,7 +240,7 @@ SVC_Handler
                 CMP     R12, #0                     ; Compare SVC number
                 BNE     SVC_User                    ; Branch if User SVC
 
-                PUSH    {R0-R3}
+                PUSH    {R0-R3}                     ; Push arguments to stack
 
                 LDR     R0, =IRQ_NestLevel
                 LDR     R1, [R0]
@@ -242,20 +254,13 @@ SVC_Handler
                 LDR     R0, [R0, #I_TICK_IRQN_OFS]  ; Load OS Tick irqn
                 BLX     IRQ_Disable                 ; Disable OS Tick interrupt
 SVC_FuncCall
-                POP     {R0-R3}
-
-                LDR     R12, [SP]                   ; Reload R12 from stack
+                LDM     SP, {R0-R3, R12}            ; Reload R0-R3 and R12 from stack
 
                 CPSIE   i                           ; Re-enable interrupts
                 BLX     R12                         ; Branch to SVC function
                 CPSID   i                           ; Disable interrupts
 
-                SUB     SP, SP, #4
-                STM     SP, {SP}^                   ; Store SP_usr onto stack
-                POP     {R12}                       ; Pop SP_usr into R12
-                SUB     R12, R12, #16               ; Adjust pointer to SP_usr
-                LDMDB   R12, {R2,R3}                ; Load return values from SVC function
-                PUSH    {R0-R3}                     ; Push return values to stack
+                STR     R0, [SP]                    ; Store function return value
 
                 LDR     R0, =osRtxInfo
                 LDR     R1, [R0, #I_K_STATE_OFS]    ; Load RTX5 kernel state
@@ -289,8 +294,11 @@ SVC_Done
                 POP     {R4, R5, R12, LR}
                 RFEFD   SP!                         ; Return from exception
 
+                ENDP
 
-osRtxContextSwitch
+
+osRtxContextSwitch\
+                PROC
                 EXPORT  osRtxContextSwitch
                 IMPORT  osRtxPendSV_Handler
                 IMPORT  osRtxInfo
@@ -352,16 +360,16 @@ osRtxContextSave
                 STMDB   R1!, {R2,R12}               ; Push FPSCR, maintain 8-byte alignment
 
                 VSTMDB  R1!, {D0-D15}               ; Save D0-D15
-                #ifdef  __ARM_ADVANCED_SIMD__
+              IF {TARGET_FEATURE_EXTENSION_REGISTER_COUNT} == 32
                 VSTMDB  R1!, {D16-D31}              ; Save D16-D31
-                #endif
+              ENDIF
 
                 LDRB    R2, [LR, #TCB_SP_FRAME]     ; Load osRtxInfo.thread.run.curr frame info
-                #ifdef  __ARM_ADVANCED_SIMD__
+              IF {TARGET_FEATURE_EXTENSION_REGISTER_COUNT} == 32
                 ORR     R2, R2, #4                  ; NEON state
-                #else
+              ELSE
                 ORR     R2, R2, #2                  ; VFP state
-                #endif
+              ENDIF
                 STRB    R2, [LR, #TCB_SP_FRAME]     ; Store VFP/NEON state
 
 osRtxContextSave1
@@ -413,9 +421,9 @@ osRtxContextRestore
                 MCR     p15, 0, R2, c1, c0, 2       ; Write CPACR
                 BEQ     osRtxContextRestore1        ; No VFP
                 ISB                                 ; Sync if VFP was enabled
-                #ifdef  __ARM_ADVANCED_SIMD__
+              IF {TARGET_FEATURE_EXTENSION_REGISTER_COUNT} == 32
                 VLDMIA  LR!, {D16-D31}              ; Restore D16-D31
-                #endif
+              ENDIF
                 VLDMIA  LR!, {D0-D15}               ; Restore D0-D15
                 LDR     R2, [LR]
                 VMSR    FPSCR, R2                   ; Restore FPSCR
@@ -437,5 +445,7 @@ osRtxContextRestore1
 
 osRtxContextExit
                 POP     {PC}                        ; Return
+
+                ENDP
 
                 END

@@ -6,7 +6,7 @@ endif
 include $(COMMON)/make/stm32ldiscovery/makefile.clang
 #----------------------------------------------------------#
 
-CMSISOS_TARGET   := cm3
+CMSISOS_TARGET   := armv7m
 CMSISOS_COMPILER := GCC
 
 #----------------------------------------------------------#

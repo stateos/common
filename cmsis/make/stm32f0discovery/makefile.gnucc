@@ -6,7 +6,7 @@ endif
 include $(COMMON)/make/stm32f0discovery/makefile.gnucc
 #----------------------------------------------------------#
 
-CMSISOS_TARGET   := cm0
+CMSISOS_TARGET   := armv6m
 CMSISOS_COMPILER := GCC
 
 #----------------------------------------------------------#

@@ -1,5 +1,5 @@
 ;/*
-; * Copyright (c) 2016-2021 Arm Limited. All rights reserved.
+; * Copyright (c) 2013-2021 Arm Limited. All rights reserved.
 ; *
 ; * SPDX-License-Identifier: Apache-2.0
 ; *
@@ -18,7 +18,7 @@
 ; * -----------------------------------------------------------------------------
 ; *
 ; * Project:     CMSIS-RTOS RTX
-; * Title:       ARMv8-M Mainline Exception handlers
+; * Title:       ARMv7-M Exception handlers
 ; *
 ; * -----------------------------------------------------------------------------
 ; */
@@ -28,21 +28,15 @@
 RTX_STACK_CHECK EQU      0
                 ENDIF
 
-                IF       :LNOT::DEF:DOMAIN_NS
-DOMAIN_NS       EQU      0
-                ENDIF
-
-                IF       ({FPU}="FPv5-SP") || ({FPU}="FPv5_D16")
+                IF       ({FPU}="FPv4-SP") || ({FPU}="VFPv4_D16") || ({FPU}="VFPv4_SP_D16") || ({FPU}="FPv5-SP") || ({FPU}="FPv5_D16")
 FPU_USED        EQU      1
                 ELSE
 FPU_USED        EQU      0
                 ENDIF
 
 I_T_RUN_OFS     EQU      20                     ; osRtxInfo.thread.run offset
-TCB_SM_OFS      EQU      48                     ; TCB.stack_mem offset
 TCB_SP_OFS      EQU      56                     ; TCB.SP offset
 TCB_SF_OFS      EQU      34                     ; TCB.stack_frame offset
-TCB_TZM_OFS     EQU      64                     ; TCB.tz_memory offset
 
 FPCCR           EQU      0xE000EF34             ; FPCCR Address
 
@@ -69,10 +63,6 @@ SVC_Handler     PROC
             IF RTX_STACK_CHECK != 0
                 IMPORT   osRtxThreadStackCheck
                 IMPORT   osRtxKernelErrorNotify
-            ENDIF
-            IF DOMAIN_NS != 0
-                IMPORT   TZ_LoadContext_S
-                IMPORT   TZ_StoreContext_S
             ENDIF
 
                 TST      LR,#0x04               ; Determine return stack from EXC_RETURN bit 2
@@ -115,31 +105,15 @@ SVC_FP_LazyState
               ENDIF
 
 SVC_ContextSave
-            IF DOMAIN_NS != 0
-                LDR      R0,[R1,#TCB_TZM_OFS]   ; Load TrustZone memory identifier
-                CBZ      R0,SVC_ContextSave_NS  ; Branch if there is no secure context
-                PUSH     {R1,R2,R12,LR}         ; Save registers and EXC_RETURN
-                BL       TZ_StoreContext_S      ; Store secure context
-                POP      {R1,R2,R12,LR}         ; Restore registers and EXC_RETURN
-            ENDIF
-
-SVC_ContextSave_NS
-            IF DOMAIN_NS != 0
-                TST      LR,#0x40               ; Check domain of interrupted thread
-                BNE      SVC_ContextSaveSP      ; Branch if secure
-            ENDIF
-
             IF RTX_STACK_CHECK != 0
                 SUB      R12,R12,#32            ; Calculate SP: space for R4..R11
               IF FPU_USED != 0
                 TST      LR,#0x10               ; Determine stack frame from EXC_RETURN bit 4
                 IT       EQ                     ; If extended stack frame
                 SUBEQ    R12,R12,#64            ;  Additional space for S16..S31
-              ENDIF
-
-SVC_ContextSaveSP
-                STR      R12,[R1,#TCB_SP_OFS]   ; Store SP
                 STRB     LR, [R1,#TCB_SF_OFS]   ; Store stack frame information
+              ENDIF
+                STR      R12,[R1,#TCB_SP_OFS]   ; Store SP
 
                 PUSH     {R1,R2}                ; Save osRtxInfo.thread.run: curr & next
                 MOV      R0,R1                  ; Parameter: osRtxInfo.thread.run.curr
@@ -163,13 +137,9 @@ SVC_ContextSaveSP
               ENDIF
 
 SVC_ContextSaveRegs
-                LDRB     LR,[R1,#TCB_SF_OFS]    ; Load stack frame information
-              IF DOMAIN_NS != 0
-                TST      LR,#0x40               ; Check domain of interrupted thread
-                BNE      SVC_ContextRestore     ; Branch if secure
-              ENDIF
                 LDR      R12,[R1,#TCB_SP_OFS]   ; Load SP
               IF FPU_USED != 0
+                LDRB     LR, [R1,#TCB_SF_OFS]   ; Load stack frame information
                 TST      LR,#0x10               ; Determine stack frame from EXC_RETURN bit 4
                 IT       EQ                     ; If extended stack frame
                 VSTMIAEQ R12!,{S16-S31}         ;  Save VFP S16..S31
@@ -181,41 +151,23 @@ SVC_ContextSaveRegs
                 TST      LR,#0x10               ; Determine stack frame from EXC_RETURN bit 4
                 IT       EQ                     ; If extended stack frame
                 VSTMDBEQ R12!,{S16-S31}         ;  Save VFP S16.S31
-              ENDIF
-SVC_ContextSaveSP
-                STR      R12,[R1,#TCB_SP_OFS]   ; Store SP
                 STRB     LR, [R1,#TCB_SF_OFS]   ; Store stack frame information
+              ENDIF
+                STR      R12,[R1,#TCB_SP_OFS]   ; Store SP
             ENDIF
 
 SVC_ContextRestore
-            IF DOMAIN_NS != 0
-                LDR      R0,[R2,#TCB_TZM_OFS]   ; Load TrustZone memory identifier
-                CBZ      R0,SVC_ContextRestore_NS; Branch if there is no secure context
-                PUSH     {R2,R3}                ; Save registers
-                BL       TZ_LoadContext_S       ; Load secure context
-                POP      {R2,R3}                ; Restore registers
-            ENDIF
-
-SVC_ContextRestore_NS
                 LDR      R0,[R2,#TCB_SP_OFS]    ; Load SP
-                LDR      R1,[R2,#TCB_SM_OFS]    ; Load stack memory base
-                MSR      PSPLIM,R1              ; Set PSPLIM
+              IF FPU_USED != 0
                 LDRB     R1,[R2,#TCB_SF_OFS]    ; Load stack frame information
                 ORN      LR,R1,#0xFF            ; Set EXC_RETURN
-
-            IF DOMAIN_NS != 0
-                TST      LR,#0x40               ; Check domain of interrupted thread
-                BNE      SVC_ContextRestoreSP   ; Branch if secure
-            ENDIF
-
-              IF FPU_USED != 0
                 TST      LR,#0x10               ; Determine stack frame from EXC_RETURN bit 4
                 IT       EQ                     ; If extended stack frame
                 VLDMIAEQ R0!,{S16-S31}          ;  Restore VFP S16..S31
+              ELSE
+                MVN      LR,#~0xFFFFFFFD        ; Set EXC_RETURN value
               ENDIF
                 LDMIA    R0!,{R4-R11}           ; Restore R4..R11
-
-SVC_ContextRestoreSP
                 MSR      PSP,R0                 ; Set PSP
 
 SVC_Exit
