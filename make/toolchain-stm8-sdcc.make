@@ -44,6 +44,8 @@ DEPS       := $(OBJS:.rel=.d)
 ifneq (clean,$(MAKECMDGOALS))
 COMMON_F   += -m$(TARGET_CORE) $(if $(filter far,$(MAKECMDGOALS)),--model-large,)
 AS_FLAGS   += -l -o -s
+C_FLAGS    += -MD
+LD_FLAGS   +=
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)
@@ -51,8 +53,6 @@ C_FLAGS    += --std-c$(STDC:20=2x)
 else
 C_FLAGS    += --std-sdcc$(STDC:20=2x)
 endif
-C_FLAGS    += -MD
-LD_FLAGS   +=
 ifneq ($(filter NOWARNINGS,$(DEFS)),)
 $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
@@ -61,6 +61,7 @@ endif
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
 COMMON_F   += --debug
+DEFS       := $(DEFS:NDEBUG=)
 else
 ifeq  ($(filter NDEBUG,$(DEFS)),)
 DEFS       += NDEBUG

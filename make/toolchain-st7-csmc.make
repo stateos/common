@@ -52,6 +52,7 @@ LD_FLAGS   += -m $(MAP) -p
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
 C_FLAGS    += +debug
+DEFS       := $(DEFS:NDEBUG=)
 else
 ifeq  ($(filter NDEBUG,$(DEFS)),)
 DEFS       += NDEBUG

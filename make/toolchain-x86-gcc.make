@@ -130,15 +130,15 @@ COMMON_F   += -O$(OPTF) -g -ggdb
 DEFS       := $(DEFS:NDEBUG=)
 DEFS       := $(DEFS:MINSIZE=)
 else
+ifeq  ($(filter NDEBUG,$(DEFS)),)
+DEFS       += NDEBUG
+endif
 ifneq ($(filter MINSIZE,$(DEFS)),)
 $(info Using minsize)
 DEFS       := $(DEFS:MINSIZE=)
 COMMON_F   += -Os
 else
 COMMON_F   += -O$(OPTF)
-endif
-ifeq  ($(filter NDEBUG,$(DEFS)),)
-DEFS       += NDEBUG
 endif
 endif
 endif

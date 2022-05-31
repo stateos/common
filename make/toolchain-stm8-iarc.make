@@ -56,6 +56,7 @@ endif
 ifneq ($(filter DEBUG,$(DEFS)),)
 $(info Using debug)
 COMMON_F   += --debug
+DEFS       := $(DEFS:NDEBUG=)
 else
 ifeq  ($(filter NDEBUG,$(DEFS)),)
 DEFS       += NDEBUG
