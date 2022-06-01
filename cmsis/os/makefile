@@ -18,7 +18,7 @@ INCS += $(COMMON)/cmsis/os/rtx/include
 
 SRCS += $(COMMON)/cmsis/os/src/cmsis_os1.c
 SRCS += $(COMMON)/cmsis/os/src/os_systick.c
-SRCS += $(COMMON)/cmsis/os/rtx/config/RTX_Config.c
+SRCS +=#$(COMMON)/cmsis/os/rtx/config/RTX_Config.c
 SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_delay.c
 SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_evflags.c
 SRCS += $(COMMON)/cmsis/os/rtx/source/rtx_evr.c
