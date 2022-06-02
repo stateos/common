@@ -2,7 +2,7 @@
 
    @file    script.ld
    @author  Rajmund Szymanski
-   @date    24.05.2022
+   @date    02.06.2022
    @brief   Linker script for STM32F030F4 device with 16KB FLASH and 4KB RAM
 
  ******************************************************************************
@@ -161,7 +161,7 @@ PROVIDE(__data_start__ = __data_start);
 PROVIDE(__data_end__   = __data_end);
 PROVIDE(__bss_start__  = __bss_start);
 PROVIDE(__bss_end__    = __bss_end);
-PROVIDE(__end__        = __bss_end);
+PROVIDE(__end__        = __heap_start);
 PROVIDE(__heap_base__  = __heap_start);
 PROVIDE(__heap_end__   = __heap_end);
 PROVIDE(__heap_base    = __heap_start);

@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     stm32f7xx.ld
 @author   Rajmund Szymanski
-@date     12.04.2021
+@date     02.06.2022
 @brief    Linker script for STM32F746NG device with 1024KB FLASH and 320KB RAM
 *******************************************************************************/
 
@@ -157,7 +157,7 @@ PROVIDE(__data_start__ = __data_start);
 PROVIDE(__data_end__   = __data_end);
 PROVIDE(__bss_start__  = __bss_start);
 PROVIDE(__bss_end__    = __bss_end);
-PROVIDE(__end__        = __bss_end);
+PROVIDE(__end__        = __heap_start);
 PROVIDE(__heap_base__  = __heap_start);
 PROVIDE(__heap_end__   = __heap_end);
 PROVIDE(__heap_base    = __heap_start);
