@@ -135,7 +135,7 @@
 
     @file    StateOS: cmsis_os.h
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    02.06.2022
     @brief   CMSIS-RTOS API implementation for StateOS.
 
  ******************************************************************************
@@ -188,6 +188,12 @@
 #define os_InRegs
 #endif
  
+#if (osCMSIS >= 0x20000U)
+#include "cmsis_os2.h"
+#else
+#include <stdint.h>
+#include <stddef.h>
+#endif
 #include "oscmsis.h"
 
 #ifdef  __cplusplus

@@ -2,7 +2,7 @@
 
     @file    StateOS: oscmsis.h
     @author  Rajmund Szymanski
-    @date    20.05.2021
+    @date    02.06.2022
     @brief   CMSIS-RTOS2 API implementation for StateOS.
 
  ******************************************************************************
@@ -32,7 +32,6 @@
 #ifndef __STATEOSCMSIS_H
 #define __STATEOSCMSIS_H
 
-#include <cmsis_os2.h>
 #include <os.h>
 
 #if     OS_TASK_EXIT == 0
