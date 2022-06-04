@@ -214,13 +214,19 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	SPI1_IRQHandler,
 	SPI2_IRQHandler,
 	USART1_IRQHandler,
-#if defined(USB) || defined(CAN) || defined(CEC) || defined(USART3) || defined(USART6) || defined(USART2)
+#if defined(USB) || defined(CEC) || defined(USART3) || defined(USART2)
 	USART2_IRQHandler,
 #endif
-#if defined(USB) || defined(CAN) || defined(CEC) || defined(USART3) || defined(USART6)
+#if defined(USB) || defined(CEC) || defined(USART3)
+	#if   defined(USART8)
+	USART3_8_IRQHandler,
+	#elif defined(USART6)
 	USART3_6_IRQHandler,
+	#else
+	USART3_4_IRQHandler,
+	#endif
 #endif
-#if defined(USB) || defined(CAN) || defined(CEC)
+#if defined(USB) || defined(CEC)
 	CEC_CAN_IRQHandler,
 #endif
 #if defined(USB)
