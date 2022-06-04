@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     startup_stm32f4xx.c
 @author   Rajmund Szymanski
-@date     03.03.2021
+@date     04.06.2022
 @brief    STM32F4xx startup file.
           After reset the Cortex-M4 processor is in thread mode,
           priority is privileged, and the stack is set to main.
@@ -322,22 +322,22 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	CRYP_IRQHandler,
 	HASH_RNG_IRQHandler,
 	FPU_IRQHandler,
-#if defined(FMPI2C1_ER_IRQn)||defined(DMA2D_IRQn)||defined(SPI5_IRQn)||defined(SPI4_IRQn)
+#if defined(FMPI2C1)||defined(DMA2D)||defined(SPI5)||defined(SPI4)
 	UART7_IRQHandler,
 	UART8_IRQHandler,
 	SPI4_IRQHandler,
 #endif
-#if defined(FMPI2C1_ER_IRQn)||defined(DMA2D_IRQn)||defined(SPI5_IRQn)
+#if defined(FMPI2C1)||defined(DMA2D)||defined(SPI5)
 	SPI5_IRQHandler,
 #endif
-#if defined(FMPI2C1_ER_IRQn)||defined(DMA2D_IRQn)
+#if defined(FMPI2C1)||defined(DMA2D)
 	SPI6_IRQHandler,
 	SAI1_IRQHandler,
 	LTDC_IRQHandler,
 	LTDC_ER_IRQHandler,
 	DMA2D_IRQHandler,
 #endif
-#if defined(FMPI2C1_ER_IRQn)
+#if defined(FMPI2C1)
 	SAI2_IRQHandler,
 	QUADSPI_IRQHandler,
 	CEC_IRQHandler,

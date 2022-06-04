@@ -2,7 +2,7 @@
 
    @file    startup.c
    @author  Rajmund Szymanski
-   @date    24.05.2022
+   @date    04.06.2022
    @brief   STM32F030F4 startup file
 
  ******************************************************************************
@@ -31,7 +31,7 @@
 *******************************************************************************/
 
 #define   RAM_start 0x20000000
-#define   RAM_end   0x20004000
+#define   RAM_end   0x20001000
 
 /*******************************************************************************
  Configuration of stacks
@@ -176,13 +176,10 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	Reset_Handler,      /* Reset                                   */
 	NMI_Handler,        /* Non-maskable interrupt                  */
 	HardFault_Handler,  /* All classes of faults                   */
-	MemManage_Handler,  /* Memory management                       */
-	BusFault_Handler,   /* Pre-fetch fault, memory access fault    */
-	UsageFault_Handler, /* Undefined instruction or illegal state  */
 	0, 0, 0, 0,         /* Reserved                                */
+	0, 0, 0,            /* Reserved                                */
 	SVC_Handler,        /* System service call via SWI instruction */
-	DebugMon_Handler,   /* Debug Monitor                           */
-	0,                  /* Reserved                                */
+	0, 0,               /* Reserved                                */
 	PendSV_Handler,     /* Pendable request for system service     */
 	SysTick_Handler,    /* System tick timer                       */
 
@@ -216,19 +213,17 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	I2C2_IRQHandler,
 	SPI1_IRQHandler,
 	SPI2_IRQHandler,
-#if defined(USB_IRQn) || defined(CEC_CAN_IRQn) || defined(USART3_6_IRQn) || defined(USART2_IRQn) || defined(USART1_IRQn)
 	USART1_IRQHandler,
-#endif
-#if defined(USB_IRQn) || defined(CEC_CAN_IRQn) || defined(USART3_6_IRQn) || defined(USART2_IRQn)
+#if defined(USB) || defined(CAN) || defined(CEC) || defined(USART3) || defined(USART6) || defined(USART2)
 	USART2_IRQHandler,
 #endif
-#if defined(USB_IRQn) || defined(CEC_CAN_IRQn) || defined(USART3_6_IRQn)
+#if defined(USB) || defined(CAN) || defined(CEC) || defined(USART3) || defined(USART6)
 	USART3_6_IRQHandler,
 #endif
-#if defined(USB_IRQn) || defined(CEC_CAN_IRQn)
+#if defined(USB) || defined(CAN) || defined(CEC)
 	CEC_CAN_IRQHandler,
 #endif
-#if defined(USB_IRQn)
+#if defined(USB)
 	USB_IRQHandler,
 #endif
 

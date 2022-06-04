@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     startup.c
 @author   Rajmund Szymanski
-@date     03.03.2021
+@date     04.06.2022
 @brief    STM32L4xx startup file.
           After reset the Cortex-M4 processor is in thread mode,
           priority is privileged, and the stack is set to main.
@@ -308,7 +308,7 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	AES_IRQHandler,
 	RNG_IRQHandler,
 	FPU_IRQHandler,
-#if defined (CRS_IRQn)
+#if defined (CRS)
 	CRS_IRQHandler,
 #endif
 

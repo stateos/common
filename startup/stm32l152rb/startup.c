@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     startup_stm32l1xx.c
 @author   Rajmund Szymanski
-@date     03.03.2021
+@date     04.06.2022
 @brief    STM32L1xx startup file.
           After reset the Cortex-M3 processor is in thread mode,
           priority is privileged, and the stack is set to main.
@@ -243,7 +243,7 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	USB_FS_WKUP_IRQHandler,
 	TIM6_IRQHandler,
 	TIM7_IRQHandler,
-#if defined(COMP_ACQ_IRQn)
+#if defined(COMP)
 	SDIO_IRQHandler,
 	TIM5_IRQHandler,
 	SPI3_IRQHandler,
