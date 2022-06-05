@@ -2,8 +2,8 @@
 
    @file    startup.c
    @author  Rajmund Szymanski
-   @date    04.06.2022
-   @brief   STM32F051R8 startup file
+   @date    05.06.2022
+   @brief   Startup file for STM32F051R8 uC
 
  ******************************************************************************
 
@@ -25,13 +25,6 @@
 
 #define __PROGRAM_START
 #include <stm32f0xx.h>
-
-/*******************************************************************************
- Specific definitions for the chip
-*******************************************************************************/
-
-#define   RAM_start 0x20000000
-#define   RAM_end   0x20002000
 
 /*******************************************************************************
  Configuration of stacks
@@ -121,11 +114,7 @@ void Reset_Handler( void )
 /* Core exception handlers */
 __ALIAS(Fault_Handler) void NMI_Handler                   (void);
 __ALIAS(Fault_Handler) void HardFault_Handler             (void);
-__ALIAS(Fault_Handler) void MemManage_Handler             (void);
-__ALIAS(Fault_Handler) void BusFault_Handler              (void);
-__ALIAS(Fault_Handler) void UsageFault_Handler            (void);
 __ALIAS(Fault_Handler) void SVC_Handler                   (void);
-__ALIAS(Fault_Handler) void DebugMon_Handler              (void);
 __ALIAS(Fault_Handler) void PendSV_Handler                (void);
 __ALIAS(Fault_Handler) void SysTick_Handler               (void);
 
@@ -137,18 +126,17 @@ __ALIAS(Fault_Handler) void FLASH_IRQHandler              (void);
 __ALIAS(Fault_Handler) void RCC_IRQHandler                (void);
 __ALIAS(Fault_Handler) void EXTI0_1_IRQHandler            (void);
 __ALIAS(Fault_Handler) void EXTI2_3_IRQHandler            (void);
-__ALIAS(Fault_Handler) void EXTI4_5_IRQHandler            (void);
+__ALIAS(Fault_Handler) void EXTI4_15_IRQHandler           (void);
 __ALIAS(Fault_Handler) void TSC_IRQHandler                (void);
 __ALIAS(Fault_Handler) void DMA1_Channel1_IRQHandler      (void);
 __ALIAS(Fault_Handler) void DMA1_Channel2_3_IRQHandler    (void);
 __ALIAS(Fault_Handler) void DMA1_Channel4_5_IRQHandler    (void);
-__ALIAS(Fault_Handler) void ADC1_IRQHandler               (void);
+__ALIAS(Fault_Handler) void ADC1_COMP_IRQHandler          (void);
 __ALIAS(Fault_Handler) void TIM1_BRK_UP_TRG_COM_IRQHandler(void);
 __ALIAS(Fault_Handler) void TIM1_CC_IRQHandler            (void);
 __ALIAS(Fault_Handler) void TIM2_IRQHandler               (void);
 __ALIAS(Fault_Handler) void TIM3_IRQHandler               (void);
-__ALIAS(Fault_Handler) void TIM6_IRQHandler               (void);
-__ALIAS(Fault_Handler) void TIM7_IRQHandler               (void);
+__ALIAS(Fault_Handler) void TIM6_DAC_IRQHandler           (void);
 __ALIAS(Fault_Handler) void TIM14_IRQHandler              (void);
 __ALIAS(Fault_Handler) void TIM15_IRQHandler              (void);
 __ALIAS(Fault_Handler) void TIM16_IRQHandler              (void);
@@ -159,9 +147,7 @@ __ALIAS(Fault_Handler) void SPI1_IRQHandler               (void);
 __ALIAS(Fault_Handler) void SPI2_IRQHandler               (void);
 __ALIAS(Fault_Handler) void USART1_IRQHandler             (void);
 __ALIAS(Fault_Handler) void USART2_IRQHandler             (void);
-__ALIAS(Fault_Handler) void USART3_6_IRQHandler           (void);
 __ALIAS(Fault_Handler) void CEC_CAN_IRQHandler            (void);
-__ALIAS(Fault_Handler) void USB_IRQHandler                (void);
 
 /*******************************************************************************
  Vector table for STM32F0xx (Cortex-M0)
@@ -193,18 +179,18 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	RCC_IRQHandler,
 	EXTI0_1_IRQHandler,
 	EXTI2_3_IRQHandler,
-	EXTI4_5_IRQHandler,
+	EXTI4_15_IRQHandler,
 	TSC_IRQHandler,
 	DMA1_Channel1_IRQHandler,
 	DMA1_Channel2_3_IRQHandler,
 	DMA1_Channel4_5_IRQHandler,
-	ADC1_IRQHandler,
+	ADC1_COMP_IRQHandler,
 	TIM1_BRK_UP_TRG_COM_IRQHandler,
 	TIM1_CC_IRQHandler,
 	TIM2_IRQHandler,
 	TIM3_IRQHandler,
-	TIM6_IRQHandler,
-	TIM7_IRQHandler,
+	TIM6_DAC_IRQHandler,
+	0,
 	TIM14_IRQHandler,
 	TIM15_IRQHandler,
 	TIM16_IRQHandler,
@@ -214,24 +200,9 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	SPI1_IRQHandler,
 	SPI2_IRQHandler,
 	USART1_IRQHandler,
-#if defined(USB) || defined(CEC) || defined(USART3) || defined(USART2)
 	USART2_IRQHandler,
-#endif
-#if defined(USB) || defined(CEC) || defined(USART3)
-	#if   defined(USART8)
-	USART3_8_IRQHandler,
-	#elif defined(USART6)
-	USART3_6_IRQHandler,
-	#else
-	USART3_4_IRQHandler,
-	#endif
-#endif
-#if defined(USB) || defined(CEC)
+	0,
 	CEC_CAN_IRQHandler,
-#endif
-#if defined(USB)
-	USB_IRQHandler,
-#endif
 
 #endif//__NO_EXTERNAL_INTERRUPTS
 };
