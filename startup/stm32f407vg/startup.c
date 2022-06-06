@@ -206,7 +206,7 @@ __ALIAS(Fault_Handler) void RNG_IRQHandler                (void);
 __ALIAS(Fault_Handler) void FPU_IRQHandler                (void);
 
 /*******************************************************************************
- Vector table for STM32F4xx (Cortex-M4F)
+ Vector table
 *******************************************************************************/
 
 void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =

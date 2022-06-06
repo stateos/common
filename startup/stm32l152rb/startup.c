@@ -1,21 +1,30 @@
-/*******************************************************************************
-@file     startup_stm32l1xx.c
-@author   Rajmund Szymanski
-@date     04.06.2022
-@brief    STM32L1xx startup file.
-          After reset the Cortex-M3 processor is in thread mode,
-          priority is privileged, and the stack is set to main.
-*******************************************************************************/
+/******************************************************************************
+
+   @file    startup.c
+   @author  Rajmund Szymanski
+   @date    06.06.2022
+   @brief   Startup file for STM32L152RB uC
+
+ ******************************************************************************
+
+   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ ******************************************************************************/
 
 #define __PROGRAM_START
 #include <stm32l1xx.h>
-
-/*******************************************************************************
- Specific definitions for the chip
-*******************************************************************************/
-
-#define   RAM_start 0x20000000
-#define   RAM_end   0x20004000
 
 /*******************************************************************************
  Configuration of stacks
@@ -159,21 +168,9 @@ __ALIAS(Fault_Handler) void RTC_Alarm_IRQHandler          (void);
 __ALIAS(Fault_Handler) void USB_FS_WKUP_IRQHandler        (void);
 __ALIAS(Fault_Handler) void TIM6_IRQHandler               (void);
 __ALIAS(Fault_Handler) void TIM7_IRQHandler               (void);
-__ALIAS(Fault_Handler) void SDIO_IRQHandler               (void);
-__ALIAS(Fault_Handler) void TIM5_IRQHandler               (void);
-__ALIAS(Fault_Handler) void SPI3_IRQHandler               (void);
-__ALIAS(Fault_Handler) void UART4_IRQHandler              (void);
-__ALIAS(Fault_Handler) void UART5_IRQHandler              (void);
-__ALIAS(Fault_Handler) void DMA2_Channel1_IRQHandler      (void);
-__ALIAS(Fault_Handler) void DMA2_Channel2_IRQHandler      (void);
-__ALIAS(Fault_Handler) void DMA2_Channel3_IRQHandler      (void);
-__ALIAS(Fault_Handler) void DMA2_Channel4_IRQHandler      (void);
-__ALIAS(Fault_Handler) void DMA2_Channel5_IRQHandler      (void);
-__ALIAS(Fault_Handler) void AES_IRQHandler                (void);
-__ALIAS(Fault_Handler) void COMP_ACQ_IRQHandler           (void);
 
 /*******************************************************************************
- Vector table for STM32L1xx (Cortex-M3)
+ Vector table
 *******************************************************************************/
 
 void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
@@ -243,20 +240,6 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	USB_FS_WKUP_IRQHandler,
 	TIM6_IRQHandler,
 	TIM7_IRQHandler,
-#if defined(COMP)
-	SDIO_IRQHandler,
-	TIM5_IRQHandler,
-	SPI3_IRQHandler,
-	UART4_IRQHandler,
-	UART5_IRQHandler,
-	DMA2_Channel1_IRQHandler,
-	DMA2_Channel2_IRQHandler,
-	DMA2_Channel3_IRQHandler,
-	DMA2_Channel4_IRQHandler,
-	DMA2_Channel5_IRQHandler,
-	AES_IRQHandler,
-	COMP_ACQ_IRQHandler,
-#endif
 
 #endif//__NO_EXTERNAL_INTERRUPTS
 };

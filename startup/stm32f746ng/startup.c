@@ -222,7 +222,7 @@ __ALIAS(Fault_Handler) void I2C4_ER_IRQHandler            (void);
 __ALIAS(Fault_Handler) void SPDIF_RX_IRQHandler           (void);
 
 /*******************************************************************************
- Vector table for STM32F7xx (Cortex-7)
+ Vector table
 *******************************************************************************/
 
 void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =

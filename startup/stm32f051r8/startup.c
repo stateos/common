@@ -2,7 +2,7 @@
 
    @file    startup.c
    @author  Rajmund Szymanski
-   @date    05.06.2022
+   @date    06.06.2022
    @brief   Startup file for STM32F051R8 uC
 
  ******************************************************************************
@@ -150,7 +150,7 @@ __ALIAS(Fault_Handler) void USART2_IRQHandler             (void);
 __ALIAS(Fault_Handler) void CEC_CAN_IRQHandler            (void);
 
 /*******************************************************************************
- Vector table for STM32F0xx (Cortex-M0)
+ Vector table
 *******************************************************************************/
 
 void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =

@@ -1,23 +1,30 @@
-/*******************************************************************************
-@file     startup.c
-@author   Rajmund Szymanski
-@date     04.06.2022
-@brief    STM32L4xx startup file.
-          After reset the Cortex-M4 processor is in thread mode,
-          priority is privileged, and the stack is set to main.
-*******************************************************************************/
+/******************************************************************************
+
+   @file    startup.c
+   @author  Rajmund Szymanski
+   @date    06.06.2022
+   @brief   Startup file for STM32L476VG uC
+
+ ******************************************************************************
+
+   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ ******************************************************************************/
 
 #define __PROGRAM_START
 #include "stm32l4xx.h"
-
-/*******************************************************************************
- Specific definitions for the chip
-*******************************************************************************/
-
-#define   CCM_start 0x10000000
-#define   CCM_end   0x10008000
-#define   RAM_start 0x20000000
-#define   RAM_end   0x20018000
 
 /*******************************************************************************
  Configuration of stacks
@@ -183,7 +190,7 @@ __ALIAS(Fault_Handler) void DFSDM1_FLT2_IRQHandler        (void);
 __ALIAS(Fault_Handler) void COMP_IRQHandler               (void);
 __ALIAS(Fault_Handler) void LPTIM1_IRQHandler             (void);
 __ALIAS(Fault_Handler) void LPTIM2_IRQHandler             (void);
-__ALIAS(Fault_Handler) void USB_IRQHandler                (void);
+__ALIAS(Fault_Handler) void OTG_FS_IRQHandler             (void);
 __ALIAS(Fault_Handler) void DMA2_Channel6_IRQHandler      (void);
 __ALIAS(Fault_Handler) void DMA2_Channel7_IRQHandler      (void);
 __ALIAS(Fault_Handler) void LPUART1_IRQHandler            (void);
@@ -195,13 +202,11 @@ __ALIAS(Fault_Handler) void SAI2_IRQHandler               (void);
 __ALIAS(Fault_Handler) void SWPMI1_IRQHandler             (void);
 __ALIAS(Fault_Handler) void TSC_IRQHandler                (void);
 __ALIAS(Fault_Handler) void LCD_IRQHandler                (void);
-__ALIAS(Fault_Handler) void AES_IRQHandler                (void);
 __ALIAS(Fault_Handler) void RNG_IRQHandler                (void);
 __ALIAS(Fault_Handler) void FPU_IRQHandler                (void);
-__ALIAS(Fault_Handler) void CRS_IRQHandler                (void);
 
 /*******************************************************************************
- Vector table for STM32L4xx (Cortex-M4F)
+ Vector table
 *******************************************************************************/
 
 void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
@@ -293,7 +298,7 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	COMP_IRQHandler,
 	LPTIM1_IRQHandler,
 	LPTIM2_IRQHandler,
-	USB_IRQHandler,
+	OTG_FS_IRQHandler,
 	DMA2_Channel6_IRQHandler,
 	DMA2_Channel7_IRQHandler,
 	LPUART1_IRQHandler,
@@ -305,12 +310,9 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	SWPMI1_IRQHandler,
 	TSC_IRQHandler,
 	LCD_IRQHandler,
-	AES_IRQHandler,
+	0,
 	RNG_IRQHandler,
 	FPU_IRQHandler,
-#if defined (CRS)
-	CRS_IRQHandler,
-#endif
 
 #endif//__NO_EXTERNAL_INTERRUPTS
 };

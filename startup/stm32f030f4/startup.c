@@ -2,7 +2,7 @@
 
    @file    startup.c
    @author  Rajmund Szymanski
-   @date    05.06.2022
+   @date    06.06.2022
    @brief   Startup file for STM32F030F4 uC
 
  ******************************************************************************
@@ -141,7 +141,7 @@ __ALIAS(Fault_Handler) void SPI1_IRQHandler               (void);
 __ALIAS(Fault_Handler) void USART1_IRQHandler             (void);
 
 /*******************************************************************************
- Vector table for STM32F0xx (Cortex-M0)
+ Vector table
 *******************************************************************************/
 
 void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
