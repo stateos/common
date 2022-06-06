@@ -1,23 +1,30 @@
-/*******************************************************************************
-@file     startup_stm32f4xx.c
-@author   Rajmund Szymanski
-@date     04.06.2022
-@brief    STM32F4xx startup file.
-          After reset the Cortex-M4 processor is in thread mode,
-          priority is privileged, and the stack is set to main.
-*******************************************************************************/
+/******************************************************************************
+
+   @file    startup.c
+   @author  Rajmund Szymanski
+   @date    06.06.2022
+   @brief   Startup file for STM32F407VG uC
+
+ ******************************************************************************
+
+   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ ******************************************************************************/
 
 #define __PROGRAM_START
 #include "stm32f4xx.h"
-
-/*******************************************************************************
- Specific definitions for the chip
-*******************************************************************************/
-
-#define   CCM_start 0x10000000
-#define   CCM_end   0x10010000
-#define   RAM_start 0x20000000
-#define   RAM_end   0x20020000
 
 /*******************************************************************************
  Configuration of stacks
@@ -195,24 +202,8 @@ __ALIAS(Fault_Handler) void OTG_HS_EP1_IN_IRQHandler      (void);
 __ALIAS(Fault_Handler) void OTG_HS_WKUP_IRQHandler        (void);
 __ALIAS(Fault_Handler) void OTG_HS_IRQHandler             (void);
 __ALIAS(Fault_Handler) void DCMI_IRQHandler               (void);
-__ALIAS(Fault_Handler) void CRYP_IRQHandler               (void);
-__ALIAS(Fault_Handler) void HASH_RNG_IRQHandler           (void);
+__ALIAS(Fault_Handler) void RNG_IRQHandler                (void);
 __ALIAS(Fault_Handler) void FPU_IRQHandler                (void);
-__ALIAS(Fault_Handler) void UART7_IRQHandler              (void);
-__ALIAS(Fault_Handler) void UART8_IRQHandler              (void);
-__ALIAS(Fault_Handler) void SPI4_IRQHandler               (void);
-__ALIAS(Fault_Handler) void SPI5_IRQHandler               (void);
-__ALIAS(Fault_Handler) void SPI6_IRQHandler               (void);
-__ALIAS(Fault_Handler) void SAI1_IRQHandler               (void);
-__ALIAS(Fault_Handler) void LTDC_IRQHandler               (void);
-__ALIAS(Fault_Handler) void LTDC_ER_IRQHandler            (void);
-__ALIAS(Fault_Handler) void DMA2D_IRQHandler              (void);
-__ALIAS(Fault_Handler) void SAI2_IRQHandler               (void);
-__ALIAS(Fault_Handler) void QUADSPI_IRQHandler            (void);
-__ALIAS(Fault_Handler) void CEC_IRQHandler                (void);
-__ALIAS(Fault_Handler) void SPDIF_RX_IRQHandler           (void);
-__ALIAS(Fault_Handler) void FMPI2C1_EV_IRQHandler         (void);
-__ALIAS(Fault_Handler) void FMPI2C1_ER_IRQHandler         (void);
 
 /*******************************************************************************
  Vector table for STM32F4xx (Cortex-M4F)
@@ -319,32 +310,9 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	OTG_HS_WKUP_IRQHandler,
 	OTG_HS_IRQHandler,
 	DCMI_IRQHandler,
-	CRYP_IRQHandler,
-	HASH_RNG_IRQHandler,
+	0,
+	RNG_IRQHandler,
 	FPU_IRQHandler,
-#if defined(FMPI2C1)||defined(DMA2D)||defined(SPI5)||defined(SPI4)
-	UART7_IRQHandler,
-	UART8_IRQHandler,
-	SPI4_IRQHandler,
-#endif
-#if defined(FMPI2C1)||defined(DMA2D)||defined(SPI5)
-	SPI5_IRQHandler,
-#endif
-#if defined(FMPI2C1)||defined(DMA2D)
-	SPI6_IRQHandler,
-	SAI1_IRQHandler,
-	LTDC_IRQHandler,
-	LTDC_ER_IRQHandler,
-	DMA2D_IRQHandler,
-#endif
-#if defined(FMPI2C1)
-	SAI2_IRQHandler,
-	QUADSPI_IRQHandler,
-	CEC_IRQHandler,
-	SPDIF_RX_IRQHandler,
-	FMPI2C1_EV_IRQHandler,
-	FMPI2C1_ER_IRQHandler,
-#endif
 
 #endif//__NO_EXTERNAL_INTERRUPTS
 };
