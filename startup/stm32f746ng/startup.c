@@ -1,21 +1,30 @@
-/*******************************************************************************
-@file     startup_stm32f7xx.c
-@author   Rajmund Szymanski
-@date     03.03.2021
-@brief    STM32F7xx startup file.
-          After reset the Cortex-M7 processor is in thread mode,
-          priority is privileged, and the stack is set to main.
-*******************************************************************************/
+/******************************************************************************
+
+   @file    startup.c
+   @author  Rajmund Szymanski
+   @date    06.06.2022
+   @brief   Startup file for STM32F746NG uC
+
+ ******************************************************************************
+
+   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ ******************************************************************************/
 
 #define __PROGRAM_START
 #include <stm32f7xx.h>
-
-/*******************************************************************************
- Specific definitions for the chip
-*******************************************************************************/
-
-#define   RAM_start 0x20000000
-#define   RAM_end   0x20050000
 
 /*******************************************************************************
  Configuration of stacks
@@ -193,8 +202,7 @@ __ALIAS(Fault_Handler) void OTG_HS_EP1_IN_IRQHandler      (void);
 __ALIAS(Fault_Handler) void OTG_HS_WKUP_IRQHandler        (void);
 __ALIAS(Fault_Handler) void OTG_HS_IRQHandler             (void);
 __ALIAS(Fault_Handler) void DCMI_IRQHandler               (void);
-__ALIAS(Fault_Handler) void CRYP_IRQHandler               (void);
-__ALIAS(Fault_Handler) void HASH_RNG_IRQHandler           (void);
+__ALIAS(Fault_Handler) void RNG_IRQHandler                (void);
 __ALIAS(Fault_Handler) void FPU_IRQHandler                (void);
 __ALIAS(Fault_Handler) void UART7_IRQHandler              (void);
 __ALIAS(Fault_Handler) void UART8_IRQHandler              (void);
@@ -318,8 +326,8 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	OTG_HS_WKUP_IRQHandler,
 	OTG_HS_IRQHandler,
 	DCMI_IRQHandler,
-	CRYP_IRQHandler,
-	HASH_RNG_IRQHandler,
+	0,
+	RNG_IRQHandler,
 	FPU_IRQHandler,
 	UART7_IRQHandler,
 	UART8_IRQHandler,
