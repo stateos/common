@@ -1,11 +1,27 @@
-/*******************************************************************************
-@file     startup_stm32f3xx.c
-@author   Rajmund Szymanski
-@date     04.06.2022
-@brief    STM32F3xx startup file.
-          After reset the Cortex-M4 processor is in thread mode,
-          priority is privileged, and the stack is set to main.
-*******************************************************************************/
+/******************************************************************************
+
+   @file    startup.c
+   @author  Rajmund Szymanski
+   @date    06.06.2022
+   @brief   Startup file for STM32F303VC uC
+
+ ******************************************************************************
+
+   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ ******************************************************************************/
 
 #define __PROGRAM_START
 #include <stm32f3xx.h>
@@ -164,8 +180,6 @@ __ALIAS(Fault_Handler) void TIM8_UP_IRQHandler            (void);
 __ALIAS(Fault_Handler) void TIM8_TRG_COM_IRQHandler       (void);
 __ALIAS(Fault_Handler) void TIM8_CC_IRQHandler            (void);
 __ALIAS(Fault_Handler) void ADC3_IRQHandler               (void);
-__ALIAS(Fault_Handler) void FMC_IRQHandler                (void);
-__ALIAS(Fault_Handler) void TIM5_IRQHandler               (void);
 __ALIAS(Fault_Handler) void SPI3_IRQHandler               (void);
 __ALIAS(Fault_Handler) void UART4_IRQHandler              (void);
 __ALIAS(Fault_Handler) void UART5_IRQHandler              (void);
@@ -177,26 +191,13 @@ __ALIAS(Fault_Handler) void DMA2_Channel3_IRQHandler      (void);
 __ALIAS(Fault_Handler) void DMA2_Channel4_IRQHandler      (void);
 __ALIAS(Fault_Handler) void DMA2_Channel5_IRQHandler      (void);
 __ALIAS(Fault_Handler) void ADC4_IRQHandler               (void);
-__ALIAS(Fault_Handler) void SDADC2_IRQHandler             (void);
-__ALIAS(Fault_Handler) void SDADC3_IRQHandler             (void);
 __ALIAS(Fault_Handler) void COMP1_2_IRQHandler            (void);
 __ALIAS(Fault_Handler) void COMP4_6_IRQHandler            (void);
 __ALIAS(Fault_Handler) void COMP7_IRQHandler              (void);
-__ALIAS(Fault_Handler) void HRTIM1_Master_IRQHandler      (void);
-__ALIAS(Fault_Handler) void HRTIM1_TIMA_IRQHandler        (void);
-__ALIAS(Fault_Handler) void HRTIM1_TIMB_IRQHandler        (void);
-__ALIAS(Fault_Handler) void HRTIM1_TIMC_IRQHandler        (void);
-__ALIAS(Fault_Handler) void HRTIM1_TIMD_IRQHandler        (void);
-__ALIAS(Fault_Handler) void I2C3_EV_IRQHandler            (void);
-__ALIAS(Fault_Handler) void I2C3_ER_IRQHandler            (void);
 __ALIAS(Fault_Handler) void USB_HP_IRQHandler             (void);
 __ALIAS(Fault_Handler) void USB_LP_IRQHandler             (void);
-__ALIAS(Fault_Handler) void TIM20_BRK_IRQHandler          (void);
-__ALIAS(Fault_Handler) void TIM20_UP_IRQHandler           (void);
-__ALIAS(Fault_Handler) void TIM20_TRG_COM_IRQHandler      (void);
-__ALIAS(Fault_Handler) void TIM20_CC_IRQHandler           (void);
+__ALIAS(Fault_Handler) void USBWakeUp_IRQHandler          (void);
 __ALIAS(Fault_Handler) void FPU_IRQHandler                (void);
-__ALIAS(Fault_Handler) void SPI4_IRQHandler               (void);                    
 
 /*******************************************************************************
  Vector table for STM32F3xx (Cortex-M4F)
@@ -272,9 +273,9 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	TIM8_TRG_COM_IRQHandler,
 	TIM8_CC_IRQHandler,
 	ADC3_IRQHandler,
-	FMC_IRQHandler,
 	0,
-	TIM5_IRQHandler,
+	0,
+	0,
 	SPI3_IRQHandler,
 	UART4_IRQHandler,
 	UART5_IRQHandler,
@@ -286,30 +287,26 @@ void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 	DMA2_Channel4_IRQHandler,
 	DMA2_Channel5_IRQHandler,
 	ADC4_IRQHandler,
-	SDADC2_IRQHandler,
-	SDADC3_IRQHandler,
+	0,
+	0,
 	COMP1_2_IRQHandler,
 	COMP4_6_IRQHandler,
 	COMP7_IRQHandler,
-	HRTIM1_Master_IRQHandler,
-	HRTIM1_TIMA_IRQHandler,
-	HRTIM1_TIMB_IRQHandler,
-	HRTIM1_TIMC_IRQHandler,
-	HRTIM1_TIMD_IRQHandler,
-	I2C3_EV_IRQHandler,
-	I2C3_ER_IRQHandler,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
 	USB_HP_IRQHandler,
 	USB_LP_IRQHandler,
 	USBWakeUp_IRQHandler,
-	TIM20_BRK_IRQHandler,
-	TIM20_UP_IRQHandler,
-	TIM20_TRG_COM_IRQHandler,
-	TIM20_CC_IRQHandler,
+	0,
+	0,
+	0,
+	0,
 	FPU_IRQHandler,
-#if defined(SPI4)
-	0, 0,
-	SPI4_IRQHandler,
-#endif
 
 #endif//__NO_EXTERNAL_INTERRUPTS
 };
