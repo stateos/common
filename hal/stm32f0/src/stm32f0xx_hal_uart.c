@@ -9,7 +9,17 @@
   *           + IO operation functions
   *           + Peripheral Control functions
   *
+  ******************************************************************************
+  * @attention
   *
+  * Copyright (c) 2016 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
   @verbatim
  ===============================================================================
                         ##### How to use this driver #####
@@ -140,17 +150,6 @@
 
 
   @endverbatim
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2016 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
   ******************************************************************************
   */
 
@@ -1665,7 +1664,10 @@ HAL_StatusTypeDef HAL_UART_DMAResume(UART_HandleTypeDef *huart)
     __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
 
     /* Re-enable PE and ERR (Frame error, noise error, overrun error) interrupts */
-    ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_PEIE);
+    if (huart->Init.Parity != UART_PARITY_NONE)
+    {    
+      ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_PEIE);
+    }
     ATOMIC_SET_BIT(huart->Instance->CR3, USART_CR3_EIE);
 
     /* Enable the UART DMA Rx request */
@@ -2976,7 +2978,7 @@ HAL_StatusTypeDef HAL_LIN_SendBreak(UART_HandleTypeDef *huart)
   *               the configuration information for the specified UART.
   * @retval HAL state
   */
-HAL_UART_StateTypeDef HAL_UART_GetState(UART_HandleTypeDef *huart)
+HAL_UART_StateTypeDef HAL_UART_GetState(const UART_HandleTypeDef *huart)
 {
   uint32_t temp1;
   uint32_t temp2;
@@ -2992,7 +2994,7 @@ HAL_UART_StateTypeDef HAL_UART_GetState(UART_HandleTypeDef *huart)
   *               the configuration information for the specified UART.
   * @retval UART Error Code
   */
-uint32_t HAL_UART_GetError(UART_HandleTypeDef *huart)
+uint32_t HAL_UART_GetError(const UART_HandleTypeDef *huart)
 {
   return huart->ErrorCode;
 }
@@ -3115,7 +3117,7 @@ HAL_StatusTypeDef UART_SetConfig(UART_HandleTypeDef *huart)
     /* USARTDIV must be greater than or equal to 0d16 */
     if (pclk != 0U)
     {
-      usartdiv = (uint16_t)(UART_DIV_SAMPLING8(pclk, huart->Init.BaudRate));
+      usartdiv = (uint32_t)(UART_DIV_SAMPLING8(pclk, huart->Init.BaudRate));
       if ((usartdiv >= UART_BRR_MIN) && (usartdiv <= UART_BRR_MAX))
       {
         brrtemp = (uint16_t)(usartdiv & 0xFFF0U);
@@ -3153,10 +3155,10 @@ HAL_StatusTypeDef UART_SetConfig(UART_HandleTypeDef *huart)
     if (pclk != 0U)
     {
       /* USARTDIV must be greater than or equal to 0d16 */
-      usartdiv = (uint16_t)(UART_DIV_SAMPLING16(pclk, huart->Init.BaudRate));
+      usartdiv = (uint32_t)(UART_DIV_SAMPLING16(pclk, huart->Init.BaudRate));
       if ((usartdiv >= UART_BRR_MIN) && (usartdiv <= UART_BRR_MAX))
       {
-        huart->Instance->BRR = usartdiv;
+        huart->Instance->BRR = (uint16_t)usartdiv;
       }
       else
       {
@@ -3394,7 +3396,14 @@ HAL_StatusTypeDef UART_Start_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pDat
   __HAL_UNLOCK(huart);
 
   /* Enable the UART Parity Error interrupt and Data Register Not Empty interrupt */
-  ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
+  if (huart->Init.Parity != UART_PARITY_NONE)
+  { 
+    ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
+  }
+  else
+  {
+    ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_RXNEIE);
+  }
   return HAL_OK;
 }
 
@@ -3448,7 +3457,10 @@ HAL_StatusTypeDef UART_Start_Receive_DMA(UART_HandleTypeDef *huart, uint8_t *pDa
   __HAL_UNLOCK(huart);
 
   /* Enable the UART Parity Error Interrupt */
-  ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_PEIE);
+  if (huart->Init.Parity != UART_PARITY_NONE)
+  {
+    ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_PEIE);
+  }
 
   /* Enable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   ATOMIC_SET_BIT(huart->Instance->CR3, USART_CR3_EIE);
@@ -4124,5 +4136,3 @@ static void UART_RxISR_16BIT(UART_HandleTypeDef *huart)
 /**
   * @}
   */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

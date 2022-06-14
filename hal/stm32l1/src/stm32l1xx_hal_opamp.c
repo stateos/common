@@ -13,6 +13,17 @@
   *           + Peripheral Control functions
   *           + Peripheral State functions
   *         
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
   @verbatim
 ================================================================================
           ##### OPAMP Peripheral Features #####
@@ -145,17 +156,6 @@
 
   @endverbatim
   ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************  
   */
 
 /*
@@ -273,16 +273,15 @@ HAL_StatusTypeDef HAL_OPAMP_Init(OPAMP_HandleTypeDef* hopamp)
     assert_param(IS_OPAMP_NONINVERTING_INPUT_CHECK_INSTANCE(hopamp, hopamp->Init.NonInvertingInput));
     assert_param(IS_OPAMP_TRIMMING(hopamp->Init.UserTrimming));
 
-    if(hopamp->State == HAL_OPAMP_STATE_RESET)
-    {  
 #if (USE_HAL_OPAMP_REGISTER_CALLBACKS == 1)
-    if(hopamp->MspInitCallback == NULL)
+    if(hopamp->State == HAL_OPAMP_STATE_RESET)
     {
-      hopamp->MspInitCallback               = HAL_OPAMP_MspInit;
-    } 
-#endif /* USE_HAL_OPAMP_REGISTER_CALLBACKS */
+      if(hopamp->MspInitCallback == NULL)
+      {
+        hopamp->MspInitCallback               = HAL_OPAMP_MspInit;
+      }
     }
-
+#endif /* USE_HAL_OPAMP_REGISTER_CALLBACKS */
 
     if (hopamp->Init.Mode != OPAMP_FOLLOWER_MODE)
     {
@@ -721,7 +720,7 @@ HAL_StatusTypeDef HAL_OPAMP_Stop(OPAMP_HandleTypeDef* hopamp)
   * @retval HAL status
   */
 HAL_StatusTypeDef HAL_OPAMP_SelfCalibrate(OPAMP_HandleTypeDef* hopamp)
-{ 
+{
   HAL_StatusTypeDef status = HAL_OK;
   
   uint32_t* opamp_trimmingvalue;
@@ -908,6 +907,17 @@ HAL_StatusTypeDef HAL_OPAMP_SelfCalibrate(OPAMP_HandleTypeDef* hopamp)
       /* Set user trimming mode */  
       hopamp->Init.UserTrimming = OPAMP_TRIMMING_USER;
       
+      /* Check on unsupported value */
+      if(opamp_trimmingvaluep == 0x1FU)  /* 0x1F is not functional */
+      {
+        opamp_trimmingvaluep = 30U;
+      }
+        
+      if(opamp_trimmingvaluen == 0x1FU)  /* 0x1F is not functional */
+      {
+        opamp_trimmingvaluen = 30U;
+      }
+
       /* Affect calibration parameters depending on mode normal/low power */
       if (hopamp->Init.PowerMode != OPAMP_POWERMODE_LOWPOWER)
       {
@@ -937,6 +947,7 @@ HAL_StatusTypeDef HAL_OPAMP_SelfCalibrate(OPAMP_HandleTypeDef* hopamp)
   }
   
   return status;
+
 }
 
 /**
@@ -1267,5 +1278,3 @@ HAL_StatusTypeDef HAL_OPAMP_UnRegisterCallback (OPAMP_HandleTypeDef *hopamp, HAL
 /**
   * @}
   */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

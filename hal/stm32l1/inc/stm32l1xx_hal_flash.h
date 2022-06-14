@@ -6,13 +6,12 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -121,7 +120,11 @@ typedef struct
   * @{
   */ 
 
-#define FLASH_SIZE                (uint32_t)((*((uint32_t *)FLASHSIZE_BASE)&0xFFFFU) * 1024U)
+#if defined (FLASH_CUT1) || defined (FLASH_CUT2)
+#define FLASH_SIZE                      (uint32_t)((*((uint32_t *)FLASHSIZE_BASE)&0xFFU) * 1024U)
+#else /*FLASH_CUT3 || FLASH_CUT4 || FLASH_CUT5 || FLASH_CUT6*/
+#define FLASH_SIZE                      (uint32_t)((*((uint32_t *)FLASHSIZE_BASE)&0xFFFFU) * 1024U)
+#endif
 #define FLASH_PAGE_SIZE           (256U)  /*!< FLASH Page Size in bytes */
 
 /**
@@ -404,6 +407,3 @@ HAL_StatusTypeDef       FLASH_WaitForLastOperation(uint32_t Timeout);
 #endif
 
 #endif /* __STM32L1xx_HAL_FLASH_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

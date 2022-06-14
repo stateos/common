@@ -144,16 +144,15 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2018 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                       opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l1xx_hal.h"
@@ -511,7 +510,7 @@ HAL_StatusTypeDef SDIO_SetSDMMCReadWaitMode(SDIO_TypeDef *SDIOx, uint32_t SDIO_R
   */
 
 /**
-  * @brief  Send the Data Block Lenght command and check the response
+  * @brief  Send the Data Block Length command and check the response
   * @param  SDIOx: Pointer to SDIO register base 
   * @retval HAL status
   */
@@ -1099,7 +1098,7 @@ uint32_t SDMMC_CmdOpCondition(SDIO_TypeDef *SDIOx, uint32_t Argument)
 }
 
 /**
-  * @brief  Checks switchable function and switch card function. SDMMC_CMD_HS_SWITCH comand
+  * @brief  Checks switchable function and switch card function. SDMMC_CMD_HS_SWITCH command
   * @param  SDIOx: Pointer to SDIO register base 
   * @parame Argument: Argument used for the command
   * @retval HAL status
@@ -1111,7 +1110,7 @@ uint32_t SDMMC_CmdSwitch(SDIO_TypeDef *SDIOx, uint32_t Argument)
   
   /* Send CMD6 to activate SDR50 Mode and Power Limit 1.44W */
   /* CMD Response: R1 */
-  sdmmc_cmdinit.Argument         = Argument; /* SDMMC_SDR25_SWITCH_PATTERN;*/
+  sdmmc_cmdinit.Argument         = Argument; /* SDMMC_SDR25_SWITCH_PATTERN */
   sdmmc_cmdinit.CmdIndex         = SDMMC_CMD_HS_SWITCH;
   sdmmc_cmdinit.Response         = SDIO_RESPONSE_SHORT;
   sdmmc_cmdinit.WaitForInterrupt = SDIO_WAIT_NO;
@@ -1142,7 +1141,7 @@ static uint32_t SDMMC_GetCmdError(SDIO_TypeDef *SDIOx)
 {
   /* 8 is the number of required instructions cycles for the below loop statement.
   The SDIO_CMDTIMEOUT is expressed in ms */
-  register uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
+  uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
   
   do
   {
@@ -1172,7 +1171,7 @@ static uint32_t SDMMC_GetCmdResp1(SDIO_TypeDef *SDIOx, uint8_t SD_CMD, uint32_t 
   
   /* 8 is the number of required instructions cycles for the below loop statement.
   The Timeout is expressed in ms */
-  register uint32_t count = Timeout * (SystemCoreClock / 8U /1000U);
+  uint32_t count = Timeout * (SystemCoreClock / 8U /1000U);
   
   do
   {
@@ -1305,7 +1304,7 @@ static uint32_t SDMMC_GetCmdResp2(SDIO_TypeDef *SDIOx)
   uint32_t sta_reg;
   /* 8 is the number of required instructions cycles for the below loop statement.
   The SDIO_CMDTIMEOUT is expressed in ms */
-  register uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
+  uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
   
   do
   {
@@ -1349,7 +1348,7 @@ static uint32_t SDMMC_GetCmdResp3(SDIO_TypeDef *SDIOx)
   uint32_t sta_reg;
   /* 8 is the number of required instructions cycles for the below loop statement.
   The SDIO_CMDTIMEOUT is expressed in ms */
-  register uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
+  uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
   
   do
   {
@@ -1391,7 +1390,7 @@ static uint32_t SDMMC_GetCmdResp6(SDIO_TypeDef *SDIOx, uint8_t SD_CMD, uint16_t 
 
   /* 8 is the number of required instructions cycles for the below loop statement.
   The SDIO_CMDTIMEOUT is expressed in ms */
-  register uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
+  uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
   
   do
   {
@@ -1462,7 +1461,7 @@ static uint32_t SDMMC_GetCmdResp7(SDIO_TypeDef *SDIOx)
   uint32_t sta_reg;
   /* 8 is the number of required instructions cycles for the below loop statement.
   The SDIO_CMDTIMEOUT is expressed in ms */
-  register uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
+  uint32_t count = SDIO_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
   
   do
   {
@@ -1504,6 +1503,32 @@ static uint32_t SDMMC_GetCmdResp7(SDIO_TypeDef *SDIOx)
 }
 
 /**
+  * @brief  Send the Send EXT_CSD command and check the response.
+  * @param  SDIOx: Pointer to SDMMC register base
+  * @param  Argument: Command Argument
+  * @retval HAL status
+  */
+uint32_t SDMMC_CmdSendEXTCSD(SDIO_TypeDef *SDIOx, uint32_t Argument)
+{
+  SDIO_CmdInitTypeDef  sdmmc_cmdinit;
+  uint32_t errorstate;
+
+  /* Send CMD9 SEND_CSD */
+  sdmmc_cmdinit.Argument         = Argument;
+  sdmmc_cmdinit.CmdIndex         = SDMMC_CMD_HS_SEND_EXT_CSD;
+  sdmmc_cmdinit.Response         = SDIO_RESPONSE_SHORT;
+  sdmmc_cmdinit.WaitForInterrupt = SDIO_WAIT_NO;
+  sdmmc_cmdinit.CPSM             = SDIO_CPSM_ENABLE;
+  (void)SDIO_SendCommand(SDIOx, &sdmmc_cmdinit);
+
+  /* Check for error conditions */
+  errorstate = SDMMC_GetCmdResp1(SDIOx, SDMMC_CMD_HS_SEND_EXT_CSD,SDIO_CMDTIMEOUT);
+
+  return errorstate;
+}
+
+
+/**
   * @}
   */
 
@@ -1517,5 +1542,3 @@ static uint32_t SDMMC_GetCmdResp7(SDIO_TypeDef *SDIOx)
   */
 
 #endif /* SDIO */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -11,6 +11,17 @@
   *           + Peripheral State and Errors functions
   *           + Peripheral Control functions
   *
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2016 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
   @verbatim
   ==============================================================================
                         ##### How to use this driver #####
@@ -171,17 +182,6 @@
     and weak (surcharged) callbacks are used.
 
   @endverbatim
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2016 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
   ******************************************************************************
   */
 
@@ -816,10 +816,10 @@ HAL_StatusTypeDef HAL_IRDA_UnRegisterCallback(IRDA_HandleTypeDef *hirda, HAL_IRD
   *         (as sent data will be handled using u16 pointer cast). Depending on compilation chain,
   *         use of specific alignment compilation directives or pragmas might be required to ensure proper alignment for pData.
   */
-HAL_StatusTypeDef HAL_IRDA_Transmit(IRDA_HandleTypeDef *hirda, uint8_t *pData, uint16_t Size, uint32_t Timeout)
+HAL_StatusTypeDef HAL_IRDA_Transmit(IRDA_HandleTypeDef *hirda, const uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
-  uint8_t  *pdata8bits;
-  uint16_t *pdata16bits;
+  const uint8_t  *pdata8bits;
+  const uint16_t *pdata16bits;
   uint32_t tickstart;
 
   /* Check that a Tx process is not already ongoing */
@@ -857,7 +857,7 @@ HAL_StatusTypeDef HAL_IRDA_Transmit(IRDA_HandleTypeDef *hirda, uint8_t *pData, u
     if ((hirda->Init.WordLength == IRDA_WORDLENGTH_9B) && (hirda->Init.Parity == IRDA_PARITY_NONE))
     {
       pdata8bits  = NULL;
-      pdata16bits = (uint16_t *) pData; /* Derogation R.11.3 */
+      pdata16bits = (const uint16_t *) pData; /* Derogation R.11.3 */
     }
     else
     {
@@ -1029,7 +1029,7 @@ HAL_StatusTypeDef HAL_IRDA_Receive(IRDA_HandleTypeDef *hirda, uint8_t *pData, ui
   *         (as sent data will be handled using u16 pointer cast). Depending on compilation chain,
   *         use of specific alignment compilation directives or pragmas might be required to ensure proper alignment for pData.
   */
-HAL_StatusTypeDef HAL_IRDA_Transmit_IT(IRDA_HandleTypeDef *hirda, uint8_t *pData, uint16_t Size)
+HAL_StatusTypeDef HAL_IRDA_Transmit_IT(IRDA_HandleTypeDef *hirda, const uint8_t *pData, uint16_t Size)
 {
   /* Check that a Tx process is not already ongoing */
   if (hirda->gState == HAL_IRDA_STATE_READY)
@@ -1129,8 +1129,16 @@ HAL_StatusTypeDef HAL_IRDA_Receive_IT(IRDA_HandleTypeDef *hirda, uint8_t *pData,
     /* Process Unlocked */
     __HAL_UNLOCK(hirda);
 
-    /* Enable the IRDA Parity Error and Data Register not empty Interrupts */
-    SET_BIT(hirda->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
+    if (hirda->Init.Parity != IRDA_PARITY_NONE)
+    { 
+      /* Enable the IRDA Parity Error and Data Register not empty Interrupts */  
+      SET_BIT(hirda->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
+    }
+    else
+    {
+     /* Enable the IRDA Data Register not empty Interrupts */ 
+     SET_BIT(hirda->Instance->CR1, USART_CR1_RXNEIE); 
+    }
 
     /* Enable the IRDA Error Interrupt: (Frame error, noise error, overrun error) */
     SET_BIT(hirda->Instance->CR3, USART_CR3_EIE);
@@ -1160,7 +1168,7 @@ HAL_StatusTypeDef HAL_IRDA_Receive_IT(IRDA_HandleTypeDef *hirda, uint8_t *pData,
   *         (as sent data will be handled by DMA from halfword frontier). Depending on compilation chain,
   *         use of specific alignment compilation directives or pragmas might be required to ensure proper alignment for pData.
   */
-HAL_StatusTypeDef HAL_IRDA_Transmit_DMA(IRDA_HandleTypeDef *hirda, uint8_t *pData, uint16_t Size)
+HAL_StatusTypeDef HAL_IRDA_Transmit_DMA(IRDA_HandleTypeDef *hirda, const uint8_t *pData, uint16_t Size)
 {
   /* Check that a Tx process is not already ongoing */
   if (hirda->gState == HAL_IRDA_STATE_READY)
@@ -1305,8 +1313,11 @@ HAL_StatusTypeDef HAL_IRDA_Receive_DMA(IRDA_HandleTypeDef *hirda, uint8_t *pData
       /* Process Unlocked */
       __HAL_UNLOCK(hirda);
 
-      /* Enable the UART Parity Error Interrupt */
-      SET_BIT(hirda->Instance->CR1, USART_CR1_PEIE);
+      if (hirda->Init.Parity != IRDA_PARITY_NONE)
+      {
+        /* Enable the UART Parity Error Interrupt */
+        SET_BIT(hirda->Instance->CR1, USART_CR1_PEIE);
+      }
 
       /* Enable the UART Error Interrupt: (Frame error, noise error, overrun error) */
       SET_BIT(hirda->Instance->CR3, USART_CR3_EIE);
@@ -1398,7 +1409,10 @@ HAL_StatusTypeDef HAL_IRDA_DMAResume(IRDA_HandleTypeDef *hirda)
     __HAL_IRDA_CLEAR_OREFLAG(hirda);
 
     /* Re-enable PE and ERR (Frame error, noise error, overrun error) interrupts */
-    SET_BIT(hirda->Instance->CR1, USART_CR1_PEIE);
+    if (hirda->Init.Parity != IRDA_PARITY_NONE)
+    {    
+      SET_BIT(hirda->Instance->CR1, USART_CR1_PEIE);
+    }
     SET_BIT(hirda->Instance->CR3, USART_CR3_EIE);
 
     /* Enable the IRDA DMA Rx request */
@@ -2386,17 +2400,17 @@ static HAL_StatusTypeDef IRDA_SetConfig(IRDA_HandleTypeDef *hirda)
   {
     case IRDA_CLOCKSOURCE_PCLK1:
       pclk = HAL_RCC_GetPCLK1Freq();
-      tmpreg = (uint16_t)(IRDA_DIV_SAMPLING16(pclk, hirda->Init.BaudRate));
+      tmpreg = (uint32_t)(IRDA_DIV_SAMPLING16(pclk, hirda->Init.BaudRate));
       break;
     case IRDA_CLOCKSOURCE_HSI:
-      tmpreg = (uint16_t)(IRDA_DIV_SAMPLING16(HSI_VALUE, hirda->Init.BaudRate));
+      tmpreg = (uint32_t)(IRDA_DIV_SAMPLING16(HSI_VALUE, hirda->Init.BaudRate));
       break;
     case IRDA_CLOCKSOURCE_SYSCLK:
       pclk = HAL_RCC_GetSysClockFreq();
-      tmpreg = (uint16_t)(IRDA_DIV_SAMPLING16(pclk, hirda->Init.BaudRate));
+      tmpreg = (uint32_t)(IRDA_DIV_SAMPLING16(pclk, hirda->Init.BaudRate));
       break;
     case IRDA_CLOCKSOURCE_LSE:
-      tmpreg = (uint16_t)(IRDA_DIV_SAMPLING16((uint32_t)LSE_VALUE, hirda->Init.BaudRate));
+      tmpreg = (uint32_t)(IRDA_DIV_SAMPLING16((uint32_t)LSE_VALUE, hirda->Init.BaudRate));
       break;
     default:
       ret = HAL_ERROR;
@@ -2406,7 +2420,7 @@ static HAL_StatusTypeDef IRDA_SetConfig(IRDA_HandleTypeDef *hirda)
   /* USARTDIV must be greater than or equal to 0d16 */
   if ((tmpreg >= USART_BRR_MIN) && (tmpreg <= USART_BRR_MAX))
   {
-    hirda->Instance->BRR = tmpreg;
+    hirda->Instance->BRR = (uint16_t)tmpreg;
   }
   else
   {
@@ -2869,7 +2883,7 @@ static void IRDA_DMARxOnlyAbortCallback(DMA_HandleTypeDef *hdma)
   */
 static void IRDA_Transmit_IT(IRDA_HandleTypeDef *hirda)
 {
-  uint16_t *tmp;
+  const uint16_t *tmp;
 
   /* Check that a Tx process is ongoing */
   if (hirda->gState == HAL_IRDA_STATE_BUSY_TX)
@@ -2886,7 +2900,7 @@ static void IRDA_Transmit_IT(IRDA_HandleTypeDef *hirda)
     {
       if ((hirda->Init.WordLength == IRDA_WORDLENGTH_9B) && (hirda->Init.Parity == IRDA_PARITY_NONE))
       {
-        tmp = (uint16_t *) hirda->pTxBuffPtr; /* Derogation R.11.3 */
+        tmp = (const uint16_t *) hirda->pTxBuffPtr; /* Derogation R.11.3 */
         hirda->Instance->TDR = (uint16_t)(*tmp & 0x01FFU);
         hirda->pTxBuffPtr += 2U;
       }
@@ -2994,5 +3008,3 @@ static void IRDA_Receive_IT(IRDA_HandleTypeDef *hirda)
   * @}
   */
 #endif /* USART_IRDA_SUPPORT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

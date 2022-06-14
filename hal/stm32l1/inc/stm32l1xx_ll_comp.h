@@ -6,13 +6,12 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -472,7 +471,7 @@ __STATIC_INLINE void LL_COMP_SetInputPlus(COMP_TypeDef *COMPx, uint32_t InputPlu
   /*        - enable IO switch control mode (RI_ASCR1_SCM)                    */
   /*          If ADC needs to be used afterwards, disable IO switch control   */
   /*          mode using function @ref LL_RI_DisableSwitchControlMode().      */
-  register uint32_t *preg = ((uint32_t *)((uint32_t) ((uint32_t)(&(RI->ASCR1)) + ((__COMP_IS_INSTANCE_EVEN(COMPx)) << 2U))));
+  uint32_t *preg = ((uint32_t *)((uint32_t) ((uint32_t)(&(RI->ASCR1)) + ((__COMP_IS_INSTANCE_EVEN(COMPx)) << 2U))));
   
   MODIFY_REG(*preg,
              (RI_ASCR1_CH * __COMP_IS_INSTANCE_ODD(COMPx)) | (RI_ASCR2_GR6 * __COMP_IS_INSTANCE_EVEN(COMPx)),
@@ -535,7 +534,7 @@ __STATIC_INLINE void LL_COMP_SetInputPlus(COMP_TypeDef *COMPx, uint32_t InputPlu
 __STATIC_INLINE uint32_t LL_COMP_GetInputPlus(COMP_TypeDef *COMPx)
 {
   /* Get switch state in routing interface (RI) register ASCR1 or ASCR2 */
-  register uint32_t *preg = ((uint32_t *)((uint32_t) ((uint32_t)(&(RI->ASCR1)) + ((__COMP_IS_INSTANCE_EVEN(COMPx)) << 2U))));
+  uint32_t *preg = ((uint32_t *)((uint32_t) ((uint32_t)(&(RI->ASCR1)) + ((__COMP_IS_INSTANCE_EVEN(COMPx)) << 2U))));
   
   return (uint32_t)(READ_BIT(*preg,
                              (RI_ASCR1_CH * __COMP_IS_INSTANCE_ODD(COMPx)) | (RI_ASCR2_GR6 * __COMP_IS_INSTANCE_EVEN(COMPx))));
@@ -843,5 +842,3 @@ void        LL_COMP_StructInit(LL_COMP_InitTypeDef *COMP_InitStruct);
 #endif
 
 #endif /* __STM32L1xx_LL_COMP_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -13,23 +13,23 @@
   *          Other functions (generic functions) are available in file 
   *          "stm32l1xx_hal_adc.c".
   *
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
   @verbatim
   [..] 
   (@) Sections "ADC peripheral features" and "How to use this driver" are
       available in file of generic functions "stm32l1xx_hal_adc.c".
   [..]
   @endverbatim
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
   ******************************************************************************
   */
 
@@ -283,13 +283,17 @@ HAL_StatusTypeDef HAL_ADCEx_InjectedPollForConversion(ADC_HandleTypeDef* hadc, u
       {
         if((Timeout == 0) || ((HAL_GetTick() - tickstart ) > Timeout))
         {
-          /* Update ADC state machine to timeout */
-          SET_BIT(hadc->State, HAL_ADC_STATE_TIMEOUT);
-          
-          /* Process unlocked */
-          __HAL_UNLOCK(hadc);
-          
-          return HAL_TIMEOUT;
+          /* New check to avoid false timeout detection in case of preemption */
+          if(HAL_IS_BIT_CLR(hadc->Instance->SR, ADC_FLAG_JEOC))
+          {
+            /* Update ADC state machine to timeout */
+            SET_BIT(hadc->State, HAL_ADC_STATE_TIMEOUT);
+
+            /* Process unlocked */
+            __HAL_UNLOCK(hadc);
+
+            return HAL_TIMEOUT;
+          }
         }
       }
     }
@@ -310,13 +314,17 @@ HAL_StatusTypeDef HAL_ADCEx_InjectedPollForConversion(ADC_HandleTypeDef* hadc, u
       {
         if((Timeout == 0) || ((HAL_GetTick() - tickstart ) > Timeout))
         {
-          /* Update ADC state machine to timeout */
-          SET_BIT(hadc->State, HAL_ADC_STATE_TIMEOUT);
+          /* New check to avoid false timeout detection in case of preemption */
+          if(conversion_timeout_cpu_cycles < conversion_timeout_cpu_cycles_max)
+          {
+            /* Update ADC state machine to timeout */
+            SET_BIT(hadc->State, HAL_ADC_STATE_TIMEOUT);
 
-          /* Process unlocked */
-          __HAL_UNLOCK(hadc);
-          
-          return HAL_TIMEOUT;
+            /* Process unlocked */
+            __HAL_UNLOCK(hadc);
+
+            return HAL_TIMEOUT;
+          }
         }
       }
       conversion_timeout_cpu_cycles ++;
@@ -863,5 +871,3 @@ HAL_StatusTypeDef HAL_ADCEx_InjectedConfigChannel(ADC_HandleTypeDef* hadc, ADC_I
 /**
   * @}
   */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

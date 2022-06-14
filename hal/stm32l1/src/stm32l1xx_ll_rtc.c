@@ -6,13 +6,12 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -87,18 +86,7 @@
 
 #define IS_LL_RTC_DAY(__DAY__)    (((__DAY__) >= 1U) && ((__DAY__) <= 31U))
 
-#define IS_LL_RTC_MONTH(__VALUE__) (((__VALUE__) == LL_RTC_MONTH_JANUARY) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_FEBRUARY) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_MARCH) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_APRIL) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_MAY) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_JUNE) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_JULY) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_AUGUST) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_SEPTEMBER) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_OCTOBER) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_NOVEMBER) \
-                                 || ((__VALUE__) == LL_RTC_MONTH_DECEMBER))
+#define IS_LL_RTC_MONTH(__MONTH__) (((__MONTH__) >= 1U) && ((__MONTH__) <= 12U))
 
 #define IS_LL_RTC_YEAR(__YEAR__) ((__YEAR__) <= 99U)
 
@@ -331,7 +319,7 @@ ErrorStatus LL_RTC_TIME_Init(RTC_TypeDef *RTCx, uint32_t RTC_Format, LL_RTC_Time
     }
 
     /* Exit Initialization mode */
-    LL_RTC_DisableInitMode(RTC);
+    LL_RTC_DisableInitMode(RTCx);
 
 #if defined(RTC_CR_BYPSHAD)
     /* If  RTC_CR_BYPSHAD bit = 0, wait for synchro else this check is not needed */
@@ -423,7 +411,7 @@ ErrorStatus LL_RTC_DATE_Init(RTC_TypeDef *RTCx, uint32_t RTC_Format, LL_RTC_Date
     }
 
     /* Exit Initialization mode */
-    LL_RTC_DisableInitMode(RTC);
+    LL_RTC_DisableInitMode(RTCx);
 
 #if defined(RTC_CR_BYPSHAD)
     /* If  RTC_CR_BYPSHAD bit = 0, wait for synchro else this check is not needed */
@@ -833,7 +821,7 @@ ErrorStatus LL_RTC_WaitForSynchro(RTC_TypeDef *RTCx)
 
   /* Wait the registers to be synchronised */
   tmp = LL_RTC_IsActiveFlag_RS(RTCx);
-  while ((timeout != 0U) && (tmp != 0U))
+  while ((timeout != 0U) && (tmp != 1U))
   {
     if (LL_SYSTICK_IsActiveCounterFlag() == 1U)
     {
@@ -843,24 +831,6 @@ ErrorStatus LL_RTC_WaitForSynchro(RTC_TypeDef *RTCx)
     if (timeout == 0U)
     {
       status = ERROR;
-    }
-  }
-
-  if (status != ERROR)
-  {
-    timeout = RTC_SYNCHRO_TIMEOUT;
-    tmp = LL_RTC_IsActiveFlag_RS(RTCx);
-    while ((timeout != 0U) && (tmp != 1U))
-    {
-      if (LL_SYSTICK_IsActiveCounterFlag() == 1U)
-      {
-        timeout--;
-      }
-      tmp = LL_RTC_IsActiveFlag_RS(RTCx);
-      if (timeout == 0U)
-      {
-        status = ERROR;
-      }
     }
   }
 
@@ -886,5 +856,3 @@ ErrorStatus LL_RTC_WaitForSynchro(RTC_TypeDef *RTCx)
   */
 
 #endif /* USE_FULL_LL_DRIVER */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

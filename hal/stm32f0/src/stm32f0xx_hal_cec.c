@@ -11,6 +11,17 @@
   *           + Peripheral Control function
   *
   *
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2016 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
   @verbatim
  ===============================================================================
                         ##### How to use this driver #####
@@ -94,18 +105,8 @@
   When the compilation define USE_HAL_CEC_REGISTER_CALLBACKS is set to 0 or
   not defined, the callback registration feature is not available and all callbacks
   are set to the corresponding weak functions.
+
   @endverbatim
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2016 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
   ******************************************************************************
   */
 
@@ -694,7 +695,7 @@ HAL_StatusTypeDef HAL_CEC_UnRegisterRxCpltCallback(CEC_HandleTypeDef *hcec)
   * @retval HAL status
   */
 HAL_StatusTypeDef HAL_CEC_Transmit_IT(CEC_HandleTypeDef *hcec, uint8_t InitiatorAddress, uint8_t DestinationAddress,
-                                      uint8_t *pData, uint32_t Size)
+                                      const uint8_t *pData, uint32_t Size)
 {
   /* if the peripheral isn't already busy and if there is no previous transmission
      already pending due to arbitration lost */
@@ -749,7 +750,7 @@ HAL_StatusTypeDef HAL_CEC_Transmit_IT(CEC_HandleTypeDef *hcec, uint8_t Initiator
   * @param hcec CEC handle
   * @retval Frame size
   */
-uint32_t HAL_CEC_GetLastReceivedFrameSize(CEC_HandleTypeDef *hcec)
+uint32_t HAL_CEC_GetLastReceivedFrameSize(const CEC_HandleTypeDef *hcec)
 {
   return hcec->RxXferSize;
 }
@@ -829,7 +830,7 @@ void HAL_CEC_IRQHandler(CEC_HandleTypeDef *hcec)
       __HAL_CEC_LAST_BYTE_TX_SET(hcec);
     }
     /* In all cases transmit the byte */
-    hcec->Instance->TXDR = *hcec->pTxBuffPtr;
+    hcec->Instance->TXDR = (uint8_t)*hcec->pTxBuffPtr;
     hcec->pTxBuffPtr++;
     /* clear Tx-Byte request flag */
     __HAL_CEC_CLEAR_FLAG(hcec, CEC_FLAG_TXBR);
@@ -957,7 +958,7 @@ __weak void HAL_CEC_ErrorCallback(CEC_HandleTypeDef *hcec)
   *              the configuration information for the specified CEC module.
   * @retval HAL state
   */
-HAL_CEC_StateTypeDef HAL_CEC_GetState(CEC_HandleTypeDef *hcec)
+HAL_CEC_StateTypeDef HAL_CEC_GetState(const CEC_HandleTypeDef *hcec)
 {
   uint32_t temp1, temp2;
   temp1 = hcec->gState;
@@ -972,7 +973,7 @@ HAL_CEC_StateTypeDef HAL_CEC_GetState(CEC_HandleTypeDef *hcec)
   *              the configuration information for the specified CEC.
   * @retval CEC Error Code
   */
-uint32_t HAL_CEC_GetError(CEC_HandleTypeDef *hcec)
+uint32_t HAL_CEC_GetError(const CEC_HandleTypeDef *hcec)
 {
   return hcec->ErrorCode;
 }
@@ -993,5 +994,3 @@ uint32_t HAL_CEC_GetError(CEC_HandleTypeDef *hcec)
 /**
   * @}
   */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
