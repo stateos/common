@@ -34,6 +34,10 @@ Features:
 - all documentation is contained within the source files
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
+4.9
+- updated os version
+- added condition variable c++ waiting functions with predicate
+---------
 4.8
 - updated sys_init function
 - stream buffer renamed to raw buffer

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osversion.h
     @author  Rajmund Szymanski
-    @date    25.03.2021
+    @date    08.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,7 +33,7 @@
 #define __INTROSVERSION_H
 
 #define __INTROS_MAJOR        4
-#define __INTROS_MINOR        8
+#define __INTROS_MINOR        9
 #define __INTROS_BUILD        0
 
 #define __INTROS        ((((__INTROS_MAJOR)&0xFFUL)<<24)|(((__INTROS_MINOR)&0xFFUL)<<16)|((__INTROS_BUILD)&0xFFFFUL))
