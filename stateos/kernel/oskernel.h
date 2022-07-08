@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    27.05.2021
+    @date    08.07.2022
     @brief   This file defines set of kernel functions for StateOS.
 
  ******************************************************************************
@@ -187,14 +187,6 @@ void core_tsk_unlink( tsk_t *tsk, int event );
 // transfer task 'tsk' to the blocked queue 'que'
 void core_tsk_transfer( tsk_t *tsk, tsk_t **que );
 
-// delay execution of current task for given duration of time 'delay'
-// append the current task to the blocked queue 'que'
-// remove the current task from tasks READY queue
-// insert the current task into timers READY queue
-// force context switch
-// return event value
-int core_tsk_waitFor( tsk_t **que, cnt_t delay );
-
 // delay execution of given task 'tsk'
 // append the current task to the blocked queue 'que'
 // remove the current task from tasks READY queue
@@ -202,6 +194,14 @@ int core_tsk_waitFor( tsk_t **que, cnt_t delay );
 // context switch if 'tsk' is the current task
 // return event value
 int core_tsk_wait( tsk_t *tsk, tsk_t **que );
+
+// delay execution of current task for given duration of time 'delay'
+// append the current task to the blocked queue 'que'
+// remove the current task from tasks READY queue
+// insert the current task into timers READY queue
+// force context switch
+// return event value
+int core_tsk_waitFor( tsk_t **que, cnt_t delay );
 
 // delay execution of current task for given duration of time 'delay' from the end of the previous countdown
 // append the current task to the blocked queue 'que'
