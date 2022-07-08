@@ -49,6 +49,10 @@ Features:
 - all documentation is contained within source files, in particular header files
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
+6.9
+- updated os version
+- added condition variable c++ waiting functions with predicate
+---------
 6.8
 - updated sys_init function
 - added support for std::barrier, std::latch, std::binary_semaphore, std::counting_semaphore

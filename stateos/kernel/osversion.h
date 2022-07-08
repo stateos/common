@@ -2,7 +2,7 @@
 
     @file    StateOS: osversion.h
     @author  Rajmund Szymanski
-    @date    25.03.2021
+    @date    08.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -33,7 +33,7 @@
 #define __STATEOSVERSION_H
 
 #define __STATEOS_MAJOR       6
-#define __STATEOS_MINOR       8
+#define __STATEOS_MINOR       9
 #define __STATEOS_BUILD       0
 
 #define __STATEOS       ((((__STATEOS_MAJOR)&0xFFUL)<<24)|(((__STATEOS_MINOR)&0xFFUL)<<16)|((__STATEOS_BUILD)&0xFFFFUL))
