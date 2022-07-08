@@ -2,7 +2,7 @@
 
     @file    StateOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    08.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -405,6 +405,48 @@ struct ConditionVariable : public __cnd
 	void giveISR  ( bool   _all = cndAll )         {        cnd_giveISR  (this,  _all); }
 	void notifyOne()                               {        cnd_notifyOne(this); }
 	void notifyAll()                               {        cnd_notifyAll(this); }
+	template<typename T, typename P>
+	int  waitFor  ( mtx_t *_mtx, const T& _delay, P _predicate )
+	{
+		auto _time = Clock::count(_delay);
+		if (_time == INFINITE) return wait(_mtx, _predicate);
+		else return waitUntil(_mtx, sys_time() + _time, _predicate);
+	}
+	template<typename T, typename P>
+	int  waitFor  ( mtx_t& _mtx, const T& _delay, P _predicate )
+	{
+		auto _time = Clock::count(_delay);
+		if (_time == INFINITE) return wait(_mtx, _predicate);
+		else return waitUntil(_mtx, sys_time() + _time, _predicate);
+	}
+	template<typename T, typename P>
+	int  waitUntil( mtx_t *_mtx, const T& _time, P _predicate )
+	{
+		int result;
+		while (!_predicate() && (result = waitUntil(_mtx, _time)) == E_SUCCESS);
+		return result;
+	}
+	template<typename T, typename P>
+	int  waitUntil( mtx_t& _mtx, const T& _time, P _predicate )
+	{
+		int result;
+		while (!_predicate() && (result = waitUntil(_mtx, _time)) == E_SUCCESS);
+		return result;
+	}
+	template<typename P>
+	int  wait     ( mtx_t *_mtx, P _predicate )
+	{
+		int result;
+		while (!_predicate() && (result = wait(_mtx)) == E_SUCCESS);
+		return result;
+	}
+	template<typename P>
+	int  wait     ( mtx_t& _mtx, P _predicate )
+	{
+		int result;
+		while (!_predicate() && (result = wait(_mtx)) == E_SUCCESS);
+		return result;
+	}
 
 #if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<ConditionVariable>;
