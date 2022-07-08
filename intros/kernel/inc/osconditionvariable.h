@@ -2,7 +2,7 @@
 
     @file    IntrOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    18.05.2021
+    @date    08.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -210,10 +210,14 @@ struct ConditionVariable : public __cnd
 	ConditionVariable& operator=( ConditionVariable&& ) = delete;
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;
 
-	void wait     ( mtx_t *_mtx ) { cnd_wait     (this,  _mtx); }
-	void wait     ( mtx_t& _mtx ) { cnd_wait     (this, &_mtx); }
-	void give     ()              { cnd_give     (this); }
-	void notifyAll()              { cnd_notifyAll(this); }
+	void wait     ( mtx_t *_mtx )               { cnd_wait     (this,  _mtx); }
+	void wait     ( mtx_t& _mtx )               { cnd_wait     (this, &_mtx); }
+	void give     ()                            { cnd_give     (this); }
+	void notifyAll()                            { cnd_notifyAll(this); }
+	template<typename P>
+	void wait     ( mtx_t *_mtx, P _predicate ) { while (!_predicate()) wait(_mtx); }
+	template<typename P>
+	void wait     ( mtx_t& _mtx, P _predicate ) { while (!_predicate()) wait(_mtx); }
 };
 
 }     //  namespace
