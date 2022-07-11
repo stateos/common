@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -329,7 +329,7 @@ struct Semaphore : public __sem
 	constexpr
 	Semaphore( const unsigned _init, const unsigned _limit = semDefault ): __sem _SEM_INIT(_init, _limit) {}
 
-	Semaphore( Semaphore&& ) = default;
+	Semaphore( Semaphore&& ) = delete;
 	Semaphore( const Semaphore& ) = delete;
 	Semaphore& operator=( Semaphore&& ) = delete;
 	Semaphore& operator=( const Semaphore& ) = delete;

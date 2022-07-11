@@ -2,7 +2,7 @@
 
     @file    IntrOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    08.07.2022
+    @date    11.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -205,7 +205,7 @@ struct ConditionVariable : public __cnd
 	constexpr
 	ConditionVariable(): __cnd _CND_INIT() {}
 
-	ConditionVariable( ConditionVariable&& ) = default;
+	ConditionVariable( ConditionVariable&& ) = delete;
 	ConditionVariable( const ConditionVariable& ) = delete;
 	ConditionVariable& operator=( ConditionVariable&& ) = delete;
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;
