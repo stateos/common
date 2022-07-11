@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.c
     @author  Rajmund Szymanski
-    @date    10.05.2021
+    @date    11.07.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -315,7 +315,7 @@ void priv_tsk_destroy( void )
 	IDLE.state = priv_tsk_idle;          // set task deleter as idle procedure
 	core_tsk_waitFor(&IDLE.obj.queue, INFINITE); // wait for removal
 
-	assert(!"system cannot return here");
+	assert(false);                       // system cannot return here
 }
 
 /* -------------------------------------------------------------------------- */
@@ -345,7 +345,7 @@ void tsk_stop( void )
 	core_tsk_wakeup(System.cur->owner, E_SUCCESS); // notify waiting task
 	core_tsk_remove(System.cur);                   // remove current task from ready queue
 
-	assert(!"system cannot return here");
+	assert(false);                                 // system cannot return here
 	for (;;);                                      // disable unnecessary warning
 }
 
@@ -448,7 +448,7 @@ void tsk_flip( fun_t *state )
 	core_ctx_switch();
 	core_tsk_flip((void *)STK_CROP(System.cur->stack, System.cur->size));
 
-	assert(!"system cannot return here");
+	assert(false);              // system cannot return here
 }
 
 /* -------------------------------------------------------------------------- */
@@ -602,7 +602,7 @@ void priv_sig_deliver( void )
 
 	core_tsk_wait(cur, cur->sig.backup.guard);
 
-	assert(!"system cannot return here");
+	assert(false); // system cannot return here
 }
 
 /* -------------------------------------------------------------------------- */

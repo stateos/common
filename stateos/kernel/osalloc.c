@@ -2,7 +2,7 @@
 
     @file    StateOS: osalloc.c
     @author  Rajmund Szymanski
-    @date    15.05.2021
+    @date    11.07.2022
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -156,7 +156,7 @@ void priv_free( void *ptr )
 		return;
 	}
 
-	assert(!"invalid memory pointer");
+	assert(false); // invalid memory pointer
 }
 
 #endif
