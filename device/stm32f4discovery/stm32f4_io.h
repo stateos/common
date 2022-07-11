@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    stm32f4_io.h
  * @author  Rajmund Szymanski
- * @date    18.05.2021
+ * @date    11.07.2022
  * @brief   This file contains macro definitions for the STM32F4XX GPIO ports.
  ******************************************************************************/
 
@@ -394,7 +394,7 @@ public:
 
 	unsigned operator ()( void )                 { return              BITBAND(((GPIO_TypeDef *)gpio)->IDR)[pin]; }
 	operator unsigned & ( void )                 { return (unsigned &)(BITBAND(((GPIO_TypeDef *)gpio)->ODR)[pin]); }
-	unsigned operator = ( const unsigned value ) { return              BITBAND(((GPIO_TypeDef *)gpio)->ODR)[pin] = value; }
+	unsigned operator = ( const unsigned value ) { return             (BITBAND(((GPIO_TypeDef *)gpio)->ODR)[pin] = value), value; }
 };
 
 /* -------------------------------------------------------------------------- */
