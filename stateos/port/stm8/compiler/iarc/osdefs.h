@@ -2,7 +2,7 @@
 
     @file    StateOS: osdefs.h
     @author  Rajmund Szymanski
-    @date    25.06.2022
+    @date    11.07.2022
     @brief   StateOS port file for STM8 uC.
 
  ******************************************************************************
@@ -54,6 +54,12 @@
 #endif
 #ifndef __PACKED_STRUCT
 #define __PACKED_STRUCT       struct
+#endif
+
+/* -------------------------------------------------------------------------- */
+
+#ifndef   static_assert
+#define   static_assert(C, M) assert(C)
 #endif
 
 /* -------------------------------------------------------------------------- */
