@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -680,7 +680,7 @@ struct MessageQueueT : public __msg
 
 	~MessageQueueT() { assert(__msg::obj.queue == nullptr); }
 
-	MessageQueueT( MessageQueueT&& ) = default;
+	MessageQueueT( MessageQueueT&& ) = delete;
 	MessageQueueT( const MessageQueueT& ) = delete;
 	MessageQueueT& operator=( MessageQueueT&& ) = delete;
 	MessageQueueT& operator=( const MessageQueueT& ) = delete;

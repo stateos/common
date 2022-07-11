@@ -2,7 +2,7 @@
 
     @file    StateOS: osflag.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -464,7 +464,7 @@ struct Flag : public __flg
 
 	~Flag() { assert(__flg::obj.queue == nullptr); }
 
-	Flag( Flag&& ) = default;
+	Flag( Flag&& ) = delete;
 	Flag( const Flag& ) = delete;
 	Flag& operator=( Flag&& ) = delete;
 	Flag& operator=( const Flag& ) = delete;

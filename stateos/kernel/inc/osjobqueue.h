@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -600,7 +600,7 @@ struct JobQueueT : public __job
 
 	~JobQueueT() { assert(__job::obj.queue == nullptr); }
 
-	JobQueueT( JobQueueT&& ) = default;
+	JobQueueT( JobQueueT&& ) = delete;
 	JobQueueT( const JobQueueT& ) = delete;
 	JobQueueT& operator=( JobQueueT&& ) = delete;
 	JobQueueT& operator=( const JobQueueT& ) = delete;

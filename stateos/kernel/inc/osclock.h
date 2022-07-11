@@ -2,7 +2,7 @@
 
     @file    StateOS: osclock.h
     @author  Rajmund Szymanski
-    @date    05.04.2021
+    @date    10.07.2022
     @brief   This file implements steady clock for StateOS.
 
  ******************************************************************************
@@ -92,7 +92,7 @@ struct Clock
 	static constexpr bool is_steady = true;
 
 	static
-	time_point now() noexcept
+	time_point now()
 	{
 		return time_point{duration{::sys_time()}};
 	}

@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -485,7 +485,7 @@ struct Mutex : public __mtx
 
 	~Mutex() { assert(__mtx::owner == nullptr); }
 
-	Mutex( Mutex&& ) = default;
+	Mutex( Mutex&& ) = delete;
 	Mutex( const Mutex& ) = delete;
 	Mutex& operator=( Mutex&& ) = delete;
 	Mutex& operator=( const Mutex& ) = delete;

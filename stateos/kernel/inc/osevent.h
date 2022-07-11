@@ -2,7 +2,7 @@
 
     @file    StateOS: osevent.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -329,7 +329,7 @@ struct Event : public __evt
 
 	~Event() { assert(__evt::obj.queue == nullptr); }
 
-	Event( Event&& ) = default;
+	Event( Event&& ) = delete;
 	Event( const Event& ) = delete;
 	Event& operator=( Event&& ) = delete;
 	Event& operator=( const Event& ) = delete;

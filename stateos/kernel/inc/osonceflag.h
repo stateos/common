@@ -2,7 +2,7 @@
 
     @file    StateOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    26.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -215,7 +215,7 @@ struct OnceFlag
 	constexpr
 	OnceFlag(): flg_{_ONE_INIT()} {}
 
-	OnceFlag( OnceFlag&& ) = default;
+	OnceFlag( OnceFlag&& ) = delete;
 	OnceFlag( const OnceFlag& ) = delete;
 	OnceFlag& operator=( OnceFlag&& ) = delete;
 	OnceFlag& operator=( const OnceFlag& ) = delete;

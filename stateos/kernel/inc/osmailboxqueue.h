@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    20.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -637,7 +637,7 @@ struct MailBoxQueueT : public __box
 
 	~MailBoxQueueT() { assert(__box::obj.queue == nullptr); }
 
-	MailBoxQueueT( MailBoxQueueT&& ) = default;
+	MailBoxQueueT( MailBoxQueueT&& ) = delete;
 	MailBoxQueueT( const MailBoxQueueT& ) = delete;
 	MailBoxQueueT& operator=( MailBoxQueueT&& ) = delete;
 	MailBoxQueueT& operator=( const MailBoxQueueT& ) = delete;

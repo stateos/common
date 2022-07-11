@@ -2,7 +2,7 @@
 
     @file    StateOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    17.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -604,7 +604,7 @@ struct EventQueueT : public __evq
 
 	~EventQueueT() { assert(__evq::obj.queue == nullptr); }
 
-	EventQueueT( EventQueueT&& ) = default;
+	EventQueueT( EventQueueT&& ) = delete;
 	EventQueueT( const EventQueueT& ) = delete;
 	EventQueueT& operator=( EventQueueT&& ) = delete;
 	EventQueueT& operator=( const EventQueueT& ) = delete;

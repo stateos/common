@@ -2,7 +2,7 @@
 
     @file    StateOS: osfastmutex.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -366,7 +366,7 @@ struct FastMutex : public __mut
 
 	~FastMutex() { assert(__mut::owner == nullptr); }
 
-	FastMutex( FastMutex&& ) = default;
+	FastMutex( FastMutex&& ) = delete;
 	FastMutex( const FastMutex& ) = delete;
 	FastMutex& operator=( FastMutex&& ) = delete;
 	FastMutex& operator=( const FastMutex& ) = delete;

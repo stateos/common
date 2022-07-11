@@ -2,7 +2,7 @@
 
     @file    StateOS: osrawbuffer.h
     @author  Rajmund Szymanski
-    @date    18.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -615,7 +615,7 @@ struct RawBufferT : public __raw
 
 	~RawBufferT() { assert(__raw::obj.queue == nullptr); }
 
-	RawBufferT( RawBufferT&& ) = default;
+	RawBufferT( RawBufferT&& ) = delete;
 	RawBufferT( const RawBufferT& ) = delete;
 	RawBufferT& operator=( RawBufferT&& ) = delete;
 	RawBufferT& operator=( const RawBufferT& ) = delete;

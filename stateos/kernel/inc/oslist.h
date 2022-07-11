@@ -2,7 +2,7 @@
 
     @file    StateOS: oslist.h
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -392,7 +392,7 @@ struct ListTT : public __lst
 
 	~ListTT() { assert(__lst::obj.queue == nullptr); }
 
-	ListTT( ListTT&& ) = default;
+	ListTT( ListTT&& ) = delete;
 	ListTT( const ListTT& ) = delete;
 	ListTT& operator=( ListTT&& ) = delete;
 	ListTT& operator=( const ListTT& ) = delete;
