@@ -2,7 +2,7 @@
 
     @file    StateOS: osconditionvariable.c
     @author  Rajmund Szymanski
-    @date    24.06.2020
+    @date    11.07.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -126,14 +126,17 @@ int cnd_waitFor( cnd_t *cnd, mtx_t *mtx, cnt_t delay )
 	assert(cnd->obj.res!=RELEASED);
 	assert(mtx);
 	assert(mtx->obj.res!=RELEASED);
+	assert((mtx->mode & mtxRecursive) == 0);
 
 	sys_lock();
 	{
 		result = mtx_give(mtx);
+		assert(result == E_SUCCESS);
 		if (result == E_SUCCESS)
 		{
 			wait_result = core_tsk_waitFor(&cnd->obj.queue, delay);
 			result = mtx_wait(mtx);
+			assert(result == E_SUCCESS);
 			if (result == E_SUCCESS)
 				result = wait_result;
 		}
@@ -155,14 +158,17 @@ int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time )
 	assert(cnd->obj.res!=RELEASED);
 	assert(mtx);
 	assert(mtx->obj.res!=RELEASED);
+	assert((mtx->mode & mtxRecursive) == 0);
 
 	sys_lock();
 	{
 		result = mtx_give(mtx);
+		assert(result == E_SUCCESS);
 		if (result == E_SUCCESS)
 		{
 			wait_result = core_tsk_waitUntil(&cnd->obj.queue, time);
 			result = mtx_wait(mtx);
+			assert(result == E_SUCCESS);
 			if (result == E_SUCCESS)
 				result = wait_result;
 		}
