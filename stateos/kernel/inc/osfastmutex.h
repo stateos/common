@@ -416,6 +416,40 @@ struct FastMutex : public __mut
 
 };
 
+/******************************************************************************
+ *
+ * Class             : FastLock
+ *
+ * Description       : create and initialize a lock guard object
+ *
+ ******************************************************************************/
+
+struct FastLock
+{
+	explicit
+	FastLock( FastMutex& _mut ): mut_(_mut)
+	{
+		int result = mut_.lock();
+		assert(result == E_SUCCESS);
+		(void) result;
+	}
+
+	~FastLock()
+	{
+		int result = mut_.unlock();
+		assert(result == E_SUCCESS);
+		(void) result;
+	}
+
+	FastLock( FastLock&& ) = delete;
+	FastLock( const FastLock& ) = delete;
+	FastLock& operator=( FastLock&& ) = delete;
+	FastLock& operator=( const FastLock& ) = delete;
+
+	private:
+	FastMutex& mut_;
+};
+
 }     //  namespace
 #endif//__cplusplus
 
