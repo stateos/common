@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    18.05.2021
+    @date    11.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -523,7 +523,7 @@ struct baseTimer : public __tmr
 	void     startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), nullptr); }
 	template<typename T, class F>
 	void     startFrom    ( const T& _delay, const T& _period, F&&     _state ) {        new (&fun) Fun_t(_state);
-	                                                                                   tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), fun_); }
+	                                                                                     tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), fun_); }
 #else
 	template<typename T>
 	void     startFrom    ( const T& _delay, const T& _period, fun_t * _state ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _state); }
@@ -672,7 +672,7 @@ struct Timer : public baseTimer
 	Timer Start( const T& _delay, const T& _period )
 	{
 		Timer tmr {};
-		tmr.start(Clock::count(_delay), Clock::count(_period));
+		tmr.start(_delay, _period);
 		return tmr;
 	}
 
@@ -680,7 +680,7 @@ struct Timer : public baseTimer
 	Timer Start( const T& _delay, const T& _period, F&& _state )
 	{
 		Timer tmr { _state };
-		tmr.start(Clock::count(_delay), Clock::count(_period));
+		tmr.start(_delay, _period);
 		return tmr;
 	}
 
@@ -722,7 +722,7 @@ struct Timer : public baseTimer
 	Timer StartFor( const T& _delay )
 	{
 		Timer tmr {};
-		tmr.startFor(Clock::count(_delay));
+		tmr.startFor(_delay);
 		return tmr;
 	}
 
@@ -730,7 +730,7 @@ struct Timer : public baseTimer
 	Timer StartFor( const T& _delay, F&& _state )
 	{
 		Timer tmr { _state };
-		tmr.startFor(Clock::count(_delay));
+		tmr.startFor(_delay);
 		return tmr;
 	}
 
@@ -773,7 +773,7 @@ struct Timer : public baseTimer
 	Timer StartPeriodic( const T& _period )
 	{
 		Timer tmr {};
-		tmr.startPeriodic(Clock::count(_period));
+		tmr.startPeriodic(_period);
 		return tmr;
 	}
 
@@ -781,7 +781,7 @@ struct Timer : public baseTimer
 	Timer StartPeriodic( const T& _period, F&& _state )
 	{
 		Timer tmr { _state };
-		tmr.startPeriodic(Clock::count(_period));
+		tmr.startPeriodic(_period);
 		return tmr;
 	}
 
@@ -821,7 +821,7 @@ struct Timer : public baseTimer
 	Timer StartUntil( const T& _time )
 	{
 		Timer tmr {};
-		tmr.startUntil(Clock::until(_time));
+		tmr.startUntil(_time);
 		return tmr;
 	}
 
@@ -829,7 +829,7 @@ struct Timer : public baseTimer
 	Timer StartUntil( const T& _time, F&& _state )
 	{
 		Timer tmr { _state };
-		tmr.startUntil(Clock::until(_time));
+		tmr.startUntil(_time);
 		return tmr;
 	}
 

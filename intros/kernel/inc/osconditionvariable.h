@@ -211,13 +211,13 @@ struct ConditionVariable : public __cnd
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;
 
 	void wait     ( mtx_t& _mtx ) { cnd_wait     (this, &_mtx); }
+	template<typename F>
+	void wait     ( mtx_t& _mtx, F _stopWaiting )
+	{
+		while (!_stopWaiting()) wait(_mtx);
+	}
 	void give     ()              { cnd_give     (this); }
 	void notifyAll()              { cnd_notifyAll(this); }
-	template<typename P>
-	void wait     ( mtx_t& _mtx, P _predicate )
-	{
-		while (!_predicate()) wait(_mtx);
-	}
 };
 
 }     //  namespace
