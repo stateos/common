@@ -597,7 +597,7 @@ struct UniqueLock
 	template<class Rep, class Period>
 	UniqueLock( Mutex& _mtx, const std::chrono::duration<Rep, Period>& _delay ): mtx_(&_mtx), locked_(false)
 	{
-		int result = mtx_->waitFor(Clock::count(_delay));
+		int result = mtx_->waitFor(_delay);
 		assert(result == E_SUCCESS || result == E_TIMEOUT);
 		locked_ = result == E_SUCCESS;
 	}
@@ -605,7 +605,7 @@ struct UniqueLock
 	template<class Clock, class Duration>
 	UniqueLock( Mutex& _mtx, const std::chrono::time_point<Clock, Duration>& _time ): mtx_(&_mtx), locked_(false)
 	{
-		int result = mtx_->waitUntil(Clock::until(_time));
+		int result = mtx_->waitUntil(_time);
 		assert(result == E_SUCCESS || result == E_TIMEOUT);
 		locked_ = result == E_SUCCESS;
 	}
@@ -654,7 +654,7 @@ struct UniqueLock
 		if (mtx_ == nullptr || locked_)
 			return false;
 
-		int result = mtx_->waitFor(Clock::count(_delay));
+		int result = mtx_->waitFor(_delay);
 		assert(result == E_SUCCESS || result == E_TIMEOUT);
 		return locked_ = result == E_SUCCESS;
 	}
@@ -665,7 +665,7 @@ struct UniqueLock
 		if (mtx_ == nullptr || locked_)
 			return false;
 
-		int result = mtx_->waitUntil(Clock::until(_time));
+		int result = mtx_->waitUntil(_time);
 		assert(result == E_SUCCESS || result == E_TIMEOUT);
 		return locked_ = result == E_SUCCESS;
 	}

@@ -400,25 +400,25 @@ struct ConditionVariable : public __cnd
 	void giveISR  ( bool   _all = cndAll )         {        cnd_giveISR  (this,  _all); }
 	void notifyOne()                               {        cnd_notifyOne(this); }
 	void notifyAll()                               {        cnd_notifyAll(this); }
-	template<typename T, typename P>
-	int  waitFor  ( mtx_t& _mtx, const T& _delay, P _predicate )
+	template<typename T, typename F>
+	int  waitFor  ( mtx_t& _mtx, const T& _delay, F _stopWaiting )
 	{
 		auto _time = Clock::count(_delay);
-		if (_time == INFINITE) return wait(_mtx, _predicate);
-		else return waitUntil(_mtx, sys_time() + _time, _predicate);
+		return (_time == INFINITE) ? wait(_mtx, _stopWaiting)
+		                           : waitUntil(_mtx, sys_time() + _time, _stopWaiting);
 	}
-	template<typename T, typename P>
-	int  waitUntil( mtx_t& _mtx, const T& _time, P _predicate )
+	template<typename T, typename F>
+	int  waitUntil( mtx_t& _mtx, const T& _time, F _stopWaiting )
 	{
 		int result;
-		while (!_predicate() && (result = waitUntil(_mtx, _time)) == E_SUCCESS);
+		while (!_stopWaiting() && (result = waitUntil(_mtx, _time)) == E_SUCCESS);
 		return result;
 	}
-	template<typename P>
-	int  wait     ( mtx_t& _mtx, P _predicate )
+	template<typename F>
+	int  wait     ( mtx_t& _mtx, F _stopWaiting )
 	{
 		int result;
-		while (!_predicate() && (result = wait(_mtx)) == E_SUCCESS);
+		while (!_stopWaiting() && (result = wait(_mtx)) == E_SUCCESS);
 		return result;
 	}
 
