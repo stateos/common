@@ -546,40 +546,179 @@ struct Mutex : public __mtx
 
 /******************************************************************************
  *
- * Class             : Lock
+ * Class             : LockGuard
  *
- * Description       : create and initialize a guard object
- *
- * Constructor parameters
- *   T               : guard class
+ * Description       : create and initialize a lock guard object
  *
  ******************************************************************************/
 
-template<class T>
-struct Lock
+struct LockGuard
 {
 	explicit
-	Lock( T& _lck ): lck_(_lck)
+	LockGuard( Mutex& _mtx ): mtx_(_mtx)
 	{
-		int result = lck_.lock();
-		assert(result = E_SUCCESS);
+		int result = mtx_.lock();
+		assert(result == E_SUCCESS);
 		(void) result;
 	}
 
-	~Lock()
+	~LockGuard()
 	{
-		int result = lck_.unlock();
-		assert(result = E_SUCCESS);
+		int result = mtx_.unlock();
+		assert(result == E_SUCCESS);
 		(void) result;
 	}
 
-	Lock( Lock&& ) = default;
-	Lock( const Lock& ) = delete;
-	Lock& operator=( Lock&& ) = delete;
-	Lock& operator=( const Lock& ) = delete;
+	LockGuard( LockGuard&& ) = delete;
+	LockGuard( const LockGuard& ) = delete;
+	LockGuard& operator=( LockGuard&& ) = delete;
+	LockGuard& operator=( const LockGuard& ) = delete;
 
 	private:
-	T& lck_;
+	Mutex& mtx_;
+};
+
+/******************************************************************************
+ *
+ * Class             : UniqueLock
+ *
+ * Description       : create and initialize a unique lock object
+ *
+ ******************************************************************************/
+
+struct UniqueLock
+{
+	explicit
+	UniqueLock( Mutex& _mtx ): mtx_(&_mtx), locked_(false)
+	{
+		lock();
+	}
+
+	template<class Rep, class Period>
+	UniqueLock( Mutex& _mtx, const std::chrono::duration<Rep, Period>& _delay ): mtx_(&_mtx), locked_(false)
+	{
+		int result = mtx_->waitFor(Clock::count(_delay));
+		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		locked_ = result == E_SUCCESS;
+	}
+
+	template<class Clock, class Duration>
+	UniqueLock( Mutex& _mtx, const std::chrono::time_point<Clock, Duration>& _time ): mtx_(&_mtx), locked_(false)
+	{
+		int result = mtx_->waitUntil(Clock::until(_time));
+		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		locked_ = result == E_SUCCESS;
+	}
+
+	UniqueLock( UniqueLock&& _src ): mtx_(_src.mtx_), locked_(_src.locked_)
+	{
+		_src.mtx_ = nullptr;
+		_src.locked_ = false;
+	}
+
+	~UniqueLock()
+	{
+		unlock();
+	}
+
+	UniqueLock() = default;
+	UniqueLock( const UniqueLock& ) = delete;
+	UniqueLock& operator=( const UniqueLock& ) = delete;
+
+	UniqueLock& operator=( UniqueLock&& _src )
+	{
+		unlock();
+
+		mtx_ = _src.mtx_;
+		locked_ = _src.locked_;
+
+		_src.mtx_ = nullptr;
+		_src.locked_ = false;
+
+		return *this;
+	}
+
+	bool tryLock()
+	{
+		if (mtx_ == nullptr || locked_)
+			return false;
+
+		int result = mtx_->tryLock();
+		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		return locked_ = result == E_SUCCESS;
+	}
+
+	template<typename T>
+	bool waitFor( const T& _delay )
+	{
+		if (mtx_ == nullptr || locked_)
+			return false;
+
+		int result = mtx_->waitFor(Clock::count(_delay));
+		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		return locked_ = result == E_SUCCESS;
+	}
+
+	template<typename T>
+	bool waitUntil( const T& _time )
+	{
+		if (mtx_ == nullptr || locked_)
+			return false;
+
+		int result = mtx_->waitUntil(Clock::until(_time));
+		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		return locked_ = result == E_SUCCESS;
+	}
+
+	void lock()
+	{
+		if (mtx_ != nullptr && !locked_)
+		{
+			int result = mtx_->lock();
+			assert(result == E_SUCCESS);
+			locked_ = result == E_SUCCESS;
+		}
+	}
+
+	void unlock()
+	{
+		if (mtx_ != nullptr && locked_)
+		{
+			int result = mtx_->unlock();
+			assert(result == E_SUCCESS);
+			locked_ = result != E_SUCCESS;
+		}
+	}
+
+	bool ownsLock() const
+	{
+		return locked_;
+	}
+
+	explicit
+	operator bool() const
+	{
+		return ownsLock();
+	}
+
+	Mutex* release()
+	{
+		Mutex* result = mtx_;
+
+		mtx_ = nullptr;
+		locked_ = false;
+
+		return result;
+	}
+
+	Mutex* mutex() const
+	{
+		return mtx_;
+	}
+
+	private:
+	Mutex *mtx_ = nullptr;
+	bool locked_ = false;
 };
 
 }     //  namespace
