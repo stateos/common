@@ -2,7 +2,7 @@
 
     @file    StateOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    10.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -383,7 +383,7 @@ struct ConditionVariable : public __cnd
 
 	~ConditionVariable() { assert(__cnd::obj.queue == nullptr); }
 
-	ConditionVariable( ConditionVariable&& ) = delete;
+	ConditionVariable( ConditionVariable&& ) = default;
 	ConditionVariable( const ConditionVariable& ) = delete;
 	ConditionVariable& operator=( ConditionVariable&& ) = delete;
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;

@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -485,7 +485,7 @@ struct Mutex : public __mtx
 
 	~Mutex() { assert(__mtx::owner == nullptr); }
 
-	Mutex( Mutex&& ) = delete;
+	Mutex( Mutex&& ) = default;
 	Mutex( const Mutex& ) = delete;
 	Mutex& operator=( Mutex&& ) = delete;
 	Mutex& operator=( const Mutex& ) = delete;
@@ -569,7 +569,7 @@ struct LockGuard
 		(void) result;
 	}
 
-	LockGuard( LockGuard&& ) = delete;
+	LockGuard( LockGuard&& ) = default;
 	LockGuard( const LockGuard& ) = delete;
 	LockGuard& operator=( LockGuard&& ) = delete;
 	LockGuard& operator=( const LockGuard& ) = delete;
@@ -594,18 +594,10 @@ struct UniqueLock
 		lock();
 	}
 
-	template<class Rep, class Period>
-	UniqueLock( Mutex& _mtx, const std::chrono::duration<Rep, Period>& _delay ): mtx_(&_mtx), locked_(false)
+	template<typename T>
+	UniqueLock( Mutex& _mtx, const T& _delay ): mtx_(&_mtx), locked_(false)
 	{
 		int result = mtx_->waitFor(_delay);
-		assert(result == E_SUCCESS || result == E_TIMEOUT);
-		locked_ = result == E_SUCCESS;
-	}
-
-	template<class Clock, class Duration>
-	UniqueLock( Mutex& _mtx, const std::chrono::time_point<Clock, Duration>& _time ): mtx_(&_mtx), locked_(false)
-	{
-		int result = mtx_->waitUntil(_time);
 		assert(result == E_SUCCESS || result == E_TIMEOUT);
 		locked_ = result == E_SUCCESS;
 	}
