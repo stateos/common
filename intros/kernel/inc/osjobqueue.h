@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -377,7 +377,7 @@ struct JobQueueT : public __job
 	constexpr
 	JobQueueT(): __job _JOB_INIT(limit_, data_) {}
 
-	JobQueueT( JobQueueT&& ) = delete;
+	JobQueueT( JobQueueT&& ) = default;
 	JobQueueT( const JobQueueT& ) = delete;
 	JobQueueT& operator=( JobQueueT&& ) = delete;
 	JobQueueT& operator=( const JobQueueT& ) = delete;

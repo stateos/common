@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -283,7 +283,7 @@ struct Flag : public __flg
 	constexpr
 	Flag( const unsigned _init = 0 ): __flg _FLG_INIT(_init) {}
 
-	Flag( Flag&& ) = delete;
+	Flag( Flag&& ) = default;
 	Flag( const Flag& ) = delete;
 	Flag& operator=( Flag&& ) = delete;
 	Flag& operator=( const Flag& ) = delete;

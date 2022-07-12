@@ -2,7 +2,7 @@
 
     @file    IntrOS: osevent.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -216,7 +216,7 @@ struct Event : public __evt
 	constexpr
 	Event(): __evt _EVT_INIT() {}
 
-	Event( Event&& ) = delete;
+	Event( Event&& ) = default;
 	Event( const Event& ) = delete;
 	Event& operator=( Event&& ) = delete;
 	Event& operator=( const Event& ) = delete;

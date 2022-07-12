@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -433,7 +433,7 @@ struct MessageQueueT : public __msg
 	constexpr
 	MessageQueueT(): __msg _MSG_INIT(limit_, size_, data_) {}
 
-	MessageQueueT( MessageQueueT&& ) = delete;
+	MessageQueueT( MessageQueueT&& ) = default;
 	MessageQueueT( const MessageQueueT& ) = delete;
 	MessageQueueT& operator=( MessageQueueT&& ) = delete;
 	MessageQueueT& operator=( const MessageQueueT& ) = delete;

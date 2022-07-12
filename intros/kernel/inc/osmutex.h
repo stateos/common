@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -232,7 +232,7 @@ struct Mutex : public __mtx
 	constexpr
 	Mutex(): __mtx _MTX_INIT() {}
 
-	Mutex( Mutex&& ) = delete;
+	Mutex( Mutex&& ) = default;
 	Mutex( const Mutex& ) = delete;
 	Mutex& operator=( Mutex&& ) = delete;
 	Mutex& operator=( const Mutex& ) = delete;
@@ -268,7 +268,7 @@ struct LockGuard
 		mtx_.unlock();
 	}
 
-	LockGuard( LockGuard&& ) = delete;
+	LockGuard( LockGuard&& ) = default;
 	LockGuard( const LockGuard& ) = delete;
 	LockGuard& operator=( LockGuard&& ) = delete;
 	LockGuard& operator=( const LockGuard& ) = delete;

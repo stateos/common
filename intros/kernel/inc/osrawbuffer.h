@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrawbuffer.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -379,7 +379,7 @@ struct RawBufferT : public __raw
 	constexpr
 	RawBufferT(): __raw _RAW_INIT(limit_, data_) {}
 
-	RawBufferT( RawBufferT&& ) = delete;
+	RawBufferT( RawBufferT&& ) = default;
 	RawBufferT( const RawBufferT& ) = delete;
 	RawBufferT& operator=( RawBufferT&& ) = delete;
 	RawBufferT& operator=( const RawBufferT& ) = delete;

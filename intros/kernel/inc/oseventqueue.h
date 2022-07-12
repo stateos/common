@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -376,7 +376,7 @@ struct EventQueueT : public __evq
 	constexpr
 	EventQueueT(): __evq _EVQ_INIT(limit_, data_) {}
 
-	EventQueueT( EventQueueT&& ) = delete;
+	EventQueueT( EventQueueT&& ) = default;
 	EventQueueT( const EventQueueT& ) = delete;
 	EventQueueT& operator=( EventQueueT&& ) = delete;
 	EventQueueT& operator=( const EventQueueT& ) = delete;

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -404,7 +404,7 @@ struct MailBoxQueueT : public __box
 	constexpr
 	MailBoxQueueT(): __box _BOX_INIT(limit_, size_, data_) {}
 
-	MailBoxQueueT( MailBoxQueueT&& ) = delete;
+	MailBoxQueueT( MailBoxQueueT&& ) = default;
 	MailBoxQueueT( const MailBoxQueueT& ) = delete;
 	MailBoxQueueT& operator=( MailBoxQueueT&& ) = delete;
 	MailBoxQueueT& operator=( const MailBoxQueueT& ) = delete;

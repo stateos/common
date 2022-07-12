@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -268,7 +268,7 @@ struct Signal : public __sig
 	constexpr
 	Signal( const unsigned _mask = 0 ): __sig _SIG_INIT(_mask) {}
 
-	Signal( Signal&& ) = delete;
+	Signal( Signal&& ) = default;
 	Signal( const Signal& ) = delete;
 	Signal& operator=( Signal&& ) = delete;
 	Signal& operator=( const Signal& ) = delete;

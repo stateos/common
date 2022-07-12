@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -282,7 +282,7 @@ struct MemoryPoolT : public __mem
 {
 	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) {}
 
-	MemoryPoolT( MemoryPoolT&& ) = delete;
+	MemoryPoolT( MemoryPoolT&& ) = default;
 	MemoryPoolT( const MemoryPoolT& ) = delete;
 	MemoryPoolT& operator=( MemoryPoolT&& ) = delete;
 	MemoryPoolT& operator=( const MemoryPoolT& ) = delete;

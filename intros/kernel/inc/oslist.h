@@ -2,7 +2,7 @@
 
     @file    IntrOS: oslist.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -251,7 +251,7 @@ struct ListTT : public __lst
 	constexpr
 	ListTT(): __lst _LST_INIT() {}
 
-	ListTT( ListTT&& ) = delete;
+	ListTT( ListTT&& ) = default;
 	ListTT( const ListTT& ) = delete;
 	ListTT& operator=( ListTT&& ) = delete;
 	ListTT& operator=( const ListTT& ) = delete;

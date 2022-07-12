@@ -2,7 +2,7 @@
 
     @file    IntrOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -210,7 +210,7 @@ struct OnceFlag
 	constexpr
 	OnceFlag(): flg_{_ONE_INIT()} {}
 
-	OnceFlag( OnceFlag&& ) = delete;
+	OnceFlag( OnceFlag&& ) = default;
 	OnceFlag( const OnceFlag& ) = delete;
 	OnceFlag& operator=( OnceFlag&& ) = delete;
 	OnceFlag& operator=( const OnceFlag& ) = delete;

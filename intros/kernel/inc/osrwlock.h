@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -301,7 +301,7 @@ struct RWLock : public __rwl
 
 	~RWLock() { assert(__rwl::write == false && __rwl::count == 0); }
 
-	RWLock( RWLock&& ) = delete;
+	RWLock( RWLock&& ) = default;
 	RWLock( const RWLock& ) = delete;
 	RWLock& operator=( RWLock&& ) = delete;
 	RWLock& operator=( const RWLock& ) = delete;
@@ -338,7 +338,7 @@ struct ReadLock
 
 	~ReadLock() { lck_.unlockRead(); }
 
-	ReadLock( ReadLock&& ) = delete;
+	ReadLock( ReadLock&& ) = default;
 	ReadLock( const ReadLock& ) = delete;
 	ReadLock& operator=( ReadLock&& ) = delete;
 	ReadLock& operator=( const ReadLock& ) = delete;
@@ -365,7 +365,7 @@ struct WriteLock
 
 	~WriteLock() { lck_.unlockWrite(); }
 
-	WriteLock( WriteLock&& ) = delete;
+	WriteLock( WriteLock&& ) = default;
 	WriteLock( const WriteLock& ) = delete;
 	WriteLock& operator=( WriteLock&& ) = delete;
 	WriteLock& operator=( const WriteLock& ) = delete;

@@ -205,7 +205,7 @@ struct ConditionVariable : public __cnd
 	constexpr
 	ConditionVariable(): __cnd _CND_INIT() {}
 
-	ConditionVariable( ConditionVariable&& ) = delete;
+	ConditionVariable( ConditionVariable&& ) = default;
 	ConditionVariable( const ConditionVariable& ) = delete;
 	ConditionVariable& operator=( ConditionVariable&& ) = delete;
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;
