@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    14.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -597,9 +597,7 @@ struct UniqueLock
 	template<typename T>
 	UniqueLock( Mutex& _mtx, const T& _delay ): mtx_(&_mtx), locked_(false)
 	{
-		int result = mtx_->waitFor(_delay);
-		assert(result == E_SUCCESS || result == E_TIMEOUT);
-		locked_ = result == E_SUCCESS;
+		waitFor(_delay);
 	}
 
 	UniqueLock( UniqueLock&& _src ): mtx_(_src.mtx_), locked_(_src.locked_)
@@ -637,7 +635,8 @@ struct UniqueLock
 
 		int result = mtx_->tryLock();
 		assert(result == E_SUCCESS || result == E_TIMEOUT);
-		return locked_ = result == E_SUCCESS;
+		locked_ = result == E_SUCCESS;
+		return locked_;
 	}
 
 	template<typename T>
@@ -648,7 +647,8 @@ struct UniqueLock
 
 		int result = mtx_->waitFor(_delay);
 		assert(result == E_SUCCESS || result == E_TIMEOUT);
-		return locked_ = result == E_SUCCESS;
+		locked_ = result == E_SUCCESS;
+		return locked_;
 	}
 
 	template<typename T>
@@ -659,27 +659,30 @@ struct UniqueLock
 
 		int result = mtx_->waitUntil(_time);
 		assert(result == E_SUCCESS || result == E_TIMEOUT);
-		return locked_ = result == E_SUCCESS;
+		locked_ = result == E_SUCCESS;
+		return locked_;
 	}
 
-	void lock()
+	bool lock()
 	{
-		if (mtx_ != nullptr && !locked_)
-		{
-			int result = mtx_->lock();
-			assert(result == E_SUCCESS);
-			locked_ = result == E_SUCCESS;
-		}
+		if (mtx_ == nullptr || locked_)
+			return false;
+
+		int result = mtx_->lock();
+		assert(result == E_SUCCESS);
+		locked_ = result == E_SUCCESS;
+		return locked_;
 	}
 
-	void unlock()
+	bool unlock()
 	{
-		if (mtx_ != nullptr && locked_)
-		{
-			int result = mtx_->unlock();
-			assert(result == E_SUCCESS);
-			locked_ = result != E_SUCCESS;
-		}
+		if (mtx_ == nullptr || !locked_)
+			return false;
+
+		int result = mtx_->unlock();
+		assert(result == E_SUCCESS);
+		locked_ = false;
+		return result == E_SUCCESS;
 	}
 
 	bool ownsLock() const
