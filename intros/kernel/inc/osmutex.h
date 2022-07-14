@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    14.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -328,7 +328,8 @@ struct UniqueLock
 
 		unsigned result = mtx_->tryLock();
 		assert(result == SUCCESS);
-		return locked_ = result == SUCCESS;
+		locked_ = result == SUCCESS;
+		return locked_;
 	}
 
 	void lock()
