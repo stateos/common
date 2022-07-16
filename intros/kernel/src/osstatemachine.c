@@ -66,7 +66,6 @@ void priv_handleReceivedEvent(hsm_t *hsm)
 	hsm_state_t *state = hsm->state;
 
 	assert(event != hsmOK);
-	assert(state != NULL);
 
 	while (event != hsmOK)
 	{
