@@ -428,6 +428,8 @@ extern const hsm_state_t RootState;
  *
  * Return            : none
  *
+ * Note              : use only in event handler function
+ *
  ******************************************************************************/
 
 void hsm_transition(hsm_t *hsm, hsm_state_t *nextState, hsm_action_t action);
