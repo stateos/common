@@ -2,7 +2,7 @@
 
     @file    IntrOS: os.h
     @author  Rajmund Szymanski
-    @date    27.05.2021
+    @date    15.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -56,5 +56,6 @@
 #include "inc/osjobqueue.h"
 #include "inc/ostimer.h"
 #include "inc/ostask.h"
+#include "inc/osstatemachine.h"
 
 #endif//__INTROS_H

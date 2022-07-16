@@ -41,6 +41,7 @@ target_sources(intros
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/ossignal.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/ostask.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/ostimer.c
+	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osstatemachine.c
 )
 
 if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/port/${INTROS_ARCH}/compiler/${INTROS_COMPILER}/oscore.s)
