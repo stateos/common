@@ -322,13 +322,10 @@ extern const hsm_state_t RootState;
  * Description       : create and initialize a hsm object
  *
  * Parameters
- *   handler         : hsm dispatcher handler
  *   stack           : base of hsm dispatcher's private stack storage
- *   ssize           : size of hsm dispatcher private stack (in bytes)
+ *   size            : size of hsm dispatcher private stack (in bytes)
  *   limit           : size of a hsm event queue (max number of stored events)
- *   esize           : size of a single event (in bytes)
  *   data            : hsm event queue data buffer
- *   state           : pointer to initial hsm state
  *
  * Return            : hsm object
  *
@@ -336,8 +333,8 @@ extern const hsm_state_t RootState;
  *
  ******************************************************************************/
 
-#define               _HSM_INIT( _stack, _ssize, _limit, _esize, _data ) \
-                    { _TSK_INIT( NULL, _stack, _ssize ), _BOX_INIT( _limit, _esize, _data ), (hsm_state_t *)&RootState, _HSM_EVENT_INIT() }
+#define               _HSM_INIT( _stack, _size, _limit, _data ) \
+                    { _TSK_INIT( NULL, _stack, _size ), _BOX_INIT( _limit, sizeof(hsm_event_t), _data ), (hsm_state_t *)&RootState, _HSM_EVENT_INIT() }
 
 /******************************************************************************
  *
@@ -353,16 +350,16 @@ extern const hsm_state_t RootState;
  *
  ******************************************************************************/
 
-#define             OS_HSM( hsm, limit, ... )                                                                                             \
-                       char hsm##__buf[limit * sizeof(hsm_event_t)];                                                                       \
-                       stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                                                       \
-                       hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, STK_OVER( _VA_STK(__VA_ARGS__) ), limit, sizeof(hsm_event_t), hsm##__buf ); \
+#define             OS_HSM( hsm, limit, ... )                                                                        \
+                       char hsm##__buf[limit * sizeof(hsm_event_t)];                                                  \
+                       stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                                  \
+                       hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, STK_OVER( _VA_STK(__VA_ARGS__) ), limit, hsm##__buf ); \
                        hsm_id hsm = & hsm##__hsm
 
-#define         static_HSM( hsm, limit, ... )                                                                                             \
-                static char hsm##__buf[limit * sizeof(hsm_event_t)];                                                                       \
-                static stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                                                       \
-                static hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, STK_OVER( _VA_STK(__VA_ARGS__) ), limit, sizeof(hsm_event_t), hsm##__buf ); \
+#define         static_HSM( hsm, limit, ... )                                                                        \
+                static char hsm##__buf[limit * sizeof(hsm_event_t)];                                                  \
+                static stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                                  \
+                static hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, STK_OVER( _VA_STK(__VA_ARGS__) ), limit, hsm##__buf ); \
                 static hsm_id hsm = & hsm##__hsm
 
 /******************************************************************************
@@ -384,7 +381,7 @@ extern const hsm_state_t RootState;
 #ifndef __cplusplus
 #define                HSM_INIT( limit, ... )                                                                     \
                       _HSM_INIT( _TSK_STACK( STK_SIZE( _VA_STK(__VA_ARGS__) ) ), STK_OVER( _VA_STK(__VA_ARGS__) ), \
-                                 limit, sizeof(hsm_event_t), _BOX_DATA( limit, sizeof(hsm_event_t) ) )
+                                 limit, _BOX_DATA( limit, sizeof(hsm_event_t) ) )
 #endif
 
 /******************************************************************************
