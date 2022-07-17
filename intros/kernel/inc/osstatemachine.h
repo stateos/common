@@ -496,7 +496,7 @@ void hsm_start(hsm_t *hsm, hsm_state_t *initState);
  *
  ******************************************************************************/
 
-unsigned hsm_give(hsm_t *hsm, unsigned event, void *param);
+unsigned hsm_give(hsm_t *hsm, unsigned value, void *param);
 
 /******************************************************************************
  *
@@ -513,7 +513,25 @@ unsigned hsm_give(hsm_t *hsm, unsigned event, void *param);
  *
  ******************************************************************************/
 
-void hsm_send(hsm_t *hsm, unsigned event, void *param);
+void hsm_send(hsm_t *hsm, unsigned value, void *param);
+
+/******************************************************************************
+ *
+ * Name              : hsm_push
+ *
+ * Description       : transfer event data to the hsm event queue,
+ *                     remove the oldest event data if the event queue is full
+ *
+ * Parameters
+ *   hsm             : pointer to hsm object
+ *   event           : event value
+ *   param           : event parameter
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void hsm_push(hsm_t *hsm, unsigned value, void *param);
 
 /******************************************************************************
  *
@@ -528,6 +546,20 @@ void hsm_send(hsm_t *hsm, unsigned event, void *param);
  ******************************************************************************/
 __STATIC_INLINE
 hsm_state_t *hsm_getState(hsm_t *hsm) { return hsm->state; }
+
+/******************************************************************************
+ *
+ * Name              : hsm_getEvent
+ *
+ * Description       : get value of the currently handled event
+ *
+ *   hsm             : pointer to hsm object
+ *
+ * Return            : parameter of the currently handled event
+ *
+ ******************************************************************************/
+__STATIC_INLINE
+unsigned hsm_getEvent(hsm_t *hsm) { return hsm->event.value; }
 
 /******************************************************************************
  *
