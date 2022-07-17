@@ -83,6 +83,8 @@ typedef struct __hsm hsm_t, * const hsm_id;
  *                     user event values must be greater than or equal to hsmUser
  *                     0 is reserved for hsmOK, which confirms event handling
  *                     transition is always possible when handling user events
+ *                     transition is not possible when handling hsmExit and hsmEntry events
+ *                     when handling hsmInit event, it only possible to transition to child state
  *                     function must return hsmOK if event has been handled
  *                     function should return event value if event was not handled
  *                        then the event value is passed to parent state handler
