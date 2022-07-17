@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    16.07.2022
+    @date    17.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -41,8 +41,8 @@
 enum
 {
 	hsmOK = 0, // event was successfully handled (should be 0)
-	hsmEntry,  // entry to state event
 	hsmExit,   // exit from state event
+	hsmEntry,  // entry to state event
 	hsmInit,   // init state after transition event
 	hsmUser,   // values less than hsmUser are reserved for the system
 };
@@ -93,17 +93,6 @@ typedef unsigned (* hsm_handler_t)(hsm_t *, unsigned);
 
 /******************************************************************************
  *
- * Name              : hierarchical state machine - event action
- *
- * Description       : optional function invoked when transition,
- *                     after all hsmExit events and before all hsmEntry events
- *
- ******************************************************************************/
-
-typedef void (* hsm_action_t)(hsm_t *);
-
-/******************************************************************************
- *
  * Name              : hierarchical state machine - event definition
  *
  ******************************************************************************/
@@ -122,7 +111,7 @@ struct __hsm_event
 
 struct __hsm_state
 {
-	hsm_state_t * parent;  // parent state in the hsm tree
+	hsm_state_t * parent;  // pointer to parent state in the hsm tree
 	hsm_handler_t handler; // event handler
 };
 
@@ -143,14 +132,6 @@ struct __hsm
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/******************************************************************************
- *
- * Name              : hsm internal root state
- *
- ******************************************************************************/
-
-extern const hsm_state_t RootState;
 
 /******************************************************************************
  *
@@ -236,7 +217,7 @@ extern const hsm_state_t RootState;
  * Description       : create and initialize a hsm state object
  *
  * Parameters
- *   parent          : parent state in the hsm tree
+ *   parent          : pointer to parent state in the hsm tree (NULL for root)
  *   handler         : event handler function
  *
  * Return            : hsm state object
@@ -246,7 +227,7 @@ extern const hsm_state_t RootState;
  ******************************************************************************/
 
 #define               _HSM_STATE_INIT( _parent, _handler ) \
-                    { _parent != NULL ? _parent : (hsm_state_t *)&RootState, _handler }
+                    { _parent, _handler }
 
 /******************************************************************************
  *
@@ -257,7 +238,7 @@ extern const hsm_state_t RootState;
  *
  * Parameters
  *   state           : name of a pointer to hsm state object
- *   parent          : parent state in the hsm tree
+ *   parent          : pointer to parent state in the hsm tree (NULL for root)
  *   handler         : event handler function
  *
  ******************************************************************************/
@@ -277,7 +258,7 @@ extern const hsm_state_t RootState;
  * Description       : create and initialize hsm state object
  *
  * Parameters
- *   parent          : parent state in the hsm tree
+ *   parent          : pointer to parent state in the hsm tree (NULL for root)
  *   handler         : event handler function
  *
  * Return            : hsm state object
@@ -299,7 +280,7 @@ extern const hsm_state_t RootState;
  * Description       : create and initialize hsm state object
  *
  * Parameters
- *   parent          : parent state in the hsm tree
+ *   parent          : pointer to parent state in the hsm tree (NULL for root)
  *   handler         : event handler function
  *
  * Return            : pointer to hsm state object
@@ -333,8 +314,11 @@ extern const hsm_state_t RootState;
  *
  ******************************************************************************/
 
-#define               _HSM_INIT( _stack, _size, _limit, _data ) \
-                    { _TSK_INIT( NULL, _stack, _size ), _BOX_INIT( _limit, sizeof(hsm_event_t), _data ), (hsm_state_t *)&RootState, _HSM_EVENT_INIT() }
+#define               _HSM_INIT( _stack, _size, _limit, _data )      \
+                    { _TSK_INIT( NULL, _stack, _size ),               \
+                      _BOX_INIT( _limit, sizeof(hsm_event_t), _data ), \
+                       NULL,                                            \
+                      _HSM_EVENT_INIT() }
 
 /******************************************************************************
  *
@@ -420,8 +404,6 @@ extern const hsm_state_t RootState;
  * Parameters
  *   hsm             : pointer to hsm object
  *   nextState       : pointer to new hsm state
- *   action          : optional function invoked when transition,
- *                     after all hsmExit events and before all hsmEntry events
  *
  * Return            : none
  *
@@ -429,7 +411,7 @@ extern const hsm_state_t RootState;
  *
  ******************************************************************************/
 
-void hsm_transition(hsm_t *hsm, hsm_state_t *nextState, hsm_action_t action);
+void hsm_transition(hsm_t *hsm, hsm_state_t *nextState);
 
 /******************************************************************************
  *
@@ -454,9 +436,7 @@ void hsm_initEvent(hsm_event_t *event);
  *
  * Parameters
  *   state           : pointer to hsm state object
- *   parent          : parent state in the hsm tree
- *                     NULL: root internal state
- *                     otherwise: user defined state
+ *   parent          : pointer to parent state in the hsm tree (NULL for root)
  *   handler         : event handler function
  *
  * Return            : none
@@ -469,7 +449,7 @@ void hsm_initState(hsm_state_t *state, hsm_state_t *parent, hsm_handler_t handle
  *
  * Name              : hsm_init
  *
- * Description       : initialize hsm object and start hsm event dispatcher
+ * Description       : initialize hsm object
  *
  * Parameters
  *   hsm             : pointer to hsm object
@@ -477,13 +457,12 @@ void hsm_initState(hsm_state_t *state, hsm_state_t *parent, hsm_handler_t handle
  *   size            : size of hsm dispatcher private stack (in bytes)
  *   data            : hsm event queue data buffer
  *   bufsize         : size of the buffer
- *   initState       : pointer to initial hsm state
  *
  * Return            : none
  *
  ******************************************************************************/
 
-void hsm_init(hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize, hsm_state_t *initState);
+void hsm_init(hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize);
 
 /******************************************************************************
  *
