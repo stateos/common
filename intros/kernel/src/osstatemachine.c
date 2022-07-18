@@ -230,7 +230,10 @@ void hsm_start( hsm_t *hsm, hsm_state_t *initState )
 
 	sys_lock();
 	{
-		hsm->state = NULL;
+		hsm->box.count = 0; // reset hsm event queue
+		hsm->box.head  = 0; //
+		hsm->box.tail  = 0; //
+		hsm->state = NULL;  // reset hsm state
 		hsm->event.value = hsmInit;
 		hsm_transition(hsm, initState);
 		tsk_startFrom(&hsm->tsk, priv_eventDispatcher);
