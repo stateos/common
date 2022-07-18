@@ -131,7 +131,7 @@ void priv_setNextState(hsm_t *hsm, hsm_state_t *state)
 
 /* -------------------------------------------------------------------------- */
 static
-bool hsm_transitionPossible(hsm_t *hsm, hsm_state_t *state)
+bool priv_transitionPossible(hsm_t *hsm, hsm_state_t *state)
 /* -------------------------------------------------------------------------- */
 {
 	return (hsm->event.value >= hsmUser ||
@@ -144,7 +144,7 @@ void hsm_transition(hsm_t *hsm, hsm_state_t *nextState)
 {
 	assert(hsm != NULL);
 
-	if (!hsm_transitionPossible(hsm, nextState))
+	if (!priv_transitionPossible(hsm, nextState))
 	{
 		assert(false);
 		return;
