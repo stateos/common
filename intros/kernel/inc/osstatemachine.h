@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    17.07.2022
+    @date    18.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -41,6 +41,7 @@
 enum
 {
 	hsmOK = 0, // event was successfully handled (should be 0)
+	hsmStop,   // stop state machine event
 	hsmExit,   // exit from state event
 	hsmEntry,  // entry to state event
 	hsmInit,   // init state after transition event
@@ -480,6 +481,21 @@ void hsm_init(hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize)
  ******************************************************************************/
 
 void hsm_start(hsm_t *hsm, hsm_state_t *initState);
+
+/******************************************************************************
+ *
+ * Name              : hsm_join
+ *
+ * Description       : delay execution of current task until termination of hsm
+ *
+ * Parameters
+ *   hsm             : pointer to hsm object
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void hsm_join(hsm_t *hsm);
 
 /******************************************************************************
  *

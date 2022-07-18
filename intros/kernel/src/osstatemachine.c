@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    17.07.2022
+    @date    18.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -37,8 +37,8 @@ static
 void priv_handleEvent(hsm_t *hsm)
 /* -------------------------------------------------------------------------- */
 {
-	unsigned     event = hsm->event.value;
 	hsm_state_t *state = hsm->state;
+	unsigned     event = hsm->event.value;
 
 	assert(event != hsmOK);
 
@@ -49,8 +49,6 @@ void priv_handleEvent(hsm_t *hsm)
 		event = state->handler(hsm, event);
 		state = state->parent;
 	}
-
-	hsm->event.value = hsmOK;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -64,6 +62,8 @@ void priv_eventDispatcher( void )
 	for (;;)
 	{
 		box_wait(&hsm->box, &hsm->event);
+		if (hsm->event.value == hsmStop)
+			tsk_stop();
 		priv_handleEvent(hsm);
 	}
 }
@@ -135,7 +135,7 @@ bool hsm_transitionPossible(hsm_t *hsm, hsm_state_t *state)
 /* -------------------------------------------------------------------------- */
 {
 	return (hsm->event.value >= hsmUser ||
-	       (hsm->event.value == hsmInit && hsm->state == state->parent));
+	       (hsm->event.value == hsmInit && state != NULL && hsm->state == state->parent));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -166,8 +166,11 @@ void hsm_transition(hsm_t *hsm, hsm_state_t *nextState)
 		hsm->state->handler(hsm, hsmEntry);
 	}
 
-	assert(hsm->state->handler != NULL);
-	hsm->state->handler(hsm, hsmInit);
+	if (hsm->state != NULL)
+	{
+		assert(hsm->state->handler != NULL);
+		hsm->state->handler(hsm, hsmInit);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -227,11 +230,22 @@ void hsm_start( hsm_t *hsm, hsm_state_t *initState )
 
 	sys_lock();
 	{
+		hsm->state = NULL;
 		hsm->event.value = hsmInit;
 		hsm_transition(hsm, initState);
 		tsk_startFrom(&hsm->tsk, priv_eventDispatcher);
 	}
 	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+void hsm_join(hsm_t *hsm)
+/* -------------------------------------------------------------------------- */
+{
+	assert(hsm);
+
+	while (hsm->state != NULL && hsm->tsk.hdr.id != ID_STOPPED)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */
