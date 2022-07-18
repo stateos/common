@@ -92,7 +92,7 @@ typedef struct __hsm hsm_t, * const hsm_id;
  *
  ******************************************************************************/
 
-typedef unsigned (* hsm_handler_t)(hsm_t *, unsigned);
+typedef unsigned hsm_handler_t(hsm_t *, unsigned);
 
 /******************************************************************************
  *
@@ -102,8 +102,8 @@ typedef unsigned (* hsm_handler_t)(hsm_t *, unsigned);
 
 struct __hsm_event
 {
-	unsigned value;        // event value
-	void   * param;        // optional event parameter
+	unsigned value; // event value
+	void   * param; // optional event parameter
 };
 
 /******************************************************************************
@@ -114,8 +114,8 @@ struct __hsm_event
 
 struct __hsm_state
 {
-	hsm_state_t * parent;  // pointer to parent state in the hsm tree
-	hsm_handler_t handler; // event handler
+	hsm_state_t   * parent;  // pointer to parent state in the hsm tree
+	hsm_handler_t * handler; // event handler
 };
 
 /******************************************************************************
@@ -126,10 +126,10 @@ struct __hsm_state
 
 struct __hsm
 {
-	tsk_t         tsk;     // hsm dispatcher
-	box_t         box;     // event queue
-	hsm_state_t * state;   // current hsm state
-	hsm_event_t   event;   // currently handled event
+	tsk_t         tsk;   // hsm dispatcher
+	box_t         box;   // event queue
+	hsm_state_t * state; // current hsm state
+	hsm_event_t   event; // currently handled event
 };
 
 #ifdef __cplusplus
@@ -446,7 +446,7 @@ void hsm_initEvent(hsm_event_t *event);
  *
  ******************************************************************************/
 
-void hsm_initState(hsm_state_t *state, hsm_state_t *parent, hsm_handler_t handler);
+void hsm_initState(hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *handler);
 
 /******************************************************************************
  *

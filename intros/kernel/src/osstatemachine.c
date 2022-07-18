@@ -188,7 +188,7 @@ void hsm_initEvent( hsm_event_t *event )
 
 
 /* -------------------------------------------------------------------------- */
-void hsm_initState( hsm_state_t *state, hsm_state_t *parent, hsm_handler_t handler )
+void hsm_initState( hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *handler )
 /* -------------------------------------------------------------------------- */
 {
 	assert(state != NULL);
