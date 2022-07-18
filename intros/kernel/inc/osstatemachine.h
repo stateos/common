@@ -494,8 +494,8 @@ void hsm_start(hsm_t *hsm, hsm_state_t *initState);
  * Return            : none
  *
  ******************************************************************************/
-
-void hsm_join(hsm_t *hsm);
+__STATIC_INLINE
+void hsm_join(hsm_t *hsm) { tsk_join(&hsm->tsk); }
 
 /******************************************************************************
  *
