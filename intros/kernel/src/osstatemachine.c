@@ -34,7 +34,7 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_handleEvent(hsm_t *hsm)
+void priv_handleEvent( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
 	hsm_state_t *state = hsm->state;
@@ -64,7 +64,7 @@ void priv_eventDispatcher( hsm_t *hsm )
 
 /* -------------------------------------------------------------------------- */
 static
-int priv_getStateLevel(hsm_state_t *state)
+int priv_getStateLevel( hsm_state_t *state )
 /* -------------------------------------------------------------------------- */
 {
 	int level = 0;
@@ -80,7 +80,7 @@ int priv_getStateLevel(hsm_state_t *state)
 
 /* -------------------------------------------------------------------------- */
 static
-hsm_state_t *priv_getRootState(hsm_t *hsm, hsm_state_t *testState)
+hsm_state_t *priv_getRootState( hsm_t *hsm, hsm_state_t *testState )
 /* -------------------------------------------------------------------------- */
 {
 	hsm_state_t *state = hsm->state;
@@ -100,7 +100,7 @@ hsm_state_t *priv_getRootState(hsm_t *hsm, hsm_state_t *testState)
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_setPrevState(hsm_t *hsm)
+void priv_setPrevState( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
 	if (hsm->state != NULL)
@@ -109,7 +109,7 @@ void priv_setPrevState(hsm_t *hsm)
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_setNextState(hsm_t *hsm, hsm_state_t *state)
+void priv_setNextState( hsm_t *hsm, hsm_state_t *state )
 /* -------------------------------------------------------------------------- */
 {
 	while (state != NULL)
@@ -125,7 +125,7 @@ void priv_setNextState(hsm_t *hsm, hsm_state_t *state)
 
 /* -------------------------------------------------------------------------- */
 static
-bool priv_transitionPossible(hsm_t *hsm, hsm_state_t *state)
+bool priv_transitionPossible( hsm_t *hsm, hsm_state_t *state )
 /* -------------------------------------------------------------------------- */
 {
 	return (hsm->event.value >= hsmUser ||
@@ -133,7 +133,7 @@ bool priv_transitionPossible(hsm_t *hsm, hsm_state_t *state)
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_transition(hsm_t *hsm, hsm_state_t *nextState)
+void hsm_transition( hsm_t *hsm, hsm_state_t *nextState )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
@@ -237,7 +237,7 @@ void hsm_start( hsm_t *hsm, hsm_state_t *initState )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned hsm_give(hsm_t *hsm, unsigned value, void *param)
+unsigned hsm_give( hsm_t *hsm, unsigned value, void *param )
 /* -------------------------------------------------------------------------- */
 {
 	hsm_event_t event;
@@ -249,7 +249,7 @@ unsigned hsm_give(hsm_t *hsm, unsigned value, void *param)
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_send(hsm_t *hsm, unsigned value, void *param)
+void hsm_send( hsm_t *hsm, unsigned value, void *param )
 /* -------------------------------------------------------------------------- */
 {
 	hsm_event_t event;
@@ -261,7 +261,7 @@ void hsm_send(hsm_t *hsm, unsigned value, void *param)
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_push(hsm_t *hsm, unsigned value, void *param)
+void hsm_push( hsm_t *hsm, unsigned value, void *param )
 /* -------------------------------------------------------------------------- */
 {
 	hsm_event_t event;

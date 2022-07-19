@@ -414,7 +414,7 @@ extern "C" {
  *
  ******************************************************************************/
 
-void hsm_transition(hsm_t *hsm, hsm_state_t *nextState);
+void hsm_transition( hsm_t *hsm, hsm_state_t *nextState );
 
 /******************************************************************************
  *
@@ -429,7 +429,7 @@ void hsm_transition(hsm_t *hsm, hsm_state_t *nextState);
  *
  ******************************************************************************/
 
-void hsm_initEvent(hsm_event_t *event);
+void hsm_initEvent( hsm_event_t *event );
 
 /******************************************************************************
  *
@@ -446,7 +446,7 @@ void hsm_initEvent(hsm_event_t *event);
  *
  ******************************************************************************/
 
-void hsm_initState(hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *handler);
+void hsm_initState( hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *handler );
 
 /******************************************************************************
  *
@@ -465,7 +465,7 @@ void hsm_initState(hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *handl
  *
  ******************************************************************************/
 
-void hsm_init(hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize);
+void hsm_init( hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize );
 
 /******************************************************************************
  *
@@ -480,7 +480,7 @@ void hsm_init(hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize)
  *
  ******************************************************************************/
 
-void hsm_start(hsm_t *hsm, hsm_state_t *initState);
+void hsm_start( hsm_t *hsm, hsm_state_t *initState );
 
 /******************************************************************************
  *
@@ -495,7 +495,7 @@ void hsm_start(hsm_t *hsm, hsm_state_t *initState);
  *
  ******************************************************************************/
 __STATIC_INLINE
-void hsm_join(hsm_t *hsm) { tsk_join(&hsm->tsk); }
+void hsm_join( hsm_t *hsm ) { tsk_join(&hsm->tsk); }
 
 /******************************************************************************
  *
@@ -514,7 +514,7 @@ void hsm_join(hsm_t *hsm) { tsk_join(&hsm->tsk); }
  *
  ******************************************************************************/
 
-unsigned hsm_give(hsm_t *hsm, unsigned value, void *param);
+unsigned hsm_give( hsm_t *hsm, unsigned value, void *param );
 
 /******************************************************************************
  *
@@ -531,7 +531,7 @@ unsigned hsm_give(hsm_t *hsm, unsigned value, void *param);
  *
  ******************************************************************************/
 
-void hsm_send(hsm_t *hsm, unsigned value, void *param);
+void hsm_send( hsm_t *hsm, unsigned value, void *param );
 
 /******************************************************************************
  *
@@ -549,7 +549,7 @@ void hsm_send(hsm_t *hsm, unsigned value, void *param);
  *
  ******************************************************************************/
 
-void hsm_push(hsm_t *hsm, unsigned value, void *param);
+void hsm_push( hsm_t *hsm, unsigned value, void *param );
 
 /******************************************************************************
  *
@@ -563,7 +563,7 @@ void hsm_push(hsm_t *hsm, unsigned value, void *param);
  *
  ******************************************************************************/
 __STATIC_INLINE
-hsm_state_t *hsm_getState(hsm_t *hsm) { return hsm->state; }
+hsm_state_t *hsm_getState( hsm_t *hsm ) { return hsm->state; }
 
 /******************************************************************************
  *
@@ -577,7 +577,7 @@ hsm_state_t *hsm_getState(hsm_t *hsm) { return hsm->state; }
  *
  ******************************************************************************/
 __STATIC_INLINE
-unsigned hsm_getEvent(hsm_t *hsm) { return hsm->event.value; }
+unsigned hsm_getEvent( hsm_t *hsm ) { return hsm->event.value; }
 
 /******************************************************************************
  *
@@ -591,7 +591,7 @@ unsigned hsm_getEvent(hsm_t *hsm) { return hsm->event.value; }
  *
  ******************************************************************************/
 __STATIC_INLINE
-void *hsm_getParam(hsm_t *hsm) { return hsm->event.param; }
+void *hsm_getParam( hsm_t *hsm ) { return hsm->event.param; }
 
 #ifdef __cplusplus
 }
