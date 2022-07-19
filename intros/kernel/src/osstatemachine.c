@@ -50,12 +50,9 @@ void priv_handleEvent(hsm_t *hsm)
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_eventDispatcher( void )
+void priv_eventDispatcher( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
-	void  *tmp = tsk_this(); // because of CSMCC
-	hsm_t *hsm = tmp;        //
-
 	for (;;)
 	{
 		box_wait(&hsm->box, &hsm->event);
@@ -213,7 +210,6 @@ void hsm_init( hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize
 
 		wrk_init(&hsm->tsk, NULL, stack, size);
 		box_init(&hsm->box, sizeof(hsm_event_t), data, bufsize);
-		hsm_initEvent(&hsm->event);
 	}
 	sys_unlock();
 }
@@ -227,11 +223,13 @@ void hsm_start( hsm_t *hsm, hsm_state_t *initState )
 
 	sys_lock();
 	{
+		hsm->tsk.arg = hsm;
 		hsm->box.count = 0; // reset hsm event queue
 		hsm->box.head  = 0; //
 		hsm->box.tail  = 0; //
 		hsm->state = NULL;  // reset hsm state
 		hsm->event.value = hsmInit;
+		hsm->event.param = NULL;
 		hsm_transition(hsm, initState);
 		tsk_startFrom(&hsm->tsk, priv_eventDispatcher);
 	}
@@ -242,7 +240,10 @@ void hsm_start( hsm_t *hsm, hsm_state_t *initState )
 unsigned hsm_give(hsm_t *hsm, unsigned value, void *param)
 /* -------------------------------------------------------------------------- */
 {
-	hsm_event_t event = { value, param };
+	hsm_event_t event;
+
+	event.value = value;
+	event.param = param;
 
 	return box_give(&hsm->box, &event);
 }
@@ -251,7 +252,10 @@ unsigned hsm_give(hsm_t *hsm, unsigned value, void *param)
 void hsm_send(hsm_t *hsm, unsigned value, void *param)
 /* -------------------------------------------------------------------------- */
 {
-	hsm_event_t event = { value, param };
+	hsm_event_t event;
+
+	event.value = value;
+	event.param = param;
 
 	box_send(&hsm->box, &event);
 }
@@ -260,7 +264,10 @@ void hsm_send(hsm_t *hsm, unsigned value, void *param)
 void hsm_push(hsm_t *hsm, unsigned value, void *param)
 /* -------------------------------------------------------------------------- */
 {
-	hsm_event_t event = { value, param };
+	hsm_event_t event;
+
+	event.value = value;
+	event.param = param;
 
 	box_push(&hsm->box, &event);
 }
