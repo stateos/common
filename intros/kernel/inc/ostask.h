@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    18.05.2021
+    @date    19.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -57,6 +57,7 @@ struct __tsk
 	hdr_t    hdr;   // timer / task header
 
 	fun_t  * state; // task state (initial task function, doesn't have to be noreturn-type)
+	void   * arg;   // reserved for internal use
 	cnt_t    start; // inherited from timer
 	cnt_t    delay; // inherited from timer
 	cnt_t    period;// inherited from timer
@@ -102,7 +103,7 @@ extern "C" {
  ******************************************************************************/
 
 #define               _TSK_INIT( _state, _stack, _size ) \
-                    { _HDR_INIT(), _state, 0, 0, 0, _stack, _size, { 0, NULL, { NULL, 0 } }, { _CTX_INIT() } }
+                    { _HDR_INIT(), _state, NULL, 0, 0, 0, _stack, _size, { 0, NULL, { NULL, 0 } }, { _CTX_INIT() } }
 
 /******************************************************************************
  *

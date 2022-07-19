@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    19.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -46,6 +46,7 @@ struct __tmr
 	hdr_t    hdr;   // timer / task header
 
 	fun_t  * state; // callback procedure
+	void   * arg;   // reserved for internal use
 	cnt_t    start;
 	cnt_t    delay;
 	cnt_t    period;
@@ -74,7 +75,7 @@ extern "C" {
  ******************************************************************************/
 
 #define               _TMR_INIT( _state ) \
-                    { _HDR_INIT(), _state, 0, 0, 0, 0 }
+                    { _HDR_INIT(), _state, NULL, 0, 0, 0, 0 }
 
 /******************************************************************************
  *
