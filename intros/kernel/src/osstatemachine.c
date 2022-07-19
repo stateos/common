@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    18.07.2022
+    @date    19.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -40,12 +40,9 @@ void priv_handleEvent(hsm_t *hsm)
 	hsm_state_t *state = hsm->state;
 	unsigned     event = hsm->event.value;
 
-	assert(event != hsmOK);
-
 	while (event != hsmOK && state != NULL)
 	{
 		assert(state->handler != NULL);
-
 		event = state->handler(hsm, event);
 		state = state->parent;
 	}

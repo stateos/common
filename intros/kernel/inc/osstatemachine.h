@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    18.07.2022
+    @date    19.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -317,10 +317,10 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define               _HSM_INIT( _stack, _size, _limit, _data )      \
-                    { _TSK_INIT( NULL, _stack, _size ),               \
-                      _BOX_INIT( _limit, sizeof(hsm_event_t), _data ), \
-                       NULL,                                            \
+#define               _HSM_INIT( _stack, _size, _limit, _data )              \
+                    { _TSK_INIT( NULL, _stack, _size ),                       \
+                      _BOX_INIT( _limit, sizeof(hsm_event_t), (char *)_data ), \
+                       NULL,                                                    \
                       _HSM_EVENT_INIT() }
 
 /******************************************************************************
@@ -337,16 +337,16 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_HSM( hsm, limit, ... )                                                                        \
-                       char hsm##__buf[limit * sizeof(hsm_event_t)];                                                  \
-                       stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                                  \
-                       hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, STK_OVER( _VA_STK(__VA_ARGS__) ), limit, hsm##__buf ); \
+#define             OS_HSM( hsm, limit, ... )                                                          \
+                       hsm_event_t hsm##__buf[limit];                                                   \
+                       stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                    \
+                       hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, sizeof(hsm##__stk), limit, hsm##__buf ); \
                        hsm_id hsm = & hsm##__hsm
 
-#define         static_HSM( hsm, limit, ... )                                                                        \
-                static char hsm##__buf[limit * sizeof(hsm_event_t)];                                                  \
-                static stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                                  \
-                static hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, STK_OVER( _VA_STK(__VA_ARGS__) ), limit, hsm##__buf ); \
+#define         static_HSM( hsm, limit, ... )                                                          \
+                static hsm_event_t hsm##__buf[limit];                                                   \
+                static stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                    \
+                static hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, sizeof(hsm##__stk), limit, hsm##__buf ); \
                 static hsm_id hsm = & hsm##__hsm
 
 /******************************************************************************
