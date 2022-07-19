@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    30.05.2021
+    @date    19.07.2022
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -318,7 +318,7 @@ void core_tsk_loop( void )
 	for (;;)
 	{
 		port_clr_lock();
-		System.cur->state();
+		System.cur->state(System.cur->arg);
 		port_set_lock();
 		core_ctx_switch();
 	}
