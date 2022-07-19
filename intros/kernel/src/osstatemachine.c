@@ -53,11 +53,13 @@ static
 void priv_eventDispatcher( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
+	assert(hsm != NULL);
+
 	for (;;)
 	{
 		box_wait(&hsm->box, &hsm->event);
 		if (hsm->event.value == hsmStop)
-			tsk_stop();
+			hsm->state = NULL;
 		priv_handleEvent(hsm);
 	}
 }
@@ -218,29 +220,43 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
+	assert(hsm->state == NULL);
 	assert(tsk != NULL);
 	assert(initState != NULL);
 
 	sys_lock();
 	{
-		tsk->arg = hsm;
-		hsm->tsk = tsk;
-		hsm->state = NULL;  // reset hsm state
-		hsm->box.count = 0; // reset hsm event queue
-		hsm->box.head  = 0; //
-		hsm->box.tail  = 0; //
-		hsm->event.value = hsmInit;
-		hsm->event.param = NULL;
-		hsm_transition(hsm, initState);
-		tsk_startFrom(hsm->tsk, priv_eventDispatcher);
+		if (hsm->state == NULL)
+		{
+			tsk->arg = hsm;
+			hsm->box.count = 0; // reset hsm event queue
+			hsm->box.head  = 0; //
+			hsm->box.tail  = 0; //
+			hsm->event.value = hsmInit;
+			hsm->event.param = NULL;
+			hsm_transition(hsm, initState);
+			tsk_startFrom(tsk, priv_eventDispatcher);
+		}
 	}
 	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+void hsm_join( hsm_t *hsm )
+/* -------------------------------------------------------------------------- */
+{
+	assert(hsm);
+
+	while (hsm->state != NULL)
+		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */
 unsigned hsm_give( hsm_t *hsm, unsigned value, void *param )
 /* -------------------------------------------------------------------------- */
 {
+	assert(hsm != NULL);
+
 	hsm_event_t event;
 
 	event.value = value;
@@ -253,6 +269,8 @@ unsigned hsm_give( hsm_t *hsm, unsigned value, void *param )
 void hsm_send( hsm_t *hsm, unsigned value, void *param )
 /* -------------------------------------------------------------------------- */
 {
+	assert(hsm != NULL);
+
 	hsm_event_t event;
 
 	event.value = value;
@@ -265,6 +283,8 @@ void hsm_send( hsm_t *hsm, unsigned value, void *param )
 void hsm_push( hsm_t *hsm, unsigned value, void *param )
 /* -------------------------------------------------------------------------- */
 {
+	assert(hsm != NULL);
+
 	hsm_event_t event;
 
 	event.value = value;

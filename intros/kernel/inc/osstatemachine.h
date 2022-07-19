@@ -126,10 +126,9 @@ struct __hsm_state
 
 struct __hsm
 {
-	tsk_t       * tsk;   // hsm dispatcher
-	hsm_state_t * state; // current hsm state
-	hsm_event_t   event; // currently handled event
 	box_t         box;   // event queue
+	hsm_event_t   event; // currently handled event
+	hsm_state_t * state; // current hsm state, NULL if hsm is stopped
 };
 
 #ifdef __cplusplus
@@ -315,10 +314,9 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define               _HSM_INIT( _limit, _data ) \
-                    {  NULL, NULL,                \
-                      _HSM_EVENT_INIT(),           \
-                      _BOX_INIT( _limit, sizeof(hsm_event_t), (char *)_data ) }
+#define               _HSM_INIT( _limit, _data )                      \
+                    { _BOX_INIT( _limit, sizeof(hsm_event_t), _data ), \
+                      _HSM_EVENT_INIT(), NULL }
 
 /******************************************************************************
  *
@@ -333,14 +331,14 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_HSM( hsm, limit )                                \
-                       hsm_event_t hsm##__buf[limit];                    \
-                       hsm_t hsm##__hsm = _HSM_INIT( limit, hsm##__buf ); \
+#define             OS_HSM( hsm, limit )                                        \
+                       hsm_event_t hsm##__buf[limit];                            \
+                       hsm_t hsm##__hsm = _HSM_INIT( limit, (char *)hsm##__buf ); \
                        hsm_id hsm = & hsm##__hsm
 
-#define         static_HSM( hsm, limit )                                \
-                static hsm_event_t hsm##__buf[limit];                    \
-                static hsm_t hsm##__hsm = _HSM_INIT( limit, hsm##__buf ); \
+#define         static_HSM( hsm, limit )                                        \
+                static hsm_event_t hsm##__buf[limit];                            \
+                static hsm_t hsm##__hsm = _HSM_INIT( limit, (char *)hsm##__buf ); \
                 static hsm_id hsm = & hsm##__hsm
 
 /******************************************************************************
@@ -476,7 +474,7 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
  *
  * Name              : hsm_join
  *
- * Description       : delay execution of current task until termination of hsm
+ * Description       : delay execution of the current job until hsm stop
  *
  * Parameters
  *   hsm             : pointer to hsm object
@@ -484,8 +482,8 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
  * Return            : none
  *
  ******************************************************************************/
-__STATIC_INLINE
-void hsm_join( hsm_t *hsm ) { tsk_join(hsm->tsk); }
+
+void hsm_join( hsm_t *hsm );
 
 /******************************************************************************
  *
@@ -563,7 +561,7 @@ hsm_state_t *hsm_getState( hsm_t *hsm ) { return hsm->state; }
  *
  *   hsm             : pointer to hsm object
  *
- * Return            : parameter of the currently handled event
+ * Return            : value of the currently handled event
  *
  ******************************************************************************/
 __STATIC_INLINE
