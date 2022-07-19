@@ -126,10 +126,10 @@ struct __hsm_state
 
 struct __hsm
 {
-	tsk_t         tsk;   // hsm dispatcher
-	box_t         box;   // event queue
+	tsk_t       * tsk;   // hsm dispatcher
 	hsm_state_t * state; // current hsm state
 	hsm_event_t   event; // currently handled event
+	box_t         box;   // event queue
 };
 
 #ifdef __cplusplus
@@ -306,8 +306,6 @@ extern "C" {
  * Description       : create and initialize a hsm object
  *
  * Parameters
- *   stack           : base of hsm dispatcher's private stack storage
- *   size            : size of hsm dispatcher private stack (in bytes)
  *   limit           : size of a hsm event queue (max number of stored events)
  *   data            : hsm event queue data buffer
  *
@@ -317,11 +315,10 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define               _HSM_INIT( _stack, _size, _limit, _data )              \
-                    { _TSK_INIT( NULL, _stack, _size ),                       \
-                      _BOX_INIT( _limit, sizeof(hsm_event_t), (char *)_data ), \
-                       NULL,                                                    \
-                      _HSM_EVENT_INIT() }
+#define               _HSM_INIT( _limit, _data ) \
+                    {  NULL, NULL,                \
+                      _HSM_EVENT_INIT(),           \
+                      _BOX_INIT( _limit, sizeof(hsm_event_t), (char *)_data ) }
 
 /******************************************************************************
  *
@@ -333,20 +330,17 @@ extern "C" {
  * Parameters
  *   hsm             : name of a pointer to hsm object
  *   limit           : size of a hsm event queue (max number of stored events)
- *   size            : (optional) size of hsm dispatcher private stack (in bytes)
  *
  ******************************************************************************/
 
-#define             OS_HSM( hsm, limit, ... )                                                          \
-                       hsm_event_t hsm##__buf[limit];                                                   \
-                       stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                    \
-                       hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, sizeof(hsm##__stk), limit, hsm##__buf ); \
+#define             OS_HSM( hsm, limit )                                \
+                       hsm_event_t hsm##__buf[limit];                    \
+                       hsm_t hsm##__hsm = _HSM_INIT( limit, hsm##__buf ); \
                        hsm_id hsm = & hsm##__hsm
 
-#define         static_HSM( hsm, limit, ... )                                                          \
-                static hsm_event_t hsm##__buf[limit];                                                   \
-                static stk_t hsm##__stk[STK_SIZE( _VA_STK(__VA_ARGS__) )] __STKALIGN;                    \
-                static hsm_t hsm##__hsm = _HSM_INIT( hsm##__stk, sizeof(hsm##__stk), limit, hsm##__buf ); \
+#define         static_HSM( hsm, limit )                                \
+                static hsm_event_t hsm##__buf[limit];                    \
+                static hsm_t hsm##__hsm = _HSM_INIT( limit, hsm##__buf ); \
                 static hsm_id hsm = & hsm##__hsm
 
 /******************************************************************************
@@ -357,7 +351,6 @@ extern "C" {
  *
  * Parameters
  *   limit           : size of a hsm event queue (max number of stored events)
- *   size            : (optional) size of hsm dispatcher private stack (in bytes)
  *
  * Return            : hsm object
  *
@@ -366,9 +359,8 @@ extern "C" {
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                HSM_INIT( limit, ... )                                                                     \
-                      _HSM_INIT( _TSK_STACK( STK_SIZE( _VA_STK(__VA_ARGS__) ) ), STK_OVER( _VA_STK(__VA_ARGS__) ), \
-                                 limit, _BOX_DATA( limit, sizeof(hsm_event_t) ) )
+#define                HSM_INIT( limit ) \
+                      _HSM_INIT(limit, _BOX_DATA( limit, sizeof(hsm_event_t) ) )
 #endif
 
 /******************************************************************************
@@ -380,7 +372,6 @@ extern "C" {
  *
  * Parameters
  *   limit           : size of a hsm event queue (max number of stored events)
- *   size            : (optional) size of hsm dispatcher private stack (in bytes)
  *
  * Return            : pointer to hsm object
  *
@@ -389,8 +380,8 @@ extern "C" {
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                HSM_CREATE( limit, ... ) \
-           (hsm_t[]) { HSM_INIT  ( limit, ##__VA_ARGS__ ) }
+#define                HSM_CREATE( limit ) \
+           (hsm_t[]) { HSM_INIT  ( limit ) }
 #define                HSM_NEW \
                        HSM_CREATE
 #endif
@@ -456,8 +447,6 @@ void hsm_initState( hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *hand
  *
  * Parameters
  *   hsm             : pointer to hsm object
- *   stack           : base of hsm dispatcher's private stack storage
- *   size            : size of hsm dispatcher private stack (in bytes)
  *   data            : hsm event queue data buffer
  *   bufsize         : size of the buffer
  *
@@ -465,7 +454,7 @@ void hsm_initState( hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *hand
  *
  ******************************************************************************/
 
-void hsm_init( hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize );
+void hsm_init( hsm_t *hsm, void *data, size_t bufsize );
 
 /******************************************************************************
  *
@@ -474,13 +463,14 @@ void hsm_init( hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize
  * Description       : start hsm event dispatcher
  *
  *   hsm             : pointer to hsm object
+ *   tsk             : pointer to hsm dispatcher
  *   initState       : pointer to initial hsm state
  *
  * Return            : none
  *
  ******************************************************************************/
 
-void hsm_start( hsm_t *hsm, hsm_state_t *initState );
+void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 
 /******************************************************************************
  *
@@ -495,7 +485,7 @@ void hsm_start( hsm_t *hsm, hsm_state_t *initState );
  *
  ******************************************************************************/
 __STATIC_INLINE
-void hsm_join( hsm_t *hsm ) { tsk_join(&hsm->tsk); }
+void hsm_join( hsm_t *hsm ) { tsk_join(hsm->tsk); }
 
 /******************************************************************************
  *

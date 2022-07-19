@@ -199,7 +199,7 @@ void hsm_initState( hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *hand
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_init( hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize )
+void hsm_init( hsm_t *hsm, void *data, size_t bufsize )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
@@ -208,30 +208,31 @@ void hsm_init( hsm_t *hsm, stk_t *stack, size_t size, void *data, size_t bufsize
 	{
 		memset(hsm, 0, sizeof(hsm_t));
 
-		wrk_init(&hsm->tsk, NULL, stack, size);
 		box_init(&hsm->box, sizeof(hsm_event_t), data, bufsize);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_start( hsm_t *hsm, hsm_state_t *initState )
+void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
+	assert(tsk != NULL);
 	assert(initState != NULL);
 
 	sys_lock();
 	{
-		hsm->tsk.arg = hsm;
+		tsk->arg = hsm;
+		hsm->tsk = tsk;
+		hsm->state = NULL;  // reset hsm state
 		hsm->box.count = 0; // reset hsm event queue
 		hsm->box.head  = 0; //
 		hsm->box.tail  = 0; //
-		hsm->state = NULL;  // reset hsm state
 		hsm->event.value = hsmInit;
 		hsm->event.param = NULL;
 		hsm_transition(hsm, initState);
-		tsk_startFrom(&hsm->tsk, priv_eventDispatcher);
+		tsk_startFrom(hsm->tsk, priv_eventDispatcher);
 	}
 	sys_unlock();
 }
