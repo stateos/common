@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    19.07.2022
+    @date    21.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -34,11 +34,17 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_handleEvent( hsm_t *hsm )
+unsigned priv_eventHandler( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
 	hsm_state_t *state = hsm->state;
 	unsigned     event = hsm->event.value;
+
+	if (event == hsmStop)
+	{
+		hsm->state = NULL;
+		return hsmStop;
+	}
 
 	while (event != hsmOK && state != NULL)
 	{
@@ -46,6 +52,8 @@ void priv_handleEvent( hsm_t *hsm )
 		event = state->handler(hsm, event);
 		state = state->parent;
 	}
+
+	return hsmOK;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -55,13 +63,11 @@ void priv_eventDispatcher( hsm_t *hsm )
 {
 	assert(hsm != NULL);
 
-	for (;;)
-	{
-		box_wait(&hsm->box, &hsm->event);
-		if (hsm->event.value == hsmStop)
-			hsm->state = NULL;
-		priv_handleEvent(hsm);
-	}
+	do     box_wait(&hsm->box, &hsm->event);
+	while (priv_eventHandler(hsm) == hsmOK);
+#if OS_TASK_EXIT == 0
+	tsk_stop();
+#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -130,8 +136,8 @@ static
 bool priv_transitionPossible( hsm_t *hsm, hsm_state_t *state )
 /* -------------------------------------------------------------------------- */
 {
-	return (hsm->event.value >= hsmUser ||
-	       (hsm->event.value == hsmInit && state != NULL && hsm->state == state->parent));
+	return (state != NULL && (hsm->event.value >= hsmUser ||
+	                         (hsm->event.value == hsmInit && hsm->state == state->parent)));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -139,6 +145,7 @@ void hsm_transition( hsm_t *hsm, hsm_state_t *nextState )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
+	assert(nextState != NULL);
 
 	if (!priv_transitionPossible(hsm, nextState))
 	{
@@ -162,11 +169,8 @@ void hsm_transition( hsm_t *hsm, hsm_state_t *nextState )
 		hsm->state->handler(hsm, hsmEntry);
 	}
 
-	if (hsm->state != NULL)
-	{
-		assert(hsm->state->handler != NULL);
-		hsm->state->handler(hsm, hsmInit);
-	}
+	assert(hsm->state->handler != NULL);
+	hsm->state->handler(hsm, hsmInit);
 }
 
 /* -------------------------------------------------------------------------- */

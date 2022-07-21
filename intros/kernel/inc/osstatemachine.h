@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    19.07.2022
+    @date    21.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -83,9 +83,10 @@ typedef struct __hsm hsm_t, * const hsm_id;
  *                     function should also handle the necessary user events
  *                     user event values must be greater than or equal to hsmUser
  *                     0 is reserved for hsmOK, which confirms event handling
- *                     transition is always possible when handling user events
- *                     transition is not possible when handling hsmExit and hsmEntry events
- *                     when handling hsmInit event, it only possible to transition to child state
+ *                     transition is possible, if:
+ *                     - not transition to NULL state and
+ *                       - handling user events or
+ *                       - handling hsmInit event and transition to child state
  *                     function must return hsmOK if event has been handled
  *                     function should return event value if event was not handled
  *                        then the event value is passed to parent state handler
@@ -128,7 +129,33 @@ struct __hsm
 {
 	box_t         box;   // event queue
 	hsm_event_t   event; // currently handled event
-	hsm_state_t * state; // current hsm state, NULL if hsm is stopped
+	hsm_state_t * state; // current hsm state
+#ifdef __cplusplus
+	void          transition( hsm_state_t& );
+	void          start     ( tsk_t&, hsm_state_t& );
+	void          join      ();
+	template<class T>
+	unsigned      give      ( unsigned, T& );
+	unsigned      give      ( unsigned );
+	template<class T>
+	void          send      ( unsigned, T& );
+	void          send      ( unsigned );
+	template<class T>
+	void          push      ( unsigned, T& );
+	void          push      ( unsigned );
+	hsm_state_t * getState  ();
+	unsigned      getEvent  ();
+	void *        getParam  ();
+#if OS_ATOMICS
+	void          startAsync( tsk_t&, hsm_state_t& );
+	template<class T>
+	unsigned      giveAsync ( unsigned, T& );
+	unsigned      giveAsync ( unsigned );
+	template<class T>
+	void          sendAsync ( unsigned, T& );
+	void          sendAsync ( unsigned );
+#endif
+#endif
 };
 
 #ifdef __cplusplus
@@ -457,6 +484,7 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize );
 /******************************************************************************
  *
  * Name              : hsm_start
+ * Async alias       : hsm_startAsync
  *
  * Description       : start hsm event dispatcher
  *
@@ -469,6 +497,11 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize );
  ******************************************************************************/
 
 void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
+
+#if OS_ATOMICS
+__STATIC_INLINE
+void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState ) { hsm_start(hsm, tsk, initState); }
+#endif
 
 /******************************************************************************
  *
@@ -488,6 +521,7 @@ void hsm_join( hsm_t *hsm );
 /******************************************************************************
  *
  * Name              : hsm_give
+ * Async alias       : hsm_giveAsync
  *
  * Description       : try to transfer event data to the hsm event queue,
  *                     don't wait if the hsm event queue is full
@@ -504,9 +538,15 @@ void hsm_join( hsm_t *hsm );
 
 unsigned hsm_give( hsm_t *hsm, unsigned value, void *param );
 
+#if OS_ATOMICS
+__STATIC_INLINE
+void hsm_giveAsync( hsm_t *hsm, unsigned value, void *param ) { hsm_give(hsm, value, param); }
+#endif
+
 /******************************************************************************
  *
  * Name              : hsm_send
+ * Async alias       : hsm_sendAsync
  *
  * Description       : try to transfer event data to the hsm event queue,
  *                     wait indefinitely while the hsm event queue is full
@@ -520,6 +560,11 @@ unsigned hsm_give( hsm_t *hsm, unsigned value, void *param );
  ******************************************************************************/
 
 void hsm_send( hsm_t *hsm, unsigned value, void *param );
+
+#if OS_ATOMICS
+__STATIC_INLINE
+void hsm_sendAsync( hsm_t *hsm, unsigned value, void *param ) { hsm_send(hsm, value, param); }
+#endif
 
 /******************************************************************************
  *
@@ -584,6 +629,83 @@ void *hsm_getParam( hsm_t *hsm ) { return hsm->event.param; }
 #ifdef __cplusplus
 }
 #endif
+
+/* -------------------------------------------------------------------------- */
+
+#ifdef __cplusplus
+
+inline void         __hsm::transition( hsm_state_t &_next )               {        hsm_transition(this, &_next); }
+inline void         __hsm::start     ( tsk_t &_task, hsm_state_t &_init ) {        hsm_start     (this, &_task,  &_init); }
+inline void         __hsm::join      ()                                   {        hsm_join      (this); }
+       template<class T>
+inline unsigned     __hsm::give      ( unsigned _value, T &_param )       { return hsm_give      (this,  _value, &_param); }
+inline unsigned     __hsm::give      ( unsigned _value )                  { return hsm_give      (this,  _value, nullptr); }
+       template<class T>
+inline void         __hsm::send      ( unsigned _value, T &_param )       {        hsm_send      (this,  _value, &_param); }
+inline void         __hsm::send      ( unsigned _value )                  {        hsm_send      (this,  _value, nullptr); }
+       template<class T>
+inline void         __hsm::push      ( unsigned _value, T &_param )       {        hsm_push      (this,  _value, &_param); }
+inline void         __hsm::push      ( unsigned _value )                  {        hsm_push      (this,  _value, nullptr); }
+inline hsm_state_t *__hsm::getState  ()                                   { return hsm_getState  (this); }
+inline unsigned     __hsm::getEvent  ()                                   { return hsm_getEvent  (this); }
+inline void *       __hsm::getParam  ()                                   { return hsm_getParam  (this); }
+#if OS_ATOMICS
+inline void         __hsm::startAsync( tsk_t &_task, hsm_state_t &_init ) {        hsm_startAsync(this, &_task,  &_init); }
+       template<class T>
+inline unsigned     __hsm::giveAsync ( unsigned _value, T &_param )       { return hsm_giveAsync (this,  _value, &_param); }
+inline unsigned     __hsm::giveAsync ( unsigned _value )                  { return hsm_giveAsync (this,  _value, nullptr); }
+       template<class T>
+inline void         __hsm::sendAsync ( unsigned _value, T &_param )       {        hsm_sendAsync (this,  _value, &_param); }
+inline void         __hsm::sendAsync ( unsigned _value )                  {        hsm_sendAsync (this,  _value, nullptr); }
+#endif
+
+namespace intros {
+
+/******************************************************************************
+ *
+ * Class             : State
+ *
+ * Description       : create and initialize a hsm state object
+ *
+ * Constructor parameters
+ *                   : none
+ *
+ ******************************************************************************/
+
+struct State : public __hsm_state
+{
+	State(                 hsm_handler_t *_handler ): __hsm_state _HSM_STATE_INIT( nullptr, _handler) {}
+	State( State &_parent, hsm_handler_t *_handler ): __hsm_state _HSM_STATE_INIT(&_parent, _handler) {}
+};
+
+/******************************************************************************
+ *
+ * Class             : StateMachineT<>
+ *
+ * Description       : create and initialize a hierarchical state machine object
+ *
+ * Constructor parameters
+ *   limit           : size of an event queue (max number of stored events)
+ *
+ ******************************************************************************/
+
+template<unsigned limit_>
+struct StateMachineT : public __hsm
+{
+	constexpr
+	StateMachineT(): __hsm _HSM_INIT(limit_, data_) {}
+
+	StateMachineT( StateMachineT&& ) = default;
+	StateMachineT( const StateMachineT& ) = delete;
+	StateMachineT& operator=( StateMachineT&& ) = delete;
+	StateMachineT& operator=( const StateMachineT& ) = delete;
+
+	private:
+	char data_[limit_ * sizeof(hsm_event_t)];
+};
+
+}     //  namespace
+#endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
 
