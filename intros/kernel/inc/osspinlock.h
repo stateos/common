@@ -2,7 +2,7 @@
 
     @file    IntrOS: osspinlock.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    10.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -42,6 +42,10 @@
  ******************************************************************************/
 
 typedef uint_fast8_t spn_t, * const spn_id;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /******************************************************************************
  *
@@ -118,10 +122,6 @@ typedef uint_fast8_t spn_t, * const spn_id;
            (spn_t[]) { SPN_INIT  () }
 #define                SPN_NEW \
                        SPN_CREATE
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /******************************************************************************

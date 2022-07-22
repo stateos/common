@@ -2,7 +2,7 @@
 
     @file    IntrOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    11.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -46,14 +46,11 @@ typedef struct __cnd cnd_t, * const cnd_id;
 struct __cnd
 {
 	unsigned signal;
+};
 
 #ifdef __cplusplus
-	void     init     ();
-	void     wait     ( mtx_t& );
-	void     give     ();
-	void     notifyAll();
+extern "C" {
 #endif
-};
 
 /******************************************************************************
  *
@@ -132,10 +129,6 @@ struct __cnd
                        CND_CREATE
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /******************************************************************************
  *
  * Name              : cnd_init
@@ -194,12 +187,6 @@ void cnd_notifyAll( cnd_t *cnd ) { cnd_give(cnd); }
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
-
-inline void __cnd::init     ()              { cnd_init     (this); }
-inline void __cnd::wait     ( mtx_t& _mtx ) { cnd_wait     (this, &_mtx); }
-inline void __cnd::give     ()              { cnd_give     (this); }
-inline void __cnd::notifyAll()              { cnd_notifyAll(this); }
-
 namespace intros {
 
 /******************************************************************************
@@ -223,8 +210,14 @@ struct ConditionVariable : public __cnd
 	ConditionVariable& operator=( ConditionVariable&& ) = delete;
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;
 
+	void wait     ( mtx_t& _mtx ) { cnd_wait     (this, &_mtx); }
 	template<typename F>
-	void wait( mtx_t& _mtx, F _stopWaiting ) { while (!_stopWaiting()) __cnd::wait(_mtx); }
+	void wait     ( mtx_t& _mtx, F _stopWaiting )
+	{
+		while (!_stopWaiting()) wait(_mtx);
+	}
+	void give     ()              { cnd_give     (this); }
+	void notifyAll()              { cnd_notifyAll(this); }
 };
 
 }     //  namespace

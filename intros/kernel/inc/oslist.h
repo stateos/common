@@ -2,7 +2,7 @@
 
     @file    IntrOS: oslist.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -47,6 +47,10 @@ struct __que
 	que_t  * next; // next object in the queue
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************
  *
  * Name              : _QUE_INIT
@@ -74,14 +78,6 @@ typedef struct __lst lst_t, * const lst_id;
 struct __lst
 {
 	que_t    head;  // list head
-
-#ifdef __cplusplus
-	void     init   ();
-	void   * take   ();
-	void   * tryWait();
-	void   * wait   ();
-	void     give   ( void* );
-#endif
 };
 
 /******************************************************************************
@@ -161,10 +157,6 @@ struct __lst
                        LST_CREATE
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /******************************************************************************
  *
  * Name              : lst_init
@@ -240,13 +232,6 @@ void lst_give( lst_t *lst, void *data );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
-
-inline void   __lst::init   ()              {        lst_init   (this); }
-inline void * __lst::take   ()              { return lst_take   (this); }
-inline void * __lst::tryWait()              { return lst_tryWait(this); }
-inline void * __lst::wait   ()              { return lst_wait   (this); }
-inline void   __lst::give   ( void *_data ) {        lst_give   (this, _data); }
-
 namespace intros {
 
 /******************************************************************************
@@ -271,9 +256,10 @@ struct ListTT : public __lst
 	ListTT& operator=( ListTT&& ) = delete;
 	ListTT& operator=( const ListTT& ) = delete;
 
-	C * take   () { return reinterpret_cast<C *>(__lst::take   ()); }
-	C * tryWait() { return reinterpret_cast<C *>(__lst::tryWait()); }
-	C * wait   () { return reinterpret_cast<C *>(__lst::wait   ()); }
+	C  * take   ()           { return reinterpret_cast<C *>(lst_take   (this)); }
+	C  * tryWait()           { return reinterpret_cast<C *>(lst_tryWait(this)); }
+	C  * wait   ()           { return reinterpret_cast<C *>(lst_wait   (this)); }
+	void give   ( C *_data ) {                              lst_give   (this, _data); }
 };
 
 /******************************************************************************

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -42,6 +42,10 @@
  ******************************************************************************/
 
 typedef uint_fast8_t one_t, * const one_id;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /******************************************************************************
  *
@@ -134,10 +138,6 @@ typedef uint_fast8_t one_t, * const one_id;
            (one_t[]) { ONE_INIT  () }
 #define                ONE_NEW \
                        ONE_CREATE
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /******************************************************************************

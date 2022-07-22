@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    19.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -56,20 +56,20 @@ struct __tsk
 {
 	hdr_t    hdr;   // timer / task header
 
-	fun_t *  state; // task state (initial task function, doesn't have to be noreturn-type)
-	void *   arg;   // reserved for internal use
-	cnt_t    begin; // inherited from timer
+	fun_t  * state; // task state (initial task function, doesn't have to be noreturn-type)
+	void   * arg;   // reserved for internal use
+	cnt_t    start; // inherited from timer
 	cnt_t    delay; // inherited from timer
 	cnt_t    period;// inherited from timer
 
-	stk_t *  stack; // base of stack
+	stk_t  * stack; // base of stack
 	size_t   size;  // size of stack (in bytes)
 
 	struct {
 	unsigned sigset;// pending signals
-	act_t *  action;// signal handler
+	act_t  * action;// signal handler
 	struct {
-	fun_t *  pc;
+	fun_t  * pc;
 	cnt_t    delay;
 	}        backup;
 	}        sig;
@@ -78,22 +78,11 @@ struct __tsk
 	ctx_t    reg;   // task context
 	jmp_buf  buf;   // setjmp/longjmp buffer
 	}        ctx;
+};
 
 #ifdef __cplusplus
-	void     init      ( fun_t*, stk_t*, size_t );
-	void     initStart ( fun_t*, stk_t*, size_t );
-	void     start     ();
-	void     startFrom ( fun_t* );
-	void     reset     ();
-	void     kill      ();
-	void     join      ();
-	unsigned suspend   ();
-	unsigned resume    ();
-	void     give      ( unsigned );
-	void     signal    ( unsigned );
-	void     setAction ( act_t* );
+extern "C" {
 #endif
-};
 
 /******************************************************************************
  *
@@ -429,10 +418,6 @@ struct __tsk
                        WRK_CREATE( state, _VA_STK(__VA_ARGS__) )
 #define                TSK_NEW \
                        TSK_CREATE
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /******************************************************************************
@@ -797,7 +782,7 @@ void cur_signal( unsigned signo ) { cur_give(signo); }
 
 /******************************************************************************
  *
- * Name              : tsk_setAction
+ * Name              : tsk_action
  *
  * Description       : set given function as a signal handler
  *
@@ -809,11 +794,11 @@ void cur_signal( unsigned signo ) { cur_give(signo); }
  *
  ******************************************************************************/
 
-void tsk_setAction( tsk_t *tsk, act_t *action );
+void tsk_action( tsk_t *tsk, act_t *action );
 
 /******************************************************************************
  *
- * Name              : cur_setAction
+ * Name              : cur_action
  *
  * Description       : set given function as a signal handler for current task
  *
@@ -826,11 +811,11 @@ void tsk_setAction( tsk_t *tsk, act_t *action );
  ******************************************************************************/
 
 __STATIC_INLINE
-void cur_setAction( act_t *action ) { tsk_setAction(System.cur, action); }
+void cur_action( act_t *action ) { tsk_action(System.cur, action); }
 
 /******************************************************************************
  *
- * Name              : tsk_getStackSpace
+ * Name              : tsk_stackSpace
  *
  * Description       : chack water mark of the stack of the current task
  *
@@ -842,7 +827,7 @@ void cur_setAction( act_t *action ) { tsk_setAction(System.cur, action); }
  ******************************************************************************/
 
 __STATIC_INLINE
-size_t tsk_getStackSpace( void )
+size_t tsk_stackSpace( void )
 {
 #ifdef DEBUG
 	return core_stk_space(System.cur);
@@ -858,20 +843,6 @@ size_t tsk_getStackSpace( void )
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
-
-inline void     __tsk::init     ( fun_t *_proc, stk_t *_stack, size_t _size ) {        wrk_init     (this, _proc, _stack, _size); }
-inline void     __tsk::initStart( fun_t *_proc, stk_t *_stack, size_t _size ) {        tsk_init     (this, _proc, _stack, _size); }
-inline void     __tsk::start    ()                                            {        tsk_start    (this); }
-inline void     __tsk::startFrom( fun_t *_proc )                              {        tsk_startFrom(this, _proc); }
-inline void     __tsk::reset    ()                                            {        tsk_reset    (this); }
-inline void     __tsk::kill     ()                                            {        tsk_kill     (this); }
-inline void     __tsk::join     ()                                            {        tsk_join     (this); }
-inline unsigned __tsk::suspend  ()                                            { return tsk_suspend  (this); }
-inline unsigned __tsk::resume   ()                                            { return tsk_resume   (this); }
-inline void     __tsk::give     ( unsigned _signo )                           {        tsk_give     (this, _signo); }
-inline void     __tsk::signal   ( unsigned _signo )                           {        tsk_signal   (this, _signo); }
-inline void     __tsk::setAction( act_t  *_action )                           {        tsk_setAction(this, _action); }
-
 namespace intros {
 
 /******************************************************************************
@@ -923,13 +894,27 @@ struct baseTask : public __tsk
 	baseTask( fun_t *_state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_state, _stack, _size) {}
 #endif
 
+	void     start    ()                   {        tsk_start    (this); }
 #if __cplusplus >= 201402L
 	template<class F>
-	void     startFrom( F&&      _state )  { new (&fun) Fun_t(_state);
-	                                         __tsk::startFrom(fun_); }
+	void     startFrom( F&&      _state )  {        new (&fun) Fun_t(_state);
+	                                                tsk_startFrom(this, fun_); }
+#else
+	void     startFrom( fun_t  * _state )  {        tsk_startFrom(this, _state); }
+#endif
+	void     join     ()                   {        tsk_join     (this); }
+	void     reset    ()                   {        tsk_reset    (this); }
+	void     kill     ()                   {        tsk_kill     (this); }
+	unsigned suspend  ()                   { return tsk_suspend  (this); }
+	unsigned resume   ()                   { return tsk_resume   (this); }
+	void     give     ( unsigned _signo )  {        tsk_give     (this, _signo); }
+	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
+#if __cplusplus >= 201402L
 	template<class F>
-	void     setAction( F&&      _action ) { new (&act) Act_t(_action);
-	                                         __tsk::setAction(act_); }
+	void     action   ( F&&      _action ) {        new (&act) Act_t(_action);
+	                                                tsk_action   (this, act_); }
+#else
+	void     action   ( act_t  * _action ) {        tsk_action   (this, _action); }
 #endif
 	explicit
 	operator bool     () const             { return __tsk::hdr.id != ID_STOPPED; }
@@ -939,10 +924,10 @@ struct baseTask : public __tsk
 
 #if __cplusplus >= 201402L
 	static
-	void     fun_     ()                   { current()->fun(); }
+	void     fun_     ()                   {        current()->fun(); }
 	Fun_t    fun;
 	static
-	void     act_     ( unsigned _signo )  { current()->act(_signo); }
+	void     act_     ( unsigned _signo )  {        current()->act(_signo); }
 	Act_t    act;
 #endif
 
@@ -957,48 +942,48 @@ struct baseTask : public __tsk
 	struct Current
 	{
 		static
-		void stop      ()                   { tsk_stop      (); }
+		void stop      ()                   {        tsk_stop      (); }
 		static
-		void exit      ()                   { tsk_exit      (); }
+		void exit      ()                   {        tsk_exit      (); }
 		static
-		void reset     ()                   { cur_reset     (); }
+		void reset     ()                   {        cur_reset     (); }
 		static
-		void kill      ()                   { cur_kill      (); }
+		void kill      ()                   {        cur_kill      (); }
 		static
-		void yield     ()                   { tsk_yield     (); }
+		void yield     ()                   {        tsk_yield     (); }
 		static
-		void pass      ()                   { tsk_pass      (); }
+		void pass      ()                   {        tsk_pass      (); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void flip      ( F&&      _state )  { new (&current()->fun) Fun_t(_state);
-		                                      tsk_flip      (fun_); }
+		void flip      ( F&&      _state )  {        new (&current()->fun) Fun_t(_state);
+		                                             tsk_flip      (fun_); }
 #else
 		static
-		void flip      ( fun_t  * _state )  { tsk_flip      (_state); }
+		void flip      ( fun_t  * _state )  {        tsk_flip      (_state); }
 #endif
 		template<typename T> static
-		void sleepFor  ( const T& _delay )  { tsk_sleepFor  (Clock::count(_delay)); }
+		void sleepFor  ( const T& _delay )  {        tsk_sleepFor  (Clock::count(_delay)); }
 		template<typename T> static
-		void sleepNext ( const T& _delay )  { tsk_sleepNext (Clock::count(_delay)); }
+		void sleepNext ( const T& _delay )  {        tsk_sleepNext (Clock::count(_delay)); }
 		template<typename T> static
-		void sleepUntil( const T& _time )   { tsk_sleepUntil(Clock::until(_time)); }
+		void sleepUntil( const T& _time )   {        tsk_sleepUntil(Clock::until(_time)); }
 		static
-		void sleep     ()                   { tsk_sleep     (); }
+		void sleep     ()                   {        tsk_sleep     (); }
 		template<typename T> static
-		void delay     ( const T& _delay )  { tsk_delay     (Clock::count(_delay)); }
+		void delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
 		static
-		void suspend   ()                   { cur_suspend   (); }
+		void suspend   ()                   {        cur_suspend   (); }
 		static
-		void give      ( unsigned _signo )  { cur_give      (_signo); }
+		void give      ( unsigned _signo )  {        cur_give      (_signo); }
 		static
-		void signal    ( unsigned _signo )  { cur_signal    (_signo); }
+		void signal    ( unsigned _signo )  {        cur_signal    (_signo); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void setAction ( F&&      _action ) { new (&current()->act) Act_t(_action);
-		                                      cur_setAction (act_); }
+		void action    ( F&&      _action ) {        new (&current()->act) Act_t(_action);
+		                                             cur_action    (act_); }
 #else
 		static
-		void setAction ( act_t  * _action ) { cur_setAction (_action); }
+		void action    ( act_t  * _action ) {        cur_action    (_action); }
 #endif
 	};
 };

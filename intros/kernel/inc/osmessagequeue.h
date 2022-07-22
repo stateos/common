@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -70,27 +70,11 @@ struct __msg
 	size_t   head;  // index to read from the data buffer (in bytes)
 	size_t   tail;  // index to write to the data buffer (in bytes)
 	char *   data;  // data buffer
+};
 
 #ifdef __cplusplus
-	void     init     ( size_t, void*, size_t );
-	size_t   take     (       void*, size_t );
-	size_t   tryWait  (       void*, size_t );
-	size_t   wait     (       void*, size_t );
-	unsigned give     ( const void*, size_t );
-	unsigned send     ( const void*, size_t );
-	unsigned push     ( const void*, size_t );
-	unsigned getCount ();
-	unsigned getSpace ();
-	unsigned getLimit ();
-	size_t   getSize  ();
-#if OS_ATOMICS
-	size_t   takeAsync(       void*, size_t );
-	size_t   waitAsync(       void*, size_t );
-	unsigned giveAsync( const void*, size_t );
-	unsigned sendAsync( const void*, size_t );
+extern "C" {
 #endif
-#endif
-};
 
 /******************************************************************************
  *
@@ -215,10 +199,6 @@ struct __msg
            (msg_t[]) { MSG_INIT  ( limit, size ) }
 #define                MSG_NEW \
                        MSG_CREATE
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /******************************************************************************
@@ -367,7 +347,7 @@ unsigned msg_push( msg_t *msg, const void *data, size_t size );
 
 /******************************************************************************
  *
- * Name              : msg_getCount
+ * Name              : msg_count
  *
  * Description       : return the amount of data contained in the message queue
  *
@@ -378,11 +358,11 @@ unsigned msg_push( msg_t *msg, const void *data, size_t size );
  *
  ******************************************************************************/
 
-unsigned msg_getCount( msg_t *msg );
+unsigned msg_count( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_getSpace
+ * Name              : msg_space
  *
  * Description       : return the amount of free space in the message queue
  *
@@ -393,11 +373,11 @@ unsigned msg_getCount( msg_t *msg );
  *
  ******************************************************************************/
 
-unsigned msg_getSpace( msg_t *msg );
+unsigned msg_space( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_getLimit
+ * Name              : msg_limit
  *
  * Description       : return the size of the message queue
  *
@@ -408,11 +388,11 @@ unsigned msg_getSpace( msg_t *msg );
  *
  ******************************************************************************/
 
-unsigned msg_getLimit( msg_t *msg );
+unsigned msg_limit( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_getSize
+ * Name              : msg_size
  *
  * Description       : return max size of a message in the message queue
  *
@@ -424,7 +404,7 @@ unsigned msg_getLimit( msg_t *msg );
  ******************************************************************************/
 
 __STATIC_INLINE
-size_t msg_getSize( msg_t *msg ) { return msg->size - sizeof(size_t); }
+size_t msg_size( msg_t *msg ) { return msg->size - sizeof(size_t); }
 
 #ifdef __cplusplus
 }
@@ -433,25 +413,6 @@ size_t msg_getSize( msg_t *msg ) { return msg->size - sizeof(size_t); }
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
-
-inline void     __msg::init     ( size_t _size, void *_data, size_t _bufsize ) {        msg_init     (this, _size, _data, _bufsize); }
-inline size_t   __msg::take     (       void *_data, size_t _size )            { return msg_take     (this, _data, _size); }
-inline size_t   __msg::tryWait  (       void *_data, size_t _size )            { return msg_tryWait  (this, _data, _size); }
-inline size_t   __msg::wait     (       void *_data, size_t _size )            { return msg_wait     (this, _data, _size); }
-inline unsigned __msg::give     ( const void *_data, size_t _size )            { return msg_give     (this, _data, _size); }
-inline unsigned __msg::send     ( const void *_data, size_t _size )            { return msg_send     (this, _data, _size); }
-inline unsigned __msg::push     ( const void *_data, size_t _size )            { return msg_push     (this, _data, _size); }
-inline unsigned __msg::getCount ()                                             { return msg_getCount (this); }
-inline unsigned __msg::getSpace ()                                             { return msg_getSpace (this); }
-inline unsigned __msg::getLimit ()                                             { return msg_getLimit (this); }
-inline size_t   __msg::getSize  ()                                             { return msg_getSize  (this); }
-#if OS_ATOMICS
-inline size_t   __msg::takeAsync(       void *_data, size_t _size )            { return msg_takeAsync(this, _data, _size); }
-inline size_t   __msg::waitAsync(       void *_data, size_t _size )            { return msg_waitAsync(this, _data, _size); }
-inline unsigned __msg::giveAsync( const void *_data, size_t _size )            { return msg_giveAsync(this, _data, _size); }
-inline unsigned __msg::sendAsync( const void *_data, size_t _size )            { return msg_sendAsync(this, _data, _size); }
-#endif
-
 namespace intros {
 
 /******************************************************************************
@@ -477,6 +438,23 @@ struct MessageQueueT : public __msg
 	MessageQueueT& operator=( MessageQueueT&& ) = delete;
 	MessageQueueT& operator=( const MessageQueueT& ) = delete;
 
+	size_t   take     (       void *_data, size_t _size ) { return msg_take     (this, _data, _size); }
+	size_t   tryWait  (       void *_data, size_t _size ) { return msg_tryWait  (this, _data, _size); }
+	size_t   wait     (       void *_data, size_t _size ) { return msg_wait     (this, _data, _size); }
+	unsigned give     ( const void *_data, size_t _size ) { return msg_give     (this, _data, _size); }
+	unsigned send     ( const void *_data, size_t _size ) { return msg_send     (this, _data, _size); }
+	unsigned push     ( const void *_data, size_t _size ) { return msg_push     (this, _data, _size); }
+	unsigned count    ()                                  { return msg_count    (this); }
+	unsigned space    ()                                  { return msg_space    (this); }
+	unsigned limit    ()                                  { return msg_limit    (this); }
+	size_t   size     ()                                  { return msg_size     (this); }
+#if OS_ATOMICS
+	size_t   takeAsync(       void *_data, size_t _size ) { return msg_takeAsync(this, _data, _size); }
+	size_t   waitAsync(       void *_data, size_t _size ) { return msg_waitAsync(this, _data, _size); }
+	unsigned giveAsync( const void *_data, size_t _size ) { return msg_giveAsync(this, _data, _size); }
+	unsigned sendAsync( const void *_data, size_t _size ) { return msg_sendAsync(this, _data, _size); }
+#endif
+
 	private:
 	char data_[limit_ * MSG_SIZE(size_)];
 };
@@ -499,17 +477,17 @@ struct MessageQueueTT : public MessageQueueT<limit_, sizeof(C)>
 	constexpr
 	MessageQueueTT(): MessageQueueT<limit_, sizeof(C)>() {}
 
-	unsigned take     (       C *_data ) { return __msg::take     (_data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned tryWait  (       C *_data ) { return __msg::tryWait  (_data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned wait     (       C *_data ) { return __msg::wait     (_data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned give     ( const C *_data ) { return __msg::give     (_data, sizeof(C)); }
-	unsigned send     ( const C *_data ) { return __msg::send     (_data, sizeof(C)); }
-	unsigned push     ( const C *_data ) { return __msg::push     (_data, sizeof(C)); }
+	unsigned take     (       C *_data ) { return msg_take     (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned tryWait  (       C *_data ) { return msg_tryWait  (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned wait     (       C *_data ) { return msg_wait     (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned give     ( const C *_data ) { return msg_give     (this, _data, sizeof(C)); }
+	unsigned send     ( const C *_data ) { return msg_send     (this, _data, sizeof(C)); }
+	unsigned push     ( const C *_data ) { return msg_push     (this, _data, sizeof(C)); }
 #if OS_ATOMICS
-	unsigned takeAsync(       C *_data ) { return __msg::takeAsync(_data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned waitAsync(       C *_data ) { return __msg::waitAsync(_data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned giveAsync( const C *_data ) { return __msg::giveAsync(_data, sizeof(C)); }
-	unsigned sendAsync( const C *_data ) { return __msg::sendAsync(_data, sizeof(C)); }
+	unsigned takeAsync(       C *_data ) { return msg_takeAsync(this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned waitAsync(       C *_data ) { return msg_waitAsync(this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
+	unsigned giveAsync( const C *_data ) { return msg_giveAsync(this, _data, sizeof(C)); }
+	unsigned sendAsync( const C *_data ) { return msg_sendAsync(this, _data, sizeof(C)); }
 #endif
 };
 

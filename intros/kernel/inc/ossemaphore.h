@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -52,23 +52,11 @@ struct __sem
 {
 	unsigned count; // current value of the semaphore counter
 	unsigned limit; // limit value of the semaphore counter
+};
 
 #ifdef __cplusplus
-	void     init     ( unsigned, unsigned );
-	unsigned take     ();
-	unsigned tryWait  ();
-	void     wait     ();
-	unsigned give     ();
-	unsigned post     ();
-	unsigned release  ( unsigned );
-	unsigned getValue ();
-#if OS_ATOMICS
-	unsigned takeAsync();
-	void     waitAsync();
-	unsigned giveAsync();
+extern "C" {
 #endif
-#endif
-};
 
 /******************************************************************************
  *
@@ -177,10 +165,6 @@ struct __sem
            (sem_t[]) { SEM_INIT  ( init, _VA_SEM(__VA_ARGS__) ) }
 #define                SEM_NEW \
                        SEM_CREATE
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /******************************************************************************
@@ -321,21 +305,6 @@ unsigned sem_getValue( sem_t *sem );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
-
-inline void     __sem::init     ( unsigned _init, unsigned _limit ) {        sem_init     (this, _init, _limit); }
-inline unsigned __sem::take     ()                                  { return sem_take     (this); }
-inline unsigned __sem::tryWait  ()                                  { return sem_tryWait  (this); }
-inline void     __sem::wait     ()                                  {        sem_wait     (this); }
-inline unsigned __sem::give     ()                                  { return sem_give     (this); }
-inline unsigned __sem::post     ()                                  { return sem_post     (this); }
-inline unsigned __sem::release  ( unsigned _num )                   { return sem_release  (this, _num); }
-inline unsigned __sem::getValue ()                                  { return sem_getValue (this); }
-#if OS_ATOMICS
-inline unsigned __sem::takeAsync()                                  { return sem_takeAsync(this); }
-inline void     __sem::waitAsync()                                  {        sem_waitAsync(this); }
-inline unsigned __sem::giveAsync()                                  { return sem_giveAsync(this); }
-#endif
-
 namespace intros {
 
 /******************************************************************************
@@ -364,6 +333,19 @@ struct Semaphore : public __sem
 	Semaphore( const Semaphore& ) = delete;
 	Semaphore& operator=( Semaphore&& ) = delete;
 	Semaphore& operator=( const Semaphore& ) = delete;
+
+	unsigned take     ()                { return sem_take     (this); }
+	unsigned tryWait  ()                { return sem_tryWait  (this); }
+	void     wait     ()                {        sem_wait     (this); }
+	unsigned give     ()                { return sem_give     (this); }
+	unsigned post     ()                { return sem_post     (this); }
+	unsigned release  ( unsigned _num ) { return sem_release  (this, _num); }
+	unsigned getValue ()                { return sem_getValue (this); }
+#if OS_ATOMICS
+	unsigned takeAsync()                { return sem_takeAsync(this); }
+	void     waitAsync()                {        sem_waitAsync(this); }
+	unsigned giveAsync()                { return sem_giveAsync(this); }
+#endif
 
 /******************************************************************************
  *

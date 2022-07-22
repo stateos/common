@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    19.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -45,27 +45,18 @@ struct __tmr
 {
 	hdr_t    hdr;   // timer / task header
 
-	fun_t *  state; // callback procedure
-	void *   arg;   // reserved for internal use
-	cnt_t    begin;
+	fun_t  * state; // callback procedure
+	void   * arg;   // reserved for internal use
+	cnt_t    start;
 	cnt_t    delay;
 	cnt_t    period;
 
 	unsigned signal;
+};
 
 #ifdef __cplusplus
-	void     init         ( fun_t* );
-	void     start        ( cnt_t, cnt_t );
-	void     startFor     ( cnt_t );
-	void     startPeriodic( cnt_t );
-	void     startFrom    ( cnt_t, cnt_t, fun_t* );
-	void     startNext    ( cnt_t );
-	void     startUntil   ( cnt_t );
-	unsigned take         ();
-	unsigned tryWait      ();
-	void     wait         ();
+extern "C" {
 #endif
-};
 
 /******************************************************************************
  *
@@ -249,10 +240,6 @@ struct __tmr
            (tmr_t[]) { TMR_INIT  ( state ) }
 #define                TMR_NEW \
                        TMR_CREATE
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /******************************************************************************
@@ -496,18 +483,6 @@ void tmr_delay( cnt_t delay ) { tmr_this()->delay = delay; }
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
-
-inline void     __tmr::init         ( fun_t *_proc )                              {        tmr_init         (this, _proc); }
-inline void     __tmr::start        ( cnt_t _delay, cnt_t _period )               {        tmr_start        (this, _delay, _period); }
-inline void     __tmr::startFor     ( cnt_t _delay )                              {        tmr_startFor     (this, _delay); }
-inline void     __tmr::startPeriodic( cnt_t _period )                             {        tmr_startPeriodic(this, _period); }
-inline void     __tmr::startFrom    ( cnt_t _delay, cnt_t _period, fun_t *_proc ) {        tmr_startFrom    (this, _delay, _period, _proc); }
-inline void     __tmr::startNext    ( cnt_t _delay )                              {        tmr_startNext    (this, _delay); }
-inline void     __tmr::startUntil   ( cnt_t _time )                               {        tmr_startUntil   (this, _time); }
-inline unsigned __tmr::take         ()                                            { return tmr_take         (this); }
-inline unsigned __tmr::tryWait      ()                                            { return tmr_tryWait      (this); }
-inline void     __tmr::wait         ()                                            {        tmr_wait         (this); }
-
 namespace intros {
 
 /******************************************************************************
@@ -535,27 +510,31 @@ struct baseTimer : public __tmr
 #endif
 
 	template<typename T>
-	void     start        ( const T& _delay, const T& _period )                 {        __tmr::start        (Clock::count(_delay), Clock::count(_period)); }
+	void     start        ( const T& _delay, const T& _period )                 {        tmr_start        (this, Clock::count(_delay), Clock::count(_period)); }
 	template<typename T>
-	void     startFor     ( const T& _delay )                                   {        __tmr::startFor     (Clock::count(_delay)); }
+	void     startFor     ( const T& _delay )                                   {        tmr_startFor     (this, Clock::count(_delay)); }
 	template<typename T>
-	void     startPeriodic( const T& _period )                                  {        __tmr::startPeriodic(Clock::count(_period)); }
+	void     startPeriodic( const T& _period )                                  {        tmr_startPeriodic(this, Clock::count(_period)); }
 	template<typename T>
-	void     startNext    ( const T& _delay )                                   {        __tmr::startNext    (Clock::count(_delay)); }
+	void     startNext    ( const T& _delay )                                   {        tmr_startNext    (this, Clock::count(_delay)); }
 	template<typename T>
-	void     startUntil   ( const T& _time )                                    {        __tmr::startUntil   (Clock::until(_time)); }
+	void     startUntil   ( const T& _time )                                    {        tmr_startUntil   (this, Clock::until(_time)); }
 #if __cplusplus >= 201402L
 	template<typename T>
-	void     startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        __tmr::startFrom    (Clock::count(_delay), Clock::count(_period), nullptr); }
+	void     startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), nullptr); }
 	template<typename T, class F>
 	void     startFrom    ( const T& _delay, const T& _period, F&&     _state ) {        new (&fun) Fun_t(_state);
-	                                                                                     __tmr::startFrom    (Clock::count(_delay), Clock::count(_period), fun_); }
+	                                                                                     tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), fun_); }
 #else
 	template<typename T>
-	void     startFrom    ( const T& _delay, const T& _period, fun_t * _state ) {        __tmr::startFrom    (Clock::count(_delay), Clock::count(_period), _state); }
+	void     startFrom    ( const T& _delay, const T& _period, fun_t * _state ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _state); }
 #endif
+	unsigned take         ()                                                    { return tmr_take         (this); }
+	unsigned tryWait      ()                                                    { return tmr_tryWait      (this); }
+	void     wait         ()                                                    {        tmr_wait         (this); }
 	explicit
 	operator bool         () const                                              { return __tmr::hdr.id != ID_STOPPED; }
+
 	template<class T = baseTimer> static
 	T *      current      ()                                                    { return static_cast<T *>(tmr_this()); }
 
@@ -577,18 +556,18 @@ struct baseTimer : public __tmr
 	{
 #if __cplusplus >= 201402L
 		static
-		void flip    ( std::nullptr_t )           { tmr_flip (nullptr); }
+		void flip ( std::nullptr_t )            { tmr_flip (nullptr); }
 		template<class F> static
-		void flip    ( F&& _state )               { new (&current()->fun) Fun_t(_state);
-		                                            tmr_flip (fun_); }
+		void flip ( F&& _state )                { new (&current()->fun) Fun_t(_state);
+		                                          tmr_flip (fun_); }
 		template<typename F, typename... A> static
-		void flip    ( F&& _state, A&&... _args ) { flip(std::bind(std::forward<F>(_state), std::forward<A>(_args)...)); }
+		void flip ( F&& _state, A&&... _args )  { flip(std::bind(std::forward<F>(_state), std::forward<A>(_args)...)); }
 #else
 		static
-		void flip    ( fun_t *_state )            { tmr_flip (_state); }
+		void flip ( fun_t  * _state )           { tmr_flip (_state); }
 #endif
 		template<typename T> static
-		void delay   ( const T& _delay )          { tmr_delay(Clock::count(_delay)); }
+		void delay( const T& _delay )           { tmr_delay(Clock::count(_delay)); }
 	};
 };
 

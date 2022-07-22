@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.c
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    07.05.2021
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -186,7 +186,7 @@ void tsk_sleepFor( cnt_t delay )
 
 	sys_lock();
 	{
-		cur->begin = core_sys_time();
+		cur->start = core_sys_time();
 		cur->delay = delay;
 
 		core_ctx_switch();
@@ -217,8 +217,8 @@ void tsk_sleepUntil( cnt_t time )
 
 	sys_lock();
 	{
-		cur->begin = core_sys_time();
-		cur->delay = time - cur->begin;
+		cur->start = core_sys_time();
+		cur->delay = time - cur->start;
 		if (cur->delay > CNT_LIMIT)
 			cur->delay = 0;
 

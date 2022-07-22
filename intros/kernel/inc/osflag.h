@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -50,18 +50,11 @@ typedef struct __flg flg_t, * const flg_id;
 struct __flg
 {
 	unsigned flags; // pending flags
+};
 
 #ifdef __cplusplus
-	void     init   ( unsigned );
-	unsigned take   ( unsigned, bool );
-	unsigned tryWait( unsigned, bool );
-	void     wait   ( unsigned, bool );
-	unsigned give   ( unsigned );
-	unsigned set    ( unsigned );
-	unsigned clear  ( unsigned );
-	unsigned get    ();
+extern "C" {
 #endif
-};
 
 /******************************************************************************
  *
@@ -154,10 +147,6 @@ struct __flg
            (flg_t[]) { FLG_INIT  ( _VA_FLG(__VA_ARGS__) ) }
 #define                FLG_NEW \
                        FLG_CREATE
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /******************************************************************************
@@ -276,16 +265,6 @@ unsigned flg_get( flg_t *flg );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
-
-inline void     __flg::init   ( unsigned _init )                    {        flg_init   (this, _init); }
-inline unsigned __flg::take   ( unsigned _flags, bool _all = true ) { return flg_take   (this, _flags, _all); }
-inline unsigned __flg::tryWait( unsigned _flags, bool _all = true ) { return flg_tryWait(this, _flags, _all); }
-inline void     __flg::wait   ( unsigned _flags, bool _all = true ) {        flg_wait   (this, _flags, _all); }
-inline unsigned __flg::give   ( unsigned _flags )                   { return flg_give   (this, _flags); }
-inline unsigned __flg::set    ( unsigned _flags )                   { return flg_set    (this, _flags); }
-inline unsigned __flg::clear  ( unsigned _flags )                   { return flg_clear  (this, _flags); }
-inline unsigned __flg::get    ()                                    { return flg_get    (this); }
-
 namespace intros {
 
 /******************************************************************************
@@ -308,6 +287,14 @@ struct Flag : public __flg
 	Flag( const Flag& ) = delete;
 	Flag& operator=( Flag&& ) = delete;
 	Flag& operator=( const Flag& ) = delete;
+
+	unsigned take   ( unsigned _flags, bool _all = true ) { return flg_take   (this, _flags, _all); }
+	unsigned tryWait( unsigned _flags, bool _all = true ) { return flg_tryWait(this, _flags, _all); }
+	void     wait   ( unsigned _flags, bool _all = true ) { return flg_wait   (this, _flags, _all); }
+	unsigned give   ( unsigned _flags )                   { return flg_give   (this, _flags); }
+	unsigned set    ( unsigned _flags )                   { return flg_set    (this, _flags); }
+	unsigned clear  ( unsigned _flags )                   { return flg_clear  (this, _flags); }
+	unsigned get    ()                                    { return flg_get    (this); }
 };
 
 }     //  namespace

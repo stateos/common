@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    12.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -55,15 +55,11 @@ struct __mem
 	unsigned limit; // size of a memory pool (depth of memory pool buffer)
 	unsigned size;  // size of memory object (in sizeof(que_t) units)
 	que_t  * data;  // pointer to memory pool buffer
+};
 
 #ifdef __cplusplus
-	void     init   ( size_t, que_t*, size_t );
-	void   * take   ();
-	void   * tryWait();
-	void   * wait   ();
-	void     give   ( void* );
+extern "C" {
 #endif
-};
 
 /******************************************************************************
  *
@@ -189,10 +185,6 @@ struct __mem
                        MEM_CREATE
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /******************************************************************************
  *
  * Name              : mem_init
@@ -271,13 +263,6 @@ void mem_give( mem_t *mem, void *data );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
-
-inline void   __mem::init   ( size_t _size, que_t *_data, size_t _bufsize ) {        mem_init   (this, _size, _data, _bufsize); }
-inline void * __mem::take   ()                                              { return mem_take   (this); }
-inline void * __mem::tryWait()                                              { return mem_tryWait(this); }
-inline void * __mem::wait   ()                                              { return mem_wait   (this); }
-inline void   __mem::give   ( void *_data )                                 {        mem_give   (this, _data); }
-
 namespace intros {
 
 /******************************************************************************
@@ -302,6 +287,11 @@ struct MemoryPoolT : public __mem
 	MemoryPoolT& operator=( MemoryPoolT&& ) = delete;
 	MemoryPoolT& operator=( const MemoryPoolT& ) = delete;
 
+	void *take   ()              { return mem_take   (this); }
+	void *tryWait()              { return mem_tryWait(this); }
+	void *wait   ()              { return mem_wait   (this); }
+	void  give   ( void *_data ) {        mem_give   (this, _data); }
+
 	private:
 	que_t data_[limit_ * (1 + MEM_SIZE(size_))];
 };
@@ -323,9 +313,9 @@ struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
 {
 	MemoryPoolTT(): MemoryPoolT<limit_, sizeof(C)>() {}
 
-	C * take   () { return reinterpret_cast<C *>(__mem::take   ()); }
-	C * tryWait() { return reinterpret_cast<C *>(__mem::tryWait()); }
-	C * wait   () { return reinterpret_cast<C *>(__mem::wait   ()); }
+	C *take   () { return reinterpret_cast<C *>(mem_take   (this)); }
+	C *tryWait() { return reinterpret_cast<C *>(mem_tryWait(this)); }
+	C *wait   () { return reinterpret_cast<C *>(mem_wait   (this)); }
 };
 
 }     //  namespace
