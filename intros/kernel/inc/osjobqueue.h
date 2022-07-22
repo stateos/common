@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -50,11 +50,26 @@ struct __job
 	unsigned head;  // first element to read from data buffer
 	unsigned tail;  // first element to write into data buffer
 	fun_t ** data;  // data buffer
-};
 
 #ifdef __cplusplus
-extern "C" {
+	void     init     ( fun_t**, size_t );
+	unsigned take     ();
+	unsigned tryWait  ();
+	void     wait     ();
+	unsigned give     ( fun_t* );
+	void     send     ( fun_t* );
+	void     push     ( fun_t* );
+	unsigned getCount ();
+	unsigned getSpace ();
+	unsigned getLimit ();
+#if OS_ATOMICS
+	unsigned takeAsync();
+	void     waitAsync();
+	unsigned giveAsync( fun_t* );
+	void     sendAsync( fun_t* );
 #endif
+#endif
+};
 
 /******************************************************************************
  *
@@ -172,6 +187,10 @@ extern "C" {
            (job_t[]) { JOB_INIT  ( limit ) }
 #define                JOB_NEW \
                        JOB_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************
@@ -308,7 +327,7 @@ void job_push( job_t *job, fun_t *fun );
 
 /******************************************************************************
  *
- * Name              : job_count
+ * Name              : job_getCount
  *
  * Description       : return the amount of data contained in the job queue
  *
@@ -319,11 +338,11 @@ void job_push( job_t *job, fun_t *fun );
  *
  ******************************************************************************/
 
-unsigned job_count( job_t *job );
+unsigned job_getCount( job_t *job );
 
 /******************************************************************************
  *
- * Name              : job_space
+ * Name              : job_getSpace
  *
  * Description       : return the amount of free space in the job queue
  *
@@ -334,11 +353,11 @@ unsigned job_count( job_t *job );
  *
  ******************************************************************************/
 
-unsigned job_space( job_t *job );
+unsigned job_getSpace( job_t *job );
 
 /******************************************************************************
  *
- * Name              : job_limit
+ * Name              : job_getLimit
  *
  * Description       : return the size of the job queue
  *
@@ -349,7 +368,7 @@ unsigned job_space( job_t *job );
  *
  ******************************************************************************/
 
-unsigned job_limit( job_t *job );
+unsigned job_getLimit( job_t *job );
 
 #ifdef __cplusplus
 }
@@ -358,6 +377,24 @@ unsigned job_limit( job_t *job );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
+
+inline void     __job::init     ( fun_t **_data, size_t _bufsize ) {        job_init     (this, _data, _bufsize); }
+inline unsigned __job::take     ()                                 { return job_take     (this); }
+inline unsigned __job::tryWait  ()                                 { return job_tryWait  (this); }
+inline void     __job::wait     ()                                 {        job_wait     (this); }
+inline unsigned __job::give     ( fun_t *_fun )                    { return job_give     (this, _fun); }
+inline void     __job::send     ( fun_t *_fun )                    {        job_send     (this, _fun); }
+inline void     __job::push     ( fun_t *_fun )                    {        job_push     (this, _fun); }
+inline unsigned __job::getCount ()                                 { return job_getCount (this); }
+inline unsigned __job::getSpace ()                                 { return job_getSpace (this); }
+inline unsigned __job::getLimit ()                                 { return job_getLimit (this); }
+#if OS_ATOMICS
+inline unsigned __job::takeAsync()                                 { return job_takeAsync(this); }
+inline void     __job::waitAsync()                                 {        job_waitAsync(this); }
+inline unsigned __job::giveAsync( fun_t *_fun )                    { return job_giveAsync(this, _fun); }
+inline void     __job::sendAsync( fun_t *_fun )                    {        job_sendAsync(this, _fun); }
+#endif
+
 namespace intros {
 
 /******************************************************************************
@@ -381,22 +418,6 @@ struct JobQueueT : public __job
 	JobQueueT( const JobQueueT& ) = delete;
 	JobQueueT& operator=( JobQueueT&& ) = delete;
 	JobQueueT& operator=( const JobQueueT& ) = delete;
-
-	unsigned take     ()              { return job_take     (this); }
-	unsigned tryWait  ()              { return job_tryWait  (this); }
-	void     wait     ()              {        job_wait     (this); }
-	unsigned give     ( fun_t *_fun ) { return job_give     (this, _fun); }
-	void     send     ( fun_t *_fun ) {        job_send     (this, _fun); }
-	void     push     ( fun_t *_fun ) {        job_push     (this, _fun); }
-	unsigned count    ()              { return job_count    (this); }
-	unsigned space    ()              { return job_space    (this); }
-	unsigned limit    ()              { return job_limit    (this); }
-#if OS_ATOMICS
-	unsigned takeAsync()              { return job_takeAsync(this); }
-	void     waitAsync()              {        job_waitAsync(this); }
-	unsigned giveAsync( fun_t *_fun ) { return job_giveAsync(this, _fun); }
-	void     sendAsync( fun_t *_fun ) {        job_sendAsync(this, _fun); }
-#endif
 
 	private:
 	fun_t *data_[limit_];

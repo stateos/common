@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -53,11 +53,17 @@ struct __sig
 {
 	unsigned sigset;// pending signals
 	unsigned mask;  // protection mask
-};
 
 #ifdef __cplusplus
-extern "C" {
+	void     init   ( unsigned );
+	unsigned take   ( unsigned );
+	unsigned tryWait( unsigned );
+	unsigned wait   ( unsigned );
+	void     give   ( unsigned );
+	void     set    ( unsigned );
+	void     clear  ( unsigned );
 #endif
+};
 
 /******************************************************************************
  *
@@ -150,6 +156,10 @@ extern "C" {
            (sig_t[]) { SIG_INIT  ( _VA_SIG(__VA_ARGS__) ) }
 #define                SIG_NEW \
                        SIG_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************
@@ -250,6 +260,15 @@ void sig_clear( sig_t *sig, unsigned signo );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
+
+inline void     __sig::init   ( unsigned _mask )   {        sig_init   (this, _mask); }
+inline unsigned __sig::take   ( unsigned _sigset ) { return sig_take   (this, _sigset); }
+inline unsigned __sig::tryWait( unsigned _sigset ) { return sig_tryWait(this, _sigset); }
+inline unsigned __sig::wait   ( unsigned _sigset ) { return sig_wait   (this, _sigset); }
+inline void     __sig::give   ( unsigned _signo )  {        sig_give   (this, _signo); }
+inline void     __sig::set    ( unsigned _signo )  {        sig_set    (this, _signo); }
+inline void     __sig::clear  ( unsigned _signo )  {        sig_clear  (this, _signo); }
+
 namespace intros {
 
 /******************************************************************************
@@ -272,13 +291,6 @@ struct Signal : public __sig
 	Signal( const Signal& ) = delete;
 	Signal& operator=( Signal&& ) = delete;
 	Signal& operator=( const Signal& ) = delete;
-
-	unsigned take   ( unsigned _sigset ) { return sig_take   (this, _sigset); }
-	unsigned tryWait( unsigned _sigset ) { return sig_tryWait(this, _sigset); }
-	unsigned wait   ( unsigned _sigset ) { return sig_wait   (this, _sigset); }
-	void     give   ( unsigned _signo )  {        sig_give   (this, _signo); }
-	void     set    ( unsigned _signo )  {        sig_set    (this, _signo); }
-	void     clear  ( unsigned _signo )  {        sig_clear  (this, _signo); }
 };
 
 }     //  namespace

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbarrier.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -48,11 +48,12 @@ struct __bar
 	unsigned limit; // barrier's value limit
 
 	unsigned signal;
-};
 
 #ifdef __cplusplus
-extern "C" {
+	void     init( unsigned );
+	void     wait();
 #endif
+};
 
 /******************************************************************************
  *
@@ -135,6 +136,10 @@ extern "C" {
                        BAR_CREATE
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************
  *
  * Name              : bar_init
@@ -173,6 +178,10 @@ void bar_wait( bar_t *bar );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
+
+inline void __bar::init( unsigned _limit ) { bar_init(this, _limit); }
+inline void __bar::wait()                  { bar_wait(this); }
+
 namespace intros {
 
 /******************************************************************************
@@ -195,8 +204,6 @@ struct Barrier : public __bar
 	Barrier( const Barrier& ) = delete;
 	Barrier& operator=( Barrier&& ) = delete;
 	Barrier& operator=( const Barrier& ) = delete;
-
-	void wait() { bar_wait(this); }
 };
 
 }     //  namespace

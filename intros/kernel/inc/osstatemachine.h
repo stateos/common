@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    21.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -105,6 +105,10 @@ struct __hsm_event
 {
 	unsigned value; // event value
 	void   * param; // optional event parameter
+
+#ifdef __cplusplus
+	void     init();
+#endif
 };
 
 /******************************************************************************
@@ -117,6 +121,10 @@ struct __hsm_state
 {
 	hsm_state_t   * parent;  // pointer to parent state in the hsm tree
 	hsm_handler_t * handler; // event handler
+
+#ifdef __cplusplus
+	void            init( hsm_state_t*, hsm_handler_t* );
+#endif
 };
 
 /******************************************************************************
@@ -130,37 +138,25 @@ struct __hsm
 	box_t         box;   // event queue
 	hsm_event_t   event; // currently handled event
 	hsm_state_t * state; // current hsm state
+
 #ifdef __cplusplus
 	void          transition( hsm_state_t& );
+	void          init      ( void*, size_t );
 	void          start     ( tsk_t&, hsm_state_t& );
 	void          join      ();
-	template<class T>
-	unsigned      give      ( unsigned, T& );
-	unsigned      give      ( unsigned );
-	template<class T>
-	void          send      ( unsigned, T& );
-	void          send      ( unsigned );
-	template<class T>
-	void          push      ( unsigned, T& );
-	void          push      ( unsigned );
+	unsigned      give      ( unsigned, void* );
+	void          send      ( unsigned, void* );
+	void          push      ( unsigned, void* );
 	hsm_state_t * getState  ();
 	unsigned      getEvent  ();
 	void *        getParam  ();
 #if OS_ATOMICS
 	void          startAsync( tsk_t&, hsm_state_t& );
-	template<class T>
-	unsigned      giveAsync ( unsigned, T& );
-	unsigned      giveAsync ( unsigned );
-	template<class T>
-	void          sendAsync ( unsigned, T& );
-	void          sendAsync ( unsigned );
+	unsigned      giveAsync ( unsigned, void* );
+	void          sendAsync ( unsigned, void* );
 #endif
 #endif
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -411,6 +407,10 @@ extern "C" {
                        HSM_CREATE
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************
  *
  * Name              : hsm_transition
@@ -540,7 +540,7 @@ unsigned hsm_give( hsm_t *hsm, unsigned value, void *param );
 
 #if OS_ATOMICS
 __STATIC_INLINE
-void hsm_giveAsync( hsm_t *hsm, unsigned value, void *param ) { hsm_give(hsm, value, param); }
+unsigned hsm_giveAsync( hsm_t *hsm, unsigned value, void *param ) { return hsm_give(hsm, value, param); }
 #endif
 
 /******************************************************************************
@@ -634,29 +634,23 @@ void *hsm_getParam( hsm_t *hsm ) { return hsm->event.param; }
 
 #ifdef __cplusplus
 
-inline void         __hsm::transition( hsm_state_t &_next )               {        hsm_transition(this, &_next); }
-inline void         __hsm::start     ( tsk_t &_task, hsm_state_t &_init ) {        hsm_start     (this, &_task,  &_init); }
-inline void         __hsm::join      ()                                   {        hsm_join      (this); }
-       template<class T>
-inline unsigned     __hsm::give      ( unsigned _value, T &_param )       { return hsm_give      (this,  _value, &_param); }
-inline unsigned     __hsm::give      ( unsigned _value )                  { return hsm_give      (this,  _value, nullptr); }
-       template<class T>
-inline void         __hsm::send      ( unsigned _value, T &_param )       {        hsm_send      (this,  _value, &_param); }
-inline void         __hsm::send      ( unsigned _value )                  {        hsm_send      (this,  _value, nullptr); }
-       template<class T>
-inline void         __hsm::push      ( unsigned _value, T &_param )       {        hsm_push      (this,  _value, &_param); }
-inline void         __hsm::push      ( unsigned _value )                  {        hsm_push      (this,  _value, nullptr); }
-inline hsm_state_t *__hsm::getState  ()                                   { return hsm_getState  (this); }
-inline unsigned     __hsm::getEvent  ()                                   { return hsm_getEvent  (this); }
-inline void *       __hsm::getParam  ()                                   { return hsm_getParam  (this); }
+inline void          __hsm_event::init()                                                {        hsm_initEvent (this); }
+inline void          __hsm_state::init( hsm_state_t *_parent, hsm_handler_t *_handler ) {        hsm_initState (this, _parent, _handler); }
+
+inline void          __hsm::transition( hsm_state_t& _next )                            {        hsm_transition(this, &_next); }
+inline void          __hsm::init      ( void *_data, size_t _bufsize )                  {        hsm_init      (this,  _data, _bufsize); }
+inline void          __hsm::start     ( tsk_t& _task, hsm_state_t& _init )              {        hsm_start     (this, &_task, &_init); }
+inline void          __hsm::join      ()                                                {        hsm_join      (this); }
+inline unsigned      __hsm::give      ( unsigned _value, void *_param = nullptr )       { return hsm_give      (this, _value, _param); }
+inline void          __hsm::send      ( unsigned _value, void *_param = nullptr )       {        hsm_send      (this, _value, _param); }
+inline void          __hsm::push      ( unsigned _value, void *_param = nullptr )       {        hsm_push      (this, _value, _param); }
+inline hsm_state_t * __hsm::getState  ()                                                { return hsm_getState  (this); }
+inline unsigned      __hsm::getEvent  ()                                                { return hsm_getEvent  (this); }
+inline void *        __hsm::getParam  ()                                                { return hsm_getParam  (this); }
 #if OS_ATOMICS
-inline void         __hsm::startAsync( tsk_t &_task, hsm_state_t &_init ) {        hsm_startAsync(this, &_task,  &_init); }
-       template<class T>
-inline unsigned     __hsm::giveAsync ( unsigned _value, T &_param )       { return hsm_giveAsync (this,  _value, &_param); }
-inline unsigned     __hsm::giveAsync ( unsigned _value )                  { return hsm_giveAsync (this,  _value, nullptr); }
-       template<class T>
-inline void         __hsm::sendAsync ( unsigned _value, T &_param )       {        hsm_sendAsync (this,  _value, &_param); }
-inline void         __hsm::sendAsync ( unsigned _value )                  {        hsm_sendAsync (this,  _value, nullptr); }
+inline void          __hsm::startAsync( tsk_t& _task, hsm_state_t& _init )              {        hsm_startAsync(this, &_task, &_init); }
+inline unsigned      __hsm::giveAsync ( unsigned _value, void *_param = nullptr )       { return hsm_giveAsync (this, _value, _param); }
+inline void          __hsm::sendAsync ( unsigned _value, void *_param = nullptr )       {        hsm_sendAsync (this, _value, _param); }
 #endif
 
 namespace intros {
@@ -675,7 +669,7 @@ namespace intros {
 struct State : public __hsm_state
 {
 	State(                 hsm_handler_t *_handler ): __hsm_state _HSM_STATE_INIT( nullptr, _handler) {}
-	State( State &_parent, hsm_handler_t *_handler ): __hsm_state _HSM_STATE_INIT(&_parent, _handler) {}
+	State( State& _parent, hsm_handler_t *_handler ): __hsm_state _HSM_STATE_INIT(&_parent, _handler) {}
 };
 
 /******************************************************************************
@@ -699,6 +693,19 @@ struct StateMachineT : public __hsm
 	StateMachineT( const StateMachineT& ) = delete;
 	StateMachineT& operator=( StateMachineT&& ) = delete;
 	StateMachineT& operator=( const StateMachineT& ) = delete;
+
+	template<class T>
+	unsigned give     ( unsigned _value, T& _param ) { return __hsm::give     (_value, &_param); }
+	template<class T>
+	void     send     ( unsigned _value, T& _param ) {        __hsm::send     (_value, &_param); }
+	template<class T>
+	void     push     ( unsigned _value, T& _param ) {        __hsm::push     (_value, &_param); }
+#if OS_ATOMICS
+	template<class T>
+	unsigned giveAsync( unsigned _value, T& _param ) { return __hsm::giveAsync(_value, &_param); }
+	template<class T>
+	void     sendAsync( unsigned _value, T& _param ) {        __hsm::sendAsync(_value, &_param); }
+#endif
 
 	private:
 	char data_[limit_ * sizeof(hsm_event_t)];

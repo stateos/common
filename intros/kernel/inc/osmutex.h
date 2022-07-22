@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    14.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -45,11 +45,17 @@ typedef struct __mtx mtx_t, * const mtx_id;
 struct __mtx
 {
 	tsk_t  * owner; // mutex owner
-};
 
 #ifdef __cplusplus
-extern "C" {
+	void     init   ();
+	unsigned take   ();
+	unsigned tryLock();
+	void     wait   ();
+	void     lock   ();
+	unsigned give   ();
+	unsigned unlock ();
 #endif
+};
 
 /******************************************************************************
  *
@@ -126,6 +132,10 @@ extern "C" {
            (mtx_t[]) { MTX_INIT  () }
 #define                MTX_NEW \
                        MTX_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************
@@ -214,6 +224,15 @@ unsigned mtx_unlock( mtx_t *mtx ) { return mtx_give(mtx); }
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
+
+inline void     __mtx::init   () {        mtx_init   (this); }
+inline unsigned __mtx::take   () { return mtx_take   (this); }
+inline unsigned __mtx::tryLock() { return mtx_tryLock(this); }
+inline void     __mtx::wait   () {        mtx_wait   (this); }
+inline void     __mtx::lock   () {        mtx_lock   (this); }
+inline unsigned __mtx::give   () { return mtx_give   (this); }
+inline unsigned __mtx::unlock () { return mtx_unlock (this); }
+
 namespace intros {
 
 /******************************************************************************
@@ -238,13 +257,6 @@ struct Mutex : public __mtx
 	Mutex& operator=( const Mutex& ) = delete;
 
 	~Mutex() { assert(__mtx::owner == nullptr); }
-
-	unsigned take   () { return mtx_take   (this); }
-	unsigned tryLock() { return mtx_tryLock(this); }
-	void     wait   () {        mtx_wait   (this); }
-	void     lock   () {        mtx_lock   (this); }
-	unsigned give   () { return mtx_give   (this); }
-	unsigned unlock () { return mtx_unlock (this); }
 };
 
 /******************************************************************************

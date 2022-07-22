@@ -2,7 +2,7 @@
 
     @file    IntrOS: osevent.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -47,11 +47,14 @@ struct __evt
 	unsigned event;
 
 	unsigned signal;
-};
 
 #ifdef __cplusplus
-extern "C" {
+	void     init();
+	unsigned take();
+	unsigned wait();
+	void     give( unsigned );
 #endif
+};
 
 /******************************************************************************
  *
@@ -130,6 +133,10 @@ extern "C" {
                        EVT_CREATE
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************
  *
  * Name              : evt_init
@@ -198,6 +205,12 @@ void evt_give( evt_t *evt, unsigned event );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
+
+inline void     __evt::init()                  {        evt_init(this); }
+inline unsigned __evt::take()                  { return evt_take(this); }
+inline unsigned __evt::wait()                  { return evt_wait(this); }
+inline void     __evt::give( unsigned _event ) {        evt_give(this, _event); }
+
 namespace intros {
 
 /******************************************************************************
@@ -220,10 +233,6 @@ struct Event : public __evt
 	Event( const Event& ) = delete;
 	Event& operator=( Event&& ) = delete;
 	Event& operator=( const Event& ) = delete;
-
-	unsigned take()                  { return evt_take(this); }
-	unsigned wait()                  { return evt_wait(this); }
-	void     give( unsigned _event ) {        evt_give(this, _event); }
 };
 
 }     //  namespace

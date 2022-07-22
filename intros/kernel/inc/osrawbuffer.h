@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrawbuffer.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -50,11 +50,20 @@ struct __raw
 	size_t   head;  // first element to read from data buffer
 	size_t   tail;  // first element to write into data buffer
 	char *   data;  // data buffer
-};
 
 #ifdef __cplusplus
-extern "C" {
+	void     init    (       void*, size_t );
+	size_t   take    (       void*, size_t );
+	size_t   tryWait (       void*, size_t );
+	size_t   wait    (       void*, size_t );
+	unsigned give    ( const void*, size_t );
+	unsigned send    ( const void*, size_t );
+	unsigned push    ( const void*, size_t );
+	size_t   getCount();
+	size_t   getSpace();
+	size_t   getLimit();
 #endif
+};
 
 /******************************************************************************
  *
@@ -190,6 +199,10 @@ extern "C" {
                        RAW_CREATE
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************
  *
  * Name              : raw_init
@@ -310,7 +323,7 @@ unsigned raw_push( raw_t *raw, const void *data, size_t size );
 
 /******************************************************************************
  *
- * Name              : raw_count
+ * Name              : raw_getCount
  *
  * Description       : return the amount of data contained in the raw buffer
  *
@@ -321,11 +334,11 @@ unsigned raw_push( raw_t *raw, const void *data, size_t size );
  *
  ******************************************************************************/
 
-size_t raw_count( raw_t *raw );
+size_t raw_getCount( raw_t *raw );
 
 /******************************************************************************
  *
- * Name              : raw_space
+ * Name              : raw_getSpace
  *
  * Description       : return the amount of free space in the raw buffer
  *
@@ -336,11 +349,11 @@ size_t raw_count( raw_t *raw );
  *
  ******************************************************************************/
 
-size_t raw_space( raw_t *raw );
+size_t raw_getSpace( raw_t *raw );
 
 /******************************************************************************
  *
- * Name              : raw_limit
+ * Name              : raw_getLimit
  *
  * Description       : return the size of the raw buffer
  *
@@ -351,7 +364,7 @@ size_t raw_space( raw_t *raw );
  *
  ******************************************************************************/
 
-size_t raw_limit( raw_t *raw );
+size_t raw_getLimit( raw_t *raw );
 
 #ifdef __cplusplus
 }
@@ -360,6 +373,18 @@ size_t raw_limit( raw_t *raw );
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
+
+inline void     __raw::init    (       void *_data, size_t _bufsize ) {        raw_init    (this, _data, _bufsize); }
+inline size_t   __raw::take    (       void *_data, size_t _size )    { return raw_take    (this, _data, _size); }
+inline size_t   __raw::tryWait (       void *_data, size_t _size )    { return raw_tryWait (this, _data, _size); }
+inline size_t   __raw::wait    (       void *_data, size_t _size )    { return raw_wait    (this, _data, _size); }
+inline unsigned __raw::give    ( const void *_data, size_t _size )    { return raw_give    (this, _data, _size); }
+inline unsigned __raw::send    ( const void *_data, size_t _size )    { return raw_send    (this, _data, _size); }
+inline unsigned __raw::push    ( const void *_data, size_t _size )    { return raw_push    (this, _data, _size); }
+inline size_t   __raw::getCount()                                     { return raw_getCount(this); }
+inline size_t   __raw::getSpace()                                     { return raw_getSpace(this); }
+inline size_t   __raw::getLimit()                                     { return raw_getLimit(this); }
+
 namespace intros {
 
 /******************************************************************************
@@ -384,16 +409,6 @@ struct RawBufferT : public __raw
 	RawBufferT& operator=( RawBufferT&& ) = delete;
 	RawBufferT& operator=( const RawBufferT& ) = delete;
 
-	size_t   take   (       void *_data, size_t _size ) { return raw_take   (this, _data, _size); }
-	size_t   tryWait(       void *_data, size_t _size ) { return raw_tryWait(this, _data, _size); }
-	size_t   wait   (       void *_data, size_t _size ) { return raw_wait   (this, _data, _size); }
-	unsigned give   ( const void *_data, size_t _size ) { return raw_give   (this, _data, _size); }
-	unsigned send   ( const void *_data, size_t _size ) { return raw_send   (this, _data, _size); }
-	unsigned push   ( const void *_data, size_t _size ) { return raw_push   (this, _data, _size); }
-	size_t   count  ()                                  { return raw_count  (this); }
-	size_t   space  ()                                  { return raw_space  (this); }
-	size_t   limit  ()                                  { return raw_limit  (this); }
-
 	private:
 	char data_[limit_];
 };
@@ -416,12 +431,12 @@ struct RawBufferTT : public RawBufferT<limit_*sizeof(C)>
 	constexpr
 	RawBufferTT(): RawBufferT<limit_*sizeof(C)>() {}
 
-	unsigned take   (       C *_data ) { return raw_take   (this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }
-	unsigned tryWait(       C *_data ) { return raw_tryWait(this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }
-	void     wait   (       C *_data ) {        raw_wait   (this, _data, sizeof(C)); }
-	unsigned give   ( const C *_data ) { return raw_give   (this, _data, sizeof(C)); }
-	unsigned send   ( const C *_data ) { return raw_send   (this, _data, sizeof(C)); }
-	unsigned push   ( const C *_data ) { return raw_push   (this, _data, sizeof(C)); }
+	unsigned take   (       C *_data ) { return __raw::take   (this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }
+	unsigned tryWait(       C *_data ) { return __raw::tryWait(this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }
+	void     wait   (       C *_data ) {        __raw::wait   (this, _data, sizeof(C)); }
+	unsigned give   ( const C *_data ) { return __raw::give   (this, _data, sizeof(C)); }
+	unsigned send   ( const C *_data ) { return __raw::send   (this, _data, sizeof(C)); }
+	unsigned push   ( const C *_data ) { return __raw::push   (this, _data, sizeof(C)); }
 };
 
 }     //  namespace
