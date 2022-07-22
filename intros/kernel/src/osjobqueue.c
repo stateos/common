@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    22.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -226,7 +226,7 @@ void job_push( job_t *job, fun_t *fun )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned job_count( job_t *job )
+unsigned job_getCount( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned count;
@@ -243,7 +243,7 @@ unsigned job_count( job_t *job )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned job_space( job_t *job )
+unsigned job_getSpace( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned space;
@@ -260,7 +260,7 @@ unsigned job_space( job_t *job )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned job_limit( job_t *job )
+unsigned job_getLimit( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned limit;

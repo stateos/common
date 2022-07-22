@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    19.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -56,20 +56,20 @@ struct __tsk
 {
 	hdr_t    hdr;   // timer / task header
 
-	fun_t  * state; // task state (initial task function, doesn't have to be noreturn-type)
-	void   * arg;   // reserved for internal use
+	fun_t *  state; // task state (initial task function, doesn't have to be noreturn-type)
+	void *   arg;   // reserved for internal use
 	cnt_t    start; // inherited from timer
 	cnt_t    delay; // inherited from timer
 	cnt_t    period;// inherited from timer
 
-	stk_t  * stack; // base of stack
+	stk_t *  stack; // base of stack
 	size_t   size;  // size of stack (in bytes)
 
 	struct {
 	unsigned sigset;// pending signals
-	act_t  * action;// signal handler
+	act_t *  action;// signal handler
 	struct {
-	fun_t  * pc;
+	fun_t *  pc;
 	cnt_t    delay;
 	}        backup;
 	}        sig;
@@ -79,10 +79,6 @@ struct __tsk
 	jmp_buf  buf;   // setjmp/longjmp buffer
 	}        ctx;
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -418,6 +414,10 @@ extern "C" {
                        WRK_CREATE( state, _VA_STK(__VA_ARGS__) )
 #define                TSK_NEW \
                        TSK_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************
@@ -782,7 +782,7 @@ void cur_signal( unsigned signo ) { cur_give(signo); }
 
 /******************************************************************************
  *
- * Name              : tsk_action
+ * Name              : tsk_setAction
  *
  * Description       : set given function as a signal handler
  *
@@ -794,11 +794,11 @@ void cur_signal( unsigned signo ) { cur_give(signo); }
  *
  ******************************************************************************/
 
-void tsk_action( tsk_t *tsk, act_t *action );
+void tsk_setAction( tsk_t *tsk, act_t *action );
 
 /******************************************************************************
  *
- * Name              : cur_action
+ * Name              : cur_setAction
  *
  * Description       : set given function as a signal handler for current task
  *
@@ -811,7 +811,7 @@ void tsk_action( tsk_t *tsk, act_t *action );
  ******************************************************************************/
 
 __STATIC_INLINE
-void cur_action( act_t *action ) { tsk_action(System.cur, action); }
+void cur_setAction( act_t *action ) { tsk_setAction(System.cur, action); }
 
 /******************************************************************************
  *
@@ -911,10 +911,10 @@ struct baseTask : public __tsk
 	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
 #if __cplusplus >= 201402L
 	template<class F>
-	void     action   ( F&&      _action ) {        new (&act) Act_t(_action);
-	                                                tsk_action   (this, act_); }
+	void     setAction( F&&      _action ) {        new (&act) Act_t(_action);
+	                                                tsk_setAction(this, act_); }
 #else
-	void     action   ( act_t  * _action ) {        tsk_action   (this, _action); }
+	void     setAction( act_t  * _action ) {        tsk_setAction(this, _action); }
 #endif
 	explicit
 	operator bool     () const             { return __tsk::hdr.id != ID_STOPPED; }
@@ -979,11 +979,11 @@ struct baseTask : public __tsk
 		void signal    ( unsigned _signo )  {        cur_signal    (_signo); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void action    ( F&&      _action ) {        new (&current()->act) Act_t(_action);
-		                                             cur_action    (act_); }
+		void setAction ( F&&      _action ) {        new (&current()->act) Act_t(_action);
+		                                             cur_setAction (act_); }
 #else
 		static
-		void action    ( act_t  * _action ) {        cur_action    (_action); }
+		void setAction ( act_t  * _action ) {        cur_setAction (_action); }
 #endif
 	};
 };

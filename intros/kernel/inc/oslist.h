@@ -2,7 +2,7 @@
 
     @file    IntrOS: oslist.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -44,12 +44,8 @@ typedef struct __que que_t;
 
 struct __que
 {
-	que_t  * next; // next object in the queue
+	que_t *  next; // next object in the queue
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -155,6 +151,10 @@ struct __lst
            (lst_t[]) { LST_INIT  () }
 #define                LST_NEW \
                        LST_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

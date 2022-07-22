@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -51,10 +51,6 @@ struct __evq
 	unsigned tail;  // first element to write into data buffer
 	unsigned*data;  // data buffer
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -172,6 +168,10 @@ extern "C" {
            (evq_t[]) { EVQ_INIT  ( limit ) }
 #define                EVQ_NEW \
                        EVQ_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************
@@ -307,7 +307,7 @@ void evq_push( evq_t *evq, unsigned event );
 
 /******************************************************************************
  *
- * Name              : evq_count
+ * Name              : evq_getCount
  *
  * Description       : return the amount of data contained in the event queue
  *
@@ -318,11 +318,11 @@ void evq_push( evq_t *evq, unsigned event );
  *
  ******************************************************************************/
 
-unsigned evq_count( evq_t *evq );
+unsigned evq_getCount( evq_t *evq );
 
 /******************************************************************************
  *
- * Name              : evq_space
+ * Name              : evq_getSpace
  *
  * Description       : return the amount of free space in the event queue
  *
@@ -333,11 +333,11 @@ unsigned evq_count( evq_t *evq );
  *
  ******************************************************************************/
 
-unsigned evq_space( evq_t *evq );
+unsigned evq_getSpace( evq_t *evq );
 
 /******************************************************************************
  *
- * Name              : evq_limit
+ * Name              : evq_getLimit
  *
  * Description       : return the size of the event queue
  *
@@ -348,7 +348,7 @@ unsigned evq_space( evq_t *evq );
  *
  ******************************************************************************/
 
-unsigned evq_limit( evq_t *evq );
+unsigned evq_getLimit( evq_t *evq );
 
 #ifdef __cplusplus
 }
@@ -387,9 +387,9 @@ struct EventQueueT : public __evq
 	unsigned give     ( unsigned _event ) { return evq_give     (this, _event); }
 	void     send     ( unsigned _event ) {        evq_send     (this, _event); }
 	void     push     ( unsigned _event ) {        evq_push     (this, _event); }
-	unsigned count    ()                  { return evq_count    (this); }
-	unsigned space    ()                  { return evq_space    (this); }
-	unsigned limit    ()                  { return evq_limit    (this); }
+	unsigned getCount ()                  { return evq_getCount (this); }
+	unsigned getSpace ()                  { return evq_getSpace (this); }
+	unsigned getLimit ()                  { return evq_getLimit (this); }
 #if OS_ATOMICS
 	unsigned takeAsync()                  { return evq_takeAsync(this); }
 	unsigned waitAsync()                  { return evq_waitAsync(this); }

@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -53,10 +53,6 @@ struct __sem
 	unsigned count; // current value of the semaphore counter
 	unsigned limit; // limit value of the semaphore counter
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -165,6 +161,10 @@ extern "C" {
            (sem_t[]) { SEM_INIT  ( init, _VA_SEM(__VA_ARGS__) ) }
 #define                SEM_NEW \
                        SEM_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

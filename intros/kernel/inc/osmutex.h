@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    14.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -44,12 +44,8 @@ typedef struct __mtx mtx_t, * const mtx_id;
 
 struct __mtx
 {
-	tsk_t  * owner; // mutex owner
+	tsk_t *  owner; // mutex owner
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -126,6 +122,10 @@ extern "C" {
            (mtx_t[]) { MTX_INIT  () }
 #define                MTX_NEW \
                        MTX_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

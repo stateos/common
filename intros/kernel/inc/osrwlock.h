@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -51,10 +51,6 @@ struct __rwl
 	bool     write; // writer is active
 	unsigned count; // number of active readers
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -131,6 +127,10 @@ extern "C" {
            (rwl_t[]) { RWL_INIT  () }
 #define                RWL_NEW \
                        RWL_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

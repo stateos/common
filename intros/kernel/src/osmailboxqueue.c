@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    22.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -221,7 +221,7 @@ void box_push( box_t *box, const void *data )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned box_count( box_t *box )
+unsigned box_getCount( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned count;
@@ -238,7 +238,7 @@ unsigned box_count( box_t *box )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned box_space( box_t *box )
+unsigned box_getSpace( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned space;
@@ -255,7 +255,7 @@ unsigned box_space( box_t *box )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned box_limit( box_t *box )
+unsigned box_getLimit( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned limit;

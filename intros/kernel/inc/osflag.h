@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -51,10 +51,6 @@ struct __flg
 {
 	unsigned flags; // pending flags
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -147,6 +143,10 @@ extern "C" {
            (flg_t[]) { FLG_INIT  ( _VA_FLG(__VA_ARGS__) ) }
 #define                FLG_NEW \
                        FLG_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

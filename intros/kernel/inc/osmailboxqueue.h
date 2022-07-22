@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -52,10 +52,6 @@ struct __box
 	size_t   tail;  // first element to write into data buffer
 	char *   data;  // data buffer
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -179,6 +175,10 @@ extern "C" {
            (box_t[]) { BOX_INIT  ( limit, size ) }
 #define                BOX_NEW \
                        BOX_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************
@@ -318,7 +318,7 @@ void box_push( box_t *box, const void *data );
 
 /******************************************************************************
  *
- * Name              : box_count
+ * Name              : box_getCount
  *
  * Description       : return the amount of data contained in the mailbox queue
  *
@@ -329,11 +329,11 @@ void box_push( box_t *box, const void *data );
  *
  ******************************************************************************/
 
-unsigned box_count( box_t *box );
+unsigned box_getCount( box_t *box );
 
 /******************************************************************************
  *
- * Name              : box_space
+ * Name              : box_getSpace
  *
  * Description       : return the amount of free space in the mailbox queue
  *
@@ -344,11 +344,11 @@ unsigned box_count( box_t *box );
  *
  ******************************************************************************/
 
-unsigned box_space( box_t *box );
+unsigned box_getSpace( box_t *box );
 
 /******************************************************************************
  *
- * Name              : box_limit
+ * Name              : box_getLimit
  *
  * Description       : return the size of the mailbox queue
  *
@@ -359,11 +359,11 @@ unsigned box_space( box_t *box );
  *
  ******************************************************************************/
 
-unsigned box_limit( box_t *box );
+unsigned box_getLimit( box_t *box );
 
 /******************************************************************************
  *
- * Name              : box_size
+ * Name              : box_getSize
  *
  * Description       : return size of a single mail
  *
@@ -375,7 +375,7 @@ unsigned box_limit( box_t *box );
  ******************************************************************************/
 
 __STATIC_INLINE
-size_t box_size( box_t *box ) { return box->size; }
+size_t box_getSize( box_t *box ) { return box->size; }
 
 #ifdef __cplusplus
 }
@@ -415,10 +415,10 @@ struct MailBoxQueueT : public __box
 	unsigned give     ( const void *_data ) { return box_give     (this, _data); }
 	void     send     ( const void *_data ) {        box_send     (this, _data); }
 	void     push     ( const void *_data ) {        box_push     (this, _data); }
-	unsigned count    ()                    { return box_count    (this); }
-	unsigned space    ()                    { return box_space    (this); }
-	unsigned limit    ()                    { return box_limit    (this); }
-	size_t   size     ()                    { return box_size     (this); }
+	unsigned getCount ()                    { return box_getCount (this); }
+	unsigned getSpace ()                    { return box_getSpace (this); }
+	unsigned getLimit ()                    { return box_getLimit (this); }
+	size_t   getSize  ()                    { return box_getSize  (this); }
 #if OS_ATOMICS
 	unsigned takeAsync(       void *_data ) { return box_takeAsync(this, _data); }
 	void     waitAsync(       void *_data ) {        box_waitAsync(this, _data); }

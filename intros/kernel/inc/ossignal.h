@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -54,10 +54,6 @@ struct __sig
 	unsigned sigset;// pending signals
 	unsigned mask;  // protection mask
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -150,6 +146,10 @@ extern "C" {
            (sig_t[]) { SIG_INIT  ( _VA_SIG(__VA_ARGS__) ) }
 #define                SIG_NEW \
                        SIG_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.c
     @author  Rajmund Szymanski
-    @date    07.05.2021
+    @date    22.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -345,7 +345,7 @@ void tsk_give( tsk_t *tsk, unsigned signo )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_action( tsk_t *tsk, act_t *action )
+void tsk_setAction( tsk_t *tsk, act_t *action )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);

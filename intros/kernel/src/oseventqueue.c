@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    22.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -222,7 +222,7 @@ void evq_push( evq_t *evq, unsigned event )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned evq_count( evq_t *evq )
+unsigned evq_getCount( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned count;
@@ -239,7 +239,7 @@ unsigned evq_count( evq_t *evq )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned evq_space( evq_t *evq )
+unsigned evq_getSpace( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned space;
@@ -256,7 +256,7 @@ unsigned evq_space( evq_t *evq )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned evq_limit( evq_t *evq )
+unsigned evq_getLimit( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned limit;

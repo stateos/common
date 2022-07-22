@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbarrier.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -49,10 +49,6 @@ struct __bar
 
 	unsigned signal;
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -133,6 +129,10 @@ extern "C" {
            (bar_t[]) { BAR_INIT  ( limit ) }
 #define                BAR_NEW \
                        BAR_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    22.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -71,10 +71,6 @@ struct __msg
 	size_t   tail;  // index to write to the data buffer (in bytes)
 	char *   data;  // data buffer
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************
  *
@@ -199,6 +195,10 @@ extern "C" {
            (msg_t[]) { MSG_INIT  ( limit, size ) }
 #define                MSG_NEW \
                        MSG_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************
@@ -347,7 +347,7 @@ unsigned msg_push( msg_t *msg, const void *data, size_t size );
 
 /******************************************************************************
  *
- * Name              : msg_count
+ * Name              : msg_getCount
  *
  * Description       : return the amount of data contained in the message queue
  *
@@ -358,11 +358,11 @@ unsigned msg_push( msg_t *msg, const void *data, size_t size );
  *
  ******************************************************************************/
 
-unsigned msg_count( msg_t *msg );
+unsigned msg_getCount( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_space
+ * Name              : msg_getSpace
  *
  * Description       : return the amount of free space in the message queue
  *
@@ -373,11 +373,11 @@ unsigned msg_count( msg_t *msg );
  *
  ******************************************************************************/
 
-unsigned msg_space( msg_t *msg );
+unsigned msg_getSpace( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_limit
+ * Name              : msg_getLimit
  *
  * Description       : return the size of the message queue
  *
@@ -388,11 +388,11 @@ unsigned msg_space( msg_t *msg );
  *
  ******************************************************************************/
 
-unsigned msg_limit( msg_t *msg );
+unsigned msg_getLimit( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_size
+ * Name              : msg_getSize
  *
  * Description       : return max size of a message in the message queue
  *
@@ -404,7 +404,7 @@ unsigned msg_limit( msg_t *msg );
  ******************************************************************************/
 
 __STATIC_INLINE
-size_t msg_size( msg_t *msg ) { return msg->size - sizeof(size_t); }
+size_t msg_getSize( msg_t *msg ) { return msg->size - sizeof(size_t); }
 
 #ifdef __cplusplus
 }
@@ -444,10 +444,10 @@ struct MessageQueueT : public __msg
 	unsigned give     ( const void *_data, size_t _size ) { return msg_give     (this, _data, _size); }
 	unsigned send     ( const void *_data, size_t _size ) { return msg_send     (this, _data, _size); }
 	unsigned push     ( const void *_data, size_t _size ) { return msg_push     (this, _data, _size); }
-	unsigned count    ()                                  { return msg_count    (this); }
-	unsigned space    ()                                  { return msg_space    (this); }
-	unsigned limit    ()                                  { return msg_limit    (this); }
-	size_t   size     ()                                  { return msg_size     (this); }
+	unsigned getCount ()                                  { return msg_getCount (this); }
+	unsigned getSpace ()                                  { return msg_getSpace (this); }
+	unsigned getLimit ()                                  { return msg_getLimit (this); }
+	size_t   getSize  ()                                  { return msg_getSize  (this); }
 #if OS_ATOMICS
 	size_t   takeAsync(       void *_data, size_t _size ) { return msg_takeAsync(this, _data, _size); }
 	size_t   waitAsync(       void *_data, size_t _size ) { return msg_waitAsync(this, _data, _size); }

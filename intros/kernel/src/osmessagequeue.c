@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmessagequeue.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    22.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -257,7 +257,7 @@ unsigned msg_push( msg_t *msg, const void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned msg_count( msg_t *msg )
+unsigned msg_getCount( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
 	size_t count;
@@ -274,7 +274,7 @@ unsigned msg_count( msg_t *msg )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned msg_space( msg_t *msg )
+unsigned msg_getSpace( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
 	size_t space;
@@ -291,7 +291,7 @@ unsigned msg_space( msg_t *msg )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned msg_limit( msg_t *msg )
+unsigned msg_getLimit( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
 	size_t limit;

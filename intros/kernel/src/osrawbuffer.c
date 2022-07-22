@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrawbuffer.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    22.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -227,7 +227,7 @@ unsigned raw_push( raw_t *raw, const void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t raw_count( raw_t *raw )
+size_t raw_getCount( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t count;
@@ -244,7 +244,7 @@ size_t raw_count( raw_t *raw )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t raw_space( raw_t *raw )
+size_t raw_getSpace( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t space;
@@ -261,7 +261,7 @@ size_t raw_space( raw_t *raw )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t raw_limit( raw_t *raw )
+size_t raw_getLimit( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t limit;
