@@ -345,7 +345,7 @@ void tsk_give( tsk_t *tsk, unsigned signo )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_setAction( tsk_t *tsk, act_t *action )
+void tsk_action( tsk_t *tsk, act_t *action )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);
