@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    21.07.2022
+    @date    25.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -31,44 +31,6 @@
 
 #include "inc/osstatemachine.h"
 #include "inc/oscriticalsection.h"
-
-/* -------------------------------------------------------------------------- */
-static
-unsigned priv_eventHandler( hsm_t *hsm )
-/* -------------------------------------------------------------------------- */
-{
-	hsm_state_t *state = hsm->state;
-	unsigned     event = hsm->event.value;
-
-	if (event == hsmStop)
-	{
-		hsm->state = NULL;
-		return hsmStop;
-	}
-
-	while (event != hsmOK && state != NULL)
-	{
-		assert(state->handler != NULL);
-		event = state->handler(hsm, event);
-		state = state->parent;
-	}
-
-	return hsmOK;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_eventDispatcher( hsm_t *hsm )
-/* -------------------------------------------------------------------------- */
-{
-	assert(hsm != NULL);
-
-	do     box_wait(&hsm->box, &hsm->event);
-	while (priv_eventHandler(hsm) == hsmOK);
-#if OS_TASK_EXIT == 0
-	tsk_stop();
-#endif
-}
 
 /* -------------------------------------------------------------------------- */
 static
@@ -133,73 +95,149 @@ void priv_setNextState( hsm_t *hsm, hsm_state_t *state )
 
 /* -------------------------------------------------------------------------- */
 static
-bool priv_transitionPossible( hsm_t *hsm, hsm_state_t *state )
+hsm_action_t* priv_getAction( hsm_state_t *state, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	return (state != NULL && (hsm->event.value >= hsmUser ||
-	                         (hsm->event.value == hsmInit && hsm->state == state->parent)));
+	hsm_action_t *action = state->queue;
+
+	while (action != NULL && action->event != event && action->event != hsmALL)
+		action = action->next;
+
+	return action;
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_transition( hsm_t *hsm, hsm_state_t *nextState )
+static
+void priv_callHandler( hsm_t *hsm, hsm_state_t *state, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	assert(hsm != NULL);
-	assert(nextState != NULL);
+	hsm_action_t *action = priv_getAction(state, event);
 
-	if (!priv_transitionPossible(hsm, nextState))
+	if (action != NULL)
+		if (action->handler != NULL)
+			action->handler(hsm, event);
+}
+
+/* -------------------------------------------------------------------------- */
+static // forward declaration
+void priv_transition( hsm_t *hsm, hsm_state_t *nextState );
+
+static
+unsigned priv_callAction( hsm_t *hsm, hsm_state_t *state, unsigned event )
+/* -------------------------------------------------------------------------- */
+{
+	hsm_action_t *action = priv_getAction(state, event);
+
+	if (action == NULL)
+		return event;
+
+	if (action->handler != NULL)
+		action->handler(hsm, event);
+
+	if (action->target != NULL)
 	{
-		assert(false);
-		return;
+		assert(event >= hsmUser || action->target->parent == state);
+
+		priv_transition(hsm, action->target);
 	}
 
+	return hsmALL;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_transition( hsm_t *hsm, hsm_state_t *nextState )
+/* -------------------------------------------------------------------------- */
+{
 	hsm_state_t *rootState = priv_getRootState(hsm, nextState);
 
 	while (hsm->state != rootState)
 	{
-		assert(hsm->state->handler != NULL);
-		hsm->state->handler(hsm, hsmExit);
+		priv_callHandler(hsm, hsm->state, hsmExit);
 		priv_setPrevState(hsm);
 	}
 
 	while (hsm->state != nextState)
 	{
 		priv_setNextState(hsm, nextState);
-		assert(hsm->state->handler != NULL);
-		hsm->state->handler(hsm, hsmEntry);
+		priv_callHandler(hsm, hsm->state, hsmEntry);
 	}
 
-	assert(hsm->state->handler != NULL);
-	hsm->state->handler(hsm, hsmInit);
+	priv_callAction(hsm, hsm->state, hsmInit);
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_initEvent( hsm_event_t *event )
+static
+void priv_eventHandler( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	assert(event != NULL);
+	hsm_state_t *state = hsm->state;
 
-	sys_lock();
+	while (state != NULL && event != hsmALL)
 	{
-		memset(event, 0, sizeof(hsm_event_t));
+		event = priv_callAction(hsm, state, event);
+		state = state->parent;
 	}
-	sys_unlock();
 }
 
+/* -------------------------------------------------------------------------- */
+static
+void priv_eventDispatcher( hsm_t *hsm )
+/* -------------------------------------------------------------------------- */
+{
+	unsigned event;
+
+	assert(hsm != NULL);
+
+	do
+	{
+		sys_lock();
+		{
+			event = evq_wait(&hsm->evq);
+			assert(event >= hsmUser || event == hsmStop);
+			if (event >= hsmUser)
+				priv_eventHandler(hsm, event);
+		}
+		sys_unlock();
+	}
+	while (event != hsmStop);
+
+	hsm->state = NULL;
+#if OS_TASK_EXIT == 0
+	tsk_stop();
+#endif
+}
 
 /* -------------------------------------------------------------------------- */
-void hsm_initState( hsm_state_t *state, hsm_state_t *parent, hsm_handler_t *handler )
+void hsm_initState( hsm_state_t *state, hsm_state_t *parent )
 /* -------------------------------------------------------------------------- */
 {
 	assert(state != NULL);
-	assert(handler != NULL);
 
 	sys_lock();
 	{
 		memset(state, 0, sizeof(hsm_state_t));
 
-		state->parent  = parent;
-		state->handler = handler;
+		state->parent = parent;
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+void hsm_initAction( hsm_action_t *action, hsm_state_t *owner, unsigned event, hsm_state_t *target, hsm_handler_t *handler )
+/* -------------------------------------------------------------------------- */
+{
+	assert(action != NULL);
+	assert(owner != NULL);
+
+	sys_lock();
+	{
+		memset(action, 0, sizeof(hsm_action_t));
+
+		action->owner = owner;
+		action->event = event;
+		action->target = target;
+		action->handler = handler;
 	}
 	sys_unlock();
 }
@@ -209,12 +247,31 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
+	assert(data != NULL);
 
 	sys_lock();
 	{
 		memset(hsm, 0, sizeof(hsm_t));
 
-		box_init(&hsm->box, sizeof(hsm_event_t), data, bufsize);
+		evq_init(&hsm->evq, data, bufsize);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+void hsm_link( hsm_t *hsm, hsm_action_t *action )
+/* -------------------------------------------------------------------------- */
+{
+	(void) hsm;
+
+	assert(hsm != NULL);
+	assert(action != NULL);
+	assert(action->owner != NULL);
+
+	sys_lock();
+	{
+		action->next = action->owner->queue;
+		action->owner->queue = action;
 	}
 	sys_unlock();
 }
@@ -227,18 +284,17 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 	assert(hsm->state == NULL);
 	assert(tsk != NULL);
 	assert(initState != NULL);
+	assert(initState->parent == NULL);
 
 	sys_lock();
 	{
 		if (hsm->state == NULL)
 		{
 			tsk->arg = hsm;
-			hsm->box.count = 0; // reset hsm event queue
-			hsm->box.head  = 0; //
-			hsm->box.tail  = 0; //
-			hsm->event.value = hsmInit;
-			hsm->event.param = NULL;
-			hsm_transition(hsm, initState);
+			hsm->evq.count = 0; // reset hsm event queue
+			hsm->evq.head  = 0; //
+			hsm->evq.tail  = 0; //
+			priv_transition(hsm, initState);
 			tsk_startFrom(tsk, priv_eventDispatcher);
 		}
 	}
@@ -249,52 +305,37 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 void hsm_join( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
-	assert(hsm);
+	assert(hsm != NULL);
 
 	while (hsm->state != NULL)
 		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned hsm_give( hsm_t *hsm, unsigned value, void *param )
+unsigned hsm_give( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
 
-	hsm_event_t event;
-
-	event.value = value;
-	event.param = param;
-
-	return box_give(&hsm->box, &event);
+	return evq_give(&hsm->evq, event);
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_send( hsm_t *hsm, unsigned value, void *param )
+void hsm_send( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
 
-	hsm_event_t event;
-
-	event.value = value;
-	event.param = param;
-
-	box_send(&hsm->box, &event);
+	evq_send(&hsm->evq, event);
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_push( hsm_t *hsm, unsigned value, void *param )
+void hsm_push( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm != NULL);
 
-	hsm_event_t event;
-
-	event.value = value;
-	event.param = param;
-
-	box_push(&hsm->box, &event);
+	evq_push(&hsm->evq, event);
 }
 
 /* -------------------------------------------------------------------------- */
