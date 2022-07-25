@@ -30,6 +30,7 @@ Features:
 - event queues
 - job queues
 - timers (one-shot, periodic)
+- hierarchical state machine
 - c++ wrapper
 - all documentation is contained within the source files
 - examples and templates are in separate repositories (https://github.com/stateos)
