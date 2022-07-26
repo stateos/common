@@ -2,7 +2,7 @@
 
     @file    IntrOS: oslist.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -69,12 +69,14 @@ struct __que
  *
  ******************************************************************************/
 
-typedef struct __lst lst_t, * const lst_id;
+typedef struct __lst lst_t;
 
 struct __lst
 {
 	que_t    head;  // list head
 };
+
+typedef struct __lst lst_id [];
 
 /******************************************************************************
  *
@@ -104,13 +106,11 @@ struct __lst
  *
  ******************************************************************************/
 
-#define             OS_LST( lst )                     \
-                       lst_t lst##__lst = _LST_INIT(); \
-                       lst_id lst = & lst##__lst
+#define             OS_LST( lst ) \
+                       lst_t lst[] = { _LST_INIT() }
 
-#define         static_LST( lst )                     \
-                static lst_t lst##__lst = _LST_INIT(); \
-                static lst_id lst = & lst##__lst
+#define         static_LST( lst ) \
+                static lst_t lst[] = { _LST_INIT() }
 
 /******************************************************************************
  *
@@ -140,7 +140,7 @@ struct __lst
  *
  * Parameters        : none
  *
- * Return            : pointer to list object
+ * Return            : list object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -148,7 +148,7 @@ struct __lst
 
 #ifndef __cplusplus
 #define                LST_CREATE() \
-           (lst_t[]) { LST_INIT  () }
+                     { LST_INIT  () }
 #define                LST_NEW \
                        LST_CREATE
 #endif

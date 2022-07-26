@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -45,12 +45,14 @@
  *
  ******************************************************************************/
 
-typedef struct __flg flg_t, * const flg_id;
+typedef struct __flg flg_t;
 
 struct __flg
 {
 	unsigned flags; // pending flags
 };
+
+typedef struct __flg flg_id [];
 
 /******************************************************************************
  *
@@ -94,13 +96,11 @@ struct __flg
  *
  ******************************************************************************/
 
-#define             OS_FLG( flg, ... )                                      \
-                       flg_t flg##__flg = _FLG_INIT( _VA_FLG(__VA_ARGS__) ); \
-                       flg_id flg = & flg##__flg
+#define             OS_FLG( flg, ... ) \
+                       flg_t flg[] = { _FLG_INIT( _VA_FLG(__VA_ARGS__) ) }
 
-#define         static_FLG( flg, ... )                                      \
-                static flg_t flg##__flg = _FLG_INIT( _VA_FLG(__VA_ARGS__) ); \
-                static flg_id flg = & flg##__flg
+#define         static_FLG( flg, ... ) \
+                static flg_t flg[] = { _FLG_INIT( _VA_FLG(__VA_ARGS__) ) }
 
 /******************************************************************************
  *
@@ -132,7 +132,7 @@ struct __flg
  * Parameters
  *   init            : (optional) initial value of flag; default: 0
  *
- * Return            : pointer to flag object
+ * Return            : flag object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -140,7 +140,7 @@ struct __flg
 
 #ifndef __cplusplus
 #define                FLG_CREATE( ... ) \
-           (flg_t[]) { FLG_INIT  ( _VA_FLG(__VA_ARGS__) ) }
+                     { FLG_INIT  ( _VA_FLG(__VA_ARGS__) ) }
 #define                FLG_NEW \
                        FLG_CREATE
 #endif

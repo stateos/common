@@ -111,11 +111,13 @@ static
 void priv_callHandler( hsm_t *hsm, hsm_state_t *state, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	hsm_action_t *action = priv_getAction(state, event);
+	hsm->action = priv_getAction(state, event);
 
-	if (action != NULL)
-		if (action->handler != NULL)
-			action->handler(hsm, event);
+	if (hsm->action == NULL)
+		return;
+
+	if (hsm->action->handler != NULL)
+		hsm->action->handler(hsm, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -126,19 +128,19 @@ static
 unsigned priv_callAction( hsm_t *hsm, hsm_state_t *state, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	hsm_action_t *action = priv_getAction(state, event);
+	hsm->action = priv_getAction(state, event);
 
-	if (action == NULL)
+	if (hsm->action == NULL)
 		return event;
 
-	if (action->handler != NULL)
-		action->handler(hsm, event);
+	if (hsm->action->handler != NULL)
+		hsm->action->handler(hsm, event);
 
-	if (action->target != NULL)
+	if (hsm->action->target != NULL)
 	{
-		assert(event >= hsmUser || action->target->parent == state);
+		assert(event >= hsmUser || hsm->action->target->parent == state);
 
-		priv_transition(hsm, action->target);
+		priv_transition(hsm, hsm->action->target);
 	}
 
 	return hsmALL;

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    25.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -54,7 +54,7 @@ enum
  *
  ******************************************************************************/
 
-typedef struct __hsm_state hsm_state_t, * const hsm_state_id;
+typedef struct __hsm_state hsm_state_t;
 
 /******************************************************************************
  *
@@ -62,7 +62,7 @@ typedef struct __hsm_state hsm_state_t, * const hsm_state_id;
  *
  ******************************************************************************/
 
-typedef struct __hsm_action hsm_action_t, * const hsm_action_id;
+typedef struct __hsm_action hsm_action_t;
 
 /******************************************************************************
  *
@@ -70,7 +70,7 @@ typedef struct __hsm_action hsm_action_t, * const hsm_action_id;
  *
  ******************************************************************************/
 
-typedef struct __hsm hsm_t, * const hsm_id;
+typedef struct __hsm hsm_t;
 
 /******************************************************************************
  *
@@ -91,6 +91,8 @@ struct __hsm_state
 	hsm_state_t *  parent;  // pointer to parent state in the hsm tree
 	hsm_action_t * queue;   // state action queue
 };
+
+typedef struct __hsm_state hsm_state_id [];
 
 /******************************************************************************
  *
@@ -118,6 +120,8 @@ struct __hsm_action
 	hsm_action_t *  next;    // next element in the hsm state action queue
 };
 
+typedef struct __hsm_action hsm_action_id [];
+
 /******************************************************************************
  *
  * Name              : hierarchical state machine - definition
@@ -128,13 +132,16 @@ struct __hsm
 {
 	evq_t         evq;   // event queue
 	hsm_state_t * state; // current hsm state
+	hsm_action_t* action;
 };
+
+typedef struct __hsm hsm_id [];
 
 /******************************************************************************
  *
  * Name              : _HSM_STATE_INIT
  *
- * Description       : create and initialize a hsm state object
+ * Description       : create and initialize an hsm state object
  *
  * Parameters
  *   parent          : pointer to parent state in the hsm tree (NULL for root)
@@ -153,7 +160,7 @@ struct __hsm
  * Name              : OS_HSM_STATE
  * Static alias      : static_HSM_STATE
  *
- * Description       : define and initialize a hsm state object
+ * Description       : define and initialize an hsm state object
  *
  * Parameters
  *   state           : name of a pointer to hsm state object
@@ -161,13 +168,11 @@ struct __hsm
  *
  ******************************************************************************/
 
-#define             OS_HSM_STATE( state, parent )                                 \
-                       hsm_state_t state##__hsm_state = _HSM_STATE_INIT( parent ); \
-                       hsm_state_id state = & state##__hsm_state
+#define             OS_HSM_STATE( state, parent ) \
+                       hsm_state_t state[] = { _HSM_STATE_INIT( parent ) }
 
-#define         static_HSM_STATE( state, parent )                                 \
-                static hsm_state_t state##__hsm_state = _HSM_STATE_INIT( parent ); \
-                static hsm_state_id state = & state##__hsm_state
+#define         static_HSM_STATE( state, parent ) \
+                static hsm_state_t state[] = { _HSM_STATE_INIT( parent ) }
 
 /******************************************************************************
  *
@@ -199,7 +204,7 @@ struct __hsm
  * Parameters
  *   parent          : pointer to parent state in the hsm tree (NULL for root)
  *
- * Return            : pointer to hsm state object
+ * Return            : hsm state object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -207,7 +212,7 @@ struct __hsm
 
 #ifndef __cplusplus
 #define                HSM_STATE_CREATE( parent ) \
-     (hsm_state_t[]) { HSM_STATE_INIT  ( parent ) }
+                     { HSM_STATE_INIT  ( parent ) }
 #define                HSM_STATE_NEW \
                        HSM_STATE_CREATE
 #endif
@@ -216,7 +221,7 @@ struct __hsm
  *
  * Name              : _HSM_ACTION_INIT
  *
- * Description       : create and initialize a hsm transition object
+ * Description       : create and initialize an hsm action object
  *
  * Parameters
  *   owner           : action owner
@@ -224,7 +229,7 @@ struct __hsm
  *   target          : pointer to transition target state (NULL, if no transition)
  *   handler         : event handler
  *
- * Return            : hsm transition object
+ * Return            : hsm action object
  *
  * Note              : for internal use
  *
@@ -238,7 +243,7 @@ struct __hsm
  * Name              : OS_HSM_ACTION
  * Static alias      : static_HSM_ACTION
  *
- * Description       : define and initialize a hsm transition object
+ * Description       : define and initialize an hsm action object
  *
  * Parameters
  *   owner           : action owner
@@ -248,19 +253,17 @@ struct __hsm
  *
  ******************************************************************************/
 
-#define             OS_HSM_ACTION( owner, event, target, handler )                                        \
-                       hsm_action_t action##__hsm_action = _HSM_ACTION_INIT( owner, event, target, handler ); \
-                       hsm_action_id action = & action##__hsm_action
+#define             OS_HSM_ACTION( owner, event, target, handler ) \
+                       hsm_action_t action[] = { _HSM_ACTION_INIT( owner, event, target, handler ) }
 
-#define         static_HSM_ACTION( owner, event, target, handler )                                        \
-                static hsm_action_t action##__hsm_action = _HSM_ACTION_INIT( owner, event, target, handler ); \
-                static hsm_action_id action = & action##__hsm_action
+#define         static_HSM_ACTION( owner, event, target, handler ) \
+                static hsm_action_t action[] = { _HSM_ACTION_INIT( owner, event, target, handler ) }
 
 /******************************************************************************
  *
  * Name              : HSM_ACTION_INIT
  *
- * Description       : create and initialize hsm transition object
+ * Description       : create and initialize an hsm action object
  *
  * Parameters
  *   owner           : action owner
@@ -268,7 +271,7 @@ struct __hsm
  *   target          : pointer to transition target state (NULL, if no transition)
  *   handler         : event handler
  *
- * Return            : hsm transition object
+ * Return            : hsm action object
  *
  * Note              : use only in 'C' code
  *
@@ -284,7 +287,7 @@ struct __hsm
  * Name              : HSM_ACTION_CREATE
  * Alias             : HSM_ACTION_NEW
  *
- * Description       : create and initialize hsm transition object
+ * Description       : create and initialize an hsm action object
  *
  * Parameters
  *   owner           : action owner
@@ -292,7 +295,7 @@ struct __hsm
  *   target          : pointer to transition target state (NULL, if no transition)
  *   handler         : event handler
  *
- * Return            : pointer to hsm transition object
+ * Return            : hsm action object as array
  *
  * Note              : use only in 'C' code
  *
@@ -300,7 +303,7 @@ struct __hsm
 
 #ifndef __cplusplus
 #define                HSM_ACTION_CREATE( owner, event, target, handler ) \
-     (hsm_action_t[]) { HSM_ACTION_INIT  ( owner, event, target, handler ) }
+                     { HSM_ACTION_INIT  ( owner, event, target, handler ) }
 #define                HSM_ACTION_NEW \
                        HSM_ACTION_CREATE
 #endif
@@ -309,10 +312,10 @@ struct __hsm
  *
  * Name              : _HSM_INIT
  *
- * Description       : create and initialize a hsm object
+ * Description       : create and initialize an hsm object
  *
  * Parameters
- *   limit           : size of a hsm event queue (max number of stored events)
+ *   limit           : size of an hsm event queue (max number of stored events)
  *   data            : hsm event queue data buffer
  *
  * Return            : hsm object
@@ -322,7 +325,7 @@ struct __hsm
  ******************************************************************************/
 
 #define               _HSM_INIT( _limit, _data ) \
-                    { _EVQ_INIT( _limit, _data ), NULL }
+                    { _EVQ_INIT( _limit, _data ), NULL, NULL }
 
 /******************************************************************************
  *
@@ -333,19 +336,17 @@ struct __hsm
  *
  * Parameters
  *   hsm             : name of a pointer to hsm object
- *   limit           : size of a hsm event queue (max number of stored events)
+ *   limit           : size of an hsm event queue (max number of stored events)
  *
  ******************************************************************************/
 
-#define             OS_HSM( hsm, limit )                                \
-                       unsigned hsm##__buf[limit];                       \
-                       hsm_t hsm##__hsm = _HSM_INIT( limit, hsm##__buf ); \
-                       hsm_id hsm = & hsm##__hsm
+#define             OS_HSM( hsm, limit )          \
+                static unsigned hsm##__buf[limit]; \
+                       hsm_t hsm[] = { _HSM_INIT( limit, hsm##__buf ) }
 
-#define         static_HSM( hsm, limit )                                \
-                static unsigned hsm##__buf[limit];                       \
-                static hsm_t hsm##__hsm = _HSM_INIT( limit, hsm##__buf ); \
-                static hsm_id hsm = & hsm##__hsm
+#define         static_HSM( hsm, limit )          \
+                static unsigned hsm##__buf[limit]; \
+                static hsm_t hsm[] = { _HSM_INIT( limit, hsm##__buf ) }
 
 /******************************************************************************
  *
@@ -354,7 +355,7 @@ struct __hsm
  * Description       : create and initialize complete hsm object
  *
  * Parameters
- *   limit           : size of a hsm event queue (max number of stored events)
+ *   limit           : size of an hsm event queue (max number of stored events)
  *
  * Return            : hsm object
  *
@@ -375,9 +376,9 @@ struct __hsm
  * Description       : create and initialize complete hsm object
  *
  * Parameters
- *   limit           : size of a hsm event queue (max number of stored events)
+ *   limit           : size of an hsm event queue (max number of stored events)
  *
- * Return            : pointer to hsm object
+ * Return            : hsm object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -385,7 +386,7 @@ struct __hsm
 
 #ifndef __cplusplus
 #define                HSM_CREATE( limit ) \
-           (hsm_t[]) { HSM_INIT  ( limit ) }
+                     { HSM_INIT  ( limit ) }
 #define                HSM_NEW \
                        HSM_CREATE
 #endif
@@ -588,33 +589,9 @@ namespace intros {
 
 /******************************************************************************
  *
- * Class             : Action
- *
- * Description       : create and initialize a hsm transition object
- *
- * Constructor parameters
- *                   : none
- *
- ******************************************************************************/
-
-struct Action : public __hsm_action
-{
-	constexpr
-	Action( hsm_state_t& _owner, unsigned _event,                       hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, _handler) {}
-	constexpr
-	Action( hsm_state_t& _owner, unsigned _event, hsm_state_t& _target, hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, _handler) {}
-
-	Action( Action&& ) = default;
-	Action( const Action& ) = default;
-	Action& operator=( Action&& ) = delete;
-	Action& operator=( const Action& ) = delete;
-};
-
-/******************************************************************************
- *
  * Class             : State
  *
- * Description       : create and initialize a hsm state object
+ * Description       : create and initialize an hsm state object
  *
  * Constructor parameters
  *                   : none
@@ -632,6 +609,30 @@ struct State : public __hsm_state
 	State( const State& ) = delete;
 	State& operator=( State&& ) = delete;
 	State& operator=( const State& ) = delete;
+};
+
+/******************************************************************************
+ *
+ * Class             : Action
+ *
+ * Description       : create and initialize an hsm action object
+ *
+ * Constructor parameters
+ *                   : none
+ *
+ ******************************************************************************/
+
+struct Action : public __hsm_action
+{
+	template<class S> constexpr
+	Action( S& _owner, unsigned _event,             hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, _handler) {}
+	template<class S> constexpr
+	Action( S& _owner, unsigned _event, S& _target, hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, _handler) {}
+
+	Action( Action&& ) = default;
+	Action( const Action& ) = default;
+	Action& operator=( Action&& ) = delete;
+	Action& operator=( const Action& ) = delete;
 };
 
 /******************************************************************************

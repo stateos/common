@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -46,13 +46,15 @@
  *
  ******************************************************************************/
 
-typedef struct __sem sem_t, * const sem_id;
+typedef struct __sem sem_t;
 
 struct __sem
 {
 	unsigned count; // current value of the semaphore counter
 	unsigned limit; // limit value of the semaphore counter
 };
+
+typedef struct __sem sem_id [];
 
 /******************************************************************************
  *
@@ -104,13 +106,11 @@ struct __sem
  *
  ******************************************************************************/
 
-#define             OS_SEM( sem, init, ... )                                      \
-                       sem_t sem##__sem = _SEM_INIT( init, _VA_SEM(__VA_ARGS__) ); \
-                       sem_id sem = & sem##__sem
+#define             OS_SEM( sem, init, ... ) \
+                       sem_t sem[] = { _SEM_INIT( init, _VA_SEM(__VA_ARGS__) ) }
 
-#define         static_SEM( sem, init, ... )                                      \
-                static sem_t sem##__sem = _SEM_INIT( init, _VA_SEM(__VA_ARGS__) ); \
-                static sem_id sem = & sem##__sem
+#define         static_SEM( sem, init, ... ) \
+                static sem_t sem[] = { _SEM_INIT( init, _VA_SEM(__VA_ARGS__) ) }
 
 /******************************************************************************
  *
@@ -150,7 +150,7 @@ struct __sem
  *                     semCounting: counting semaphore (default)
  *                     otherwise: limited semaphore
  *
- * Return            : pointer to semaphore object
+ * Return            : semaphore object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -158,7 +158,7 @@ struct __sem
 
 #ifndef __cplusplus
 #define                SEM_CREATE( init, ... ) \
-           (sem_t[]) { SEM_INIT  ( init, _VA_SEM(__VA_ARGS__) ) }
+                     { SEM_INIT  ( init, _VA_SEM(__VA_ARGS__) ) }
 #define                SEM_NEW \
                        SEM_CREATE
 #endif

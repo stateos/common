@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -40,7 +40,7 @@
  *
  ******************************************************************************/
 
-typedef struct __box box_t, * const box_id;
+typedef struct __box box_t;
 
 struct __box
 {
@@ -52,6 +52,8 @@ struct __box
 	size_t   tail;  // first element to write into data buffer
 	char *   data;  // data buffer
 };
+
+typedef struct __box box_id [];
 
 /******************************************************************************
  *
@@ -122,15 +124,13 @@ struct __box
  *
  ******************************************************************************/
 
-#define             OS_BOX( box, limit, size )                                \
-                       char box##__buf[limit * size];                          \
-                       box_t box##__box = _BOX_INIT( limit, size, box##__buf ); \
-                       box_id box = & box##__box
+#define             OS_BOX( box, limit, size )       \
+                static char box##__buf[limit * size]; \
+                       box_t box[] = { _BOX_INIT( limit, size, box##__buf ) }
 
-#define         static_BOX( box, limit, size )                                \
-                static char box##__buf[limit * size];                          \
-                static box_t box##__box = _BOX_INIT( limit, size, box##__buf ); \
-                static box_id box = & box##__box
+#define         static_BOX( box, limit, size )       \
+                static char box##__buf[limit * size]; \
+                static box_t box[] = { _BOX_INIT( limit, size, box##__buf ) }
 
 /******************************************************************************
  *
@@ -164,7 +164,7 @@ struct __box
  *   limit           : size of a queue (max number of stored mails)
  *   size            : size of a single mail (in bytes)
  *
- * Return            : pointer to mailbox queue object
+ * Return            : mailbox queue object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -172,7 +172,7 @@ struct __box
 
 #ifndef __cplusplus
 #define                BOX_CREATE( limit, size ) \
-           (box_t[]) { BOX_INIT  ( limit, size ) }
+                     { BOX_INIT  ( limit, size ) }
 #define                BOX_NEW \
                        BOX_CREATE
 #endif

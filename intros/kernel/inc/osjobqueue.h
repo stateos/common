@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -40,7 +40,7 @@
  *
  ******************************************************************************/
 
-typedef struct __job job_t, * const job_id;
+typedef struct __job job_t;
 
 struct __job
 {
@@ -51,6 +51,8 @@ struct __job
 	unsigned tail;  // first element to write into data buffer
 	fun_t ** data;  // data buffer
 };
+
+typedef struct __job job_id [];
 
 /******************************************************************************
  *
@@ -117,15 +119,13 @@ struct __job
  *
  ******************************************************************************/
 
-#define             OS_JOB( job, limit )                                \
-                       fun_t *job##__buf[limit];                         \
-                       job_t job##__job = _JOB_INIT( limit, job##__buf ); \
-                       job_id job = & job##__job
+#define             OS_JOB( job, limit )        \
+                static fun_t *job##__buf[limit]; \
+                       job_t job[] = { _JOB_INIT( limit, job##__buf ) }
 
-#define         static_JOB( job, limit )                                \
-                static fun_t *job##__buf[limit];                         \
-                static job_t job##__job = _JOB_INIT( limit, job##__buf ); \
-                static job_id job = & job##__job
+#define         static_JOB( job, limit )        \
+                static fun_t *job##__buf[limit]; \
+                static job_t job[] = { _JOB_INIT( limit, job##__buf ) }
 
 /******************************************************************************
  *
@@ -157,7 +157,7 @@ struct __job
  * Parameters
  *   limit           : size of a queue (max number of stored job procedures)
  *
- * Return            : pointer to job queue object
+ * Return            : job queue object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -165,7 +165,7 @@ struct __job
 
 #ifndef __cplusplus
 #define                JOB_CREATE( limit ) \
-           (job_t[]) { JOB_INIT  ( limit ) }
+                     { JOB_INIT  ( limit ) }
 #define                JOB_NEW \
                        JOB_CREATE
 #endif

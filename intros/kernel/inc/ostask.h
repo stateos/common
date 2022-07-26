@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -80,6 +80,8 @@ struct __tsk
 	}        ctx;
 };
 
+typedef struct __tsk tsk_id [];
+
 /******************************************************************************
  *
  * Name              : _TSK_INIT
@@ -100,29 +102,6 @@ struct __tsk
 
 #define               _TSK_INIT( _state, _stack, _size ) \
                     { _HDR_INIT(), _state, NULL, 0, 0, 0, _stack, _size, { 0, NULL, { NULL, 0 } }, { _CTX_INIT() } }
-
-/******************************************************************************
- *
- * Name              : _TSK_CREATE
- *
- * Description       : create and initialize a task object
- *
- * Parameters
- *   state           : task state (initial task function) doesn't have to be noreturn-type
- *                     it will be executed into an infinite system-implemented loop
- *   stack           : base of task's private stack storage
- *   size            : size of task private stack (in bytes)
- *
- * Return            : pointer to task object
- *
- * Note              : for internal use
- *
- ******************************************************************************/
-
-#ifndef __cplusplus
-#define               _TSK_CREATE( _state, _stack, _size ) \
-          (tsk_t[]) { _TSK_INIT  ( _state, _stack, _size ) }
-#endif
 
 /******************************************************************************
  *
@@ -189,15 +168,13 @@ struct __tsk
  *
  ******************************************************************************/
 
-#define             OS_WRK( tsk, state, size )                                            \
-                       stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN;                      \
-                       tsk_t tsk##__tsk = _TSK_INIT( state, tsk##__stk, STK_OVER( size ) ); \
-                       tsk_id tsk = & tsk##__tsk
+#define             OS_WRK( tsk, state, size )                       \
+                static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
+                       tsk_t tsk[] = { _TSK_INIT( state, tsk##__stk, STK_OVER( size ) ) }
 
-#define         static_WRK( tsk, state, size )                                            \
-                static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN;                      \
-                static tsk_t tsk##__tsk = _TSK_INIT( state, tsk##__stk, STK_OVER( size ) ); \
-                static tsk_id tsk = & tsk##__tsk
+#define         static_WRK( tsk, state, size )                       \
+                static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
+                static tsk_t tsk[] = { _TSK_INIT( state, tsk##__stk, STK_OVER( size ) ) }
 
 /******************************************************************************
  *
@@ -235,7 +212,7 @@ struct __tsk
  ******************************************************************************/
 
 #define             OS_WRK_DEF( tsk, size )        \
-                       void tsk##__fun( void );     \
+                static void tsk##__fun( void );     \
                     OS_WRK( tsk, tsk##__fun, size ); \
                        void tsk##__fun( void )
 
@@ -282,10 +259,10 @@ struct __tsk
 
 #ifdef __CONSTRUCTOR
 #define             OS_WRK_START( tsk, size )                   \
-                       void tsk##__fun( void );                  \
+                static void tsk##__fun( void );                  \
                     OS_WRK( tsk, tsk##__fun, size );              \
-         __CONSTRUCTOR void tsk##__run( void ) { tsk_start(tsk); } \
-                       void tsk##__fun( void )
+  __CONSTRUCTOR static void tsk##__run( void ) { tsk_start(tsk); } \
+                static void tsk##__fun( void )
 #endif
 
 #ifdef __CONSTRUCTOR
@@ -356,7 +333,7 @@ struct __tsk
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *
- * Return            : pointer to task object
+ * Return            : task object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -364,7 +341,7 @@ struct __tsk
 
 #ifndef __cplusplus
 #define                WRK_CREATE( state, size ) \
-           (tsk_t[]) { WRK_INIT  ( state, size ) }
+                     { WRK_INIT  ( state, size ) }
 #define                WRK_NEW \
                        WRK_CREATE
 #endif
@@ -403,7 +380,7 @@ struct __tsk
  *                     it will be executed into an infinite system-implemented loop
  *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
- * Return            : pointer to task object
+ * Return            : task object as array (id)
  *
  * Note              : use only in 'C' code
  *

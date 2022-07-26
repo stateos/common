@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -47,13 +47,15 @@
  *
  ******************************************************************************/
 
-typedef struct __sig sig_t, * const sig_id;
+typedef struct __sig sig_t;
 
 struct __sig
 {
 	unsigned sigset;// pending signals
 	unsigned mask;  // protection mask
 };
+
+typedef struct __sig sig_id [];
 
 /******************************************************************************
  *
@@ -97,13 +99,11 @@ struct __sig
  *
  ******************************************************************************/
 
-#define             OS_SIG( sig, ... )                                      \
-                       sig_t sig##__sig = _SIG_INIT( _VA_SIG(__VA_ARGS__) ); \
-                       sig_id sig = & sig##__sig
+#define             OS_SIG( sig, ... ) \
+                       sig_t sig[] = { _SIG_INIT( _VA_SIG(__VA_ARGS__) ) }
 
-#define         static_SIG( sig, ... )                                      \
-                static sig_t sig##__sig = _SIG_INIT( _VA_SIG(__VA_ARGS__) ); \
-                static sig_id sig = & sig##__sig
+#define         static_SIG( sig, ... ) \
+                static sig_t sig[] = { _SIG_INIT( _VA_SIG(__VA_ARGS__) ) }
 
 /******************************************************************************
  *
@@ -135,7 +135,7 @@ struct __sig
  * Parameters
  *   mask            : (optional) protection mask; default: 0
  *
- * Return            : pointer to signal object
+ * Return            : signal object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -143,7 +143,7 @@ struct __sig
 
 #ifndef __cplusplus
 #define                SIG_CREATE( ... ) \
-           (sig_t[]) { SIG_INIT  ( _VA_SIG(__VA_ARGS__) ) }
+                     { SIG_INIT  ( _VA_SIG(__VA_ARGS__) ) }
 #define                SIG_NEW \
                        SIG_CREATE
 #endif

@@ -2,7 +2,7 @@
 
     @file    IntrOS: osevent.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -40,7 +40,7 @@
  *
  ******************************************************************************/
 
-typedef struct __evt evt_t, * const evt_id;
+typedef struct __evt evt_t;
 
 struct __evt
 {
@@ -48,6 +48,8 @@ struct __evt
 
 	unsigned signal;
 };
+
+typedef struct __evt evt_id [];
 
 /******************************************************************************
  *
@@ -77,13 +79,11 @@ struct __evt
  *
  ******************************************************************************/
 
-#define             OS_EVT( evt )                     \
-                       evt_t evt##__evt = _EVT_INIT(); \
-                       evt_id evt = & evt##__evt
+#define             OS_EVT( evt ) \
+                       evt_t evt[] = { _EVT_INIT() }
 
-#define         static_EVT( evt )                     \
-                static evt_t evt##__evt = _EVT_INIT(); \
-                static evt_id evt = & evt##__evt
+#define         static_EVT( evt ) \
+                static evt_t evt[] = { _EVT_INIT() }
 
 /******************************************************************************
  *
@@ -113,7 +113,7 @@ struct __evt
  *
  * Parameters        : none
  *
- * Return            : pointer to event object
+ * Return            : event object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -121,7 +121,7 @@ struct __evt
 
 #ifndef __cplusplus
 #define                EVT_CREATE() \
-           (evt_t[]) { EVT_INIT  () }
+                     { EVT_INIT  () }
 #define                EVT_NEW \
                        EVT_CREATE
 #endif

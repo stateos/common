@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -46,7 +46,7 @@
  *
  ******************************************************************************/
 
-typedef struct __mem mem_t, * const mem_id;
+typedef struct __mem mem_t;
 
 struct __mem
 {
@@ -56,6 +56,8 @@ struct __mem
 	unsigned size;  // size of memory object (in sizeof(que_t) units)
 	que_t  * data;  // pointer to memory pool buffer
 };
+
+typedef struct __mem mem_id [];
 
 /******************************************************************************
  *
@@ -126,15 +128,13 @@ struct __mem
  *
  ******************************************************************************/
 
-#define             OS_MEM( mem, limit, size )                                          \
-                       que_t mem##__buf[limit * (1 + MEM_SIZE(size))];                   \
-                       mem_t mem##__mem = _MEM_INIT( limit, MEM_SIZE(size), mem##__buf ); \
-                       mem_id mem = & mem##__mem
+#define             OS_MEM( mem, limit, size )                        \
+                static que_t mem##__buf[limit * (1 + MEM_SIZE(size))]; \
+                       mem_t mem[] = { _MEM_INIT( limit, MEM_SIZE(size), mem##__buf ) }
 
-#define         static_MEM( mem, limit, size )                                          \
-                static que_t mem##__buf[limit * (1 + MEM_SIZE(size))];                   \
-                static mem_t mem##__mem = _MEM_INIT( limit, MEM_SIZE(size), mem##__buf ); \
-                static mem_id mem = & mem##__mem
+#define         static_MEM( mem, limit, size )                        \
+                static que_t mem##__buf[limit * (1 + MEM_SIZE(size))]; \
+                static mem_t mem[] = { _MEM_INIT( limit, MEM_SIZE(size), mem##__buf ) }
 
 /******************************************************************************
  *
@@ -168,7 +168,7 @@ struct __mem
  *   limit           : size of a buffer (max number of objects)
  *   size            : size of memory object (in bytes)
  *
- * Return            : pointer to memory pool object
+ * Return            : memory pool object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -176,7 +176,7 @@ struct __mem
 
 #ifndef __cplusplus
 #define                MEM_CREATE( limit, size ) \
-           (mem_t[]) { MEM_INIT  ( limit, size ) }
+                     { MEM_INIT  ( limit, size ) }
 #define                MEM_NEW \
                        MEM_CREATE
 #endif

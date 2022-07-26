@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -59,7 +59,7 @@ __PACKED_STRUCT __msh
  *
  ******************************************************************************/
 
-typedef struct __msg msg_t, * const msg_id;
+typedef struct __msg msg_t;
 
 struct __msg
 {
@@ -71,6 +71,8 @@ struct __msg
 	size_t   tail;  // index to write to the data buffer (in bytes)
 	char *   data;  // data buffer
 };
+
+typedef struct __msg msg_id [];
 
 /******************************************************************************
  *
@@ -142,15 +144,13 @@ struct __msg
  *
  ******************************************************************************/
 
-#define             OS_MSG( msg, limit, size )                                \
-                       char msg##__buf[limit * MSG_SIZE(size)];                \
-                       msg_t msg##__msg = _MSG_INIT( limit, size, msg##__buf ); \
-                       msg_id msg = & msg##__msg
+#define             OS_MSG( msg, limit, size )                 \
+                static char msg##__buf[limit * MSG_SIZE(size)]; \
+                       msg_t msg[] = { _MSG_INIT( limit, size, msg##__buf ) }
 
-#define         static_MSG( msg, limit, size )                                \
-                static char msg##__buf[limit * MSG_SIZE(size)];                \
-                static msg_t msg##__msg = _MSG_INIT( limit, size, msg##__buf ); \
-                static msg_id msg = & msg##__msg
+#define         static_MSG( msg, limit, size )                 \
+                static char msg##__buf[limit * MSG_SIZE(size)]; \
+                static msg_t msg[] = { _MSG_INIT( limit, size, msg##__buf ) }
 
 /******************************************************************************
  *
@@ -184,7 +184,7 @@ struct __msg
  *   limit           : size of a queue (max number of stored messages)
  *   size            : max size of a single message (in bytes)
  *
- * Return            : pointer to message queue object
+ * Return            : message queue object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -192,7 +192,7 @@ struct __msg
 
 #ifndef __cplusplus
 #define                MSG_CREATE( limit, size ) \
-           (msg_t[]) { MSG_INIT  ( limit, size ) }
+                     { MSG_INIT  ( limit, size ) }
 #define                MSG_NEW \
                        MSG_CREATE
 #endif

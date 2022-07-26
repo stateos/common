@@ -2,7 +2,7 @@
 
     @file    IntrOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -41,7 +41,8 @@
  *
  ******************************************************************************/
 
-typedef uint_fast8_t one_t, * const one_id;
+typedef uint_fast8_t one_t;
+typedef uint_fast8_t one_id [];
 
 /******************************************************************************
  *
@@ -87,13 +88,11 @@ typedef uint_fast8_t one_t, * const one_id;
  *
  ******************************************************************************/
 
-#define             OS_ONE( one )                     \
-                       one_t one##__one = _ONE_INIT(); \
-                       one_id one = & one##__one
+#define             OS_ONE( one ) \
+                       one_t one[] = { _ONE_INIT() }
 
-#define         static_ONE( one )                     \
-                static one_t one##__one = _ONE_INIT(); \
-                static one_id one = & one##__one
+#define         static_ONE( one ) \
+                static one_t one[] = { _ONE_INIT() }
 
 /******************************************************************************
  *
@@ -123,7 +122,7 @@ typedef uint_fast8_t one_t, * const one_id;
  *
  * Parameters        : none
  *
- * Return            : pointer to once flag object
+ * Return            : once flag object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -131,7 +130,7 @@ typedef uint_fast8_t one_t, * const one_id;
 
 #ifndef __cplusplus
 #define                ONE_CREATE() \
-           (one_t[]) { ONE_INIT  () }
+                     { ONE_INIT  () }
 #define                ONE_NEW \
                        ONE_CREATE
 #endif

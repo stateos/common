@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -54,6 +54,8 @@ struct __tmr
 	unsigned signal;
 };
 
+typedef struct __tmr tmr_id [];
+
 /******************************************************************************
  *
  * Name              : _TMR_INIT
@@ -87,13 +89,11 @@ struct __tmr
  *
  ******************************************************************************/
 
-#define             OS_TMR( tmr, state )                     \
-                       tmr_t tmr##__tmr = _TMR_INIT( state ); \
-                       tmr_id tmr = & tmr##__tmr
+#define             OS_TMR( tmr, state ) \
+                       tmr_t tmr[] = { _TMR_INIT( state ) }
 
-#define         static_TMR( tmr, state )                     \
-                static tmr_t tmr##__tmr = _TMR_INIT( state ); \
-                static tmr_id tmr = & tmr##__tmr
+#define         static_TMR( tmr, state ) \
+                static tmr_t tmr[] = { _TMR_INIT( state ) }
 
 /******************************************************************************
  *
@@ -108,16 +108,14 @@ struct __tmr
  *
  ******************************************************************************/
 
-#define             OS_TMR_DEF( tmr )                            \
-                       void tmr##__fun( void );                   \
-                       tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun ); \
-                       tmr_id tmr = & tmr##__tmr;                   \
-                       void tmr##__fun( void )
+#define             OS_TMR_DEF( tmr )          \
+                static void tmr##__fun( void ); \
+                    OS_TMR( tmr, tmr##__fun );   \
+                static void tmr##__fun( void )
 
-#define         static_TMR_DEF( tmr )                            \
-                static void tmr##__fun( void );                   \
-                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun ); \
-                static tmr_id tmr = & tmr##__tmr;                   \
+#define         static_TMR_DEF( tmr )          \
+                static void tmr##__fun( void ); \
+                static_TMR( tmr, tmr##__fun );   \
                 static void tmr##__fun( void )
 
 /******************************************************************************
@@ -142,20 +140,18 @@ struct __tmr
  ******************************************************************************/
 
 #ifdef __CONSTRUCTOR
-#define             OS_TMR_START( tmr, delay, period )                          \
-                       void tmr##__fun( void );                                  \
-                       tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                \
-                       tmr_id tmr = & tmr##__tmr;                                  \
-         __CONSTRUCTOR void tmr##__start( void ) { tmr_start(tmr, delay, period); } \
-                       void tmr##__fun( void )
+#define             OS_TMR_START( tmr, delay, period )                         \
+                static void tmr##__fun( void );                                 \
+                    OS_TMR( tmr, tmr##__fun );                                   \
+  __CONSTRUCTOR static void tmr##__run( void ) { tmr_start(tmr, delay, period); } \
+                static void tmr##__fun( void )
 #endif
 
 #ifdef __CONSTRUCTOR
-#define         static_TMR_START( tmr, delay, period )                          \
-                static void tmr##__fun( void );                                  \
-                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );                \
-                static tmr_id tmr = & tmr##__tmr;                                  \
-  __CONSTRUCTOR static void tmr##__start( void ) { tmr_start(tmr, delay, period); } \
+#define         static_TMR_START( tmr, delay, period )                         \
+                static void tmr##__fun( void );                                 \
+                static_TMR( tmr, tmr##__fun );                                   \
+  __CONSTRUCTOR static void tmr##__run( void ) { tmr_start(tmr, delay, period); } \
                 static void tmr##__fun( void )
 #endif
 
@@ -176,21 +172,19 @@ struct __tmr
  ******************************************************************************/
 
 #ifdef __CONSTRUCTOR
-#define             OS_TMR_UNTIL( tmr, time )                               \
-                       void tmr##__fun( void );                              \
-                       tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );            \
-                       tmr_id tmr = & tmr##__tmr;                              \
-         __CONSTRUCTOR void tmr##__start( void ) { tmr_startUntil(tmr, time); } \
-                       void tmr##__fun( void )
+#define             OS_TMR_UNTIL( tmr, time )                              \
+                static void tmr##__fun( void );                             \
+                    OS_TMR( tmr, tmr##__fun );                               \
+  __CONSTRUCTOR static void tmr##__run( void ) { tmr_startUntil(tmr, time); } \
+                static void tmr##__fun( void )
 #endif
 
 #ifdef __CONSTRUCTOR
-#define         static_TMR_UNTIL( tmr, time )                               \
-                static void tmr##__fun( void );                              \
-                static tmr_t tmr##__tmr = _TMR_INIT( tmr##__fun );            \
-                static tmr_id tmr = & tmr##__tmr;                              \
-  __CONSTRUCTOR static void tmr##__start( void ) { tmr_startUntil(tmr, time); } \
-                static  void tmr##__fun( void )
+#define         static_TMR_UNTIL( tmr, time )                              \
+                static void tmr##__fun( void );                             \
+                static_TMR( tmr, tmr##__fun );                               \
+  __CONSTRUCTOR static void tmr##__run( void ) { tmr_startUntil(tmr, time); } \
+                static void tmr##__fun( void )
 #endif
 
 /******************************************************************************
@@ -225,7 +219,7 @@ struct __tmr
  *   state           : callback procedure
  *                     NULL: no callback
  *
- * Return            : pointer to timer object
+ * Return            : timer object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -233,7 +227,7 @@ struct __tmr
 
 #ifndef __cplusplus
 #define                TMR_CREATE( state ) \
-           (tmr_t[]) { TMR_INIT  ( state ) }
+                     { TMR_INIT  ( state ) }
 #define                TMR_NEW \
                        TMR_CREATE
 #endif

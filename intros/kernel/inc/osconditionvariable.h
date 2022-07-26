@@ -2,7 +2,7 @@
 
     @file    IntrOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -41,12 +41,14 @@
  *
  ******************************************************************************/
 
-typedef struct __cnd cnd_t, * const cnd_id;
+typedef struct __cnd cnd_t;
 
 struct __cnd
 {
 	unsigned signal;
 };
+
+typedef struct __cnd cnd_id [];
 
 /******************************************************************************
  *
@@ -76,13 +78,11 @@ struct __cnd
  *
  ******************************************************************************/
 
-#define             OS_CND( cnd )                     \
-                       cnd_t cnd##__cnd = _CND_INIT(); \
-                       cnd_id cnd = & cnd##__cnd
+#define             OS_CND( cnd ) \
+                       cnd_t cnd[] = { _CND_INIT() }
 
-#define         static_CND( cnd )                     \
-                static cnd_t cnd##__cnd = _CND_INIT(); \
-                static cnd_id cnd = & cnd##__cnd
+#define         static_CND( cnd ) \
+                static cnd_t cnd[] = { _CND_INIT() }
 
 /******************************************************************************
  *
@@ -112,7 +112,7 @@ struct __cnd
  *
  * Parameters        : none
  *
- * Return            : pointer to condition variable object
+ * Return            : condition variable object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -120,7 +120,7 @@ struct __cnd
 
 #ifndef __cplusplus
 #define                CND_CREATE() \
-           (cnd_t[]) { CND_INIT  () }
+                     { CND_INIT  () }
 #define                CND_NEW \
                        CND_CREATE
 #endif

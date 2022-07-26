@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -40,7 +40,7 @@
  *
  ******************************************************************************/
 
-typedef struct __evq evq_t, * const evq_id;
+typedef struct __evq evq_t;
 
 struct __evq
 {
@@ -51,6 +51,8 @@ struct __evq
 	unsigned tail;  // first element to write into data buffer
 	unsigned*data;  // data buffer
 };
+
+typedef struct __evq evq_id [];
 
 /******************************************************************************
  *
@@ -117,15 +119,13 @@ struct __evq
  *
  ******************************************************************************/
 
-#define             OS_EVQ( evq, limit )                                \
-                       unsigned evq##__buf[limit];                       \
-                       evq_t evq##__evq = _EVQ_INIT( limit, evq##__buf ); \
-                       evq_id evq = & evq##__evq
+#define             OS_EVQ( evq, limit )          \
+                static unsigned evq##__buf[limit]; \
+                       evq_t evq[] = { _EVQ_INIT( limit, evq##__buf ) }
 
-#define         static_EVQ( evq, limit )                                \
-                static unsigned evq##__buf[limit];                       \
-                static evq_t evq##__evq = _EVQ_INIT( limit, evq##__buf ); \
-                static evq_id evq = & evq##__evq
+#define         static_EVQ( evq, limit )          \
+                static unsigned evq##__buf[limit]; \
+                static evq_t evq[] = { _EVQ_INIT( limit, evq##__buf ) }
 
 /******************************************************************************
  *
@@ -157,7 +157,7 @@ struct __evq
  * Parameters
  *   limit           : size of a queue (max number of stored events)
  *
- * Return            : pointer to event queue object
+ * Return            : event queue object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -165,7 +165,7 @@ struct __evq
 
 #ifndef __cplusplus
 #define                EVQ_CREATE( limit ) \
-           (evq_t[]) { EVQ_INIT  ( limit ) }
+                     { EVQ_INIT  ( limit ) }
 #define                EVQ_NEW \
                        EVQ_CREATE
 #endif

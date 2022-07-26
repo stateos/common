@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbarrier.h
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -40,7 +40,7 @@
  *
  ******************************************************************************/
 
-typedef struct __bar bar_t, * const bar_id;
+typedef struct __bar bar_t;
 
 struct __bar
 {
@@ -49,6 +49,8 @@ struct __bar
 
 	unsigned signal;
 };
+
+typedef struct __bar bar_id [];
 
 /******************************************************************************
  *
@@ -80,13 +82,11 @@ struct __bar
  *
  ******************************************************************************/
 
-#define             OS_BAR( bar, limit )                     \
-                       bar_t bar##__bar = _BAR_INIT( limit ); \
-                       bar_id bar = & bar##__bar
+#define             OS_BAR( bar, limit ) \
+                       bar_t bar[] = { _BAR_INIT( limit ) }
 
-#define         static_BAR( bar, limit )                     \
-                static bar_t bar##__bar = _BAR_INIT( limit ); \
-                static bar_id bar = & bar##__bar
+#define         static_BAR( bar, limit ) \
+                static bar_t bar[] = { _BAR_INIT( limit ) }
 
 /******************************************************************************
  *
@@ -118,7 +118,7 @@ struct __bar
  * Parameters
  *   limit           : number of tasks that must call bar_wait function to release the barrier object
  *
- * Return            : pointer to barrier object
+ * Return            : barrier object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -126,7 +126,7 @@ struct __bar
 
 #ifndef __cplusplus
 #define                BAR_CREATE( limit ) \
-           (bar_t[]) { BAR_INIT  ( limit ) }
+                     { BAR_INIT  ( limit ) }
 #define                BAR_NEW \
                        BAR_CREATE
 #endif
