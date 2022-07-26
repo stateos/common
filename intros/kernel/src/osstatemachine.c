@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    25.07.2022
+    @date    26.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -301,16 +301,6 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 		}
 	}
 	sys_unlock();
-}
-
-/* -------------------------------------------------------------------------- */
-void hsm_join( hsm_t *hsm )
-/* -------------------------------------------------------------------------- */
-{
-	assert(hsm != NULL);
-
-	while (hsm->state != NULL)
-		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

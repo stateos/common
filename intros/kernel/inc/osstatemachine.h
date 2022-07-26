@@ -487,21 +487,6 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState ) { hsm_star
 
 /******************************************************************************
  *
- * Name              : hsm_join
- *
- * Description       : delay execution of the current job until hsm stop
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *
- * Return            : none
- *
- ******************************************************************************/
-
-void hsm_join( hsm_t *hsm );
-
-/******************************************************************************
- *
  * Name              : hsm_give
  * Async alias       : hsm_giveAsync
  *
@@ -512,7 +497,7 @@ void hsm_join( hsm_t *hsm );
  *   event           : event value
  *
  * Return
- *   SUCCESS         : event data was successfully transferred to the hsm event queue
+ *   SUCCESS         : event data was successfully transferred to the hsm object
  *   FAILURE         : hsm event queue is full
  *
  ******************************************************************************/
@@ -551,7 +536,7 @@ void hsm_sendAsync( hsm_t *hsm, unsigned event ) { hsm_send(hsm, event); }
  * Name              : hsm_push
  *
  * Description       : transfer event data to the hsm event queue,
- *                     remove the oldest event data if the event queue is full
+ *                     remove the oldest event data if the hsm event queue is full
  *
  * Parameters
  *   hsm             : pointer to hsm object
@@ -628,11 +613,23 @@ struct Action : public __hsm_action
 	Action( S& _owner, unsigned _event,             hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, _handler) {}
 	template<class S> constexpr
 	Action( S& _owner, unsigned _event, S& _target, hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, _handler) {}
+#if __cplusplus >= 201402L
+	template<class S, class F> constexpr
+	Action( S& _owner, unsigned _event,             F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, fun_), fun{_handler} {}
+	template<class S, class F> constexpr
+	Action( S& _owner, unsigned _event, S& _target, F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, fun_), fun{_handler} {}
+#endif
 
 	Action( Action&& ) = default;
 	Action( const Action& ) = default;
 	Action& operator=( Action&& ) = delete;
 	Action& operator=( const Action& ) = delete;
+
+#if __cplusplus >= 201402L
+	static
+	void fun_( hsm_t *_hsm, unsigned _event ) { static_cast<Action*>(_hsm->action)->fun(_hsm, _event); }
+	std::function<void( hsm_t *, unsigned )> fun;
+#endif
 };
 
 /******************************************************************************
@@ -659,7 +656,6 @@ struct StateMachineT : public __hsm
 
 	void          link      ( hsm_action_t& _action )            {        hsm_link      (this, &_action); }
 	void          start     ( tsk_t& _task, hsm_state_t& _init ) {        hsm_start     (this, &_task, &_init); }
-	void          join      ()                                   {        hsm_join      (this); }
 	unsigned      give      ( unsigned _event )                  { return hsm_give      (this,  _event); }
 	void          send      ( unsigned _event )                  {        hsm_send      (this,  _event); }
 	void          push      ( unsigned _event )                  {        hsm_push      (this,  _event); }
