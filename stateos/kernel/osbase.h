@@ -2,7 +2,7 @@
 
     @file    StateOS: osbase.h
     @author  Rajmund Szymanski
-    @date    28.04.2021
+    @date    26.07.2022
     @brief   This file contains basic definitions for StateOS.
 
  ******************************************************************************
@@ -115,11 +115,11 @@ typedef uint64_t     cnt_t;
 
 /* -------------------------------------------------------------------------- */
 
-typedef struct __mtx mtx_t, * const mtx_id; // mutex
-typedef struct __tmr tmr_t, * const tmr_id; // timer
-typedef struct __tsk tsk_t, * const tsk_id; // task
-typedef         void fun_t();               // timer/task procedure
-typedef         void act_t(unsigned);       // signal action
+typedef struct __mtx mtx_t;           // mutex
+typedef struct __tmr tmr_t;           // timer
+typedef struct __tsk tsk_t;           // task
+typedef         void fun_t();         // timer/task procedure
+typedef         void act_t(unsigned); // signal action
 
 /* -------------------------------------------------------------------------- */
 

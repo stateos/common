@@ -2,7 +2,7 @@
 
     @file    StateOS: osonceflag.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -42,11 +42,8 @@
  *
  ******************************************************************************/
 
-typedef uint_fast8_t one_t, * const one_id;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef uint_fast8_t one_t;
+typedef uint_fast8_t one_id [];
 
 /******************************************************************************
  *
@@ -92,13 +89,11 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_ONE( one )                     \
-                       one_t one##__one = _ONE_INIT(); \
-                       one_id one = & one##__one
+#define             OS_ONE( one ) \
+                       one_t one[] = { _ONE_INIT() }
 
-#define         static_ONE( one )                     \
-                static one_t one##__one = _ONE_INIT(); \
-                static one_id one = & one##__one
+#define         static_ONE( one ) \
+                static one_t one[] = { _ONE_INIT() }
 
 /******************************************************************************
  *
@@ -128,7 +123,7 @@ extern "C" {
  *
  * Parameters        : none
  *
- * Return            : pointer to once flag object
+ * Return            : once flag object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -136,9 +131,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                ONE_CREATE() \
-           (one_t[]) { ONE_INIT  () }
+                     { ONE_INIT  () }
 #define                ONE_NEW \
                        ONE_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

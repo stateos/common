@@ -2,7 +2,7 @@
 
     @file    StateOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -45,7 +45,7 @@
  *
  ******************************************************************************/
 
-typedef struct __rwl rwl_t, * const rwl_id;
+typedef struct __rwl rwl_t;
 
 struct __rwl
 {
@@ -56,9 +56,7 @@ struct __rwl
 	unsigned count; // number of active readers
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct __rwl rwl_id [];
 
 /******************************************************************************
  *
@@ -88,13 +86,11 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_RWL( rwl )                     \
-                       rwl_t rwl##__rwl = _RWL_INIT(); \
-                       rwl_id rwl = & rwl##__rwl
+#define             OS_RWL( rwl ) \
+                       rwl_t rwl[] = { _RWL_INIT() }
 
-#define         static_RWL( rwl )                     \
-                static rwl_t rwl##__rwl = _RWL_INIT(); \
-                static rwl_id rwl = & rwl##__rwl
+#define         static_RWL( rwl ) \
+                static rwl_t rwl[] = { _RWL_INIT() }
 
 /******************************************************************************
  *
@@ -124,7 +120,7 @@ extern "C" {
  *
  * Parameters        : none
  *
- * Return            : pointer to read/write lock object
+ * Return            : read/write lock object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -132,9 +128,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                RWL_CREATE() \
-           (rwl_t[]) { RWL_INIT  () }
+                     { RWL_INIT  () }
 #define                RWL_NEW \
                        RWL_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

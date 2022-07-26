@@ -2,7 +2,7 @@
 
     @file    StateOS: osspinlock.h
     @author  Rajmund Szymanski
-    @date    10.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -41,11 +41,8 @@
  *
  ******************************************************************************/
 
-typedef uint_fast8_t spn_t, * const spn_id;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef uint_fast8_t spn_t;
+typedef uint_fast8_t spn_id [];
 
 /******************************************************************************
  *
@@ -75,13 +72,11 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_SPN( spn )                     \
-                       spn_t spn##__spn = _SPN_INIT(); \
-                       spn_id spn = & spn##__spn
+#define             OS_SPN( spn ) \
+                       spn_t spn[] = { _SPN_INIT() }
 
-#define         static_SPN( spn )                     \
-                static spn_t spn##__spn = _SPN_INIT(); \
-                static spn_id spn = & spn##__spn
+#define         static_SPN( spn ) \
+                static spn_t spn[] = { _SPN_INIT() }
 
 /******************************************************************************
  *
@@ -111,7 +106,7 @@ extern "C" {
  *
  * Parameters        : none
  *
- * Return            : pointer to spin lock object
+ * Return            : spin lock object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -119,9 +114,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                SPN_CREATE() \
-           (spn_t[]) { SPN_INIT  () }
+                     { SPN_INIT  () }
 #define                SPN_NEW \
                        SPN_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

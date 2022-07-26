@@ -2,7 +2,7 @@
 
     @file    StateOS: osrawbuffer.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -41,7 +41,7 @@
  *
  ******************************************************************************/
 
-typedef struct __raw raw_t, * const raw_id;
+typedef struct __raw raw_t;
 
 struct __raw
 {
@@ -55,9 +55,7 @@ struct __raw
 	char *   data;  // data buffer
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct __raw raw_id [];
 
 /******************************************************************************
  *
@@ -138,15 +136,13 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_RAW( raw, limit, ... )                                                 \
-                       char raw##__buf[_VA_RAW(limit, __VA_ARGS__)];                           \
-                       raw_t raw##__raw = _RAW_INIT( _VA_RAW(limit, __VA_ARGS__), raw##__buf ); \
-                       raw_id raw = & raw##__raw
+#define             OS_RAW( raw, limit, ... )                       \
+                static char raw##__buf[_VA_RAW(limit, __VA_ARGS__)]; \
+                       raw_t raw[] = { _RAW_INIT( _VA_RAW(limit, __VA_ARGS__), raw##__buf ) }
 
-#define         static_RAW( raw, limit, ... )                                                 \
-                static char raw##__buf[_VA_RAW(limit, __VA_ARGS__)];                           \
-                static raw_t raw##__raw = _RAW_INIT( _VA_RAW(limit, __VA_ARGS__), raw##__buf ); \
-                static raw_id raw = & raw##__raw
+#define         static_RAW( raw, limit, ... )                       \
+                static char raw##__buf[_VA_RAW(limit, __VA_ARGS__)]; \
+                static raw_t raw[] = { _RAW_INIT( _VA_RAW(limit, __VA_ARGS__), raw##__buf ) }
 
 /******************************************************************************
  *
@@ -180,7 +176,7 @@ extern "C" {
  *   limit           : size of a buffer (max number of stored bytes / objects)
  *   type            : (optional) size of the object (in bytes); default: 1
  *
- * Return            : pointer to raw buffer object
+ * Return            : raw buffer object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -188,9 +184,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                RAW_CREATE( limit, ... ) \
-           (raw_t[]) { RAW_INIT  ( _VA_RAW(limit, __VA_ARGS__) ) }
+                     { RAW_INIT  ( _VA_RAW(limit, __VA_ARGS__) ) }
 #define                RAW_NEW \
                        RAW_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

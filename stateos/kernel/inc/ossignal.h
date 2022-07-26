@@ -2,7 +2,7 @@
 
     @file    StateOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -46,7 +46,7 @@
  *
  ******************************************************************************/
 
-typedef struct __sig sig_t, * const sig_id;
+typedef struct __sig sig_t;
 
 struct __sig
 {
@@ -56,9 +56,7 @@ struct __sig
 	unsigned mask;  // protection mask
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct __sig sig_id [];
 
 /******************************************************************************
  *
@@ -102,13 +100,11 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_SIG( sig, ... )                                      \
-                       sig_t sig##__sig = _SIG_INIT( _VA_SIG(__VA_ARGS__) ); \
-                       sig_id sig = & sig##__sig
+#define             OS_SIG( sig, ... ) \
+                       sig_t sig[] = { _SIG_INIT( _VA_SIG(__VA_ARGS__) ) }
 
-#define         static_SIG( sig, ... )                                      \
-                static sig_t sig##__sig = _SIG_INIT( _VA_SIG(__VA_ARGS__) ); \
-                static sig_id sig = & sig##__sig
+#define         static_SIG( sig, ... ) \
+                static sig_t sig[] = { _SIG_INIT( _VA_SIG(__VA_ARGS__) ) }
 
 /******************************************************************************
  *
@@ -140,7 +136,7 @@ extern "C" {
  * Parameters
  *   mask            : (optional) protection mask; default: 0
  *
- * Return            : pointer to signal object
+ * Return            : signal object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -148,9 +144,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                SIG_CREATE( ... ) \
-           (sig_t[]) { SIG_INIT  ( _VA_SIG(__VA_ARGS__) ) }
+                     { SIG_INIT  ( _VA_SIG(__VA_ARGS__) ) }
 #define                SIG_NEW \
                        SIG_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

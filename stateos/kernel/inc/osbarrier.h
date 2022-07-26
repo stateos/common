@@ -2,7 +2,7 @@
 
     @file    StateOS: osbarrier.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -42,7 +42,7 @@
  *
  ******************************************************************************/
 
-typedef struct __bar bar_t, * const bar_id;
+typedef struct __bar bar_t;
 
 struct __bar
 {
@@ -51,9 +51,7 @@ struct __bar
 	unsigned limit; // limit of tasks blocked on the barrier object
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct __bar bar_id [];
 
 /******************************************************************************
  *
@@ -85,13 +83,11 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_BAR( bar, limit )                     \
-                       bar_t bar##__bar = _BAR_INIT( limit ); \
-                       bar_id bar = & bar##__bar
+#define             OS_BAR( bar, limit ) \
+                       bar_t bar[] = { _BAR_INIT( limit ) }
 
-#define         static_BAR( bar, limit )                     \
-                static bar_t bar##__bar = _BAR_INIT( limit ); \
-                static bar_id bar = & bar##__bar
+#define         static_BAR( bar, limit ) \
+                static bar_t bar[] = { _BAR_INIT( limit ) }
 
 /******************************************************************************
  *
@@ -123,7 +119,7 @@ extern "C" {
  * Parameters
  *   limit           : number of tasks that must call bar_wait[Until|For] function to release the barrier object
  *
- * Return            : pointer to barrier object
+ * Return            : barrier object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -131,9 +127,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                BAR_CREATE( limit ) \
-           (bar_t[]) { BAR_INIT  ( limit ) }
+                     { BAR_INIT  ( limit ) }
 #define                BAR_NEW \
                        BAR_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

@@ -2,7 +2,7 @@
 
     @file    StateOS: osevent.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -41,16 +41,14 @@
  *
  ******************************************************************************/
 
-typedef struct __evt evt_t, * const evt_id;
+typedef struct __evt evt_t;
 
 struct __evt
 {
 	obj_t    obj;   // object header
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct __evt evt_id [];
 
 /******************************************************************************
  *
@@ -80,13 +78,11 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_EVT( evt )                     \
-                       evt_t evt##__evt = _EVT_INIT(); \
-                       evt_id evt = & evt##__evt
+#define             OS_EVT( evt ) \
+                       evt_t evt[] = { _EVT_INIT() }
 
-#define         static_EVT( evt )                     \
-                static evt_t evt##__evt = _EVT_INIT(); \
-                static evt_id evt = & evt##__evt
+#define         static_EVT( evt ) \
+                static evt_t evt[] = { _EVT_INIT() }
 
 /******************************************************************************
  *
@@ -116,7 +112,7 @@ extern "C" {
  *
  * Parameters        : none
  *
- * Return            : pointer to event object
+ * Return            : event object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -124,9 +120,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                EVT_CREATE() \
-           (evt_t[]) { EVT_INIT  () }
+                     { EVT_INIT  () }
 #define                EVT_NEW \
                        EVT_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

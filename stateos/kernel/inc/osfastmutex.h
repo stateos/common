@@ -2,7 +2,7 @@
 
     @file    StateOS: osfastmutex.h
     @author  Rajmund Szymanski
-    @date    12.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -43,7 +43,7 @@
  *
  ******************************************************************************/
 
-typedef struct __mut mut_t, * const mut_id;
+typedef struct __mut mut_t;
 
 struct __mut
 {
@@ -52,9 +52,7 @@ struct __mut
 	tsk_t  * owner; // mutex owner
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct __mut mut_id [];
 
 /******************************************************************************
  *
@@ -84,13 +82,11 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_MUT( mut )                     \
-                       mut_t mut##__mut = _MUT_INIT(); \
-                       mut_id mut = & mut##__mut
+#define             OS_MUT( mut ) \
+                       mut_t mut[] = { _MUT_INIT() }
 
-#define         static_MUT( mut )                     \
-                static mut_t mut##__mut = _MUT_INIT(); \
-                static mut_id mut = & mut##__mut
+#define         static_MUT( mut ) \
+                static mut_t mut[] = { _MUT_INIT() }
 
 /******************************************************************************
  *
@@ -120,7 +116,7 @@ extern "C" {
  *
  * Parameters        : none
  *
- * Return            : pointer to fast mutex object
+ * Return            : fast mutex object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -128,9 +124,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                MUT_CREATE() \
-           (mut_t[]) { MUT_INIT  () }
+                     { MUT_INIT  () }
 #define                MUT_NEW \
                        MUT_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

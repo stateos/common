@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    14.07.2022
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -81,9 +81,7 @@ struct __mtx
 	mtx_t  * list;  // list of mutexes held by owner
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct __mtx mtx_id [];
 
 /******************************************************************************
  *
@@ -136,13 +134,11 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_MTX( mtx, mode, ... )                                    \
-                       mtx_t mtx##__mtx = _MTX_INIT(mode, _VA_MTX(__VA_ARGS__)); \
-                       mtx_id mtx = & mtx##__mtx
+#define             OS_MTX( mtx, mode, ... ) \
+                       mtx_t mtx[] = { _MTX_INIT(mode, _VA_MTX(__VA_ARGS__) ) }
 
-#define         static_MTX( mtx, mode, ... )                                    \
-                static mtx_t mtx##__mtx = _MTX_INIT(mode, _VA_MTX(__VA_ARGS__)); \
-                static mtx_id mtx = & mtx##__mtx
+#define         static_MTX( mtx, mode, ... ) \
+                static mtx_t mtx[] = { _MTX_INIT(mode, _VA_MTX(__VA_ARGS__) ) }
 
 /******************************************************************************
  *
@@ -182,7 +178,7 @@ extern "C" {
  *                     robustness: mtxStalled or mtxRobust
  *   prio            : mutex priority; used only with mtxPrioProtect protocol
  *
- * Return            : pointer to mutex object
+ * Return            : mutex object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -190,9 +186,13 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                MTX_CREATE( mode, ... ) \
-           (mtx_t[]) { MTX_INIT  ( mode, _VA_MTX(__VA_ARGS__) ) }
+                     { MTX_INIT  ( mode, _VA_MTX(__VA_ARGS__) ) }
 #define                MTX_NEW \
                        MTX_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************

@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    27.05.2021
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -155,9 +155,7 @@ struct __tsk
 #endif
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct __tsk tsk_id [];
 
 /******************************************************************************
  *
@@ -181,30 +179,6 @@ extern "C" {
 #define               _TSK_INIT( _prio, _state, _stack, _size )                                               \
                        { _OBJ_INIT(), _HDR_INIT(), _state, NULL, 0, 0, 0, NULL, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
                        { NULL, NULL }, { 0, NULL, { NULL, NULL } }, { { 0 } }, _PORT_DATA_INIT() }
-
-/******************************************************************************
- *
- * Name              : _TSK_CREATE
- *
- * Description       : create and initialize a task object
- *
- * Parameters
- *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
- *                     it will be executed into an infinite system-implemented loop
- *   stack           : base of task's private stack storage
- *   size            : size of task private stack (in bytes)
- *
- * Return            : pointer to task object
- *
- * Note              : for internal use
- *
- ******************************************************************************/
-
-#ifndef __cplusplus
-#define               _TSK_CREATE( _prio, _state, _stack, _size ) \
-          (tsk_t[]) { _TSK_INIT  ( _prio, _state, _stack, _size ) }
-#endif
 
 /******************************************************************************
  *
@@ -272,15 +246,13 @@ extern "C" {
  *
  ******************************************************************************/
 
-#define             OS_WRK( tsk, prio, state, size )                                            \
-                       stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN;                            \
-                       tsk_t tsk##__tsk = _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ); \
-                       tsk_id tsk = & tsk##__tsk
+#define             OS_WRK( tsk, prio, state, size )                       \
+                static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
+                       tsk_t tsk[] = { _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ) }
 
-#define         static_WRK( tsk, prio, state, size )                                            \
-                static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN;                            \
-                static tsk_t tsk##__tsk = _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ); \
-                static tsk_id tsk = & tsk##__tsk
+#define         static_WRK( tsk, prio, state, size )                       \
+                static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
+                static tsk_t tsk[] = { _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ) }
 
 /******************************************************************************
  *
@@ -320,9 +292,9 @@ extern "C" {
  ******************************************************************************/
 
 #define             OS_WRK_DEF( tsk, prio, size )        \
-                       void tsk##__fun( void );           \
+                static void tsk##__fun( void );           \
                     OS_WRK( tsk, prio, tsk##__fun, size ); \
-                       void tsk##__fun( void )
+                static void tsk##__fun( void )
 
 #define         static_WRK_DEF( tsk, prio, size )        \
                 static void tsk##__fun( void );           \
@@ -369,10 +341,10 @@ extern "C" {
 
 #ifdef __CONSTRUCTOR
 #define             OS_WRK_START( tsk, prio, size )                         \
-                       void tsk##__fun( void );                              \
+                static void tsk##__fun( void );                              \
                     OS_WRK( tsk, prio, tsk##__fun, size );                    \
-         __CONSTRUCTOR void tsk##__run( void ) { sys_init(); tsk_start(tsk); } \
-                       void tsk##__fun( void )
+  __CONSTRUCTOR static void tsk##__run( void ) { sys_init(); tsk_start(tsk); } \
+                static void tsk##__fun( void )
 #endif
 
 #ifdef __CONSTRUCTOR
@@ -446,7 +418,7 @@ extern "C" {
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *
- * Return            : pointer to task object
+ * Return            : task object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -454,7 +426,7 @@ extern "C" {
 
 #ifndef __cplusplus
 #define                WRK_CREATE( prio, state, size ) \
-           (tsk_t[]) { WRK_INIT  ( prio, state, size ) }
+                     { WRK_INIT  ( prio, state, size ) }
 #define                WRK_NEW \
                        WRK_CREATE
 #endif
@@ -495,7 +467,7 @@ extern "C" {
  *                     it will be executed into an infinite system-implemented loop
  *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
- * Return            : pointer to task object
+ * Return            : task object as array (id)
  *
  * Note              : use only in 'C' code
  *
@@ -506,6 +478,10 @@ extern "C" {
                        WRK_CREATE( prio, state, _VA_STK(__VA_ARGS__) )
 #define                TSK_NEW \
                        TSK_CREATE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /******************************************************************************
