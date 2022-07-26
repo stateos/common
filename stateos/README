@@ -41,6 +41,7 @@ Features:
 - event queues
 - job queues
 - timers (one-shot, periodic)
+- hierarchical state machine
 - cmsis-rtos api
 - cmsis-rtos2 api
 - nasa-osal support
@@ -55,6 +56,7 @@ Features:
 - updated assertions
 - updated os version
 - added condition variable c++ waiting functions with predicate
+- added hierarchical state machine (HSM)
 ---------
 6.8
 - updated sys_init function

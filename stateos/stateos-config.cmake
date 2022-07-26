@@ -43,6 +43,7 @@ target_sources(stateos
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/ossignal.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/ostask.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/ostimer.c
+	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osstatemachine.c
 )
 
 if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/port/${STATEOS_ARCH}/compiler/${STATEOS_COMPILER}/oscore.s)

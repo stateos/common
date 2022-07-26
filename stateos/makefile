@@ -46,6 +46,7 @@ SRCS += $(COMMON)/stateos/kernel/src/ossemaphore.c
 SRCS += $(COMMON)/stateos/kernel/src/ossignal.c
 SRCS += $(COMMON)/stateos/kernel/src/ostask.c
 SRCS += $(COMMON)/stateos/kernel/src/ostimer.c
+SRCS += $(COMMON)/stateos/kernel/src/osstatemachine.c
 ifneq ($(wildcard $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)/oscore.s),)
 SRCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)/oscore.s
 endif

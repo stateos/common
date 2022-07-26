@@ -2,7 +2,7 @@
 
     @file    StateOS: os.h
     @author  Rajmund Szymanski
-    @date    27.05.2021
+    @date    26.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -58,5 +58,6 @@
 #include "inc/osjobqueue.h"
 #include "inc/ostimer.h"
 #include "inc/ostask.h"
+#include "inc/osstatemachine.h"
 
 #endif//__STATEOS_H
