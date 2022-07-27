@@ -700,6 +700,9 @@ hsm_state_t *hsm_getState( hsm_t *hsm );
 /* -------------------------------------------------------------------------- */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
+#if __cplusplus >= 201402L && !defined(__ICCARM__)
+#include <vector>
+#endif
 namespace stateos {
 
 /******************************************************************************
@@ -744,9 +747,9 @@ struct Action : public __hsm_action
 	template<class S> constexpr
 	Action( S& _owner, unsigned _event, S& _target, hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, _handler) {}
 #if __cplusplus >= 201402L
-	template<class S, class F> constexpr
+	template<class S, class F>
 	Action( S& _owner, unsigned _event,             F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, fun_), fun{_handler} {}
-	template<class S, class F> constexpr
+	template<class S, class F>
 	Action( S& _owner, unsigned _event, S& _target, F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, fun_), fun{_handler} {}
 #endif
 
@@ -773,12 +776,14 @@ struct Action : public __hsm_action
  *
  ******************************************************************************/
 
-template<unsigned limit_>
+template<unsigned limit_ = 1>
 struct StateMachineT : public __hsm
 {
 	constexpr
 	StateMachineT(): __hsm _HSM_INIT(limit_, data_) {}
-
+#if __cplusplus >= 201402L && !defined(__ICCARM__)
+	StateMachineT( std::vector<Action>&& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{std::move(_tab)} { for (auto& _a: tab_) link(_a); }
+#endif
 	StateMachineT( StateMachineT&& ) = default;
 	StateMachineT( const StateMachineT& ) = delete;
 	StateMachineT& operator=( StateMachineT&& ) = delete;
@@ -837,6 +842,9 @@ struct StateMachineT : public __hsm
 
 	private:
 	unsigned data_[limit_];
+#if __cplusplus >= 201402L && !defined(__ICCARM__)
+	std::vector<Action> tab_{};
+#endif
 };
 
 }     //  namespace
