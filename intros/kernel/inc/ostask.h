@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    27.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -839,7 +839,7 @@ template<size_t size_>
 struct baseStack
 {
 	static_assert(size_>0, "incorrect stack size");
-#if __cplusplus >= 201703 && !defined(__ICCARM__)
+#if __cplusplus >= 201703L && !defined(__ICCARM__)
 	stk_t stack_[STK_SIZE(size_)] __STKALIGN;
 #else
 	stk_t stack_[STK_SIZE(size_)];
