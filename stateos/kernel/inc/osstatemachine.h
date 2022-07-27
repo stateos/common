@@ -509,21 +509,6 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 
 /******************************************************************************
  *
- * Name              : hsm_stop
- *
- * Description       : stop execution of hsm
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *
- * Return            : none
- *
- ******************************************************************************/
-
-void hsm_stop( hsm_t *hsm );
-
-/******************************************************************************
- *
  * Name              : hsm_reset
  * Alias             : hsm_kill
  *

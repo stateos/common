@@ -187,26 +187,31 @@ static
 void priv_eventDispatcher( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned event;
-
 	assert(hsm);
 
-	do
+	for (;;)
 	{
+		unsigned event;
+		int      result = evq_wait(&hsm->evq, &event);
+
+		if (result != E_SUCCESS || event == hsmStop)
+			break;
+
+		assert(event >= hsmUser);
+
 		sys_lock();
 		{
-			int result = evq_wait(&hsm->evq, &event);
-			if (result != E_SUCCESS)
-				event = hsmStop;
-			assert(event >= hsmUser || event == hsmStop);
 			if (event >= hsmUser)
 				priv_eventHandler(hsm, event);
 		}
 		sys_unlock();
 	}
-	while (event != hsmStop);
 
-	hsm_stop(hsm);
+	sys_lock();
+	{
+		hsm->state = NULL;
+	}
+	sys_unlock();
 #if OS_TASK_EXIT == 0
 	tsk_stop();
 #endif
@@ -334,27 +339,13 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 	{
 		if (hsm->state == NULL)
 		{
-			hsm->evq.count = 0;
-			hsm->evq.head  = 0;
-			hsm->evq.tail  = 0;
+			hsm->evq.count = 0; // reset hsm event queue
+			hsm->evq.head  = 0; //
+			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
 			tsk->arg = hsm;
 			tsk_startFrom(tsk, priv_eventDispatcher);
 		}
-	}
-	sys_unlock();
-}
-
-/* -------------------------------------------------------------------------- */
-void hsm_stop( hsm_t *hsm )
-/* -------------------------------------------------------------------------- */
-{
-	assert_tsk_context();
-	assert(hsm);
-	
-	sys_lock();
-	{
-		hsm->state = NULL;
 	}
 	sys_unlock();
 }
@@ -470,26 +461,31 @@ static
 void priv_eventDispatcherAsync( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned event;
-
 	assert(hsm);
 
-	do
+	for (;;)
 	{
-		evq_waitAsync(&hsm->evq, &event);
-		assert(event >= hsmUser || event == hsmStop);
-		if (event >= hsmUser)
-		{
-			sys_lock();
-			{
-				priv_eventHandler(hsm, event);
-			}
-			sys_unlock();
-		}
-	}
-	while (event != hsmStop);
+		unsigned event;
+		int      result = evq_waitAsync(&hsm->evq, &event);
 
-	hsm_stop(hsm);
+		if (result != E_SUCCESS || event == hsmStop)
+			break;
+
+		assert(event >= hsmUser);
+
+		sys_lock();
+		{
+			if (event >= hsmUser)
+				priv_eventHandler(hsm, event);
+		}
+		sys_unlock();
+	}
+
+	sys_lock();
+	{
+		hsm->state = NULL;
+	}
+	sys_unlock();
 #if OS_TASK_EXIT == 0
 	tsk_stop();
 #endif
@@ -510,9 +506,9 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 	{
 		if (hsm->state == NULL)
 		{
-			hsm->evq.count = 0;
-			hsm->evq.head  = 0;
-			hsm->evq.tail  = 0;
+			hsm->evq.count = 0; // reset hsm event queue
+			hsm->evq.head  = 0; //
+			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
 			tsk->arg = hsm;
 			tsk_startFrom(tsk, priv_eventDispatcherAsync);
