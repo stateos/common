@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    27.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -506,6 +506,21 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 #if OS_ATOMICS
 void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : hsm_stop
+ *
+ * Description       : stop execution of hsm
+ *
+ * Parameters
+ *   hsm             : pointer to hsm object
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void hsm_stop( hsm_t *hsm );
 
 /******************************************************************************
  *

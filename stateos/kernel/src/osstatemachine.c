@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    27.07.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -206,7 +206,7 @@ void priv_eventDispatcher( hsm_t *hsm )
 	}
 	while (event != hsmStop);
 
-	hsm->state = NULL;
+	hsm_stop(hsm);
 #if OS_TASK_EXIT == 0
 	tsk_stop();
 #endif
@@ -346,14 +346,29 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 }
 
 /* -------------------------------------------------------------------------- */
+void hsm_stop( hsm_t *hsm )
+/* -------------------------------------------------------------------------- */
+{
+	assert_tsk_context();
+	assert(hsm);
+	
+	sys_lock();
+	{
+		hsm->state = NULL;
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
 static
 void priv_hsm_reset( hsm_t *hsm, int event )
 /* -------------------------------------------------------------------------- */
 {
+	hsm->state = NULL;
+
 	hsm->evq.count = 0;
 	hsm->evq.head  = 0;
 	hsm->evq.tail  = 0;
-	hsm->state = NULL;
 
 	core_all_wakeup(hsm->evq.obj.queue, event);
 }
@@ -394,6 +409,7 @@ int hsm_give( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	return evq_give(&hsm->evq, event);
 }
@@ -403,6 +419,7 @@ int hsm_sendFor( hsm_t *hsm, unsigned event, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	return evq_sendFor(&hsm->evq, event, delay);
 }
@@ -412,6 +429,7 @@ int hsm_sendUntil( hsm_t *hsm, unsigned event, cnt_t time )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	return evq_sendUntil(&hsm->evq, event, time);
 }
@@ -421,6 +439,7 @@ void hsm_push( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	evq_push(&hsm->evq, event);
 }
@@ -457,9 +476,7 @@ void priv_eventDispatcherAsync( hsm_t *hsm )
 
 	do
 	{
-		int result = evq_waitAsync(&hsm->evq, &event);
-		if (result != E_SUCCESS)
-			event = hsmStop;
+		evq_waitAsync(&hsm->evq, &event);
 		assert(event >= hsmUser || event == hsmStop);
 		if (event >= hsmUser)
 		{
@@ -472,7 +489,7 @@ void priv_eventDispatcherAsync( hsm_t *hsm )
 	}
 	while (event != hsmStop);
 
-	hsm->state = NULL;
+	hsm_stop(hsm);
 #if OS_TASK_EXIT == 0
 	tsk_stop();
 #endif
@@ -509,6 +526,7 @@ int hsm_giveAsync( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	return evq_giveAsync(&hsm->evq, event);
 }
@@ -518,6 +536,7 @@ int hsm_sendAsync( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	return evq_sendAsync(&hsm->evq, event);
 }
