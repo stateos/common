@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    27.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -484,6 +484,22 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 __STATIC_INLINE
 void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState ) { hsm_start(hsm, tsk, initState); }
 #endif
+
+/******************************************************************************
+ *
+ * Name              : hsm_stop
+ *
+ * Description       : stop execution of hsm
+ *
+ * Parameters
+ *   hsm             : pointer to hsm object
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+__STATIC_INLINE
+void hsm_stop( hsm_t *hsm ) { hsm->state = NULL; }
 
 /******************************************************************************
  *

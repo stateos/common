@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    27.07.2022
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -189,7 +189,7 @@ void priv_eventDispatcher( hsm_t *hsm )
 {
 	unsigned event;
 
-	assert(hsm != NULL);
+	assert(hsm);
 
 	do
 	{
@@ -204,7 +204,7 @@ void priv_eventDispatcher( hsm_t *hsm )
 	}
 	while (event != hsmStop);
 
-	hsm->state = NULL;
+	hsm_stop(hsm);
 #if OS_TASK_EXIT == 0
 	tsk_stop();
 #endif
@@ -214,7 +214,7 @@ void priv_eventDispatcher( hsm_t *hsm )
 void hsm_initState( hsm_state_t *state, hsm_state_t *parent )
 /* -------------------------------------------------------------------------- */
 {
-	assert(state != NULL);
+	assert(state);
 
 	sys_lock();
 	{
@@ -229,8 +229,8 @@ void hsm_initState( hsm_state_t *state, hsm_state_t *parent )
 void hsm_initAction( hsm_action_t *action, hsm_state_t *owner, unsigned event, hsm_state_t *target, hsm_handler_t *handler )
 /* -------------------------------------------------------------------------- */
 {
-	assert(action != NULL);
-	assert(owner != NULL);
+	assert(action);
+	assert(owner);
 
 	sys_lock();
 	{
@@ -248,8 +248,9 @@ void hsm_initAction( hsm_action_t *action, hsm_state_t *owner, unsigned event, h
 void hsm_init( hsm_t *hsm, void *data, size_t bufsize )
 /* -------------------------------------------------------------------------- */
 {
-	assert(hsm != NULL);
-	assert(data != NULL);
+	assert(hsm);
+	assert(data);
+	assert(bufsize);
 
 	sys_lock();
 	{
@@ -266,9 +267,9 @@ void hsm_link( hsm_t *hsm, hsm_action_t *action )
 {
 	(void) hsm;
 
-	assert(hsm != NULL);
-	assert(action != NULL);
-	assert(action->owner != NULL);
+	assert(hsm);
+	assert(action);
+	assert(action->owner);
 
 	sys_lock();
 	{
@@ -282,21 +283,21 @@ void hsm_link( hsm_t *hsm, hsm_action_t *action )
 void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 /* -------------------------------------------------------------------------- */
 {
-	assert(hsm != NULL);
+	assert(hsm);
 	assert(hsm->state == NULL);
-	assert(tsk != NULL);
-	assert(initState != NULL);
+	assert(tsk);
+	assert(initState);
 	assert(initState->parent == NULL);
 
 	sys_lock();
 	{
 		if (hsm->state == NULL)
 		{
-			tsk->arg = hsm;
 			hsm->evq.count = 0; // reset hsm event queue
 			hsm->evq.head  = 0; //
 			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
+			tsk->arg = hsm;
 			tsk_startFrom(tsk, priv_eventDispatcher);
 		}
 	}
@@ -307,7 +308,8 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 unsigned hsm_give( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	assert(hsm != NULL);
+	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	return evq_give(&hsm->evq, event);
 }
@@ -316,7 +318,8 @@ unsigned hsm_give( hsm_t *hsm, unsigned event )
 void hsm_send( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	assert(hsm != NULL);
+	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	evq_send(&hsm->evq, event);
 }
@@ -325,7 +328,8 @@ void hsm_send( hsm_t *hsm, unsigned event )
 void hsm_push( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	assert(hsm != NULL);
+	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
 
 	evq_push(&hsm->evq, event);
 }
