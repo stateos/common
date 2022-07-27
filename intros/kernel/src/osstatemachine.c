@@ -187,24 +187,26 @@ static
 void priv_eventDispatcher( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned event;
-
 	assert(hsm);
 
-	do
+	for (;;)
 	{
+		unsigned event = evq_wait(&hsm->evq);
+
+		if (event == hsmStop)
+			break;
+
+		assert(event >= hsmUser);
+
 		sys_lock();
 		{
-			event = evq_wait(&hsm->evq);
-			assert(event >= hsmUser || event == hsmStop);
 			if (event >= hsmUser)
 				priv_eventHandler(hsm, event);
 		}
 		sys_unlock();
 	}
-	while (event != hsmStop);
 
-	hsm_stop(hsm);
+	hsm->state = NULL;
 #if OS_TASK_EXIT == 0
 	tsk_stop();
 #endif

@@ -487,22 +487,6 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState ) { hsm_star
 
 /******************************************************************************
  *
- * Name              : hsm_stop
- *
- * Description       : stop execution of hsm
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *
- * Return            : none
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-void hsm_stop( hsm_t *hsm ) { hsm->state = NULL; }
-
-/******************************************************************************
- *
  * Name              : hsm_give
  * Async alias       : hsm_giveAsync
  *
