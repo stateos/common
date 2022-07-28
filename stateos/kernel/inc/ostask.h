@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    28.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -533,7 +533,7 @@ void wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
  * Name              : tsk_init
  *
  * Description       : initialize complete work area for task object
- *                     and start the task
+ *                     and start the task, if state != NULL
  *
  * Parameters
  *   tsk             : pointer to task object
@@ -586,7 +586,7 @@ tsk_t *wrk_new( unsigned prio, fun_t *state, size_t size, bool detached, bool au
  * Name              : tsk_setup
  *
  * Description       : create and initialize complete work area for task object
- *                     and start the task
+ *                     and start the task, if proc != NULL
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
@@ -609,7 +609,7 @@ tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size );
  * Alias             : tsk_new
  *
  * Description       : create and initialize a new task object with default stack size
- *                     and start the task
+ *                     and start the task, if state != NULL
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
@@ -626,13 +626,13 @@ tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size );
 __STATIC_INLINE
 tsk_t *tsk_create( unsigned prio, fun_t *state )
 {
-	return wrk_create(prio, state, OS_STACK_SIZE, false, true);
+	return wrk_create(prio, state, OS_STACK_SIZE, false, state != NULL);
 }
 
 __STATIC_INLINE
 tsk_t *tsk_new( unsigned prio, fun_t *state )
 {
-	return wrk_create(prio, state, OS_STACK_SIZE, false, true);
+	return wrk_create(prio, state, OS_STACK_SIZE, false, state != NULL);
 }
 
 /******************************************************************************
@@ -640,7 +640,7 @@ tsk_t *tsk_new( unsigned prio, fun_t *state )
  * Name              : tsk_detached
  *
  * Description       : create and initialize a new detached task object with default stack size
- *                     and start the task
+ *                     and start the task, if state != NULL
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
@@ -657,7 +657,7 @@ tsk_t *tsk_new( unsigned prio, fun_t *state )
 __STATIC_INLINE
 tsk_t *tsk_detached( unsigned prio, fun_t *state )
 {
-	return wrk_create(prio, state, OS_STACK_SIZE, true, true);
+	return wrk_create(prio, state, OS_STACK_SIZE, true, state != NULL);
 }
 
 /******************************************************************************

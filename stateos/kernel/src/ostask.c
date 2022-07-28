@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.c
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    28.07.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -90,15 +90,17 @@ void tsk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
 {
 	assert_tsk_context();
 	assert(tsk);
-	assert(state);
 	assert(stack);
 	assert(size>sizeof(ctx_t));
 
 	sys_lock();
 	{
 		priv_wrk_init(tsk, prio, state, NULL, stack, size, NULL, false);
-		core_ctx_init(tsk);
-		core_tsk_insert(tsk);
+		if (state)
+		{
+			core_ctx_init(tsk);
+			core_tsk_insert(tsk);
+		}
 	}
 	sys_unlock();
 }
@@ -110,6 +112,7 @@ tsk_t *wrk_create( unsigned prio, fun_t *state, size_t size, bool detached, bool
 	tsk_t *tsk;
 
 	assert_tsk_context();
+	assert(state||!autostart);
 	assert(size>sizeof(ctx_t));
 
 	sys_lock();
@@ -117,7 +120,6 @@ tsk_t *wrk_create( unsigned prio, fun_t *state, size_t size, bool detached, bool
 		tsk = priv_wrk_create(prio, state, NULL, size, detached);
 		if (tsk && autostart)
 		{
-			assert(state);
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
 		}
@@ -134,13 +136,12 @@ tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size )
 	tsk_t *tsk;
 
 	assert_tsk_context();
-	assert(proc);
 	assert(size>sizeof(ctx_t));
 
 	sys_lock();
 	{
 		tsk = priv_wrk_create(prio, proc, arg, size, false);
-		if (tsk)
+		if (tsk && proc)
 		{
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
