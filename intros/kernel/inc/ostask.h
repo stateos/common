@@ -56,7 +56,7 @@ struct __tsk
 {
 	hdr_t    hdr;   // timer / task header
 
-	fun_t *  state; // task state (initial task function, doesn't have to be noreturn-type)
+	fun_t *  proc;  // task proc (initial task function, doesn't have to be noreturn-type)
 	void *   arg;   // reserved for internal use
 	cnt_t    start; // inherited from timer
 	cnt_t    delay; // inherited from timer
@@ -89,7 +89,7 @@ typedef struct __tsk tsk_id [];
  * Description       : create and initialize a task object
  *
  * Parameters
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   stack           : base of task's private stack storage
  *   size            : size of task private stack (in bytes)
@@ -100,8 +100,8 @@ typedef struct __tsk tsk_id [];
  *
  ******************************************************************************/
 
-#define               _TSK_INIT( _state, _stack, _size ) \
-                    { _HDR_INIT(), _state, NULL, 0, 0, 0, _stack, _size, { 0, NULL, { NULL, 0 } }, { _CTX_INIT() } }
+#define               _TSK_INIT( _proc, _stack, _size ) \
+                    { _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, { 0, NULL, { NULL, 0 } }, { _CTX_INIT() } }
 
 /******************************************************************************
  *
@@ -162,19 +162,19 @@ typedef struct __tsk tsk_id [];
  *
  * Parameters
  *   tsk             : name of a pointer to task object
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *
  ******************************************************************************/
 
-#define             OS_WRK( tsk, state, size )                       \
+#define             OS_WRK( tsk, proc, size )                        \
                 static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
-                       tsk_t tsk[] = { _TSK_INIT( state, tsk##__stk, STK_OVER( size ) ) }
+                       tsk_t tsk[] = { _TSK_INIT( proc, tsk##__stk, STK_OVER( size ) ) }
 
-#define         static_WRK( tsk, state, size )                       \
+#define         static_WRK( tsk, proc, size )                        \
                 static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
-                static tsk_t tsk[] = { _TSK_INIT( state, tsk##__stk, STK_OVER( size ) ) }
+                static tsk_t tsk[] = { _TSK_INIT( proc, tsk##__stk, STK_OVER( size ) ) }
 
 /******************************************************************************
  *
@@ -185,17 +185,17 @@ typedef struct __tsk tsk_id [];
  *
  * Parameters
  *   tsk             : name of a pointer to task object
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
  ******************************************************************************/
 
-#define             OS_TSK( tsk, state, ... ) \
-                    OS_WRK( tsk, state, _VA_STK(__VA_ARGS__) )
+#define             OS_TSK( tsk, proc, ... ) \
+                    OS_WRK( tsk, proc, _VA_STK(__VA_ARGS__) )
 
-#define         static_TSK( tsk, state, ... ) \
-                static_WRK( tsk, state, _VA_STK(__VA_ARGS__) )
+#define         static_TSK( tsk, proc, ... ) \
+                static_WRK( tsk, proc, _VA_STK(__VA_ARGS__) )
 
 /******************************************************************************
  *
@@ -203,7 +203,7 @@ typedef struct __tsk tsk_id [];
  * Static alias      : static_WRK_DEF
  *
  * Description       : define and initialize complete work area for task object
- *                     task state (function body) must be defined immediately below
+ *                     task proc (function body) must be defined immediately below
  *
  * Parameters
  *   tsk             : name of a pointer to task object
@@ -227,7 +227,7 @@ typedef struct __tsk tsk_id [];
  * Static alias      : static_TSK_DEF
  *
  * Description       : define and initialize complete work area for task object with default stack size
- *                     task state (function body) must be defined immediately below
+ *                     task proc (function body) must be defined immediately below
  *
  * Parameters
  *   tsk             : name of a pointer to task object
@@ -247,7 +247,7 @@ typedef struct __tsk tsk_id [];
  * Static alias      : static_WRK_START
  *
  * Description       : define, initialize and start complete work area for task object
- *                     task state (function body) must be defined immediately below
+ *                     task proc (function body) must be defined immediately below
  *
  * Parameters
  *   tsk             : name of a pointer to task object
@@ -279,7 +279,7 @@ typedef struct __tsk tsk_id [];
  * Static alias      : static_TSK_START
  *
  * Description       : define, initialize and start complete work area for task object with default stack size
- *                     task state (function body) must be defined immediately below
+ *                     task proc (function body) must be defined immediately below
  *
  * Parameters
  *   tsk             : name of a pointer to task object
@@ -306,7 +306,7 @@ typedef struct __tsk tsk_id [];
  * Description       : create and initialize complete work area for task object
  *
  * Parameters
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *
@@ -317,8 +317,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                WRK_INIT( state, size ) \
-                      _TSK_INIT( state, _TSK_STACK( size ), STK_OVER( size ) )
+#define                WRK_INIT( proc, size ) \
+                      _TSK_INIT( proc, _TSK_STACK( size ), STK_OVER( size ) )
 #endif
 
 /******************************************************************************
@@ -329,7 +329,7 @@ typedef struct __tsk tsk_id [];
  * Description       : create and initialize complete work area for task object
  *
  * Parameters
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *
@@ -340,8 +340,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                WRK_CREATE( state, size ) \
-                     { WRK_INIT  ( state, size ) }
+#define                WRK_CREATE( proc, size ) \
+                     { WRK_INIT  ( proc, size ) }
 #define                WRK_NEW \
                        WRK_CREATE
 #endif
@@ -353,7 +353,7 @@ typedef struct __tsk tsk_id [];
  * Description       : create and initialize complete work area for task object with default stack size
  *
  * Parameters
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
@@ -364,8 +364,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                TSK_INIT( state, ... ) \
-                       WRK_INIT( state, _VA_STK(__VA_ARGS__) )
+#define                TSK_INIT( proc, ... ) \
+                       WRK_INIT( proc, _VA_STK(__VA_ARGS__) )
 #endif
 
 /******************************************************************************
@@ -376,7 +376,7 @@ typedef struct __tsk tsk_id [];
  * Description       : create and initialize complete work area for task object with default stack size
  *
  * Parameters
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
@@ -387,8 +387,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                TSK_CREATE( state, ... ) \
-                       WRK_CREATE( state, _VA_STK(__VA_ARGS__) )
+#define                TSK_CREATE( proc, ... ) \
+                       WRK_CREATE( proc, _VA_STK(__VA_ARGS__) )
 #define                TSK_NEW \
                        TSK_CREATE
 #endif
@@ -425,7 +425,7 @@ tsk_t *cur_task( void ) { return System.cur; }
  *
  * Parameters
  *   tsk             : pointer to task object
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   stack           : base of task's private stack storage
  *   size            : size of task private stack (in bytes)
@@ -434,18 +434,18 @@ tsk_t *cur_task( void ) { return System.cur; }
  *
  ******************************************************************************/
 
-void wrk_init( tsk_t *tsk, fun_t *state, stk_t *stack, size_t size );
+void wrk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size );
 
 /******************************************************************************
  *
  * Name              : tsk_init
  *
  * Description       : initialize complete work area for task object
- *                     and start the task, if state != NULL
+ *                     and start the task, if proc != NULL
  *
  * Parameters
  *   tsk             : pointer to task object
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   stack           : base of task's private stack storage
  *   size            : size of task private stack (in bytes)
@@ -454,7 +454,7 @@ void wrk_init( tsk_t *tsk, fun_t *state, stk_t *stack, size_t size );
  *
  ******************************************************************************/
 
-void tsk_init( tsk_t *tsk, fun_t *state, stk_t *stack, size_t size );
+void tsk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size );
 
 /******************************************************************************
  *
@@ -479,14 +479,14 @@ void tsk_start( tsk_t *tsk );
  *
  * Parameters
  *   tsk             : pointer to task object
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *
  * Return            : none
  *
  ******************************************************************************/
 
-void tsk_startFrom( tsk_t *tsk, fun_t *state );
+void tsk_startFrom( tsk_t *tsk, fun_t *proc );
 
 /******************************************************************************
  *
@@ -583,17 +583,17 @@ void tsk_pass ( void ) { core_ctx_switch(); }
  *
  * Name              : tsk_flip
  *
- * Description       : restart current task with the new state (task function)
+ * Description       : restart current task with the new proc (task function)
  *
  * Parameters
- *   proc            : new task state (task function)
+ *   proc            : new task proc (task function)
  *
  * Return            : none
  *
  ******************************************************************************/
 
 __NO_RETURN
-void tsk_flip( fun_t *state );
+void tsk_flip( fun_t *proc );
 
 /******************************************************************************
  *
@@ -853,7 +853,7 @@ struct baseStack
  * Description       : create and initialize base class for task objects
  *
  * Constructor parameters
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   stack           : base of task's private stack storage
  *   size            : size of task private stack (in bytes)
@@ -866,18 +866,18 @@ struct baseTask : public __tsk
 {
 #if __cplusplus >= 201402L
 	template<class F>
-	baseTask( F&& _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(fun_, _stack, _size), fun{_state} {}
+	baseTask( F&& _proc, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(fun_, _stack, _size), fun{_proc} {}
 #else
-	baseTask( fun_t *_state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_state, _stack, _size) {}
+	baseTask( fun_t *_proc, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_proc, _stack, _size) {}
 #endif
 
 	void     start    ()                   {        tsk_start    (this); }
 #if __cplusplus >= 201402L
 	template<class F>
-	void     startFrom( F&&      _state )  {        new (&fun) Fun_t(_state);
+	void     startFrom( F&&      _proc )   {        new (&fun) Fun_t(_proc);
 	                                                tsk_startFrom(this, fun_); }
 #else
-	void     startFrom( fun_t  * _state )  {        tsk_startFrom(this, _state); }
+	void     startFrom( fun_t  * _proc )   {        tsk_startFrom(this, _proc); }
 #endif
 	void     join     ()                   {        tsk_join     (this); }
 	void     reset    ()                   {        tsk_reset    (this); }
@@ -932,11 +932,11 @@ struct baseTask : public __tsk
 		void pass      ()                   {        tsk_pass      (); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void flip      ( F&&      _state )  {        new (&current()->fun) Fun_t(_state);
+		void flip      ( F&&      _proc )   {        new (&current()->fun) Fun_t(_proc);
 		                                             tsk_flip      (fun_); }
 #else
 		static
-		void flip      ( fun_t  * _state )  {        tsk_flip      (_state); }
+		void flip      ( fun_t  * _proc )   {        tsk_flip      (_proc); }
 #endif
 		template<typename T> static
 		void sleepFor  ( const T& _delay )  {        tsk_sleepFor  (Clock::count(_delay)); }
@@ -976,7 +976,7 @@ using this_task = baseTask::Current;
  *
  * Constructor parameters
  *   size            : size of task private stack (in bytes)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *
  ******************************************************************************/
@@ -985,12 +985,12 @@ template<size_t size_>
 struct TaskT : public baseTask, public baseStack<size_>
 {
 	template<class F>
-	TaskT( F&& _state ):
-	baseTask{_state, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
+	TaskT( F&& _proc ):
+	baseTask{_proc, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
 #if __cplusplus >= 201402L
 	template<typename F, typename... A>
-	TaskT( F&& _state, A&&... _args ):
-	baseTask{std::bind(std::forward<F>(_state), std::forward<A>(_args)...), baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
+	TaskT( F&& _proc, A&&... _args ):
+	baseTask{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...), baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
 #endif
 
 	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
@@ -1008,25 +1008,25 @@ struct TaskT : public baseTask, public baseStack<size_>
  *
  * Parameters
  *   size            : size of task private stack (in bytes)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   args            : arguments for state function
+ *   args            : arguments for task proc
  *
  * Return            : TaskT<> object
  *
  ******************************************************************************/
 
 	template<class F> static
-	TaskT<size_> Make( F&& _state )
+	TaskT<size_> Make( F&& _proc )
 	{
-		return { _state };
+		return { _proc };
 	}
 
 #if __cplusplus >= 201402L
 	template<typename F, typename... A> static
-	TaskT<size_> Make( F&& _state, A&&... _args )
+	TaskT<size_> Make( F&& _proc, A&&... _args )
 	{
-		return Make(std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Make(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 
@@ -1038,27 +1038,27 @@ struct TaskT : public baseTask, public baseStack<size_>
  *
  * Parameters
  *   size            : size of task private stack (in bytes)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   args            : arguments for state function
+ *   args            : arguments for task proc
  *
  * Return            : TaskT<> object
  *
  ******************************************************************************/
 
 	template<class F> static
-	TaskT<size_> Start( F&& _state )
+	TaskT<size_> Start( F&& _proc )
 	{
-		TaskT<size_> tsk { _state };
+		TaskT<size_> tsk { _proc };
 		tsk.start();
 		return tsk;
 	}
 
 #if __cplusplus >= 201402L
 	template<typename F, typename... A> static
-	TaskT<size_> Start( F&& _state, A&&... _args )
+	TaskT<size_> Start( F&& _proc, A&&... _args )
 	{
-		return Start(std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Start(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 };

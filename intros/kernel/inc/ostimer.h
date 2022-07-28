@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    28.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -45,7 +45,7 @@ struct __tmr
 {
 	hdr_t    hdr;   // timer / task header
 
-	fun_t *  state; // callback procedure
+	fun_t *  proc;  // callback procedure
 	void *   arg;   // reserved for internal use
 	cnt_t    start;
 	cnt_t    delay;
@@ -63,7 +63,7 @@ typedef struct __tmr tmr_id [];
  * Description       : create and initialize a timer object
  *
  * Parameters
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     NULL: no callback
  *
  * Return            : timer object
@@ -72,8 +72,8 @@ typedef struct __tmr tmr_id [];
  *
  ******************************************************************************/
 
-#define               _TMR_INIT( _state ) \
-                    { _HDR_INIT(), _state, NULL, 0, 0, 0, 0 }
+#define               _TMR_INIT( _proc ) \
+                    { _HDR_INIT(), _proc, NULL, 0, 0, 0, 0 }
 
 /******************************************************************************
  *
@@ -84,16 +84,16 @@ typedef struct __tmr tmr_id [];
  *
  * Parameters
  *   tmr             : name of a pointer to timer object
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     NULL: no callback
  *
  ******************************************************************************/
 
-#define             OS_TMR( tmr, state ) \
-                       tmr_t tmr[] = { _TMR_INIT( state ) }
+#define             OS_TMR( tmr, proc ) \
+                       tmr_t tmr[] = { _TMR_INIT( proc ) }
 
-#define         static_TMR( tmr, state ) \
-                static tmr_t tmr[] = { _TMR_INIT( state ) }
+#define         static_TMR( tmr, proc ) \
+                static tmr_t tmr[] = { _TMR_INIT( proc ) }
 
 /******************************************************************************
  *
@@ -194,7 +194,7 @@ typedef struct __tmr tmr_id [];
  * Description       : create and initialize a timer object
  *
  * Parameters
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     NULL: no callback
  *
  * Return            : timer object
@@ -204,8 +204,8 @@ typedef struct __tmr tmr_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                TMR_INIT( state ) \
-                      _TMR_INIT( state )
+#define                TMR_INIT( proc ) \
+                      _TMR_INIT( proc )
 #endif
 
 /******************************************************************************
@@ -216,7 +216,7 @@ typedef struct __tmr tmr_id [];
  * Description       : create and initialize a timer object
  *
  * Parameters
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     NULL: no callback
  *
  * Return            : timer object as array (id)
@@ -226,8 +226,8 @@ typedef struct __tmr tmr_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                TMR_CREATE( state ) \
-                     { TMR_INIT  ( state ) }
+#define                TMR_CREATE( proc ) \
+                     { TMR_INIT  ( proc ) }
 #define                TMR_NEW \
                        TMR_CREATE
 #endif
@@ -261,14 +261,14 @@ tmr_t *tmr_this( void ) { return (tmr_t *) System.cur; }
  *
  * Parameters
  *   tmr             : pointer to timer object
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     NULL: no callback
  *
  * Return            : none
  *
  ******************************************************************************/
 
-void tmr_init( tmr_t *tmr, fun_t *state );
+void tmr_init( tmr_t *tmr, fun_t *proc );
 
 /******************************************************************************
  *
@@ -448,7 +448,7 @@ void tmr_wait( tmr_t *tmr );
  ******************************************************************************/
 
 __STATIC_INLINE
-void tmr_flip( fun_t *proc ) { tmr_this()->state = proc; }
+void tmr_flip( fun_t *proc ) { tmr_this()->proc = proc; }
 
 /******************************************************************************
  *
@@ -486,7 +486,7 @@ namespace intros {
  * Description       : create and initialize base class for timer objects
  *
  * Constructor parameters
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     nullptr: no callback
  *
  * Note              : for internal use
@@ -498,9 +498,9 @@ struct baseTimer : public __tmr
 	baseTimer(): __tmr _TMR_INIT(nullptr) {}
 #if __cplusplus >= 201402L
 	template<class F>
-	baseTimer( F&& _state ): __tmr _TMR_INIT(fun_), fun{_state} {}
+	baseTimer( F&& _proc ): __tmr _TMR_INIT(fun_), fun{_proc} {}
 #else
-	baseTimer( fun_t *_state ): __tmr _TMR_INIT(_state) {}
+	baseTimer( fun_t *_proc ): __tmr _TMR_INIT(_proc) {}
 #endif
 
 	template<typename T>
@@ -517,11 +517,11 @@ struct baseTimer : public __tmr
 	template<typename T>
 	void     startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), nullptr); }
 	template<typename T, class F>
-	void     startFrom    ( const T& _delay, const T& _period, F&&     _state ) {        new (&fun) Fun_t(_state);
+	void     startFrom    ( const T& _delay, const T& _period, F&&     _proc )  {        new (&fun) Fun_t(_proc);
 	                                                                                     tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), fun_); }
 #else
 	template<typename T>
-	void     startFrom    ( const T& _delay, const T& _period, fun_t * _state ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _state); }
+	void     startFrom    ( const T& _delay, const T& _period, fun_t * _proc )  {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _proc); }
 #endif
 	unsigned take         ()                                                    { return tmr_take         (this); }
 	unsigned tryWait      ()                                                    { return tmr_tryWait      (this); }
@@ -552,13 +552,13 @@ struct baseTimer : public __tmr
 		static
 		void flip ( std::nullptr_t )            { tmr_flip (nullptr); }
 		template<class F> static
-		void flip ( F&& _state )                { new (&current()->fun) Fun_t(_state);
+		void flip ( F&& _proc )                 { new (&current()->fun) Fun_t(_proc);
 		                                          tmr_flip (fun_); }
 		template<typename F, typename... A> static
-		void flip ( F&& _state, A&&... _args )  { flip(std::bind(std::forward<F>(_state), std::forward<A>(_args)...)); }
+		void flip ( F&& _proc, A&&... _args )   { flip(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)); }
 #else
 		static
-		void flip ( fun_t  * _state )           { tmr_flip (_state); }
+		void flip ( fun_t  * _proc )            { tmr_flip (_proc); }
 #endif
 		template<typename T> static
 		void delay( const T& _delay )           { tmr_delay(Clock::count(_delay)); }
@@ -575,7 +575,7 @@ using this_timer = baseTimer::Current;
  * Description       : create and initialize a timer object
  *
  * Constructor parameters
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     none / nullptr: no callback
  *
  ******************************************************************************/
@@ -584,11 +584,11 @@ struct Timer : public baseTimer
 {
 	Timer(): baseTimer{} {}
 	template<class F>
-	Timer( F&& _state ): baseTimer{_state} {}
+	Timer( F&& _proc ): baseTimer{_proc} {}
 #if __cplusplus >= 201402L
 	Timer( std::nullptr_t ): baseTimer{} {}
 	template<typename F, typename... A>
-	Timer( F&& _state, A&&... _args ): baseTimer{std::bind(std::forward<F>(_state), std::forward<A>(_args)...)} {}
+	Timer( F&& _proc, A&&... _args ): baseTimer{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)} {}
 #endif
 
 	~Timer() { assert(__tmr::hdr.id == ID_STOPPED); }
@@ -605,7 +605,7 @@ struct Timer : public baseTimer
  * Description       : create and initialize timer object
  *
  * Parameters
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     none / nullptr: no callback
  *   args            : arguments for callback procedure
  *
@@ -620,9 +620,9 @@ struct Timer : public baseTimer
 	}
 
 	template<class F> static
-	Timer Make( F&& _state )
+	Timer Make( F&& _proc )
 	{
-		return { _state };
+		return { _proc };
 	}
 
 #if __cplusplus >= 201402L
@@ -633,9 +633,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename F, typename... A> static
-	Timer Make( F&& _state, A&&... _args )
+	Timer Make( F&& _proc, A&&... _args )
 	{
-		return Make(std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Make(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 
@@ -655,7 +655,7 @@ struct Timer : public baseTimer
  *   period          : duration of time (maximum number of ticks to countdown) for all next expirations
  *                     IMMEDIATE: don't countdown
  *                     INFINITE:  countdown indefinitely
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     none / nullptr: no callback
  *   args            : arguments for callback procedure
  *
@@ -672,9 +672,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename T, class F> static
-	Timer Start( const T& _delay, const T& _period, F&& _state )
+	Timer Start( const T& _delay, const T& _period, F&& _proc )
 	{
-		Timer tmr { _state };
+		Timer tmr { _proc };
 		tmr.start(_delay, _period);
 		return tmr;
 	}
@@ -687,9 +687,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename T, typename F, typename... A> static
-	Timer Start( const T& _delay, const T& _period, F&& _state, A&&... _args )
+	Timer Start( const T& _delay, const T& _period, F&& _proc, A&&... _args )
 	{
-		return Start(_delay, _period, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Start(_delay, _period, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 
@@ -705,7 +705,7 @@ struct Timer : public baseTimer
  *   delay           : duration of time (maximum number of ticks to countdown)
  *                     IMMEDIATE: don't countdown
  *                     INFINITE:  countdown indefinitely
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     none / nullptr: no callback
  *   args            : arguments for callback procedure
  *
@@ -722,9 +722,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename T, class F> static
-	Timer StartFor( const T& _delay, F&& _state )
+	Timer StartFor( const T& _delay, F&& _proc )
 	{
-		Timer tmr { _state };
+		Timer tmr { _proc };
 		tmr.startFor(_delay);
 		return tmr;
 	}
@@ -737,9 +737,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename T, typename F, typename... A> static
-	Timer StartFor( const T& _delay, F&& _state, A&&... _args )
+	Timer StartFor( const T& _delay, F&& _proc, A&&... _args )
 	{
-		return StartFor(_delay, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return StartFor(_delay, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 
@@ -756,7 +756,7 @@ struct Timer : public baseTimer
  *   period          : duration of time (maximum number of ticks to countdown)
  *                     IMMEDIATE: don't countdown
  *                     INFINITE:  countdown indefinitely
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     none / nullptr: no callback
  *   args            : arguments for callback procedure
  *
@@ -773,9 +773,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename T, class F> static
-	Timer StartPeriodic( const T& _period, F&& _state )
+	Timer StartPeriodic( const T& _period, F&& _proc )
 	{
-		Timer tmr { _state };
+		Timer tmr { _proc };
 		tmr.startPeriodic(_period);
 		return tmr;
 	}
@@ -788,9 +788,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename T, typename F, typename... A> static
-	Timer StartPeriodic( const T& _period, F&& _state, A&&... _args )
+	Timer StartPeriodic( const T& _period, F&& _proc, A&&... _args )
 	{
-		return StartPeriodic(_period, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return StartPeriodic(_period, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 
@@ -804,7 +804,7 @@ struct Timer : public baseTimer
  *
  * Parameters
  *   time            : timepoint value
- *   state           : callback procedure
+ *   proc            : callback procedure
  *                     none / nullptr: no callback
  *   args            : arguments for callback procedure
  *
@@ -821,9 +821,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename T, class F> static
-	Timer StartUntil( const T& _time, F&& _state )
+	Timer StartUntil( const T& _time, F&& _proc )
 	{
-		Timer tmr { _state };
+		Timer tmr { _proc };
 		tmr.startUntil(_time);
 		return tmr;
 	}
@@ -836,9 +836,9 @@ struct Timer : public baseTimer
 	}
 
 	template<typename T, typename F, typename... A> static
-	Timer StartUntil( const T& _time, F&& _state, A&&... _args )
+	Timer StartUntil( const T& _time, F&& _proc, A&&... _args )
 	{
-		return StartUntil(_time, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return StartUntil(_time, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 };

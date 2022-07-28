@@ -35,20 +35,20 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_wrk_init( tsk_t *tsk, fun_t *state, stk_t *stack, size_t size )
+void priv_wrk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	memset(tsk, 0, sizeof(tsk_t));
 
 	core_hdr_init(&tsk->hdr);
 
-	tsk->state = state;
+	tsk->proc  = proc;
 	tsk->stack = stack;
 	tsk->size  = size;
 }
 
 /* -------------------------------------------------------------------------- */
-void wrk_init( tsk_t *tsk, fun_t *state, stk_t *stack, size_t size )
+void wrk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);
@@ -57,13 +57,13 @@ void wrk_init( tsk_t *tsk, fun_t *state, stk_t *stack, size_t size )
 
 	sys_lock();
 	{
-		priv_wrk_init(tsk, state, stack, size);
+		priv_wrk_init(tsk, proc, stack, size);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_init( tsk_t *tsk, fun_t *state, stk_t *stack, size_t size )
+void tsk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);
@@ -72,8 +72,8 @@ void tsk_init( tsk_t *tsk, fun_t *state, stk_t *stack, size_t size )
 
 	sys_lock();
 	{
-		priv_wrk_init(tsk, state, stack, size);
-		if (state)
+		priv_wrk_init(tsk, proc, stack, size);
+		if (proc)
 		{
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
@@ -87,7 +87,7 @@ void tsk_start( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);
-	assert(tsk->state);
+	assert(tsk->proc);
 
 	sys_lock();
 	{
@@ -101,17 +101,17 @@ void tsk_start( tsk_t *tsk )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_startFrom( tsk_t *tsk, fun_t *state )
+void tsk_startFrom( tsk_t *tsk, fun_t *proc )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);
-	assert(state);
+	assert(proc);
 
 	sys_lock();
 	{
 		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
-			tsk->state = state;
+			tsk->proc = proc;
 
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
@@ -168,12 +168,12 @@ void tsk_join( tsk_t *tsk )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_flip( fun_t *state )
+void tsk_flip( fun_t *proc )
 /* -------------------------------------------------------------------------- */
 {
-	assert(state);
+	assert(proc);
 
-	System.cur->state = state;
+	System.cur->proc = proc;
 
 	priv_tsk_reset(System.cur);
 	core_ctx_init(System.cur);
