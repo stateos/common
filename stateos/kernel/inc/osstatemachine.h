@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    27.07.2022
+    @date    28.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -89,8 +89,8 @@ typedef void hsm_handler_t(hsm_t *, unsigned);
 
 struct __hsm_state
 {
-	hsm_state_t *  parent;  // pointer to parent state in the hsm tree
-	hsm_action_t * queue;   // state action queue
+	hsm_state_t *   parent;  // pointer to parent state in the hsm tree
+	hsm_action_t *  queue;   // state action queue
 };
 
 typedef struct __hsm_state hsm_state_id [];
@@ -131,9 +131,9 @@ typedef struct __hsm_action hsm_action_id [];
 
 struct __hsm
 {
-	evq_t         evq;   // event queue
-	hsm_state_t * state; // current hsm state
-	hsm_action_t* action;
+	evq_t           evq;     // event queue
+	hsm_state_t *   state;   // current hsm state
+	hsm_action_t *  action;  // current hsm state action
 };
 
 typedef struct __hsm hsm_id [];
@@ -700,9 +700,7 @@ hsm_state_t *hsm_getState( hsm_t *hsm );
 /* -------------------------------------------------------------------------- */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
-#if __cplusplus >= 201402L && !defined(__ICCARM__)
 #include <vector>
-#endif
 namespace stateos {
 
 /******************************************************************************

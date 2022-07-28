@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    27.07.2022
+    @date    28.07.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -95,7 +95,7 @@ void priv_setNextState( hsm_t *hsm, hsm_state_t *state )
 
 /* -------------------------------------------------------------------------- */
 static
-hsm_action_t* priv_getAction( hsm_state_t *state, unsigned event )
+hsm_action_t* priv_getAction( hsm_t *hsm, hsm_state_t *state, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	hsm_action_t *action = state->queue;
@@ -103,21 +103,22 @@ hsm_action_t* priv_getAction( hsm_state_t *state, unsigned event )
 	while (action != NULL && action->event != event && action->event != hsmALL)
 		action = action->next;
 
+	hsm->action = action;
+
 	return action;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_callHandler( hsm_t *hsm, hsm_state_t *state, unsigned event )
+hsm_action_t *priv_callHandler( hsm_t *hsm, hsm_state_t *state, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	hsm->action = priv_getAction(state, event);
+	hsm_action_t *action = priv_getAction(hsm, state, event);
 
-	if (hsm->action == NULL)
-		return;
+	if (action != NULL && action->handler != NULL)
+		action->handler(hsm, event);
 
-	if (hsm->action->handler != NULL)
-		hsm->action->handler(hsm, event);
+	return action;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -128,19 +129,16 @@ static
 unsigned priv_callAction( hsm_t *hsm, hsm_state_t *state, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	hsm->action = priv_getAction(state, event);
+	hsm_action_t *action = priv_callHandler(hsm, state, event);
 
-	if (hsm->action == NULL)
+	if (action == NULL)
 		return event;
 
-	if (hsm->action->handler != NULL)
-		hsm->action->handler(hsm, event);
-
-	if (hsm->action->target != NULL)
+	if (action->target != NULL)
 	{
-		assert(event >= hsmUser || hsm->action->target->parent == state);
+		assert(event >= hsmUser || action->target->parent == state);
 
-		priv_transition(hsm, hsm->action->target);
+		priv_transition(hsm, action->target);
 	}
 
 	return hsmALL;
