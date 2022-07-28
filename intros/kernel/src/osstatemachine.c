@@ -297,8 +297,7 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 			hsm->evq.head  = 0; //
 			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
-			tsk->arg = hsm;
-			tsk_startFrom(tsk, priv_eventDispatcher);
+			tsk_startWith(tsk, priv_eventDispatcher, hsm);
 		}
 	}
 	sys_unlock();

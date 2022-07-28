@@ -490,6 +490,23 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc );
 
 /******************************************************************************
  *
+ * Name              : tsk_startWith
+ *
+ * Description       : start previously defined/created/stopped task object
+ *
+ * Parameters
+ *   tsk             : pointer to task object
+ *   proc            : task initial procedure (initial task function)
+ *   arg             : task initial procedure argument (for internal use)
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void tsk_startWith( tsk_t *tsk, fun_t *proc, void *arg );
+
+/******************************************************************************
+ *
  * Name              : tsk_stop
  * Alias             : tsk_exit
  *

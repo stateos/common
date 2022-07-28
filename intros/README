@@ -43,6 +43,7 @@ Features:
 - added hierarchical state machine (HSM)
 - changed tsk_init function
 - renamed tsk/tmr function
+- added tsk_startWith function
 ---------
 4.8
 - updated sys_init function

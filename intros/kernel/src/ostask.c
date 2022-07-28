@@ -121,6 +121,27 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc )
 }
 
 /* -------------------------------------------------------------------------- */
+void tsk_startWith( tsk_t *tsk, fun_t *proc, void *arg )
+/* -------------------------------------------------------------------------- */
+{
+	assert(tsk);
+	assert(proc);
+
+	sys_lock();
+	{
+		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
+		{
+			tsk->proc = proc;
+			tsk->arg  = arg;
+
+			core_ctx_init(tsk);
+			core_tsk_insert(tsk);
+		}
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
 static
 void priv_tsk_reset( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
