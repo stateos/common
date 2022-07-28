@@ -41,6 +41,7 @@ Features:
 - updated os version
 - added condition variable c++ waiting functions with predicate
 - added hierarchical state machine (HSM)
+- changed tsk_init function
 ---------
 4.8
 - updated sys_init function
