@@ -2,7 +2,7 @@
 
     @file    StateOS: ossys.c
     @author  Rajmund Szymanski
-    @date    27.05.2021
+    @date    28.07.2022
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -51,7 +51,7 @@ static  union  { stk_t STK[STK_SIZE(OS_IDLE_STACK)] __STKALIGN;
 
 tmr_t WAIT = { .hdr={ .prev=&WAIT, .next=&WAIT, .id=ID_TIMER }, .delay=INFINITE }; // timers queue
 tsk_t MAIN = { .hdr={ .prev=&IDLE, .next=&IDLE, .id=ID_READY }, .stack=MAIN_TOP, .basic=OS_MAIN_PRIO, .prio=OS_MAIN_PRIO }; // main task
-tsk_t IDLE = { .hdr={ .prev=&MAIN, .next=&MAIN, .id=ID_READY }, .state=core_tsk_idle, .stack=IDLE_STK, .size=sizeof(IDLE_STK), .sp=IDLE_SP, .owner=&IDLE }; // idle task and tasks queue
+tsk_t IDLE = { .hdr={ .prev=&MAIN, .next=&MAIN, .id=ID_READY }, .proc=core_tsk_idle, .stack=IDLE_STK, .size=sizeof(IDLE_STK), .sp=IDLE_SP, .owner=&IDLE }; // idle task and tasks queue
 
 sys_t System = { .cur=&MAIN };
 

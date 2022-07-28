@@ -34,7 +34,7 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, void *arg, stk_t *stack, size_t size, void *res, bool detached )
+void priv_wrk_init( tsk_t *tsk, unsigned prio, fun_t *proc, void *arg, stk_t *stack, size_t size, void *res, bool detached )
 /* -------------------------------------------------------------------------- */
 {
 	memset(tsk, 0, sizeof(tsk_t));
@@ -44,7 +44,7 @@ void priv_wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, void *arg, stk_t *s
 
 	tsk->prio  = prio;
 	tsk->basic = prio;
-	tsk->state = state;
+	tsk->proc  = proc;
 	tsk->arg   = arg;
 	tsk->stack = stack;
 	tsk->size  = size;
@@ -53,7 +53,7 @@ void priv_wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, void *arg, stk_t *s
 
 /* -------------------------------------------------------------------------- */
 static
-tsk_t *priv_wrk_create( unsigned prio, fun_t *state, void *arg, size_t size, bool detached )
+tsk_t *priv_wrk_create( unsigned prio, fun_t *proc, void *arg, size_t size, bool detached )
 /* -------------------------------------------------------------------------- */
 {
 	struct tsk_T { tsk_t tsk; stk_t buf[]; } *tmp;
@@ -63,13 +63,13 @@ tsk_t *priv_wrk_create( unsigned prio, fun_t *state, void *arg, size_t size, boo
 	bufsize = STK_OVER(size);
 	tmp = malloc(sizeof(struct tsk_T) + bufsize);
 	if (tmp)
-		priv_wrk_init(tsk = &tmp->tsk, prio, state, arg, tmp->buf, bufsize, tmp, detached);
+		priv_wrk_init(tsk = &tmp->tsk, prio, proc, arg, tmp->buf, bufsize, tmp, detached);
 
 	return tsk;
 }
 
 /* -------------------------------------------------------------------------- */
-void wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t size )
+void wrk_init( tsk_t *tsk, unsigned prio, fun_t *proc, stk_t *stack, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	assert_tsk_context();
@@ -79,13 +79,13 @@ void wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
 
 	sys_lock();
 	{
-		priv_wrk_init(tsk, prio, state, NULL, stack, size, NULL, false);
+		priv_wrk_init(tsk, prio, proc, NULL, stack, size, NULL, false);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t size )
+void tsk_init( tsk_t *tsk, unsigned prio, fun_t *proc, stk_t *stack, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	assert_tsk_context();
@@ -95,8 +95,8 @@ void tsk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
 
 	sys_lock();
 	{
-		priv_wrk_init(tsk, prio, state, NULL, stack, size, NULL, false);
-		if (state)
+		priv_wrk_init(tsk, prio, proc, NULL, stack, size, NULL, false);
+		if (proc)
 		{
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
@@ -106,18 +106,18 @@ void tsk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
 }
 
 /* -------------------------------------------------------------------------- */
-tsk_t *wrk_create( unsigned prio, fun_t *state, size_t size, bool detached, bool autostart )
+tsk_t *wrk_create( unsigned prio, fun_t *proc, size_t size, bool detached, bool autostart )
 /* -------------------------------------------------------------------------- */
 {
 	tsk_t *tsk;
 
 	assert_tsk_context();
-	assert(state||!autostart);
+	assert(proc||!autostart);
 	assert(size>sizeof(ctx_t));
 
 	sys_lock();
 	{
-		tsk = priv_wrk_create(prio, state, NULL, size, detached);
+		tsk = priv_wrk_create(prio, proc, NULL, size, detached);
 		if (tsk && autostart)
 		{
 			core_ctx_init(tsk);
@@ -159,7 +159,7 @@ void tsk_start( tsk_t *tsk )
 	assert_tsk_context();
 	assert(tsk);
 	assert(tsk->obj.res!=RELEASED);     // object with released resources cannot be used
-	assert(tsk->state);
+	assert(tsk->proc);
 
 	sys_lock();
 	{
@@ -173,19 +173,19 @@ void tsk_start( tsk_t *tsk )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_startFrom( tsk_t *tsk, fun_t *state )
+void tsk_startFrom( tsk_t *tsk, fun_t *proc )
 /* -------------------------------------------------------------------------- */
 {
 	assert_tsk_context();
 	assert(tsk);
 	assert(tsk->obj.res!=RELEASED);     // object with released resources cannot be used
-	assert(state);
+	assert(proc);
 
 	sys_lock();
 	{
 		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
-			tsk->state = state;
+			tsk->proc = proc;
 
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
@@ -302,7 +302,7 @@ void priv_tsk_idle( void )
 	sys_lock();
 	{
 		core_tsk_deleter();              // call garbage collection procedure
-		IDLE.state = core_tsk_idle;      // restore default idle procedure
+		IDLE.proc = core_tsk_idle;      // restore default idle procedure
 	}
 	sys_unlock();
 }
@@ -313,7 +313,7 @@ void priv_tsk_destroy( void )
 /* -------------------------------------------------------------------------- */
 {
 	core_tsk_deleter();                  // call garbage collection procedure
-	IDLE.state = priv_tsk_idle;          // set task deleter as idle procedure
+	IDLE.proc = priv_tsk_idle;          // set task deleter as idle procedure
 	core_tsk_waitFor(&IDLE.obj.queue, INFINITE); // wait for removal
 
 	assert(false);                       // system cannot return here
@@ -435,15 +435,15 @@ void tsk_yield( void )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_flip( fun_t *state )
+void tsk_flip( fun_t *proc )
 /* -------------------------------------------------------------------------- */
 {
 	assert_tsk_context();
-	assert(state);
+	assert(proc);
 
 	port_set_lock();
 
-	System.cur->state = state;
+	System.cur->proc = proc;
 
 	priv_sig_reset(System.cur); // reset signal variables of current task
 	core_ctx_switch();

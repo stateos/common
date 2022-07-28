@@ -6,7 +6,7 @@ Targets:
 ARM Cortex-M, STM8.
 ---------
 Inspiration:
-StateOS was inspired by the concept of a state machine. Procedure executed by the task (task state) doesn't have to be noreturn-type. It will be executed into an infinite loop. There's a dedicated function for immediate change the task state (task function).
+StateOS was inspired by the concept of a state machine. Procedure executed by the task (task proc) doesn't have to be noreturn-type. It will be executed into an infinite loop. There's a dedicated function for immediate change the task proc (task function).
 ---------
 Documentation:
 All documentation is contained within source files, in particular header files.
@@ -57,6 +57,8 @@ Features:
 - updated os version
 - added condition variable c++ waiting functions with predicate
 - added hierarchical state machine (HSM)
+- changed tsk_init and tsk_setup functions
+- renamed tsk/tmr function
 ---------
 6.8
 - updated sys_init function

@@ -59,7 +59,7 @@ struct __tsk
 	obj_t    obj;   // object header
 	hdr_t    hdr;   // timer / task header
 
-	fun_t  * state; // task state (initial task function, doesn't have to be noreturn-type)
+	fun_t  * proc;  // task proc (initial task function, doesn't have to be noreturn-type)
 	void   * arg;   // reserved for internal use
 	cnt_t    start; // inherited from timer
 	cnt_t    delay; // inherited from timer
@@ -165,7 +165,7 @@ typedef struct __tsk tsk_id [];
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   stack           : base of task's private stack storage
  *   size            : size of task private stack (in bytes)
@@ -176,8 +176,8 @@ typedef struct __tsk tsk_id [];
  *
  ******************************************************************************/
 
-#define               _TSK_INIT( _prio, _state, _stack, _size )                                               \
-                       { _OBJ_INIT(), _HDR_INIT(), _state, NULL, 0, 0, 0, NULL, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
+#define               _TSK_INIT( _prio, _proc, _stack, _size )                                               \
+                       { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, NULL, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
                        { NULL, NULL }, { 0, NULL, { NULL, NULL } }, { { 0 } }, _PORT_DATA_INIT() }
 
 /******************************************************************************
@@ -240,19 +240,19 @@ typedef struct __tsk tsk_id [];
  * Parameters
  *   tsk             : name of a pointer to task object
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *
  ******************************************************************************/
 
-#define             OS_WRK( tsk, prio, state, size )                       \
+#define             OS_WRK( tsk, prio, proc, size )                       \
                 static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
-                       tsk_t tsk[] = { _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ) }
+                       tsk_t tsk[] = { _TSK_INIT( prio, proc, tsk##__stk, STK_OVER( size ) ) }
 
-#define         static_WRK( tsk, prio, state, size )                       \
+#define         static_WRK( tsk, prio, proc, size )                       \
                 static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
-                static tsk_t tsk[] = { _TSK_INIT( prio, state, tsk##__stk, STK_OVER( size ) ) }
+                static tsk_t tsk[] = { _TSK_INIT( prio, proc, tsk##__stk, STK_OVER( size ) ) }
 
 /******************************************************************************
  *
@@ -264,17 +264,17 @@ typedef struct __tsk tsk_id [];
  * Parameters
  *   tsk             : name of a pointer to task object
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
  ******************************************************************************/
 
-#define             OS_TSK( tsk, prio, state, ... ) \
-                    OS_WRK( tsk, prio, state, _VA_STK(__VA_ARGS__) )
+#define             OS_TSK( tsk, prio, proc, ... ) \
+                    OS_WRK( tsk, prio, proc, _VA_STK(__VA_ARGS__) )
 
-#define         static_TSK( tsk, prio, state, ... ) \
-                static_WRK( tsk, prio, state, _VA_STK(__VA_ARGS__) )
+#define         static_TSK( tsk, prio, proc, ... ) \
+                static_WRK( tsk, prio, proc, _VA_STK(__VA_ARGS__) )
 
 /******************************************************************************
  *
@@ -282,7 +282,7 @@ typedef struct __tsk tsk_id [];
  * Static alias      : static_WRK_DEF
  *
  * Description       : define and initialize complete work area for task object
- *                     task state (function body) must be defined immediately below
+ *                     task proc (function body) must be defined immediately below
  *
  * Parameters
  *   tsk             : name of a pointer to task object
@@ -307,7 +307,7 @@ typedef struct __tsk tsk_id [];
  * Static alias      : static_TSK_DEF
  *
  * Description       : define and initialize complete work area for task object with default stack size
- *                     task state (function body) must be defined immediately below
+ *                     task proc (function body) must be defined immediately below
  *
  * Parameters
  *   tsk             : name of a pointer to task object
@@ -328,7 +328,7 @@ typedef struct __tsk tsk_id [];
  * Static alias      : static_WRK_START
  *
  * Description       : define, initialize and start complete work area for task object
- *                     task state (function body) must be defined immediately below
+ *                     task proc (function body) must be defined immediately below
  *
  * Parameters
  *   tsk             : name of a pointer to task object
@@ -361,7 +361,7 @@ typedef struct __tsk tsk_id [];
  * Static alias      : static_TSK_START
  *
  * Description       : define, initialize and start complete work area for task object with default stack size
- *                     task state (function body) must be defined immediately below
+ *                     task proc (function body) must be defined immediately below
  *
  * Parameters
  *   tsk             : name of a pointer to task object
@@ -390,7 +390,7 @@ typedef struct __tsk tsk_id [];
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *
@@ -401,8 +401,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                WRK_INIT( prio, state, size ) \
-                      _TSK_INIT( prio, state, _TSK_STACK( size ), STK_OVER( size ) )
+#define                WRK_INIT( prio, proc, size ) \
+                      _TSK_INIT( prio, proc, _TSK_STACK( size ), STK_OVER( size ) )
 #endif
 
 /******************************************************************************
@@ -414,7 +414,7 @@ typedef struct __tsk tsk_id [];
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *
@@ -425,8 +425,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                WRK_CREATE( prio, state, size ) \
-                     { WRK_INIT  ( prio, state, size ) }
+#define                WRK_CREATE( prio, proc, size ) \
+                     { WRK_INIT  ( prio, proc, size ) }
 #define                WRK_NEW \
                        WRK_CREATE
 #endif
@@ -439,7 +439,7 @@ typedef struct __tsk tsk_id [];
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
@@ -450,8 +450,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                TSK_INIT( prio, state, ... ) \
-                       WRK_INIT( prio, state, _VA_STK(__VA_ARGS__) )
+#define                TSK_INIT( prio, proc, ... ) \
+                       WRK_INIT( prio, proc, _VA_STK(__VA_ARGS__) )
 #endif
 
 /******************************************************************************
@@ -463,7 +463,7 @@ typedef struct __tsk tsk_id [];
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
@@ -474,8 +474,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                TSK_CREATE( prio, state, ... ) \
-                       WRK_CREATE( prio, state, _VA_STK(__VA_ARGS__) )
+#define                TSK_CREATE( prio, proc, ... ) \
+                       WRK_CREATE( prio, proc, _VA_STK(__VA_ARGS__) )
 #define                TSK_NEW \
                        TSK_CREATE
 #endif
@@ -515,7 +515,7 @@ tsk_t *cur_task( void ) { return System.cur; }
  * Parameters
  *   tsk             : pointer to task object
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   stack           : base of task's private stack storage
  *   size            : size of task private stack (in bytes)
@@ -526,19 +526,19 @@ tsk_t *cur_task( void ) { return System.cur; }
  *
  ******************************************************************************/
 
-void wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t size );
+void wrk_init( tsk_t *tsk, unsigned prio, fun_t *proc, stk_t *stack, size_t size );
 
 /******************************************************************************
  *
  * Name              : tsk_init
  *
  * Description       : initialize complete work area for task object
- *                     and start the task, if state != NULL
+ *                     and start the task, if proc != NULL
  *
  * Parameters
  *   tsk             : pointer to task object
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   stack           : base of task's private stack storage
  *   size            : size of task private stack (in bytes)
@@ -549,7 +549,7 @@ void wrk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
  *
  ******************************************************************************/
 
-void tsk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t size );
+void tsk_init( tsk_t *tsk, unsigned prio, fun_t *proc, stk_t *stack, size_t size );
 
 /******************************************************************************
  *
@@ -560,7 +560,7 @@ void tsk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   size            : size of task private stack (in bytes)
  *   detached        : create as detached?
@@ -573,12 +573,12 @@ void tsk_init( tsk_t *tsk, unsigned prio, fun_t *state, stk_t *stack, size_t siz
  *
  ******************************************************************************/
 
-tsk_t *wrk_create( unsigned prio, fun_t *state, size_t size, bool detached, bool autostart );
+tsk_t *wrk_create( unsigned prio, fun_t *proc, size_t size, bool detached, bool autostart );
 
 __STATIC_INLINE
-tsk_t *wrk_new( unsigned prio, fun_t *state, size_t size, bool detached, bool autostart )
+tsk_t *wrk_new( unsigned prio, fun_t *proc, size_t size, bool detached, bool autostart )
 {
-	return wrk_create(prio, state, size, detached, autostart);
+	return wrk_create(prio, proc, size, detached, autostart);
 }
 
 /******************************************************************************
@@ -609,11 +609,11 @@ tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size );
  * Alias             : tsk_new
  *
  * Description       : create and initialize a new task object with default stack size
- *                     and start the task, if state != NULL
+ *                     and start the task, if proc != NULL
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *
  * Return            : pointer to task object
@@ -624,15 +624,15 @@ tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size );
  ******************************************************************************/
 
 __STATIC_INLINE
-tsk_t *tsk_create( unsigned prio, fun_t *state )
+tsk_t *tsk_create( unsigned prio, fun_t *proc )
 {
-	return wrk_create(prio, state, OS_STACK_SIZE, false, state != NULL);
+	return wrk_create(prio, proc, OS_STACK_SIZE, false, (bool)proc);
 }
 
 __STATIC_INLINE
-tsk_t *tsk_new( unsigned prio, fun_t *state )
+tsk_t *tsk_new( unsigned prio, fun_t *proc )
 {
-	return wrk_create(prio, state, OS_STACK_SIZE, false, state != NULL);
+	return wrk_create(prio, proc, OS_STACK_SIZE, false, (bool)proc);
 }
 
 /******************************************************************************
@@ -640,11 +640,11 @@ tsk_t *tsk_new( unsigned prio, fun_t *state )
  * Name              : tsk_detached
  *
  * Description       : create and initialize a new detached task object with default stack size
- *                     and start the task, if state != NULL
+ *                     and start the task, if proc != NULL
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *
  * Return            : pointer to task object
@@ -655,9 +655,9 @@ tsk_t *tsk_new( unsigned prio, fun_t *state )
  ******************************************************************************/
 
 __STATIC_INLINE
-tsk_t *tsk_detached( unsigned prio, fun_t *state )
+tsk_t *tsk_detached( unsigned prio, fun_t *proc )
 {
-	return wrk_create(prio, state, OS_STACK_SIZE, true, state != NULL);
+	return wrk_create(prio, proc, OS_STACK_SIZE, true, (bool)proc);
 }
 
 /******************************************************************************
@@ -685,7 +685,7 @@ void tsk_start( tsk_t *tsk );
  *
  * Parameters
  *   tsk             : pointer to task object
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *
  * Return            : none
@@ -694,7 +694,7 @@ void tsk_start( tsk_t *tsk );
  *
  ******************************************************************************/
 
-void tsk_startFrom( tsk_t *tsk, fun_t *state );
+void tsk_startFrom( tsk_t *tsk, fun_t *proc );
 
 /******************************************************************************
  *
@@ -896,10 +896,10 @@ void tsk_pass ( void ) { tsk_yield(); }
  *
  * Name              : tsk_flip
  *
- * Description       : restart current task with the new state (task function)
+ * Description       : restart current task with the new proc (task function)
  *
  * Parameters
- *   proc            : new task state (task function)
+ *   proc            : new task proc (task function)
  *
  * Return            : none
  *
@@ -908,7 +908,7 @@ void tsk_pass ( void ) { tsk_yield(); }
  ******************************************************************************/
 
 __NO_RETURN
-void tsk_flip( fun_t *state );
+void tsk_flip( fun_t *proc );
 
 /******************************************************************************
  *
@@ -1233,7 +1233,7 @@ struct baseStack
  *
  * Constructor parameters
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *   stack           : base of task's private stack storage
  *   size            : size of task private stack (in bytes)
@@ -1246,18 +1246,18 @@ struct baseTask : public __tsk
 {
 #if __cplusplus >= 201402L
 	template<class F>
-	baseTask( const unsigned _prio, F&&     _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_prio, fun_, _stack, _size), fun{_state} {}
+	baseTask( const unsigned _prio, F&&     _proc, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_prio, fun_, _stack, _size), fun{_proc} {}
 #else
-	baseTask( const unsigned _prio, fun_t * _state, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_prio, _state, _stack, _size) {}
+	baseTask( const unsigned _prio, fun_t * _proc, stk_t * const _stack, const size_t _size ): __tsk _TSK_INIT(_prio, _proc, _stack, _size) {}
 #endif
 
 	void     start    ()                   {        tsk_start    (this); }
 #if __cplusplus >= 201402L
 	template<class F>
-	void     startFrom( F&&      _state )  {        new (&fun) Fun_t(_state);
+	void     startFrom( F&&      _proc )   {        new (&fun) Fun_t(_proc);
 	                                                tsk_startFrom(this, fun_); }
 #else
-	void     startFrom( fun_t *  _state )  {        tsk_startFrom(this, _state); }
+	void     startFrom( fun_t *  _proc )   {        tsk_startFrom(this, _proc); }
 #endif
 	int      detach   ()                   { return tsk_detach   (this); }
 	int      join     ()                   { return tsk_join     (this); }
@@ -1321,11 +1321,11 @@ struct baseTask : public __tsk
 		void     pass      ()                   {        tsk_pass      (); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void     flip      ( F&&      _state )  {        new (&current()->fun) Fun_t(_state);
+		void     flip      ( F&&      _proc )   {        new (&current()->fun) Fun_t(_proc);
 		                                                 tsk_flip      (fun_); }
 #else
 		static
-		void     flip      ( fun_t *  _state )  {        tsk_flip      (_state); }
+		void     flip      ( fun_t *  _proc )   {        tsk_flip      (_proc); }
 #endif
 		static
 		void     setPrio   ( unsigned _prio )   {        tsk_setPrio   (_prio); }
@@ -1374,7 +1374,7 @@ using this_task = baseTask::Current;
  * Constructor parameters
  *   size            : size of task private stack (in bytes)
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
  *
  ******************************************************************************/
@@ -1383,22 +1383,22 @@ template<size_t size_>
 struct TaskT : public baseTask, public baseStack<size_>
 {
 	template<class F>
-	TaskT( const unsigned _prio, F&& _state ):
-	baseTask{_prio, _state, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
+	TaskT( const unsigned _prio, F&& _proc ):
+	baseTask{_prio, _proc, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
 
 	template<class F>
-	TaskT( F&& _state ):
-	TaskT<size_>{OS_MAIN_PRIO, _state} {}
+	TaskT( F&& _proc ):
+	TaskT<size_>{OS_MAIN_PRIO, _proc} {}
 
 #if __cplusplus >= 201402L
 	template<typename F, typename... A>
-	TaskT( const unsigned _prio, F&& _state, A&&... _args ):
-	TaskT<size_>{_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...)} {}
+	TaskT( const unsigned _prio, F&& _proc, A&&... _args ):
+	TaskT<size_>{_prio, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)} {}
 
 #if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>>
-	TaskT( F&& _state, A&&... _args ):
-	TaskT<size_>{std::bind(std::forward<F>(_state), std::forward<A>(_args)...)} {}
+	TaskT( F&& _proc, A&&... _args ):
+	TaskT<size_>{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)} {}
 #endif
 #endif
 
@@ -1425,38 +1425,38 @@ struct TaskT : public baseTask, public baseStack<size_>
  * Parameters
  *   size            : size of task private stack (in bytes)
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   args            : arguments for state function
+ *   args            : arguments for task proc
  *
  * Return            : TaskT<> object
  *
  ******************************************************************************/
 
 	template<class F> static
-	TaskT<size_> Make( const unsigned _prio, F&& _state )
+	TaskT<size_> Make( const unsigned _prio, F&& _proc )
 	{
-		return { _prio, _state };
+		return { _prio, _proc };
 	}
 
 	template<class F> static
-	TaskT<size_> Make( F&& _state )
+	TaskT<size_> Make( F&& _proc )
 	{
-		return Make(OS_MAIN_PRIO, _state);
+		return Make(OS_MAIN_PRIO, _proc);
 	}
 
 #if __cplusplus >= 201402L
 	template<typename F, typename... A> static
-	TaskT<size_> Make( const unsigned _prio, F&& _state, A&&... _args )
+	TaskT<size_> Make( const unsigned _prio, F&& _proc, A&&... _args )
 	{
-		return Make(_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Make(_prio, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 
 #if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>> static
-	TaskT<size_> Make( F&& _state, A&&... _args )
+	TaskT<size_> Make( F&& _proc, A&&... _args )
 	{
-		return Make(std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Make(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 #endif
@@ -1470,40 +1470,40 @@ struct TaskT : public baseTask, public baseStack<size_>
  * Parameters
  *   size            : size of task private stack (in bytes)
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   args            : arguments for state function
+ *   args            : arguments for task proc
  *
  * Return            : TaskT<> object
  *
  ******************************************************************************/
 
 	template<class F> static
-	TaskT<size_> Start( const unsigned _prio, F&& _state )
+	TaskT<size_> Start( const unsigned _prio, F&& _proc )
 	{
-		TaskT<size_> tsk { _prio, _state };
+		TaskT<size_> tsk { _prio, _proc };
 		tsk.start();
 		return tsk;
 	}
 
 	template<class F> static
-	TaskT<size_> Start( F&& _state )
+	TaskT<size_> Start( F&& _proc )
 	{
-		return Start(OS_MAIN_PRIO, _state);
+		return Start(OS_MAIN_PRIO, _proc);
 	}
 
 #if __cplusplus >= 201402L
 	template<typename F, typename... A> static
-	TaskT<size_> Start( const unsigned _prio, F&& _state, A&&... _args )
+	TaskT<size_> Start( const unsigned _prio, F&& _proc, A&&... _args )
 	{
-		return Start(_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Start(_prio, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 
 #if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>> static
-	TaskT<size_> Start( F&& _state, A&&... _args )
+	TaskT<size_> Start( F&& _proc, A&&... _args )
 	{
-		return Start(std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Start(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 #endif
@@ -1518,9 +1518,9 @@ struct TaskT : public baseTask, public baseStack<size_>
  * Parameters
  *   size            : size of task private stack (in bytes)
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   args            : arguments for state function
+ *   args            : arguments for task proc
  *
  * Return            : std::unique_pointer / pointer to dynamic joinable TaskT<> object
  *
@@ -1529,9 +1529,9 @@ struct TaskT : public baseTask, public baseStack<size_>
  ******************************************************************************/
 
 	template<class F> static
-	Ptr Create( const unsigned _prio, F&& _state )
+	Ptr Create( const unsigned _prio, F&& _proc )
 	{
-		auto tsk = new TaskT<size_>(_prio, _state);
+		auto tsk = new TaskT<size_>(_prio, _proc);
 		if (tsk != nullptr)
 		{
 			tsk->__tsk::obj.res = tsk;
@@ -1541,23 +1541,23 @@ struct TaskT : public baseTask, public baseStack<size_>
 	}
 
 	template<class F> static
-	Ptr Create( F&& _state )
+	Ptr Create( F&& _proc )
 	{
-		return Create(OS_MAIN_PRIO, _state);
+		return Create(OS_MAIN_PRIO, _proc);
 	}
 
 #if __cplusplus >= 201402L
 	template<typename F, typename... A> static
-	Ptr Create( const unsigned _prio, F&& _state, A&&... _args )
+	Ptr Create( const unsigned _prio, F&& _proc, A&&... _args )
 	{
-		return Create(_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Create(_prio, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 
 #if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>> static
-	Ptr Create( F&& _state, A&&... _args )
+	Ptr Create( F&& _proc, A&&... _args )
 	{
-		return Create(std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Create(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 #endif
@@ -1572,9 +1572,9 @@ struct TaskT : public baseTask, public baseStack<size_>
  * Parameters
  *   size            : size of task private stack (in bytes)
  *   prio            : initial task priority (any unsigned int value)
- *   state           : task state (initial task function) doesn't have to be noreturn-type
+ *   proc            : task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   args            : arguments for state function
+ *   args            : arguments for task proc
  *
  * Return            : std::unique_pointer / pointer to dynamic detached TaskT<> object
  *
@@ -1583,9 +1583,9 @@ struct TaskT : public baseTask, public baseStack<size_>
  ******************************************************************************/
 
 	template<class F> static
-	Ptr Detached( const unsigned _prio, F&& _state )
+	Ptr Detached( const unsigned _prio, F&& _proc )
 	{
-		auto tsk = new TaskT<size_>(_prio, _state);
+		auto tsk = new TaskT<size_>(_prio, _proc);
 		if (tsk != nullptr)
 		{
 			tsk->__tsk::obj.res = tsk;
@@ -1596,23 +1596,23 @@ struct TaskT : public baseTask, public baseStack<size_>
 	}
 
 	template<class F> static
-	Ptr Detached( F&& _state )
+	Ptr Detached( F&& _proc )
 	{
-		return Detached(OS_MAIN_PRIO, _state);
+		return Detached(OS_MAIN_PRIO, _proc);
 	}
 
 #if __cplusplus >= 201402L
 	template<typename F, typename... A> static
-	Ptr Detached( const unsigned _prio, F&& _state, A&&... _args )
+	Ptr Detached( const unsigned _prio, F&& _proc, A&&... _args )
 	{
-		return Detached(_prio, std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Detached(_prio, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 
 #if __cplusplus >= 201703L && !defined(__ICCARM__)
 	template<typename F, typename... A, typename = std::enable_if_t<std::is_invocable_v<F, A...>>> static
-	Ptr Detached( F&& _state, A&&... _args )
+	Ptr Detached( F&& _proc, A&&... _args )
 	{
-		return Detached(std::bind(std::forward<F>(_state), std::forward<A>(_args)...));
+		return Detached(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
 #endif

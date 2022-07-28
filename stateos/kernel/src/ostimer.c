@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.c
     @author  Rajmund Szymanski
-    @date    10.05.2021
+    @date    28.07.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -34,7 +34,7 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_tmr_init( tmr_t *tmr, fun_t *state, void *arg, void *res )
+void priv_tmr_init( tmr_t *tmr, fun_t *proc, void *arg, void *res )
 /* -------------------------------------------------------------------------- */
 {
 	memset(tmr, 0, sizeof(tmr_t));
@@ -42,12 +42,12 @@ void priv_tmr_init( tmr_t *tmr, fun_t *state, void *arg, void *res )
 	core_obj_init(&tmr->obj, res);
 	core_hdr_init(&tmr->hdr);
 
-	tmr->state = state;
-	tmr->arg   = arg;
+	tmr->proc = proc;
+	tmr->arg  = arg;
 }
 
 /* -------------------------------------------------------------------------- */
-void tmr_init( tmr_t *tmr, fun_t *state )
+void tmr_init( tmr_t *tmr, fun_t *proc )
 /* -------------------------------------------------------------------------- */
 {
 	assert_tsk_context();
@@ -55,13 +55,13 @@ void tmr_init( tmr_t *tmr, fun_t *state )
 
 	sys_lock();
 	{
-		priv_tmr_init(tmr, state, NULL, NULL);
+		priv_tmr_init(tmr, proc, NULL, NULL);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-tmr_t *tmr_create( fun_t *state )
+tmr_t *tmr_create( fun_t *proc )
 /* -------------------------------------------------------------------------- */
 {
 	tmr_t *tmr;
@@ -72,7 +72,7 @@ tmr_t *tmr_create( fun_t *state )
 	{
 		tmr = malloc(sizeof(tmr_t));
 		if (tmr)
-			priv_tmr_init(tmr, state, NULL, tmr);
+			priv_tmr_init(tmr, proc, NULL, tmr);
 	}
 	sys_unlock();
 
@@ -180,7 +180,7 @@ void tmr_startFrom( tmr_t *tmr, cnt_t delay, cnt_t period, fun_t *proc )
 
 	sys_lock();
 	{
-		tmr->state  = proc;
+		tmr->proc   = proc;
 		tmr->start  = core_sys_time();
 		tmr->delay  = delay;
 		tmr->period = period;
