@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    29.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -746,9 +746,9 @@ struct Action : public __hsm_action
 	Action( S& _owner, unsigned _event, S& _target, hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, _handler) {}
 #if __cplusplus >= 201402L
 	template<class S, class F>
-	Action( S& _owner, unsigned _event,             F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, fun_), fun{_handler} {}
+	Action( S& _owner, unsigned _event,             F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, handler_), handler{_handler} {}
 	template<class S, class F>
-	Action( S& _owner, unsigned _event, S& _target, F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, fun_), fun{_handler} {}
+	Action( S& _owner, unsigned _event, S& _target, F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, handler_), handler{_handler} {}
 #endif
 
 	Action( Action&& ) = default;
@@ -758,8 +758,8 @@ struct Action : public __hsm_action
 
 #if __cplusplus >= 201402L
 	static
-	void fun_( hsm_t *_hsm, unsigned _event ) { static_cast<Action*>(_hsm->action)->fun(_hsm, _event); }
-	std::function<void( hsm_t *, unsigned )> fun;
+	void handler_( hsm_t *_hsm, unsigned _event ) { static_cast<Action*>(_hsm->action)->handler(_hsm, _event); }
+	std::function<void( hsm_t *, unsigned )> handler;
 #endif
 };
 
