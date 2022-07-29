@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    29.07.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -626,13 +626,13 @@ tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size );
 __STATIC_INLINE
 tsk_t *tsk_create( unsigned prio, fun_t *proc )
 {
-	return wrk_create(prio, proc, OS_STACK_SIZE, false, (bool)proc);
+	return wrk_create(prio, proc, OS_STACK_SIZE, false, !!proc);
 }
 
 __STATIC_INLINE
 tsk_t *tsk_new( unsigned prio, fun_t *proc )
 {
-	return wrk_create(prio, proc, OS_STACK_SIZE, false, (bool)proc);
+	return wrk_create(prio, proc, OS_STACK_SIZE, false, !!proc);
 }
 
 /******************************************************************************
@@ -657,7 +657,7 @@ tsk_t *tsk_new( unsigned prio, fun_t *proc )
 __STATIC_INLINE
 tsk_t *tsk_detached( unsigned prio, fun_t *proc )
 {
-	return wrk_create(prio, proc, OS_STACK_SIZE, true, (bool)proc);
+	return wrk_create(prio, proc, OS_STACK_SIZE, true, !!proc);
 }
 
 /******************************************************************************
