@@ -493,6 +493,7 @@ void hsm_link( hsm_t *hsm, hsm_action_t *action );
  *
  * Description       : start hsm event dispatcher
  *
+ * Parameters
  *   hsm             : pointer to hsm object
  *   tsk             : pointer to hsm dispatcher
  *   initState       : pointer to initial hsm state
@@ -558,6 +559,7 @@ void hsm_delete( hsm_t *hsm ) { hsm_destroy(hsm); }
  * Description       : try to transfer event data to the hsm event queue,
  *                     don't wait if the hsm event queue is full
  *
+ * Parameters
  *   hsm             : pointer to hsm object
  *   event           : event value
  *
@@ -638,6 +640,7 @@ int hsm_sendUntil( hsm_t *hsm, unsigned event, cnt_t time );
  * Description       : try to transfer event data to the hsm event queue,
  *                     wait indefinitely while the hsm event queue is full
  *
+ * Parameters
  *   hsm             : pointer to hsm object
  *   event           : event value
  *
@@ -685,6 +688,7 @@ void hsm_pushISR( hsm_t *hsm, unsigned event ) { hsm_push(hsm, event); }
  *
  * Description       : get current hsm state
  *
+ * Parameters
  *   hsm             : pointer to hsm object
  *
  * Return            : pointer to current hsm state
