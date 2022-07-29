@@ -304,13 +304,10 @@ hsm_t *hsm_create( unsigned limit )
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_link( hsm_t *hsm, hsm_action_t *action )
+void hsm_link( hsm_action_t *action )
 /* -------------------------------------------------------------------------- */
 {
-	(void) hsm;
-
 	assert_tsk_context();
-	assert(hsm);
 	assert(action);
 	assert(action->owner);
 
