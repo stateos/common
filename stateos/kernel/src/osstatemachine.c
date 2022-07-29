@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    29.07.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -50,19 +50,19 @@ int priv_getStateLevel( hsm_state_t *state )
 
 /* -------------------------------------------------------------------------- */
 static
-hsm_state_t *priv_getRootState( hsm_t *hsm, hsm_state_t *testState )
+hsm_state_t *priv_getRootState( hsm_t *hsm, hsm_state_t *other )
 /* -------------------------------------------------------------------------- */
 {
 	hsm_state_t *state = hsm->state;
 	int diff = priv_getStateLevel(state)
-	         - priv_getStateLevel(testState);
+	         - priv_getStateLevel(other);
 
 	while (diff-- > 0) state = state->parent;
-	while (++diff < 0) testState = testState->parent;
-	while (state != testState)
+	while (++diff < 0) other = other->parent;
+	while (state != other)
 	{
 		state = state->parent;
-		testState = testState->parent;
+		other = other->parent;
 	}
 
 	return state;
