@@ -454,14 +454,13 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize );
  * Description       : link hsm state action to the state action queue
  *
  * Parameters
- *   hsm             : pointer to hsm object
  *   action          : pointer to hsm state action object
  *
  * Return            : none
  *
  ******************************************************************************/
 
-void hsm_link( hsm_t *hsm, hsm_action_t *action );
+void hsm_link( hsm_action_t *action );
 
 /******************************************************************************
  *
@@ -630,6 +629,8 @@ struct Action : public __hsm_action
 	Action& operator=( Action&& ) = delete;
 	Action& operator=( const Action& ) = delete;
 
+	void link() { hsm_link(this); }
+
 #if __cplusplus >= 201402L
 	static
 	void handler_( hsm_t *_hsm, unsigned _event ) { static_cast<Action*>(_hsm->action)->handler(_hsm, _event); }
@@ -654,14 +655,13 @@ struct StateMachineT : public __hsm
 	constexpr
 	StateMachineT(): __hsm _HSM_INIT(limit_, data_) {}
 #if __cplusplus >= 201402L && !defined(__ICCARM__)
-	StateMachineT( std::vector<Action>&& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{std::move(_tab)} { for (auto& _a: tab_) link(_a); }
+	StateMachineT( std::vector<Action>&& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{std::move(_tab)} { for (auto& _a: tab_) _a.link(); }
 #endif
 	StateMachineT( StateMachineT&& ) = default;
 	StateMachineT( const StateMachineT& ) = delete;
 	StateMachineT& operator=( StateMachineT&& ) = delete;
 	StateMachineT& operator=( const StateMachineT& ) = delete;
 
-	void          link      ( hsm_action_t& _action )            {        hsm_link      (this, &_action); }
 	void          start     ( tsk_t& _task, hsm_state_t& _init ) {        hsm_start     (this, &_task, &_init); }
 	unsigned      give      ( unsigned _event )                  { return hsm_give      (this,  _event); }
 	void          send      ( unsigned _event )                  {        hsm_send      (this,  _event); }

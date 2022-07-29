@@ -262,12 +262,9 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize )
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_link( hsm_t *hsm, hsm_action_t *action )
+void hsm_link( hsm_action_t *action )
 /* -------------------------------------------------------------------------- */
 {
-	(void) hsm;
-
-	assert(hsm);
 	assert(action);
 	assert(action->owner);
 
