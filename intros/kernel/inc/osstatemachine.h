@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    29.07.2022
+    @date    31.07.2022
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -573,7 +573,10 @@ hsm_state_t* hsm_getState( hsm_t *hsm ) { return hsm->state; }
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
+
+#include <iterator>
 #include <vector>
+
 namespace intros {
 
 /******************************************************************************
@@ -600,6 +603,8 @@ struct State : public __hsm_state
 	State& operator=( const State& ) = delete;
 };
 
+template<unsigned> struct StateMachineT; // forward declaration
+
 /******************************************************************************
  *
  * Class             : Action
@@ -618,9 +623,9 @@ struct Action : public __hsm_action
 	template<class S> constexpr
 	Action( S& _owner, unsigned _event, S& _target, hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, _handler) {}
 #if __cplusplus >= 201402L
-	template<class S, class F>
+	template<class S, class F> constexpr
 	Action( S& _owner, unsigned _event,             F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, handler_), handler{_handler} {}
-	template<class S, class F>
+	template<class S, class F> constexpr
 	Action( S& _owner, unsigned _event, S& _target, F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, handler_), handler{_handler} {}
 #endif
 
@@ -629,13 +634,18 @@ struct Action : public __hsm_action
 	Action& operator=( Action&& ) = delete;
 	Action& operator=( const Action& ) = delete;
 
-	void link() { hsm_link(this); }
-
 #if __cplusplus >= 201402L
 	static
 	void handler_( hsm_t *_hsm, unsigned _event ) { static_cast<Action*>(_hsm->action)->handler(_hsm, _event); }
 	std::function<void( hsm_t *, unsigned )> handler;
 #endif
+
+	private:
+
+	void link() { hsm_link(this); }
+
+	template<unsigned>
+	friend struct StateMachineT;
 };
 
 /******************************************************************************
@@ -652,17 +662,21 @@ struct Action : public __hsm_action
 template<unsigned limit_ = 1>
 struct StateMachineT : public __hsm
 {
-	constexpr
-	StateMachineT(): __hsm _HSM_INIT(limit_, data_) {}
-#if __cplusplus >= 201402L && !defined(__ICCARM__)
-	StateMachineT( std::vector<Action>&& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{std::move(_tab)} { for (auto& _a: tab_) _a.link(); }
-#endif
+	StateMachineT():                             __hsm _HSM_INIT(limit_, data_), tab_{}     {}
+	StateMachineT( std::vector<Action>&  _tab ): StateMachineT(std::move(_tab))             {}
+	StateMachineT( std::vector<Action>&& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{_tab} {}
+
 	StateMachineT( StateMachineT&& ) = default;
 	StateMachineT( const StateMachineT& ) = delete;
 	StateMachineT& operator=( StateMachineT&& ) = delete;
 	StateMachineT& operator=( const StateMachineT& ) = delete;
 
-	void          start     ( tsk_t& _task, hsm_state_t& _init ) {        hsm_start     (this, &_task, &_init); }
+	template<typename... A>
+	void          add       ( A&&... _args )                     {        tab_.emplace_back(std::forward<A>(_args)...); }
+	void          add       ( std::vector<Action>&  _tab )       {        add(std::move(_tab)); }
+	void          add       ( std::vector<Action>&& _tab )       {        std::copy(std::begin(_tab), std::end(_tab), std::back_inserter(tab_)); }
+	void          start     ( tsk_t& _task, hsm_state_t& _init ) {        for (auto& _action: tab_) _action.link();
+	                                                                      hsm_start     (this, &_task, &_init); }
 	unsigned      give      ( unsigned _event )                  { return hsm_give      (this,  _event); }
 	void          send      ( unsigned _event )                  {        hsm_send      (this,  _event); }
 	void          push      ( unsigned _event )                  {        hsm_push      (this,  _event); }
@@ -674,10 +688,9 @@ struct StateMachineT : public __hsm
 #endif
 
 	private:
-	unsigned data_[limit_];
-#if __cplusplus >= 201402L && !defined(__ICCARM__)
-	std::vector<Action> tab_{};
-#endif
+
+	unsigned            data_[limit_];
+	std::vector<Action> tab_;
 };
 
 }     //  namespace
