@@ -792,38 +792,36 @@ struct Action : public __hsm_action
 template<unsigned limit_ = 1>
 struct StateMachineT : public __hsm
 {
-	StateMachineT():                             __hsm _HSM_INIT(limit_, data_), tab_{}     {}
-	StateMachineT( std::vector<Action>&  _tab ): StateMachineT(std::move(_tab))             {}
-	StateMachineT( std::vector<Action>&& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{_tab} {}
+	StateMachineT():                                  __hsm _HSM_INIT(limit_, data_), tab_{}     {}
+	StateMachineT( const std::vector<Action>& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{_tab} {}
 
 	StateMachineT( StateMachineT&& ) = default;
 	StateMachineT( const StateMachineT& ) = delete;
 	StateMachineT& operator=( StateMachineT&& ) = delete;
 	StateMachineT& operator=( const StateMachineT& ) = delete;
 
-	template<typename... A>
-	void          add       ( A&&... _args )                     {        tab_.emplace_back(std::forward<A>(_args)...); }
-	void          add       ( std::vector<Action>&  _tab )       {        add(std::move(_tab)); }
-	void          add       ( std::vector<Action>&& _tab )       {        std::copy(std::begin(_tab), std::end(_tab), std::back_inserter(tab_)); }
-	void          start     ( tsk_t& _task, hsm_state_t& _init ) {        for (auto& _action: tab_) _action.link();
-	                                                                      hsm_start     (this, &_task, &_init); }
-	void          reset     ()                                   {        hsm_reset     (this); }
-	void          kill      ()                                   {        hsm_kill      (this); }
-	void          destroy   ()                                   {        hsm_destroy   (this); }
-	int           give      ( unsigned _event )                  { return hsm_give      (this,  _event); }
-	int           giveISR   ( unsigned _event )                  { return hsm_giveISR   (this,  _event); }
+	template<class S, typename... A>
+	void          add       ( S& _owner, unsigned _event, A&&... _args ) { tab_.emplace_back(_owner, _event, std::forward<A>(_args)...); }
+	void          add       ( const std::vector<Action>& _tab )   {        std::copy(std::begin(_tab), std::end(_tab), std::back_inserter(tab_)); }
+	void          start     ( tsk_t& _task, hsm_state_t& _init )  {        for (auto& _action: tab_) _action.link();
+	                                                                       hsm_start     (this, &_task, &_init); }
+	void          reset     ()                                    {        hsm_reset     (this); }
+	void          kill      ()                                    {        hsm_kill      (this); }
+	void          destroy   ()                                    {        hsm_destroy   (this); }
+	int           give      ( unsigned _event )                   { return hsm_give      (this,  _event); }
+	int           giveISR   ( unsigned _event )                   { return hsm_giveISR   (this,  _event); }
 	template<typename T>
-	int           sendFor   ( unsigned _event, const T& _delay ) { return hsm_sendFor  (this,   _event, Clock::count(_delay)); }
+	int           sendFor   ( unsigned _event, const T& _delay )  { return hsm_sendFor  (this,   _event, Clock::count(_delay)); }
 	template<typename T>
-	int           sendUntil ( unsigned _event, const T& _time )  { return hsm_sendUntil(this,   _event, Clock::until(_time)); }
-	int           send      ( unsigned _event )                  { return hsm_send      (this,  _event); }
-	void          push      ( unsigned _event )                  {        hsm_push      (this,  _event); }
-	void          pushISR   ( unsigned _event )                  {        hsm_pushISR   (this,  _event); }
-	hsm_state_t * getState  ()                                   { return hsm_getState  (this); }
+	int           sendUntil ( unsigned _event, const T& _time )   { return hsm_sendUntil(this,   _event, Clock::until(_time)); }
+	int           send      ( unsigned _event )                   { return hsm_send      (this,  _event); }
+	void          push      ( unsigned _event )                   {        hsm_push      (this,  _event); }
+	void          pushISR   ( unsigned _event )                   {        hsm_pushISR   (this,  _event); }
+	hsm_state_t * getState  ()                                    { return hsm_getState  (this); }
 #if OS_ATOMICS
-	void          startAsync( tsk_t& _task, hsm_state_t& _init ) {        hsm_startAsync(this, &_task, &_init); }
-	unsigned      giveAsync ( unsigned _event )                  { return hsm_giveAsync (this,  _event); }
-	void          sendAsync ( unsigned _event )                  {        hsm_sendAsync (this,  _event); }
+	void          startAsync( tsk_t& _task, hsm_state_t& _init )  {        hsm_startAsync(this, &_task, &_init); }
+	unsigned      giveAsync ( unsigned _event )                   { return hsm_giveAsync (this,  _event); }
+	void          sendAsync ( unsigned _event )                   {        hsm_sendAsync (this,  _event); }
 #endif
 
 #if __cplusplus >= 201402L
