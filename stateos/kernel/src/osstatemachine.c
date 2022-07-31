@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    29.07.2022
+    @date    31.07.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -313,8 +313,11 @@ void hsm_link( hsm_action_t *action )
 
 	sys_lock();
 	{
-		action->next = action->owner->queue;
-		action->owner->queue = action;
+		if (action->next == NULL)
+		{
+			action->next = action->owner->queue;
+			action->owner->queue = action;
+		}
 	}
 	sys_unlock();
 }
