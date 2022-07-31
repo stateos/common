@@ -98,7 +98,7 @@ static
 hsm_action_t* priv_getAction( hsm_t *hsm, hsm_state_t *state, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	hsm_action_t *action = state->queue;
+	hsm_action_t *action = state == NULL ? NULL : state->queue;
 
 	while (action != NULL && action->event != event && action->event != hsmALL)
 		action = action->next;
@@ -204,7 +204,11 @@ void priv_eventDispatcher( hsm_t *hsm )
 		sys_unlock();
 	}
 
-	hsm->state = NULL;
+	sys_lock();
+	{
+		priv_transition(hsm, NULL);
+	}
+	sys_unlock();
 #if OS_TASK_EXIT == 0
 	tsk_stop();
 #endif
