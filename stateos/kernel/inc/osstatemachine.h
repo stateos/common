@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    31.07.2022
+    @date    01.08.2022
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -825,9 +825,9 @@ struct StateMachineT : public __hsm
 #endif
 
 #if __cplusplus >= 201402L
-	using Ptr = std::unique_ptr<EventQueueT<limit_>>;
+	using Ptr = std::unique_ptr<StateMachineT<limit_>>;
 #else
-	using Ptr = EventQueueT<limit_> *;
+	using Ptr = StateMachineT<limit_> *;
 #endif
 
 /******************************************************************************
@@ -849,6 +849,15 @@ struct StateMachineT : public __hsm
 	Ptr Create()
 	{
 		auto hsm = new StateMachineT<limit_>();
+		if (hsm != nullptr)
+			hsm->__hsm::evq.obj.res = hsm;
+		return Ptr(hsm);
+	}
+
+	static
+	Ptr Create( const std::vector<Action>& _tab )
+	{
+		auto hsm = new StateMachineT<limit_>(_tab);
 		if (hsm != nullptr)
 			hsm->__hsm::evq.obj.res = hsm;
 		return Ptr(hsm);
