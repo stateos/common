@@ -2,7 +2,7 @@
 
     @file    IntrOS: osport.c
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    14.10.2022
     @brief   IntrOS port file for STM32F0 uC.
 
  ******************************************************************************
@@ -74,21 +74,21 @@ void port_sys_init( void )
 	#error Incorrect Timer frequency!
 	#endif
 
-	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 	#if HW_TIMER_SIZE < OS_TIMER_SIZE
-	NVIC_SetPriority(TIM2_IRQn, 0xFF);
-	NVIC_EnableIRQ(TIM2_IRQn);
+	NVIC_SetPriority(TIM3_IRQn, 0xFF);
+	NVIC_EnableIRQ(TIM3_IRQn);
 	#else
 	__ISB();
 	#endif
 	#if HW_TIMER_SIZE > OS_TIMER_SIZE
-	TIM2->ARR  = CNT_MAX;
+	TIM3->ARR  = CNT_MAX;
 	#endif
-	TIM2->PSC  = (CPU_FREQUENCY)/(OS_FREQUENCY)-1;
-	TIM2->EGR  = TIM_EGR_UG;
-	TIM2->CR1  = TIM_CR1_CEN;
+	TIM3->PSC  = (CPU_FREQUENCY)/(OS_FREQUENCY)-1;
+	TIM3->EGR  = TIM_EGR_UG;
+	TIM3->CR1  = TIM_CR1_CEN;
 	#if HW_TIMER_SIZE < OS_TIMER_SIZE
-	TIM2->DIER = TIM_DIER_UIE;
+	TIM3->DIER = TIM_DIER_UIE;
 	#endif
 
 /******************************************************************************
@@ -124,11 +124,11 @@ void SysTick_Handler( void )
 
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
 
-void TIM2_IRQHandler( void )
+void TIM3_IRQHandler( void )
 {
-//	if (TIM2->SR & TIM_SR_UIF)
+//	if (TIM3->SR & TIM_SR_UIF)
 	{
-		TIM2->SR = ~TIM_SR_UIF;
+		TIM3->SR = ~TIM_SR_UIF;
 		core_sys_tick();
 		__ISB(); // delay because of GNUCC
 	}
@@ -152,11 +152,11 @@ cnt_t port_sys_time( void )
 	uint32_t tck;
 
 	cnt = System.cnt;
-	tck = TIM2->CNT;
+	tck = TIM3->CNT;
 
-	if (TIM2->SR & TIM_SR_UIF)
+	if (TIM3->SR & TIM_SR_UIF)
 	{
-		tck = TIM2->CNT;
+		tck = TIM3->CNT;
 		cnt += (cnt_t)(1) << (HW_TIMER_SIZE);
 	}
 
