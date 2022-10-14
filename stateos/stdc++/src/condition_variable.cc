@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 07.05.2022
+// Modified by Rajmund Szymanski @ StateOS, 14.10.2022
 
 #include <condition_variable>
 
@@ -36,7 +36,25 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
   condition_variable::condition_variable() noexcept = default;
 
   condition_variable::~condition_variable() noexcept = default;
+#if __GNUC__ < 11
+  void
+  condition_variable::wait(unique_lock<mutex>& __lock) noexcept
+  {
+    cnd_wait(&_M_cond, __lock.mutex()->native_handle());
+  }
 
+  void
+  condition_variable::notify_one() noexcept
+  {
+    cnd_notifyOne(&_M_cond);
+  }
+
+  void
+  condition_variable::notify_all() noexcept
+  {
+    cnd_notifyAll(&_M_cond);
+  }
+#else
   void
   condition_variable::wait(unique_lock<mutex>& __lock) noexcept
   {
@@ -54,7 +72,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
   {
     cnd_notifyAll(_M_cond.native_handle());
   }
-
+#endif
   extern void
   __at_thread_exit(__at_thread_exit_elt *);
 

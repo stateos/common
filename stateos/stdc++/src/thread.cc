@@ -23,9 +23,8 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 31.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 14.10.2022
 
-#include <memory> // include this first so <thread> can use shared_ptr
 #include <thread>
 #include <mutex>
 #include <unordered_map>
