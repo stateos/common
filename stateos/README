@@ -60,6 +60,7 @@ Features:
 - changed tsk_init and tsk_setup functions
 - renamed tsk/tmr function
 - added tsk_startWith function
+- stdc++: fixed compilation error for gcc 12
 ---------
 6.8
 - updated sys_init function
