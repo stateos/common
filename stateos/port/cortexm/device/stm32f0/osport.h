@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    14.10.2022
     @brief   StateOS port definitions for STM32F0 uC.
 
  ******************************************************************************
@@ -67,7 +67,7 @@ extern "C" {
 #ifdef  HW_TIMER_SIZE
 #error  HW_TIMER_SIZE is an internal os definition!
 #elif   OS_FREQUENCY > 1000
-#define HW_TIMER_SIZE        32 /* bit size of hardware timer                 */
+#define HW_TIMER_SIZE        16 /* bit size of hardware timer                 */
 #else
 #define HW_TIMER_SIZE         0 /* os does not work in tick-less mode         */
 #endif
@@ -99,7 +99,7 @@ extern "C" {
 __STATIC_INLINE
 uint32_t port_sys_time( void )
 {
-	return TIM2->CNT;
+	return TIM3->CNT;
 }
 
 #endif
@@ -134,9 +134,9 @@ void port_tmr_stop( void )
 {
 #if HW_TIMER_SIZE
 	#if HW_TIMER_SIZE < OS_TIMER_SIZE
-	TIM2->DIER = TIM_DIER_UIE;
+	TIM3->DIER = TIM_DIER_UIE;
 	#else
-	TIM2->DIER = 0;
+	TIM3->DIER = 0;
 	#endif
 #endif
 }
@@ -148,11 +148,11 @@ __STATIC_INLINE
 void port_tmr_start( uint32_t timeout )
 {
 #if HW_TIMER_SIZE
-	TIM2->CCR1 = timeout;
+	TIM3->CCR1 = timeout;
 	#if HW_TIMER_SIZE < OS_TIMER_SIZE
-	TIM2->DIER = TIM_DIER_CC1IE | TIM_DIER_UIE;
+	TIM3->DIER = TIM_DIER_CC1IE | TIM_DIER_UIE;
 	#else
-	TIM2->DIER = TIM_DIER_CC1IE;
+	TIM3->DIER = TIM_DIER_CC1IE;
 	#endif
 #else
 	(void) timeout;
@@ -167,10 +167,10 @@ void port_tmr_force( void )
 {
 #if HW_TIMER_SIZE
 	#if HW_TIMER_SIZE < OS_TIMER_SIZE
-	TIM2->DIER = TIM_DIER_CC1IE | TIM_DIER_UIE;
-	TIM2->EGR  = TIM_EGR_CC1G;
+	TIM3->DIER = TIM_DIER_CC1IE | TIM_DIER_UIE;
+	TIM3->EGR  = TIM_EGR_CC1G;
 	#else
-	NVIC_SetPendingIRQ(TIM2_IRQn);
+	NVIC_SetPendingIRQ(TIM3_IRQn);
 	#endif
 #endif
 }
