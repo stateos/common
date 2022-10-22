@@ -3,7 +3,7 @@
 TARGET_PLATFORM := attiny817xmini
 TARGET_CHIP     := attiny817
 TARGET_DEVICE   := attiny817
-TARGET_CORE     := attiny
+TARGET_CORE     := avrxmega3
 TARGET_ARCH     := avr
 TARGET_COMPILER := gcc
 
