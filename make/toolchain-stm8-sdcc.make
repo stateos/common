@@ -72,7 +72,7 @@ endif
 #----------------------------------------------------------#
 
 DEFS_F     := $(DEFS:%=-D%)
-INCS_F     := $(INCS:%=-I%)
+INCS_F     := $(INCS:%=-I%) $(PREINC:%=-include %)
 SRC_DIRS   := $(sort $(dir $(SRCS)))
 SRC_DIRS_F := $(SRC_DIRS:%/=--directory=%)
 LIB_DIRS_F := $(LIB_DIRS:%/=-L%)

@@ -132,7 +132,7 @@ clist=$(subst $(space),$(comma),$(strip $1))
 #----------------------------------------------------------#
 
 DEFS_F     := $(DEFS:%=-D%)
-INCS_F     := $(INCS:%=-I%)
+INCS_F     := $(INCS:%=-I%) $(PREINC:%=-include %)
 DEFS_L     := $(DEFS_F:%=--pd=%)
 INCS_L     := $(INCS_F:%=--pd=%)
 LIB_DIRS   += $(abspath $(CLANG)../../RV31/LIB)
