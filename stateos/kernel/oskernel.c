@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    25.10.2022
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -190,9 +190,9 @@ void priv_tsk_insert( tsk_t *tsk )
 {
 	tsk_t *prv;
 	tsk_t *nxt = &IDLE;
-#if OS_ROBIN && HW_TIMER_SIZE == 0
+	#if OS_ROBIN && HW_TIMER_SIZE == 0
 	tsk->slice = 0;
-#endif
+	#endif
 	if (tsk->prio)
 		do nxt = nxt->hdr.next;
 		while (tsk->prio <= nxt->prio);
@@ -223,8 +223,10 @@ void core_tsk_insert( tsk_t *tsk )
 {
 	tsk->hdr.id = ID_READY;
 	priv_tsk_insert(tsk);
+	#if OS_ROBIN
 	if (tsk == IDLE.hdr.next)
 		port_ctx_switch();
+	#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -242,16 +244,16 @@ void core_tsk_remove( tsk_t *tsk )
 void core_ctx_init( tsk_t *tsk )
 {
 	assert(tsk->size>STK_OVER(sizeof(ctx_t)));
-#ifdef DEBUG
+	#ifdef DEBUG
 	if (tsk != System.cur)
 		memset(tsk->stack, 0xFF, tsk->size);
-#endif
+	#endif
 	tsk->sp = (ctx_t *)STK_CROP(tsk->stack, tsk->size) - 1;
-#if OS_TASK_EXIT == 0
-	port_ctx_init(tsk->sp, core_tsk_loop);
-#else
+	#if OS_TASK_EXIT
 	port_ctx_init(tsk->sp, core_tsk_exec);
-#endif
+	#else
+	port_ctx_init(tsk->sp, core_tsk_loop);
+	#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -270,10 +272,10 @@ bool priv_stk_integrity( tsk_t *tsk, void *tp, void *sp)
 {
 	if (tsk == &MAIN) return true;
 	if (sp < tp) return false;
-#if (__MPU_USED == 0) && ((OS_GUARD_SIZE) > 0)
+	#if (__MPU_USED == 0) && ((OS_GUARD_SIZE) > 0)
 	if (tsk == &IDLE) return true;
 	if (core_stk_space(tsk) < STK_OVER(0)) return false;
-#endif
+	#endif
 	return true;
 }
 
@@ -514,8 +516,10 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		if (tsk == System.cur)       // current task
 		{
 			tsk = tsk->hdr.next;
+			#if OS_ROBIN
 			if (tsk->prio > prio)
 				port_ctx_switch();
+			#endif
 		}
 		else
 		if (tsk->guard != 0)         // blocked task
@@ -552,8 +556,10 @@ void core_cur_prio( unsigned prio )
 	{
 		tsk->prio = prio;
 		tsk = tsk->hdr.next;
+		#if OS_ROBIN
 		if (tsk->prio > prio)
 			port_ctx_switch();
+		#endif
 	}
 }
 
@@ -575,11 +581,11 @@ void *core_tsk_handler( void *sp )
 
 		nxt = IDLE.hdr.next;
 
-#if OS_ROBIN && HW_TIMER_SIZE == 0
+		#if OS_ROBIN && HW_TIMER_SIZE == 0
 		if (cur == nxt || (nxt->slice >= (OS_FREQUENCY)/(OS_ROBIN) && (nxt->slice = 0) == 0))
-#else
+		#else
 		if (cur == nxt)
-#endif
+		#endif
 		{
 			priv_tsk_remove(nxt);
 			priv_tsk_insert(nxt);
@@ -590,11 +596,11 @@ void *core_tsk_handler( void *sp )
 		sp = nxt->sp;
 		nxt->sp = 0;
 
-#if __MPU_USED == 1
-//		port_mpu_disable();
+		#if __MPU_USED == 1
+	//	port_mpu_disable();
 		port_mpu_stackUpdate(nxt == &MAIN ? NULL : nxt->stack);
-//		port_mpu_enable();
-#endif
+	//	port_mpu_enable();
+		#endif
 	}
 	port_clr_lock();
 
