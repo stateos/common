@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    25.10.2022
     @brief   StateOS port file for STM8S uC.
 
  ******************************************************************************
@@ -68,16 +68,21 @@ void port_sys_init( void )
 
 #else //HW_TIMER_SIZE
 
-	#if (OS_FREQUENCY)/(OS_ROBIN)-1 > UINT16_MAX
+	#if OS_ROBIN
+	#if (OS_FREQUENCY)/(OS_ROBIN) > UINT16_MAX
 	#error Incorrect OS_ROBIN frequency!
+	#else
+	#define  CCR_     ((OS_FREQUENCY)/(OS_ROBIN))
+	#endif
+	#else
+	#define  CCR_       UINT16_MAX
 	#endif
 
-	#define  CNT_(X)   ((X)>>0?(X)>>1?(X)>>2?(X)>>3?(X)>>4?(X)>>5?(X)>>6?(X)>>7?(X)>>8?(X)>>9?-1:9:8:7:6:5:4:3:2:1:0)
-	#define  PSC_ CNT_  ((CPU_FREQUENCY)/(OS_FREQUENCY)-1)
+	#define  CNT_(X)  ((X)>>0?(X)>>1?(X)>>2?(X)>>3?(X)>>4?(X)>>5?(X)>>6?(X)>>7?(X)>>8?(X)>>9?-1:9:8:7:6:5:4:3:2:1:0)
+	#define  PSC_ CNT_((CPU_FREQUENCY)/(OS_FREQUENCY)-1)
 	#if      PSC_ < 0
 	#error Incorrect CPU_FREQUENCY / OS_FREQUENCY value!
 	#endif
-	#define  CCR_       ((OS_FREQUENCY)/(OS_ROBIN))
 
 /******************************************************************************
  Tick-less mode: configuration of system timer
@@ -85,6 +90,10 @@ void port_sys_init( void )
 *******************************************************************************/
 
 	TIM3->PSCR  = (uint8_t)(PSC_);
+	#if HW_TIMER_SIZE > OS_TIMER_SIZE
+	TIM3->ARRH  = (uint8_t)(CNT_MAX >> 8);
+	TIM3->ARRL  = (uint8_t)(CNT_MAX);
+	#endif
 	TIM3->CCR1H = (uint8_t)(CCR_ >> 8);
 	TIM3->CCR1L = (uint8_t)(CCR_);
 	#if HW_TIMER_SIZE < OS_TIMER_SIZE
