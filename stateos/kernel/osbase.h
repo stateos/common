@@ -101,7 +101,9 @@ typedef uint32_t     hwt_t;
 #elif   HW_TIMER_SIZE == 64
 typedef uint64_t     hwt_t;
 #define HWT_MAX           0xFFFFFFFFFFFFFFFFULL
-#elif   HW_TIMER_SIZE
+#elif   HW_TIMER_SIZE ==  0
+#define HWT_MAX           0
+#else
 #error  Invalid HW_TIMER_SIZE value!
 #endif
 
