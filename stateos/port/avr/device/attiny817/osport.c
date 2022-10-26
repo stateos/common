@@ -227,7 +227,6 @@ ISR( TCA0_CMP2_vect )
 //	if (TCA0.SINGLE.INTFLAGS & TCA_SINGLE_CMP2_bm)
 	{
 		TCA0.SINGLE.INTFLAGS = TCA_SINGLE_CMP2_bm;
-		port_tmr_stop();
 		core_tmr_handler();
 	}
 }
