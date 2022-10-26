@@ -111,12 +111,12 @@ bool priv_tmr_expired( tmr_t *tmr )
 	if (tmr->delay == INFINITE)
 	return false; // return if timer counting indefinitely
 
-	if (tmr->delay <= core_sys_time() - tmr->start)
+	if (tmr->delay < core_sys_time() - tmr->start + 1)
 	return true;  // return if timer finished counting
 
 	port_tmr_start((hwt_t)(tmr->start + tmr->delay));
 
-	if (tmr->delay >  core_sys_time() - tmr->start)
+	if (tmr->delay >= core_sys_time() - tmr->start + 1)
 	return false; // return if timer still counts
 
 	port_tmr_stop();
@@ -131,10 +131,10 @@ bool priv_tmr_expired( tmr_t *tmr )
 static
 bool priv_tmr_expired( tmr_t *tmr )
 {
-	if (tmr->delay >= core_sys_time() - tmr->start + 1)
-	return false; // return if timer still counts or counting indefinitely
+	if (tmr->delay < core_sys_time() - tmr->start + 1)
+	return true;  // return if timer finished counting
 
-	return true;  // timer finished counting
+	return false; // return if timer still counts or counting indefinitely
 }
 
 #endif
