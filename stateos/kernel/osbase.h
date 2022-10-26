@@ -2,7 +2,7 @@
 
     @file    StateOS: osbase.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    26.10.2022
     @brief   This file contains basic definitions for StateOS.
 
  ******************************************************************************
@@ -91,6 +91,16 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------------- */
+
+#if     HW_TIMER_SIZE == 16
+typedef uint16_t     hwt_t;
+#elif   HW_TIMER_SIZE == 32
+typedef uint32_t     hwt_t;
+#elif   HW_TIMER_SIZE == 64
+typedef uint64_t     hwt_t;
+#elif   HW_TIMER_SIZE
+#error  Invalid HW_TIMER_SIZE value!
+#endif
 
 #if     OS_TIMER_SIZE == 16
 typedef uint16_t     cnt_t;

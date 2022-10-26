@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    25.10.2022
+    @date    26.10.2022
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -114,7 +114,7 @@ bool priv_tmr_expired( tmr_t *tmr )
 	if (tmr->delay <= core_sys_time() - tmr->start)
 	return true;  // return if timer finished counting
 
-	port_tmr_start(tmr->start + tmr->delay);
+	port_tmr_start((hwt_t)(tmr->start + tmr->delay));
 
 	if (tmr->delay >  core_sys_time() - tmr->start)
 	return false; // return if timer still counts
