@@ -2,7 +2,7 @@
 
     @file    IntrOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    26.10.2022
+    @date    28.10.2022
     @brief   This file defines set of kernel functions for IntrOS.
 
  ******************************************************************************
@@ -173,7 +173,7 @@ __STATIC_INLINE
 void core_sys_tick( void )
 {
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
-	System.cnt = System.cnt + (cnt_t)HWT_MAX + 1;
+	System.cnt = System.cnt + ((cnt_t)1<<(HW_TIMER_SIZE));
 #endif
 }
 
