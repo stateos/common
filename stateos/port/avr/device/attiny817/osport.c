@@ -264,7 +264,7 @@ cnt_t port_sys_time( void )
 	if (TCA0.SINGLE.INTFLAGS & TCA_SINGLE_OVF_bm)
 	{
 		tck = TCA0.SINGLE.CNT;
-		cnt += (cnt_t)HWT_MAX + 1;
+		cnt += ((cnt_t)1<<(HW_TIMER_SIZE));
 	}
 
 	return cnt + tck;
