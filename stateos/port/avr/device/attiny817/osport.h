@@ -111,9 +111,9 @@ void port_ctx_switch( void )
 
 /* -------------------------------------------------------------------------- */
 // force yield system control to the next process now
-
-void port_ctx_switchNow( void );
 /*
+void port_ctx_switchNow( void );
+*/
 __STATIC_INLINE
 void port_ctx_switchNow( void )
 {
@@ -121,7 +121,7 @@ void port_ctx_switchNow( void )
 	sei(); __ISB();
 	cli();
 }
-*/
+
 /* -------------------------------------------------------------------------- */
 // reset context switch indicator
 
