@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    26.10.2022
+    @date    27.10.2022
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -33,18 +33,6 @@
 #include "inc/osmutex.h"
 #include "inc/ostimer.h"
 #include "inc/ostask.h"
-
-/* -------------------------------------------------------------------------- */
-// SYSTEM INTERNAL SERVICES
-/* -------------------------------------------------------------------------- */
-
-static
-void priv_ctx_switchNow( void )
-{
-	port_ctx_switch();
-	port_clr_lock(); __ISB();
-	port_set_lock();
-}
 
 /* -------------------------------------------------------------------------- */
 // SYSTEM TIMER SERVICES
@@ -236,7 +224,7 @@ void core_tsk_remove( tsk_t *tsk )
 	tsk->hdr.id = ID_STOPPED;
 	priv_tsk_remove(tsk);
 	if (tsk == System.cur)
-		priv_ctx_switchNow();
+		port_ctx_switchNow();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -246,7 +234,7 @@ void core_ctx_init( tsk_t *tsk )
 	assert(tsk->size>STK_OVER(sizeof(ctx_t)));
 	#ifdef DEBUG
 	if (tsk != System.cur)
-		memset(tsk->stack, 0xFF, tsk->size);
+		memset(tsk->stack, 0xFF, tsk->size - sizeof(ctx_t));
 	#endif
 	tsk->sp = (ctx_t *)STK_CROP(tsk->stack, tsk->size) - 1;
 	#if OS_TASK_EXIT
@@ -315,11 +303,21 @@ void core_ctx_switch( void )
 
 /* -------------------------------------------------------------------------- */
 
+void core_ctx_switchNow( void )
+{
+	tsk_t *cur = IDLE.hdr.next;
+	tsk_t *nxt = cur->hdr.next;
+	if (nxt->prio == cur->prio)
+		port_ctx_switchNow();
+}
+
+/* -------------------------------------------------------------------------- */
+
 void core_tsk_loop( void )
 {
 	for (;;)
 	{
-		port_clr_lock();
+		port_clr_lock(); __ISB();
 		System.cur->proc(System.cur->arg);
 		port_set_lock();
 		core_ctx_switch();
@@ -394,7 +392,7 @@ int core_tsk_wait( tsk_t *tsk, tsk_t **que )
 	}
 
 	if (tsk == System.cur)
-		priv_ctx_switchNow();
+		port_ctx_switchNow();
 
 	return tsk->event;
 }

@@ -86,7 +86,10 @@ extern  stk_t               __stack[];
 	asm volatile               \
 	(                          \
 		"push r0           \n" \
+		"in   r0, __SREG__ \n" \
+		"cli               \n" \
 		"push r1           \n" \
+		"eor  r1, r1       \n" \
 		"push r2           \n" \
 		"push r3           \n" \
 		"push r4           \n" \
@@ -117,8 +120,6 @@ extern  stk_t               __stack[];
 		"push r29          \n" \
 		"push r30          \n" \
 		"push r31          \n" \
-		"in   r0, __SREG__ \n" \
-		"eor  r1, r1       \n" \
 		"push r0           \n" \
 	)
 
@@ -128,7 +129,6 @@ extern  stk_t               __stack[];
 	asm volatile               \
 	(                          \
 		"pop  r0           \n" \
-		"out  __SREG__, r0 \n" \
 		"pop  r31          \n" \
 		"pop  r30          \n" \
 		"pop  r29          \n" \
@@ -160,6 +160,7 @@ extern  stk_t               __stack[];
 		"pop  r3           \n" \
 		"pop  r2           \n" \
 		"pop  r1           \n" \
+		"out  __SREG__, r0 \n" \
 		"pop  r0           \n" \
 	)
 

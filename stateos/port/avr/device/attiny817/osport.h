@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    26.10.2022
+    @date    28.10.2022
     @brief   StateOS port definitions for ATtiny817 uC.
 
  ******************************************************************************
@@ -109,6 +109,19 @@ void port_ctx_switch( void )
 #endif
 }
 
+/* -------------------------------------------------------------------------- */
+// force yield system control to the next process now
+
+void port_ctx_switchNow( void );
+/*
+__STATIC_INLINE
+void port_ctx_switchNow( void )
+{
+	port_ctx_switch();
+	sei(); __ISB();
+	cli();
+}
+*/
 /* -------------------------------------------------------------------------- */
 // reset context switch indicator
 
