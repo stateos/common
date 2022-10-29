@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    27.10.2022
+    @date    29.10.2022
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -563,7 +563,7 @@ void core_cur_prio( unsigned prio )
 
 /* -------------------------------------------------------------------------- */
 
-void *core_tsk_handler( void *sp )
+void *core_tsk_switch( void *sp )
 {
 	tsk_t *cur, *nxt;
 

@@ -2,7 +2,7 @@
 
     @file    StateOS: oscore.c
     @author  Rajmund Szymanski
-    @date    14.12.2020
+    @date    29.10.2022
     @brief   StateOS port file for ARM Cotrex-M uC.
 
  ******************************************************************************
@@ -38,7 +38,7 @@
 void PendSV_Handler( void )
 {
 	#asm
-	xref _core_tsk_handler
+	xref _core_tsk_switch
 
 	mrs   r0,    PSP
 	mov   r3,    lr
@@ -56,7 +56,7 @@ _1:	subs  r0,  # 36
 	stm   r0!, { r3  - r7 }
 	subs  r0,  # 36
 
-	bl   _core_tsk_handler
+	bl   _core_tsk_switch
 
 	adds  r0,  # 16
 	ldm   r0!, { r3  - r7 }
@@ -88,7 +88,7 @@ _2:	msr   PSP,   r0
 void PendSV_Handler( void )
 {
 	#asm
-	xref _core_tsk_handler
+	xref _core_tsk_switch
 
 	tst   lr,  # 4                      ; process stack used?
 	itee  ne
@@ -104,7 +104,7 @@ void PendSV_Handler( void )
 #endif
 	stmdb r0!, { r4  - r11, lr }
 
-	bl   _core_tsk_handler
+	bl   _core_tsk_switch
 
 	ldmia r0!, { r4  - r11, lr }
 #if __FPU_USED

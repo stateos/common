@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    28.10.2022
+    @date    29.10.2022
     @brief   StateOS port file for ATtiny817 uC.
 
  ******************************************************************************
@@ -140,7 +140,7 @@ __attribute__((naked))
 void port_ctx_switchNow( void )
 {
 	PUSH_CONTEXT();
-	port_set_sp(core_tsk_handler(port_get_sp()));
+	port_set_sp(core_tsk_switch(port_get_sp()));
 	POP_CONTEXT();
 	asm volatile ("ret");
 }
@@ -176,7 +176,7 @@ ISR( TCA0_CMP0_vect, ISR_NAKED )
 //	if (TCA0.SINGLE.INTFLAGS & TCA_SINGLE_CMP0_bm)
 	{
 		TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;
-		port_set_sp(core_tsk_handler(port_get_sp()));
+		port_set_sp(core_tsk_switch(port_get_sp()));
 	}
 	POP_CONTEXT();
 	reti();
@@ -219,7 +219,7 @@ ISR( TCA0_CMP0_vect, ISR_NAKED )
 //	if (TCA0.SINGLE.INTFLAGS & TCA_SINGLE_CMP0_bm)
 	{
 		TCA0.SINGLE.INTCTRL &= (uint8_t) ~TCA_SINGLE_CMP0_bm;
-		SP = (uint16_t) core_tsk_handler(port_get_sp());
+		port_set_sp(core_tsk_switch(port_get_sp()));
 	}
 	POP_CONTEXT();
 	reti();

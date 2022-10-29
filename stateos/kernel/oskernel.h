@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    28.10.2022
+    @date    29.10.2022
     @brief   This file defines set of kernel functions for StateOS.
 
  ******************************************************************************
@@ -271,7 +271,7 @@ void core_cur_prio( unsigned prio );
 // save stack pointer 'sp' of the current task
 // reset context switch timer counter
 // return a pointer to the stack pointer of the next READY task the highest priority
-void *core_tsk_handler( void *sp );
+void *core_tsk_switch( void *sp );
 
 /* -------------------------------------------------------------------------- */
 

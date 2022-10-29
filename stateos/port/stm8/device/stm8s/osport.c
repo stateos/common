@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    25.10.2022
+    @date    29.10.2022
     @brief   StateOS port file for STM8S uC.
 
  ******************************************************************************
@@ -148,7 +148,7 @@ INTERRUPT_HANDLER(TIM3_CAP_COM_IRQHandler, 16)
 //	if (TIM3->SR1 & TIM3_SR1_CC1IF)
 	{
 		TIM3->SR1 = (uint8_t) ~TIM3_SR1_CC1IF;
-		_set_SP(core_tsk_handler(_get_SP()));
+		_set_SP(core_tsk_switch(_get_SP()));
 	}
 }
 
@@ -199,7 +199,7 @@ INTERRUPT_HANDLER(TIM3_CAP_COM_IRQHandler, 16)
 	if (TIM3->SR1 & TIM3_SR1_CC1IF)
 	{
 		TIM3->SR1 = (uint8_t) ~TIM3_SR1_CC1IF;
-		_set_SP(core_tsk_handler(_get_SP()));
+		_set_SP(core_tsk_switch(_get_SP()));
 	}
 }
 
