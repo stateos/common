@@ -61,6 +61,10 @@ Features:
 - renamed tsk/tmr function
 - added tsk_startWith function
 - stdc++: fixed compilation error for gcc 12
+- updated port files
+- added non-preemption guards
+- updated kernel
+- added support for attiny817xmini
 ---------
 6.8
 - updated sys_init function
