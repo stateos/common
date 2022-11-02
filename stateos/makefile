@@ -18,11 +18,6 @@ $(error Please define STATEOS_COMPILER before including the stateos-kernel packa
 endif
 
 INCS += $(COMMON)/stateos/kernel
-INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)
-INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/device/$(STATEOS_DEVICE)
-ifneq ($(wildcard $(COMMON)/stateos/port/$(STATEOS_ARCH)/common),)
-INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/common
-endif
 
 SRCS += $(COMMON)/stateos/kernel/oskernel.c
 SRCS += $(COMMON)/stateos/kernel/osalloc.c
@@ -47,6 +42,13 @@ SRCS += $(COMMON)/stateos/kernel/src/ossignal.c
 SRCS += $(COMMON)/stateos/kernel/src/ostask.c
 SRCS += $(COMMON)/stateos/kernel/src/ostimer.c
 SRCS += $(COMMON)/stateos/kernel/src/osstatemachine.c
+
+INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)
+INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/device/$(STATEOS_DEVICE)
+ifneq ($(wildcard $(COMMON)/stateos/port/$(STATEOS_ARCH)/common),)
+INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/common
+endif
+
 ifneq ($(wildcard $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)/oscore.s),)
 SRCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)/oscore.s
 endif

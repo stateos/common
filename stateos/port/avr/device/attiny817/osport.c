@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    29.10.2022
+    @date    01.11.2022
     @brief   StateOS port file for ATtiny817 uC.
 
  ******************************************************************************
@@ -133,18 +133,6 @@ void port_sys_init( void )
 	port_clr_lock();
 }
 
-/* -------------------------------------------------------------------------- */
-// force yield system control to the next process now
-/*
-__attribute__((naked))
-void port_ctx_switchNow( void )
-{
-	PUSH_CONTEXT();
-	port_set_sp(core_tsk_switch(port_get_sp()));
-	POP_CONTEXT();
-	asm volatile ("ret");
-}
-*/
 /* -------------------------------------------------------------------------- */
 
 #if HW_TIMER_SIZE == 0

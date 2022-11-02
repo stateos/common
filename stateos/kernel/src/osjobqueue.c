@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.c
     @author  Rajmund Szymanski
-    @date    20.05.2021
+    @date    01.11.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -581,7 +581,7 @@ int job_waitAsync( job_t *job )
 	assert_tsk_context();
 
 	while (job_takeAsync(job) != E_SUCCESS)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return E_SUCCESS;
 }
@@ -627,7 +627,7 @@ int job_sendAsync( job_t *job, fun_t *fun )
 	assert_tsk_context();
 
 	while (job_giveAsync(job, fun) != E_SUCCESS)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return E_SUCCESS;
 }

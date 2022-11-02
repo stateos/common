@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.c
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    01.11.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -469,7 +469,7 @@ void tsk_flip( fun_t *proc )
 	System.cur->proc = proc;
 
 	priv_sig_reset(System.cur); // reset signal variables of current task
-	core_ctx_switch();
+	core_ctx_switchNow();
 	core_tsk_flip((void *)STK_CROP(System.cur->stack, System.cur->size));
 
 	assert(false);              // system cannot return here

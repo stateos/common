@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    01.11.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -643,7 +643,7 @@ int msg_waitAsync( msg_t *msg, void *data, size_t size, size_t *read )
 	assert_tsk_context();
 
 	while (result = msg_takeAsync(msg, data, size, read), result == E_TIMEOUT)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return result;
 }
@@ -694,7 +694,7 @@ int msg_sendAsync( msg_t *msg, const void *data, size_t size )
 	assert_tsk_context();
 
 	while (result = msg_giveAsync(msg, data, size), result == E_TIMEOUT)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return E_SUCCESS;
 }

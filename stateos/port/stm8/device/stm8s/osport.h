@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    28.10.2022
+    @date    01.11.2022
     @brief   StateOS port definitions for STM8S uC.
 
  ******************************************************************************
@@ -102,17 +102,6 @@ __STATIC_INLINE
 void port_ctx_switch( void )
 {
 	TIM3->EGR = TIM3_EGR_CC1G;
-}
-
-/* -------------------------------------------------------------------------- */
-// force yield system control to the next process now
-
-__STATIC_INLINE
-void port_ctx_switchNow( void )
-{
-	port_ctx_switch();
-	enableInterrupts(); __ISB();
-	disableInterrupts();
 }
 
 /* -------------------------------------------------------------------------- */

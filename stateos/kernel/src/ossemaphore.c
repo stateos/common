@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.c
     @author  Rajmund Szymanski
-    @date    13.05.2021
+    @date    01.11.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -327,7 +327,7 @@ int sem_waitAsync( sem_t *sem )
 	assert_tsk_context();
 
 	while (sem_takeAsync(sem) != E_SUCCESS)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return E_SUCCESS;
 }

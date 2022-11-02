@@ -2,7 +2,7 @@
 
     @file    StateOS: oscore.h
     @author  Rajmund Szymanski
-    @date    15.12.2020
+    @date    01.11.2022
     @brief   StateOS port file for ARM Cotrex-M uC.
 
  ******************************************************************************
@@ -229,6 +229,18 @@ void port_clr_lock( void )
 }
 
 #endif
+
+/* -------------------------------------------------------------------------- */
+// force yield system control to the next process now
+
+__STATIC_INLINE
+void port_ctx_switchNow( void )
+{
+	lck_t lck = port_get_lock();
+	port_ctx_switch();
+	port_clr_lock(); __ISB();
+	port_put_lock(lck);
+}
 
 /* -------------------------------------------------------------------------- */
 

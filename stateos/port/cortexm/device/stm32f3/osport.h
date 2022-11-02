@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    28.10.2022
+    @date    01.11.2022
     @brief   StateOS port definitions for STM32F3 uC.
 
  ******************************************************************************
@@ -112,17 +112,6 @@ __STATIC_INLINE
 void port_ctx_switch( void )
 {
 	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
-}
-
-/* -------------------------------------------------------------------------- */
-// force yield system control to the next process now
-
-__STATIC_INLINE
-void port_ctx_switchNow( void )
-{
-	port_ctx_switch();
-	__enable_irq(); __ISB();
-	__disable_irq();
 }
 
 /* -------------------------------------------------------------------------- */

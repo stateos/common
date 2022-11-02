@@ -2,7 +2,7 @@
 
     @file    StateOS: oseventqueue.c
     @author  Rajmund Szymanski
-    @date    20.05.2021
+    @date    01.11.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -582,7 +582,7 @@ int evq_waitAsync( evq_t *evq, unsigned *event )
 	assert_tsk_context();
 
 	while (evq_takeAsync(evq, event) != E_SUCCESS)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return E_SUCCESS;
 }
@@ -627,7 +627,7 @@ int evq_sendAsync( evq_t *evq, unsigned event )
 	assert_tsk_context();
 
 	while (evq_giveAsync(evq, event) != E_SUCCESS)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return E_SUCCESS;
 }

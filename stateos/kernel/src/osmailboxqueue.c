@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    01.11.2022
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -570,7 +570,7 @@ int box_waitAsync( box_t *box, void *data )
 	assert_tsk_context();
 
 	while (box_takeAsync(box, data) != E_SUCCESS)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return E_SUCCESS;
 }
@@ -616,7 +616,7 @@ int box_sendAsync( box_t *box, const void *data )
 	assert_tsk_context();
 
 	while (box_giveAsync(box, data) != E_SUCCESS)
-		core_ctx_switch();
+		core_ctx_switchNow();
 
 	return E_SUCCESS;
 }
