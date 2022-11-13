@@ -2,7 +2,7 @@
 
    @file    startup.c
    @author  Rajmund Szymanski
-   @date    06.06.2022
+   @date    13.11.2022
    @brief   Startup file for STM32F303VC uC
 
  ******************************************************************************
@@ -58,7 +58,7 @@ extern char __initial_sp [];
 *******************************************************************************/
 
 static
-void Fault_Handler()
+void Fault_Handler( void )
 {
 	/* Go into an infinite loop */
 	for (;;);
