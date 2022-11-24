@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.h
     @author  Rajmund Szymanski
-    @date    29.10.2022
+    @date    24.11.2022
     @brief   This file defines set of kernel functions for StateOS.
 
  ******************************************************************************
@@ -125,7 +125,9 @@ void port_sys_init( void );
 void core_ctx_init( tsk_t *tsk );
 
 // save status of the current process and force yield system control to the next
+#if OS_ROBIN
 void core_ctx_switch( void );
+#endif
 
 // save status of the current process and immediately yield system control to the next
 void core_ctx_switchNow( void );

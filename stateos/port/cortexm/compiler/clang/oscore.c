@@ -130,7 +130,7 @@ void PendSV_Handler( void )
 /* -------------------------------------------------------------------------- */
 
 __attribute__((naked))
-void core_tsk_flip(/*void *sp*/)
+void core_tsk_flip( void *sp )
 {
 	__ASM volatile
 	(
