@@ -95,7 +95,7 @@ $(info Using nowarnings)
 DEFS       := $(DEFS:NOWARNINGS=)
 COMMON_F   += -Wall
 else
-COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wsign-conversion
+COMMON_F   += -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wsign-conversion -Wno-strict-prototypes
 CXX_FLAGS  += -Wzero-as-null-pointer-constant
 endif
 ifneq ($(filter ISO,$(DEFS)),)

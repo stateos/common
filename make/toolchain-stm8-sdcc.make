@@ -124,7 +124,7 @@ clean :
 
 flash : all $(HEX)
 	$(info Programing device...)
-	$(STVP) -BoardName=ST-LINK -Port=USB -ProgMode=SWIM -Device=$(TARGET_CHIP) -verif -no_loop -no_log -FileProg=$(HEX)
+	$(STVP) -BoardName=ST-LINK -Port=USB -ProgMode=SWIM -Device=$(TARGET_CORE) -verif -no_loop -no_log -FileProg=$(HEX)
 
 debug : all $(HEX)
 	$(info Debugging device...)

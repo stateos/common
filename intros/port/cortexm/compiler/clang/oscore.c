@@ -2,7 +2,7 @@
 
     @file    IntrOS: oscore.c
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    21.11.2022
     @brief   IntrOS port file for ARM Cotrex-M uC.
 
  ******************************************************************************
@@ -36,7 +36,7 @@
 #if __FPU_USED
 
 __attribute__((naked))
-int setjmp(/*jmp_buf buf*/)
+int setjmp( jmp_buf buf )
 {
 	__asm volatile
 	(
@@ -56,7 +56,7 @@ int setjmp(/*jmp_buf buf*/)
 #if __FPU_USED
 
 __attribute__((naked))
-void longjmp(/*jmp_buf buf, int val*/)
+void longjmp( jmp_buf buf, int val )
 {
 	__asm volatile
 	(
