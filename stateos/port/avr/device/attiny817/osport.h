@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    01.11.2022
+    @date    29.11.2022
     @brief   StateOS port definitions for ATtiny817 uC.
 
  ******************************************************************************
@@ -117,7 +117,7 @@ void port_ctx_reset( void )
 {
 #if HW_TIMER_SIZE
 	#if OS_ROBIN
-	TCA0.SINGLE.CMP1 = TCA0.SINGLE.CNT + (OS_FREQUENCY) / (OS_ROBIN);
+	TCA0.SINGLE.CMP1 = TCA0.SINGLE.CNT + (uint16_t)((OS_FREQUENCY) / (OS_ROBIN));
 	#endif
 #endif
 }
