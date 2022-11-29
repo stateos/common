@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    24.11.2022
+    @date    29.11.2022
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -292,7 +292,6 @@ void core_stk_move( tsk_t *tsk, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-#if OS_ROBIN
 
 void core_ctx_switch( void )
 {
@@ -302,7 +301,6 @@ void core_ctx_switch( void )
 		port_ctx_switch();
 }
 
-#endif
 /* -------------------------------------------------------------------------- */
 
 void core_ctx_switchNow( void )
