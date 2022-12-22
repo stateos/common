@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     stm32f4xx.ld
 @author   Rajmund Szymanski
-@date     02.06.2022
+@date     22.12.2022
 @brief    Linker script for STM32F407VG device with 1024KB FLASH and 192KB RAM
 *******************************************************************************/
 
@@ -44,10 +44,7 @@ SECTIONS
 		*(.text*   .gnu.linkonce.t.*)
 		*(.rodata* .gnu.linkonce.r.*)
 		*(.glue_7  .glue_7t)
-	} > ROM
 
-	.init : ALIGN(4)
-	{
 		__preinit_array_start = .;
 		KEEP (*(.preinit_array))
 		__preinit_array_end = .;
@@ -58,10 +55,7 @@ SECTIONS
 		__init_array_end = .;
 
 		KEEP (*(.init))
-	} > ROM
 
-	.fini : ALIGN(4)
-	{
 		__fini_array_start = .;
 		KEEP (*(.fini_array))
 		KEEP (*(SORT(.fini_array.*)))
@@ -132,7 +126,7 @@ SECTIONS
 		*(COMMON)
 		. = ALIGN(4);
 		__bss_end = .;
-	} > RAM AT > RAM
+	} > RAM
 
 	__bss_size = SIZEOF(.bss);
 
@@ -142,7 +136,7 @@ SECTIONS
 		*(.noinit);
 		. = ALIGN(4);
 		__noinit_end = .;
-	} > RAM AT > RAM
+	} > RAM
 
 	__noinit_size = SIZEOF(.noinit);
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     stm32f3xx.ld
 @author   Rajmund Szymanski
-@date     02.06.2022
+@date     22.12.2022
 @brief    Linker script for STM32F303VC device with 256KB FLASH and 48KB RAM
 *******************************************************************************/
 
@@ -23,6 +23,7 @@ __CCM_end   = ORIGIN(CCM) + LENGTH(CCM);
 __RAM_start = ORIGIN(RAM);
 __RAM_size  = LENGTH(RAM);
 __RAM_end   = ORIGIN(RAM) + LENGTH(RAM);
+
 PROVIDE(main_stack_size = 0);
 PROVIDE(proc_stack_size = 0);
 
@@ -37,10 +38,7 @@ SECTIONS
 		*(.text*   .gnu.linkonce.t.*)
 		*(.rodata* .gnu.linkonce.r.*)
 		*(.glue_7  .glue_7t)
-	} > ROM
 
-	.init : ALIGN(4)
-	{
 		__preinit_array_start = .;
 		KEEP (*(.preinit_array))
 		__preinit_array_end = .;
@@ -51,10 +49,7 @@ SECTIONS
 		__init_array_end = .;
 
 		KEEP (*(.init))
-	} > ROM
 
-	.fini : ALIGN(4)
-	{
 		__fini_array_start = .;
 		KEEP (*(.fini_array))
 		KEEP (*(SORT(.fini_array.*)))
@@ -117,7 +112,7 @@ SECTIONS
 		*(COMMON)
 		. = ALIGN(4);
 		__bss_end = .;
-	} > RAM AT > RAM
+	} > RAM
 
 	__bss_size = SIZEOF(.bss);
 
@@ -127,7 +122,7 @@ SECTIONS
 		*(.noinit);
 		. = ALIGN(4);
 		__noinit_end = .;
-	} > RAM AT > RAM
+	} > RAM
 
 	__noinit_size = SIZEOF(.noinit);
 
