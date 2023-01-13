@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-printf.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -80,8 +78,6 @@ OS_console_internal_record_t OS_console_table[OS_MAX_CONSOLES];
 
 /*----------------------------------------------------------------
  *
- * Function: OS_ConsoleAPI_Init
- *
  *  Purpose: Local helper routine, not part of OSAL API.
  *
  *-----------------------------------------------------------------*/
@@ -123,7 +119,7 @@ int32 OS_ConsoleAPI_Init(void)
     }
 
     return return_code;
-} /* end OS_ConsoleAPI_Init */
+}
 
 /*
  *********************************************************************************
@@ -132,8 +128,6 @@ int32 OS_ConsoleAPI_Init(void)
  */
 
 /*----------------------------------------------------------------
- *
- * Function: OS_Console_CopyOut
  *
  *  Purpose: Local helper routine, not part of OSAL API.
  *    Write into the console ring buffer
@@ -183,7 +177,7 @@ static int32 OS_Console_CopyOut(OS_console_internal_record_t *console, const cha
     }
 
     return return_code;
-} /* end OS_Console_CopyOut */
+}
 
 /*
  *********************************************************************************
@@ -192,8 +186,6 @@ static int32 OS_Console_CopyOut(OS_console_internal_record_t *console, const cha
  */
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ConsoleWrite
  *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Write into the console ring buffer
@@ -260,11 +252,9 @@ int32 OS_ConsoleWrite(osal_id_t console_id, const char *Str)
     }
 
     return return_code;
-} /* end OS_ConsoleWrite */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_printf
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -276,7 +266,7 @@ void OS_printf(const char *String, ...)
     char    msg_buffer[OS_BUFFER_SIZE];
     int     actualsz;
 
-    BUGCHECK((String) != NULL, )
+    BUGCHECK_VOID(String != NULL)
 
     if (OS_SharedGlobalVars.GlobalState != OS_INIT_MAGIC_NUMBER)
     {
@@ -321,12 +311,9 @@ void OS_printf(const char *String, ...)
 
         OS_ConsoleWrite(OS_SharedGlobalVars.PrintfConsoleId, msg_buffer);
     }
-
-} /* end OS_printf */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_printf_disable
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -335,11 +322,9 @@ void OS_printf(const char *String, ...)
 void OS_printf_disable(void)
 {
     OS_SharedGlobalVars.PrintfEnabled = false;
-} /* end OS_printf_disable */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_printf_enable
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -348,4 +333,4 @@ void OS_printf_disable(void)
 void OS_printf_enable(void)
 {
     OS_SharedGlobalVars.PrintfEnabled = true;
-} /* end OS_printf_enable */
+}

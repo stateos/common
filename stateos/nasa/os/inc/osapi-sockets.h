@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -134,7 +132,7 @@ typedef struct
  * is (mostly) agnostic to the actual network address type.
  *
  * Every network address should be representable as a string (i.e. dotted decimal IP, etc).
- * This can serve as a the "common denominator" to all address types.
+ * This can serve as the "common denominator" to all address types.
  *
  * @{
  */
@@ -208,7 +206,7 @@ int32 OS_SocketAddrFromString(OS_SockAddr_t *Addr, const char *string);
 /**
  * @brief Get the port number of a network address
  *
- * For network prototcols that have the concept of a port number (such
+ * For network protocols that have the concept of a port number (such
  * as TCP/IP and UDP/IP) this function gets the port number from the
  * address structure.
  *
@@ -226,7 +224,7 @@ int32 OS_SocketAddrGetPort(uint16 *PortNum, const OS_SockAddr_t *Addr);
 /**
  * @brief Set the port number of a network address
  *
- * For network prototcols that have the concept of a port number (such
+ * For network protocols that have the concept of a port number (such
  * as TCP/IP and UDP/IP) this function sets the port number from the
  * address structure.
  *

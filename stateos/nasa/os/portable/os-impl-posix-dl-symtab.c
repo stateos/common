@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file   os-impl-posix-dl-symtab.c
+ * \file
  * \author joseph.p.hickey@nasa.gov
  *
  * This file contains a module loader implementation for systems
@@ -79,8 +77,6 @@
 
 /*----------------------------------------------------------------
  *
- * Function: OS_GenericSymbolLookup_Impl
- *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
  *
@@ -134,25 +130,39 @@ int32 OS_GenericSymbolLookup_Impl(void *dl_handle, cpuaddr *SymbolAddress, const
 
 /*----------------------------------------------------------------
  *
- * Function: OS_GlobalSymbolLookup_Impl
- *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_GlobalSymbolLookup_Impl(cpuaddr *SymbolAddress, const char *SymbolName)
+int32 OS_SymbolLookup_Impl(cpuaddr *SymbolAddress, const char *SymbolName)
 {
-    int32 status;
+    int32            status;
+    int32            local_status;
+    OS_object_iter_t iter;
 
+    /* First search global table */
     status = OS_GenericSymbolLookup_Impl(OSAL_DLSYM_DEFAULT_HANDLE, SymbolAddress, SymbolName);
 
-    return status;
+    /* If not found iterate through module local symbols and break if found */
+    if (status != OS_SUCCESS)
+    {
+        OS_ObjectIdIterateActive(OS_OBJECT_TYPE_OS_MODULE, &iter);
+        while (OS_ObjectIdIteratorGetNext(&iter))
+        {
+            local_status = OS_ModuleSymbolLookup_Impl(&iter.token, SymbolAddress, SymbolName);
+            if (local_status == OS_SUCCESS)
+            {
+                status = local_status;
+                break;
+            }
+        }
+        OS_ObjectIdIteratorDestroy(&iter);
+    }
 
-} /* end OS_SymbolLookup_Impl */
+    return status;
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ModuleSymbolLookup_Impl
  *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
@@ -168,12 +178,9 @@ int32 OS_ModuleSymbolLookup_Impl(const OS_object_token_t *token, cpuaddr *Symbol
     status = OS_GenericSymbolLookup_Impl(impl->dl_handle, SymbolAddress, SymbolName);
 
     return status;
-
-} /* end OS_ModuleSymbolLookup_Impl */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SymbolTableDump_Impl
  *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
@@ -195,6 +202,5 @@ int32 OS_SymbolTableDump_Impl(const char *filename, size_t SizeLimit)
      * unimplemented here.
      */
 
-    return (OS_ERR_NOT_IMPLEMENTED);
-
-} /* end OS_SymbolTableDump_Impl */
+    return OS_ERR_NOT_IMPLEMENTED;
+}

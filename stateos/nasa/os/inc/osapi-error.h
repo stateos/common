@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -47,6 +45,20 @@
  * when changing this value.
  */
 typedef char os_err_name_t[OS_ERROR_NAME_LENGTH];
+
+/**
+ * @brief Status converted to string length limit
+ *
+ * Used for sizing os_status_string_t intended for use in printing osal_status_t values
+ * Sized to fit LONG_MIN including NULL termination
+ */
+#define OS_STATUS_STRING_LENGTH 12
+
+/**
+ * @brief For the @ref OS_StatusToString() function, to ensure
+ * everyone is making an array of the same length.
+ */
+typedef char os_status_string_t[OS_STATUS_STRING_LENGTH];
 
 /** @defgroup OSReturnCodes OSAL Return Code Defines
  *
@@ -140,6 +152,22 @@ typedef char os_err_name_t[OS_ERROR_NAME_LENGTH];
 
 /*-------------------------------------------------------------------------------------*/
 /**
+ * @brief Convert a status code to a native "long" type
+ *
+ * For printing or logging purposes, this converts the given status code
+ * to a "long" (signed integer) value.  It should be used in conjunction
+ * with the "%ld" conversion specifier in printf-style statements.
+ *
+ * @param[in] Status Execution status, see @ref OSReturnCodes
+ * @return Same status value converted to the "long" data type
+ */
+static inline long OS_StatusToInteger(osal_status_t Status)
+{
+    return (long)Status;
+}
+
+/*-------------------------------------------------------------------------------------*/
+/**
  * @brief Convert an error number to a string
  *
  * @param[in] error_num Error number to convert
@@ -151,6 +179,17 @@ typedef char os_err_name_t[OS_ERROR_NAME_LENGTH];
  * @retval #OS_ERROR if error could not be converted
  */
 int32 OS_GetErrorName(int32 error_num, os_err_name_t *err_name);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Convert status to a string
+ *
+ * @param[in] status Status value to convert
+ * @param[out] status_string Buffer to store status converted to string
+ *
+ * @return Passed in string pointer
+ */
+char *OS_StatusToString(osal_status_t status, os_status_string_t *status_string);
 /**@}*/
 
 #endif /* OSAPI_ERROR_H */

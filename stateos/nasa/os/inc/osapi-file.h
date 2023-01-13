@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -306,7 +304,7 @@ int32 OS_chmod(const char *path, uint32 access_mode);
 /**
  * @brief Obtain information about a file or directory
  *
- * Returns information about a file or directory in a os_fstat_t structure
+ * Returns information about a file or directory in an os_fstat_t structure
  *
  * @param[in]  path      The file to operate on @nonnull
  * @param[out] filestats Buffer to store file information @nonnull
@@ -344,9 +342,9 @@ int32 OS_lseek(osal_id_t filedes, int32 offset, uint32 whence);
  *
  * Removes a given filename from the drive
  *
- * @note The behvior of this API on an open file is not defined at the OSAL level
+ * @note The behavior of this API on an open file is not defined at the OSAL level
  * due to dependencies on the underlying OS which may or may not allow the related
- * operation based on a varienty of potential configurations.  For portability,
+ * operation based on a variety of potential configurations.  For portability,
  * it is recommended that applications ensure the file is closed prior to removal.
  *
  * @param[in]  path      The file to operate on @nonnull
@@ -368,9 +366,9 @@ int32 OS_remove(const char *path);
  * Changes the name of a file, where the source and destination
  * reside on the same file system.
  *
- * @note The behvior of this API on an open file is not defined at the OSAL level
+ * @note The behavior of this API on an open file is not defined at the OSAL level
  * due to dependencies on the underlying OS which may or may not allow the related
- * operation based on a varienty of potential configurations.  For portability,
+ * operation based on a variety of potential configurations.  For portability,
  * it is recommended that applications ensure the file is closed prior to removal.
  *
  * @param[in]  old_filename      The original filename @nonnull
@@ -390,9 +388,9 @@ int32 OS_rename(const char *old_filename, const char *new_filename);
 /**
  * @brief Copies a single file from src to dest
  *
- * @note The behvior of this API on an open file is not defined at the OSAL level
+ * @note The behavior of this API on an open file is not defined at the OSAL level
  * due to dependencies on the underlying OS which may or may not allow the related
- * operation based on a varienty of potential configurations.  For portability,
+ * operation based on a variety of potential configurations.  For portability,
  * it is recommended that applications ensure the file is closed prior to removal.
  *
  * @param[in]  src       The source file to operate on @nonnull
@@ -418,9 +416,9 @@ int32 OS_cp(const char *src, const char *dest);
  * If this fails, it falls back to copying the file and removing
  * the original.
  *
- * @note The behvior of this API on an open file is not defined at the OSAL level
+ * @note The behavior of this API on an open file is not defined at the OSAL level
  * due to dependencies on the underlying OS which may or may not allow the related
- * operation based on a varienty of potential configurations.  For portability,
+ * operation based on a variety of potential configurations.  For portability,
  * it is recommended that applications ensure the file is closed prior to removal.
  *
  * @param[in]  src       The source file to operate on @nonnull

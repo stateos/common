@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -73,6 +71,9 @@ typedef struct
  * be configured to support at least (OS_MAX_TASKS + OS_MAX_TIMEBASES) threads,
  * to account for the helper threads associated with time base objects.
  *
+ * @note This configuration API must not be used from the context of a timer callback.
+ * Timers should only be configured from the context of normal OSAL tasks.
+ *
  * @param[out]  timebase_id     will be set to the non-zero ID of the newly-created resource @nonnull
  * @param[in]   timebase_name   The name of the time base @nonnull
  * @param[in]   external_sync   A synchronization function for BSP hardware-based timer ticks
@@ -101,6 +102,9 @@ int32 OS_TimeBaseCreate(osal_id_t *timebase_id, const char *timebase_name, OS_Ti
  * This function has no effect for time bases that are using
  * a BSP-provided external_sync function.
  *
+ * @note This configuration API must not be used from the context of a timer callback.
+ * Timers should only be configured from the context of normal OSAL tasks.
+ *
  * @param[in]   timebase_id     The timebase resource to configure
  * @param[in]   start_time      The amount of delay for the first tick, in microseconds.
  * @param[in]   interval_time   The amount of delay between ticks, in microseconds.
@@ -120,6 +124,9 @@ int32 OS_TimeBaseSet(osal_id_t timebase_id, uint32 start_time, uint32 interval_t
  * The helper task and any other resources associated with the time base
  * abstraction will be freed.
  *
+ * @note This configuration API must not be used from the context of a timer callback.
+ * Timers should only be configured from the context of normal OSAL tasks.
+ *
  * @param[in]   timebase_id     The timebase resource to delete
  *
  * @return Execution status, see @ref OSReturnCodes
@@ -134,6 +141,9 @@ int32 OS_TimeBaseDelete(osal_id_t timebase_id);
  * @brief Find the ID of an existing time base resource
  *
  * Given a time base name, find and output the ID associated with it.
+ *
+ * @note This configuration API must not be used from the context of a timer callback.
+ * Timers should only be configured from the context of normal OSAL tasks.
  *
  * @param[out]  timebase_id     will be set to the non-zero ID of the matching resource @nonnull
  * @param[in]   timebase_name   The name of the timebase resource to find @nonnull
@@ -155,7 +165,10 @@ int32 OS_TimeBaseGetIdByName(osal_id_t *timebase_id, const char *timebase_name);
  * relevant information about the time base resource.
  *
  * This function will pass back a pointer to structure that contains
- *             all of the relevant info( name and creator) about the specified timebase.
+ * all of the relevant info( name and creator) about the specified timebase.
+ *
+ * @note This configuration API must not be used from the context of a timer callback.
+ * Timers should only be configured from the context of normal OSAL tasks.
  *
  * @param[in]   timebase_id     The timebase resource ID
  * @param[out]  timebase_prop   Buffer to store timebase properties @nonnull

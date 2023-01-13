@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -50,6 +48,7 @@
 #define OS_OBJECT_TYPE_OS_MODULE   0x0A /**< @brief Object module type */
 #define OS_OBJECT_TYPE_OS_FILESYS  0x0B /**< @brief Object file system type */
 #define OS_OBJECT_TYPE_OS_CONSOLE  0x0C /**< @brief Object console type */
+#define OS_OBJECT_TYPE_OS_CONDVAR  0x0D /**< @brief Object condition variable type */
 #define OS_OBJECT_TYPE_USER        0x10 /**< @brief Object user type */
 /**@}*/
 
@@ -66,7 +65,7 @@
  *
  * The returned value is of the type "unsigned long" for direct use with
  * printf-style functions. It is recommended to use the "%lx" conversion
- * specifier as the hexidecimal encoding clearly delineates the internal fields.
+ * specifier as the hexadecimal encoding clearly delineates the internal fields.
  *
  * @note This provides the raw integer value and is _not_ suitable for use
  * as an array index, as the result is not zero-based.  See the
@@ -80,7 +79,11 @@
  */
 static inline unsigned long OS_ObjectIdToInteger(osal_id_t object_id)
 {
+#ifdef OSAL_OMIT_DEPRECATED
+    return object_id.v;
+#else
     return object_id;
+#endif
 }
 
 /*-------------------------------------------------------------------------------------*/
@@ -98,7 +101,11 @@ static inline unsigned long OS_ObjectIdToInteger(osal_id_t object_id)
  */
 static inline osal_id_t OS_ObjectIdFromInteger(unsigned long value)
 {
+#ifdef OSAL_OMIT_DEPRECATED
+    return (osal_id_t) {value};
+#else
     return (osal_id_t)value;
+#endif
 }
 
 /*-------------------------------------------------------------------------------------*/
@@ -119,7 +126,7 @@ static inline osal_id_t OS_ObjectIdFromInteger(unsigned long value)
  */
 static inline bool OS_ObjectIdEqual(osal_id_t object_id1, osal_id_t object_id2)
 {
-    return (object_id1 == object_id2);
+    return (OS_ObjectIdToInteger(object_id1) == OS_ObjectIdToInteger(object_id2));
 }
 
 /*-------------------------------------------------------------------------------------*/
@@ -140,7 +147,7 @@ static inline bool OS_ObjectIdEqual(osal_id_t object_id1, osal_id_t object_id2)
  */
 static inline bool OS_ObjectIdDefined(osal_id_t object_id)
 {
-    return (object_id != 0);
+    return (OS_ObjectIdToInteger(object_id) != 0);
 }
 
 /*-------------------------------------------------------------------------------------*/
