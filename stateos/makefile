@@ -43,6 +43,8 @@ SRCS += $(COMMON)/stateos/kernel/src/ostask.c
 SRCS += $(COMMON)/stateos/kernel/src/ostimer.c
 SRCS += $(COMMON)/stateos/kernel/src/osstatemachine.c
 
+ifndef STATEOS_NANO_INCLUDE_GUARD
+
 INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)
 INCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/device/$(STATEOS_DEVICE)
 ifneq ($(wildcard $(COMMON)/stateos/port/$(STATEOS_ARCH)/common),)
@@ -60,6 +62,8 @@ SRCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/compiler/$(STATEOS_COMPILER)/osli
 endif
 ifneq ($(wildcard $(COMMON)/stateos/port/$(STATEOS_ARCH)/device/$(STATEOS_DEVICE)/osport.c),)
 SRCS += $(COMMON)/stateos/port/$(STATEOS_ARCH)/device/$(STATEOS_DEVICE)/osport.c
+endif
+
 endif
 
 endif
