@@ -1,15 +1,33 @@
-/*******************************************************************************
-@file     stm32l4xx.ld
-@author   Rajmund Szymanski
-@date     22.12.2022
-@brief    Linker script for STM32L476VG device with 1024KB FLASH and 128KB RAM
-*******************************************************************************/
+/******************************************************************************
+
+   @file    script.ld
+   @author  Rajmund Szymanski
+   @date    08.02.2023
+   @brief   Linker script for STM32L476VG device with 1024KB FLASH and 128KB RAM
+
+ ******************************************************************************
+
+   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ ******************************************************************************/
 
 MEMORY
 {
-	ROM (rx)  : ORIGIN = 0x08000000, LENGTH = 1024k
-	CCM (rwx) : ORIGIN = 0x10000000, LENGTH =   32k
-	RAM (rwx) : ORIGIN = 0x20000000, LENGTH =   96k
+	ROM : ORIGIN = 0x08000000, LENGTH = 1024k
+	CCM : ORIGIN = 0x10000000, LENGTH =   32k
+	RAM : ORIGIN = 0x20000000, LENGTH =   96k
 }
 
 __ROM_start = ORIGIN(ROM);
@@ -39,10 +57,12 @@ SECTIONS
 		*(.rodata* .gnu.linkonce.r.*)
 		*(.glue_7  .glue_7t)
 
+		. = ALIGN(4);
 		__preinit_array_start = .;
 		KEEP (*(.preinit_array))
 		__preinit_array_end = .;
 
+		. = ALIGN(4);
 		__init_array_start = .;
 		KEEP (*(SORT(.init_array.*)))
 		KEEP (*(.init_array))
@@ -50,6 +70,7 @@ SECTIONS
 
 		KEEP (*(.init))
 
+		. = ALIGN(4);
 		__fini_array_start = .;
 		KEEP (*(.fini_array))
 		KEEP (*(SORT(.fini_array.*)))
@@ -81,7 +102,7 @@ SECTIONS
 		*(.ccm*)
 		. = ALIGN(4);
 		__ccm_end = .;
-	} > CCM AT > CCM
+	} > CCM
 
 	.main_stack (NOLOAD) : ALIGN(8)
 	{
