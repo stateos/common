@@ -2,12 +2,12 @@
 
    @file    script.ld
    @author  Rajmund Szymanski
-   @date    22.12.2022
+   @date    08.02.2023
    @brief   Linker script for STM32F051R8 device with 64KB FLASH and 8KB RAM
 
  ******************************************************************************
 
-   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@
 
 MEMORY
 {
-	ROM (rx)  : ORIGIN = 0x08000000, LENGTH = 64K
-	RAM (rwx) : ORIGIN = 0x20000000, LENGTH =  8K
+	ROM : ORIGIN = 0x08000000, LENGTH = 64K
+	RAM : ORIGIN = 0x20000000, LENGTH =  8K
 }
 
 __ROM_start = ORIGIN(ROM);
@@ -51,7 +51,10 @@ SECTIONS
 		*(.text*   .gnu.linkonce.t.*)
 		*(.rodata* .gnu.linkonce.r.*)
 		*(.glue_7  .glue_7t)
+	} > ROM
 
+	.init : ALIGN(4)
+	{
 		__preinit_array_start = .;
 		KEEP (*(.preinit_array))
 		__preinit_array_end = .;
@@ -62,7 +65,10 @@ SECTIONS
 		__init_array_end = .;
 
 		KEEP (*(.init))
+	} > ROM
 
+	.fini : ALIGN(4)
+	{
 		__fini_array_start = .;
 		KEEP (*(.fini_array))
 		KEEP (*(SORT(.fini_array.*)))
@@ -117,7 +123,7 @@ SECTIONS
 		*(COMMON)
 		. = ALIGN(4);
 		__bss_end = .;
-	} > RAM
+	} > RAM AT > RAM
 
 	__bss_size = SIZEOF(.bss);
 
@@ -127,7 +133,7 @@ SECTIONS
 		*(.noinit);
 		. = ALIGN(4);
 		__noinit_end = .;
-	} > RAM
+	} > RAM AT > RAM
 
 	__noinit_size = SIZEOF(.noinit);
 
