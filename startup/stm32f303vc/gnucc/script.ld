@@ -1,15 +1,33 @@
-/*******************************************************************************
-@file     stm32f3xx.ld
-@author   Rajmund Szymanski
-@date     02.06.2022
-@brief    Linker script for STM32F303VC device with 256KB FLASH and 48KB RAM
-*******************************************************************************/
+/******************************************************************************
+
+   @file    script.ld
+   @author  Rajmund Szymanski
+   @date    08.02.2023
+   @brief   Linker script for STM32F303VC device with 256KB FLASH and 48KB RAM
+
+ ******************************************************************************
+
+   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ ******************************************************************************/
 
 MEMORY
 {
-	ROM (rx)  : ORIGIN = 0x08000000, LENGTH = 256k
-	CCM (rwx) : ORIGIN = 0x10000000, LENGTH =   8k
-	RAM (rwx) : ORIGIN = 0x20000000, LENGTH =  48k
+	ROM : ORIGIN = 0x08000000, LENGTH = 256k
+	CCM : ORIGIN = 0x10000000, LENGTH =   8k
+	RAM : ORIGIN = 0x20000000, LENGTH =  48k
 }
 
 __ROM_start = ORIGIN(ROM);
@@ -37,24 +55,21 @@ SECTIONS
 		*(.text*   .gnu.linkonce.t.*)
 		*(.rodata* .gnu.linkonce.r.*)
 		*(.glue_7  .glue_7t)
-	} > ROM
 
-	.init : ALIGN(4)
-	{
+		. = ALIGN(4);
 		__preinit_array_start = .;
 		KEEP (*(.preinit_array))
 		__preinit_array_end = .;
 
+		. = ALIGN(4);
 		__init_array_start = .;
 		KEEP (*(SORT(.init_array.*)))
 		KEEP (*(.init_array))
 		__init_array_end = .;
 
 		KEEP (*(.init))
-	} > ROM
 
-	.fini : ALIGN(4)
-	{
+		. = ALIGN(4);
 		__fini_array_start = .;
 		KEEP (*(.fini_array))
 		KEEP (*(SORT(.fini_array.*)))
@@ -86,7 +101,7 @@ SECTIONS
 		*(.ccm*)
 		. = ALIGN(4);
 		__ccm_end = .;
-	} > CCM AT > CCM
+	} > CCM
 
 	.main_stack (NOLOAD) : ALIGN(8)
 	{
@@ -117,7 +132,7 @@ SECTIONS
 		*(COMMON)
 		. = ALIGN(4);
 		__bss_end = .;
-	} > RAM AT > RAM
+	} > RAM
 
 	__bss_size = SIZEOF(.bss);
 
@@ -127,7 +142,7 @@ SECTIONS
 		*(.noinit);
 		. = ALIGN(4);
 		__noinit_end = .;
-	} > RAM AT > RAM
+	} > RAM
 
 	__noinit_size = SIZEOF(.noinit);
 

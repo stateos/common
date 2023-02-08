@@ -2,12 +2,12 @@
 
    @file    script.ld
    @author  Rajmund Szymanski
-   @date    02.06.2022
+   @date    08.02.2023
    @brief   Linker script for STM32F051R8 device with 64KB FLASH and 8KB RAM
 
  ******************************************************************************
 
-   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@
 
 MEMORY
 {
-	ROM (rx)  : ORIGIN = 0x08000000, LENGTH = 64K
-	RAM (rwx) : ORIGIN = 0x20000000, LENGTH =  8K
+	ROM : ORIGIN = 0x08000000, LENGTH = 64K
+	RAM : ORIGIN = 0x20000000, LENGTH =  8K
 }
 
 __ROM_start = ORIGIN(ROM);
