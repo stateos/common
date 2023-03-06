@@ -2,7 +2,7 @@
 
    @file    script.ld
    @author  Rajmund Szymanski
-   @date    08.02.2023
+   @date    06.03.2023
    @brief   Linker script for STM32F051R8 device with 64KB FLASH and 8KB RAM
 
  ******************************************************************************
@@ -103,7 +103,7 @@ SECTIONS
 
 	.data : ALIGN(4)
 	{
-		__data_load = LOADADDR(.data);
+		__data_source = LOADADDR(.data);
 
 		__data_start = .;
 		*(.data* .gnu.linkonce.d.*)
