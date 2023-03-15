@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.c
     @author  Rajmund Szymanski
-    @date    01.11.2022
+    @date    15.03.2023
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -130,7 +130,7 @@ tsk_t *wrk_create( unsigned prio, fun_t *proc, size_t size, bool detached, bool 
 }
 
 /* -------------------------------------------------------------------------- */
-tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size )
+tsk_t *tsk_setup( unsigned prio, fun_a *proc, void *arg, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	tsk_t *tsk;
@@ -140,7 +140,7 @@ tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size )
 
 	sys_lock();
 	{
-		tsk = priv_wrk_create(prio, proc, arg, size, false);
+		tsk = priv_wrk_create(prio, (fun_t *)proc, arg, size, false);
 		if (tsk && proc)
 		{
 			core_ctx_init(tsk);
@@ -195,7 +195,7 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_startWith( tsk_t *tsk, fun_t *proc, void *arg )
+void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg )
 /* -------------------------------------------------------------------------- */
 {
 	assert_tsk_context();
@@ -207,7 +207,7 @@ void tsk_startWith( tsk_t *tsk, fun_t *proc, void *arg )
 	{
 		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
-			tsk->proc = proc;
+			tsk->proc = (fun_t *)proc;
 			tsk->arg  = arg;
 
 			core_ctx_init(tsk);

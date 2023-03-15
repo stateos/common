@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.c
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    15.03.2023
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -121,7 +121,7 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_startWith( tsk_t *tsk, fun_t *proc, void *arg )
+void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);
@@ -131,7 +131,7 @@ void tsk_startWith( tsk_t *tsk, fun_t *proc, void *arg )
 	{
 		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
-			tsk->proc = proc;
+			tsk->proc = (fun_t *)proc;
 			tsk->arg  = arg;
 
 			core_ctx_init(tsk);
