@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    29.07.2022
+    @date    15.03.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -601,7 +601,7 @@ tsk_t *wrk_new( unsigned prio, fun_t *proc, size_t size, bool detached, bool aut
  *
  ******************************************************************************/
 
-tsk_t *tsk_setup( unsigned prio, fun_t *proc, void *arg, size_t size );
+tsk_t *tsk_setup( unsigned prio, fun_a *proc, void *arg, size_t size );
 
 /******************************************************************************
  *
@@ -713,7 +713,7 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc );
  *
  ******************************************************************************/
 
-void tsk_startWith( tsk_t *tsk, fun_t *proc, void *arg );
+void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg );
 
 /******************************************************************************
  *

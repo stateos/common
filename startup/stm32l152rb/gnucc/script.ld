@@ -2,7 +2,7 @@
 
    @file    script.ld
    @author  Rajmund Szymanski
-   @date    08.02.2023
+   @date    06.03.2023
    @brief   Linker script for STM32L152RB device with 128KB FLASH and 16KB RAM
 
  ******************************************************************************
@@ -103,7 +103,7 @@ SECTIONS
 
 	.data : ALIGN(4)
 	{
-		__data_load = LOADADDR(.data);
+		__data_source = LOADADDR(.data);
 
 		__data_start = .;
 		*(.data* .gnu.linkonce.d.*)

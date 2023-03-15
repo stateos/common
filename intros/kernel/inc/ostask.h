@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    15.03.2023
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -503,7 +503,7 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc );
  *
  ******************************************************************************/
 
-void tsk_startWith( tsk_t *tsk, fun_t *proc, void *arg );
+void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg );
 
 /******************************************************************************
  *

@@ -2,7 +2,7 @@
 
     @file    StateOS: oskernel.c
     @author  Rajmund Szymanski
-    @date    29.11.2022
+    @date    15.03.2023
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
@@ -133,7 +133,7 @@ static
 void priv_tmr_wakeup( tmr_t *tmr, int event )
 {
 	if (tmr->proc)
-		tmr->proc(tmr->arg);
+		((fun_a *)tmr->proc)(tmr->arg);
 
 	priv_tmr_remove(tmr);
 	if (tmr->delay >= core_sys_time() - tmr->start + 1)
@@ -318,7 +318,7 @@ void core_tsk_loop( void )
 	for (;;)
 	{
 		port_clr_lock();
-		System.cur->proc(System.cur->arg);
+		((fun_a *)System.cur->proc)(System.cur->arg);
 		port_set_lock();
 		core_ctx_switchNow();
 	}
@@ -330,7 +330,7 @@ void core_tsk_loop( void )
 void core_tsk_exec( void )
 {
 	port_clr_lock();
-	System.cur->proc(System.cur->arg);
+	((fun_a *)System.cur->proc)(System.cur->arg);
 	tsk_stop();
 }
 
