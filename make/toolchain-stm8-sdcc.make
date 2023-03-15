@@ -42,7 +42,7 @@ DEPS       := $(OBJS:.rel=.d)
 #----------------------------------------------------------#
 
 ifneq (clean,$(MAKECMDGOALS))
-COMMON_F   += -m$(TARGET_CORE) $(if $(filter far,$(MAKECMDGOALS)),--model-large,)
+COMMON_F   += -m$(TARGET_ARCH) $(if $(filter far,$(MAKECMDGOALS)),--model-large,)
 AS_FLAGS   += -l -o -s
 C_FLAGS    += -MD
 LD_FLAGS   +=
@@ -112,7 +112,7 @@ $(LIB) : $(OBJS)
 
 $(HEX) : $(OBJS)
 	$(info $@)
-	$(CC) $(LD_FLAGS) $(OBJS) -o $@
+	$(CC) $(LD_FLAGS) $(OBJS) $(LIBS) -o $@
 
 print_elf_size : $(ELF)
 	$(info Size of target:)

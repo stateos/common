@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    31.07.2022
+    @date    15.03.2023
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -301,7 +301,7 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 			hsm->evq.head  = 0; //
 			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
-			tsk_startWith(tsk, priv_eventDispatcher, hsm);
+			tsk_startWith(tsk, (fun_a *)priv_eventDispatcher, hsm);
 		}
 	}
 	sys_unlock();
