@@ -82,9 +82,8 @@ static cnt_t get_counter( void )
 
 void sys_delay( cnt_t millis )
 {
-	cnt_t cnt;
 	cnt_t start = get_counter();
-	do cnt = get_counter(); while (cnt - start < millis);
+	while (get_counter() - start + 1 <= millis);
 }
 
 /* --------------------------------------------------------------------------------------------- */
