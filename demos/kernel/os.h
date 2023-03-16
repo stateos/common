@@ -1,13 +1,13 @@
 /******************************************************************************
 
     @file    DemOS: os.h
-    @author  Rajmund Szymanski
-    @date    25.03.2021
+    @author  Rajmund Szymański
+    @date    16.03.2023
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
 
-   Copyright (c) 2018-2021 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -67,6 +67,8 @@ extern volatile
 cnt_t   sys_counter;                 // port variable - system time counter
 void    sys_init ( void );           // port function - initialize the system timer
 cnt_t   sys_time ( void );           // port function - get current value of the system timer (in milliseconds)
+void    sys_stop ( void );           // core function - stop all tasks
+void    sys_delay( cnt_t );          // core function - blocking delay
 
 #ifdef  USE_GOTO
 
@@ -150,6 +152,8 @@ void    tsk_start( tsk_t *tsk );     // system function - make task ready to exe
 #define tsk_waitUntil(cnd)         do { tsk_waitWhile(!(cnd));                                                     } while(0)
 // start new or restart previously stopped task (tsk) with function (fun)
 #define tsk_startFrom(tsk, fun)    do { if ((tsk)->id == ID_RIP) { (tsk)->function = (fun); tsk_start(tsk); }      } while(0)
+// stop all tasks and make task (tsk) ready to exclusive execution
+#define tsk_startExclusive(tsk)    do { sys_stop(); tsk_start(tsk); return;                                        } while(0)
 // wait while the task (tsk) is working
 #define tsk_join(tsk)              do { tsk_waitUntil((tsk)->id == ID_RIP);                                        } while(0)
 // start task (tsk) and wait for the end of execution of (tsk)

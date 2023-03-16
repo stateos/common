@@ -1,13 +1,13 @@
 /******************************************************************************
 
     @file    DemOS: os.c
-    @author  Rajmund Szymanski
-    @date    30.06.2020
+    @author  Rajmund Szymański
+    @date    16.03.2023
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
 
-   Copyright (c) 2018-2021 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -57,6 +57,34 @@ void tsk_start( tsk_t *tsk )
 			tail = tsk;
 		}
 	}
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void sys_stop( void )
+{
+	tsk_t *tsk = &MAIN;
+
+	while ((tsk = tsk->next) != &MAIN)
+		tsk->id = ID_RIP;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static cnt_t get_counter( void )
+{
+	cnt_t result;
+	do result = sys_counter; while (result != sys_counter);
+	return result;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void sys_delay( cnt_t millis )
+{
+	cnt_t cnt;
+	cnt_t start = get_counter();
+	do cnt = get_counter(); while (cnt - start < millis);
 }
 
 /* --------------------------------------------------------------------------------------------- */
