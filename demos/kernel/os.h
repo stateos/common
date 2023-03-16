@@ -144,8 +144,13 @@ void    tsk_start( tsk_t *tsk );     // system function - make task ready to exe
 #define tsk_self(tsk)                 ( sys_current == (tsk) )
 // necessary prologue of the task
 #define tsk_begin()                     TSK_BEGIN(); do {                                                          } while(0)
-// necessary epilogue of the task
+#ifdef  USE_EXIT
+// necessary epilogue of the task - task is killed at the end of the task procedure
+#define tsk_end()                       TSK_END(); do { tsk_exit();                                                } while(0)
+#else//!USE_EXIT
+// necessary epilogue of the task - task procedure is executed in an infinite loop
 #define tsk_end()                       TSK_END(); do { tsk_again();                                               } while(0)
+#endif//USE_EXIT
 // wait while the condition (cnd) is true
 #define tsk_waitWhile(cnd)         do { TSK_WHILE(cnd);                                                            } while(0)
 // wait while the condition (cnd) is false
