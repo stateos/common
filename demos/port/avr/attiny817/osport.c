@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.c
     @author  Rajmund Szymanski
-    @date    10.03.2020
+    @date    17.03.2023
     @brief   DemOS port file for ATtiny817 uC.
 
  ******************************************************************************
@@ -39,22 +39,63 @@ cnt_t sys_counter = 0;
 
 /* --------------------------------------------------------------------------------------------- */
 
+__attribute__((weak))
+void sys_hook( void ) {}  // user function - called from counter interrupt
+
+/* --------------------------------------------------------------------------------------------- */
+
 ISR( TCA0_OVF_vect )
 {
 	TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
 	sys_counter++;
+	sys_hook();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+#define PRESCALER 2
+
+static_assert(((F_CPU) / (PRESCALER) / 1000000UL) * (PRESCALER) * 1000000UL == (F_CPU), "prescaler too large");
+
+#define TCA_SINGLE_CLKSEL_DIV_cc(prescaler) TCA_SINGLE_CLKSEL_DIV##prescaler##_gc
+#define TCA_SINGLE_CLKSEL_DIV_gc(prescaler) TCA_SINGLE_CLKSEL_DIV_cc(prescaler)
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void port_init( void )
+{
+	TCA0.SINGLE.PER     = F_CPU / (PRESCALER) / 1000 - 1;
+	TCA0.SINGLE.CTRLB   = TCA_SINGLE_WGMODE_NORMAL_gc;
+	TCA0.SINGLE.CTRLA   = TCA_SINGLE_CLKSEL_DIV_gc(PRESCALER) |
+	                      TCA_SINGLE_ENABLE_bm;
+	TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;
+
+	sei();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void sys_udelay( uint16_t micros )
+{
+	uint16_t start = TCA0.SINGLE.CNT;
+	uint16_t cnt;
+	micros = (uint16_t)(micros * (F_CPU / (PRESCALER) / 1000000UL));
+	do
+	{
+		cnt = TCA0.SINGLE.CNT;
+		if (cnt < start)
+			cnt += (uint16_t)(F_CPU / (PRESCALER) / 1000UL);
+	}
+	while (cnt - start < micros);
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
 void sys_init( void )
 {
-	TCA0.SINGLE.PER     = F_CPU / 1000 / 16 - 1;
-	TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;
-	TCA0.SINGLE.CTRLB   = TCA_SINGLE_WGMODE_NORMAL_gc;
-	TCA0.SINGLE.CTRLA   = TCA_SINGLE_CLKSEL_DIV16_gc
-	                    | TCA_SINGLE_ENABLE_bm;
-	sei();
+	static OS_ONE(init);
+
+	one_call(init, port_init);
 }
 
 /* --------------------------------------------------------------------------------------------- */
