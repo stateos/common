@@ -2,7 +2,7 @@
 
     @file    DemOS: os.h
     @author  Rajmund Szymański
-    @date    16.03.2023
+    @date    17.03.2023
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
@@ -142,6 +142,12 @@ void    tsk_start( tsk_t *tsk );     // system function - make task ready to exe
 #define cur_task()                    ( sys_current )
 // check whether the task (tsk) is the current task
 #define tsk_self(tsk)                 ( sys_current == (tsk) )
+// check whether the task (tsk) is ready to execute
+#define tsk_ready(tsk)                ( (tsk)->id == ID_RDY )
+// check whether the task (tsk) has been stopped
+#define tsk_dead(tsk)                 ( (tsk)->id == ID_RIP )
+// check whether the task (tsk) has been suspended
+#define tsk_suspended(tsk)            ( (tsk)->id == ID_DLY )
 // necessary prologue of the task
 #define tsk_begin()                     TSK_BEGIN(); do {                                                          } while(0)
 #ifdef  USE_EXIT
@@ -214,6 +220,8 @@ typedef cnt_t tmr_t;
 /* -------------------------------------------------------------------------- */
 // check if the timer (tmr) finishes countdown for given duration of time (dly)
 #define tmr_expiredFor(tmr, dly)      ( sys_time() - *(tmr) + 1 > (dly) )
+// check if the timer (tmr) finishes countdown for given duration of time (dly) from the end of the previous countdown
+#define tmr_expiredNext(tmr, dly)     ( tmr_expiredFor(tmr, dly) ? ((*(tmr) += (dly)), true) : false )
 // check if the timer (tmr) finishes countdown until given timepoint (tim)
 #define tmr_expiredUntil(tmr, tim)    ( tmr_expiredFor(tmr, (tim) - *(tmr)) )
 // start/restart the timer (tmr)
@@ -256,6 +264,8 @@ typedef uint_fast8_t sem_t;
 /* -------------------------------------------------------------------------- */
 // return true if the semaphore (sem) is released
 #define sem_given(sem)                ( *(sem) != 0 )
+// alias
+#define sem_released(sem)               sem_giveen(sem)
 // try to lock the semaphore (sem); return true if the semaphore has been successfully locked
 #define sem_take(sem)                 ( sem_given(sem) ? ((*(sem) = 0), true) : false )
 // alias
@@ -268,15 +278,17 @@ typedef uint_fast8_t sem_t;
 #define sem_give(sem)                 ( sem_taken(sem) ? ((*(sem) = 1), true) : false )
 // alias
 #define sem_post(sem)                   sem_give(sem)
+// alias
+#define sem_release(sem)                sem_give(sem)
 
 /* Protected signal ========================================================= */
 // definition of protected signal
 typedef unsigned sig_t;
 
-#define SIG_LIMIT     (sizeof(unsigned) * CHAR_BIT)
+#define SIG_LIMIT     (sizeof(sig_t) * CHAR_BIT)
 
 #define SIGSET(signo) (((signo) < SIG_LIMIT) ? 1U << (signo) : 0U) // signal mask from the given signal number
-#define sigAll        (0U-1)                                       // signal mask for all signals
+#define sigAll        (sig_t)(-1)                                  // signal mask for all signals
 
 /* -------------------------------------------------------------------------- */
 // define and initialize the protected signal (sig)
