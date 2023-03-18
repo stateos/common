@@ -2,7 +2,7 @@
 
     @file    DemOS: osversion.h
     @author  Rajmund Szymański
-    @date    16.03.2023
+    @date    18.03.2023
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
@@ -32,8 +32,8 @@
 #ifndef __DEMOSVERSION_H
 #define __DEMOSVERSION_H
 
-#define __DEMOS_MAJOR        0
-#define __DEMOS_MINOR        9
+#define __DEMOS_MAJOR        1
+#define __DEMOS_MINOR        0
 #define __DEMOS_BUILD        0
 
 #define __DEMOS        ((((__DEMOS_MAJOR)&0xFFUL)<<24)|(((__DEMOS_MINOR)&0xFFUL)<<16)|((__DEMOS_BUILD)&0xFFFFUL))
