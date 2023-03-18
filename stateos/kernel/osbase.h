@@ -2,7 +2,7 @@
 
     @file    StateOS: osbase.h
     @author  Rajmund Szymanski
-    @date    15.03.2023
+    @date    18.03.2023
     @brief   This file contains basic definitions for StateOS.
 
  ******************************************************************************
@@ -248,12 +248,6 @@ typedef struct __sys
 /* -------------------------------------------------------------------------- */
 
 #define RELEASED   ((void *)((uintptr_t)0 - 1)) // released resouces
-
-/* -------------------------------------------------------------------------- */
-
-#define SIGLIM        (sizeof(unsigned) * CHAR_BIT)
-#define SIGSET(signo) (((signo) < (SIGLIM)) ? 1U << (signo) : 0U)
-                      // signal mask from the given signal number
 
 /* -------------------------------------------------------------------------- */
 
