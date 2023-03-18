@@ -35,6 +35,11 @@ Features:
 - all documentation is contained within the source files
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
+5.0
+- updated os version
+- added SELF definition
+- removed cur_ functions
+---------
 4.9
 - updated LockGuard and added UniqueLock
 - updated assertions

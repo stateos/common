@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    15.03.2023
+    @date    18.03.2023
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -401,6 +401,7 @@ extern "C" {
  *
  * Name              : tsk_this
  * Alias             : cur_task
+ * Alias             : SELF
  *
  * Description       : return current task object
  *
@@ -415,6 +416,8 @@ tsk_t *tsk_this( void ) { return System.cur; }
 
 __STATIC_INLINE
 tsk_t *cur_task( void ) { return System.cur; }
+
+#define SELF                   ( System.cur )
 
 /******************************************************************************
  *
@@ -542,25 +545,6 @@ void tsk_reset( tsk_t *tsk );
 
 __STATIC_INLINE
 void tsk_kill( tsk_t *tsk ) { tsk_reset(tsk); }
-
-/******************************************************************************
- *
- * Name              : cur_reset
- * Alias             : cur_kill
- *
- * Description       : stop execution of current task
- *
- * Parameters        : none
- *
- * Return            : none
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-void cur_reset( void ) { tsk_reset(System.cur); }
-
-__STATIC_INLINE
-void cur_kill( void ) { cur_reset(); }
 
 /******************************************************************************
  *
@@ -702,22 +686,6 @@ unsigned tsk_suspend( tsk_t *tsk );
 
 /******************************************************************************
  *
- * Name              : cur_suspend
- *
- * Description       : delay indefinitely execution of given task
- *                     execution of the task can be resumed
- *
- * Parameters        : none
- *
- * Return            : none
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-void cur_suspend( void ) { tsk_suspend(System.cur); }
-
-/******************************************************************************
- *
  * Name              : tsk_resume
  *
  * Description       : resume execution of given suspended task
@@ -756,26 +724,6 @@ void tsk_signal( tsk_t *tsk, unsigned signo ) { tsk_give(tsk, signo); }
 
 /******************************************************************************
  *
- * Name              : cur_give
- * Alias             : cur_signal
- *
- * Description       : send given signal to the current task
- *
- * Parameters
- *   signo           : signal number
- *
- * Return            : none
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-void cur_give( unsigned signo ) { tsk_give(System.cur, signo); }
-
-__STATIC_INLINE
-void cur_signal( unsigned signo ) { cur_give(signo); }
-
-/******************************************************************************
- *
  * Name              : tsk_setAction
  *
  * Description       : set given function as a signal handler
@@ -789,23 +737,6 @@ void cur_signal( unsigned signo ) { cur_give(signo); }
  ******************************************************************************/
 
 void tsk_setAction( tsk_t *tsk, act_t *action );
-
-/******************************************************************************
- *
- * Name              : cur_setAction
- *
- * Description       : set given function as a signal handler for current task
- *
- * Parameters
- *   signo           : signal number
- *   action          : signal handler
- *
- * Return            : none
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-void cur_setAction( act_t *action ) { tsk_setAction(System.cur, action); }
 
 /******************************************************************************
  *
@@ -940,9 +871,9 @@ struct baseTask : public __tsk
 		static
 		void exit      ()                   {        tsk_exit      (); }
 		static
-		void reset     ()                   {        cur_reset     (); }
+		void reset     ()                   {        tsk_reset     (current()); }
 		static
-		void kill      ()                   {        cur_kill      (); }
+		void kill      ()                   {        tsk_kill      (current()); }
 		static
 		void yield     ()                   {        tsk_yield     (); }
 		static
@@ -966,18 +897,18 @@ struct baseTask : public __tsk
 		template<typename T> static
 		void delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
 		static
-		void suspend   ()                   {        cur_suspend   (); }
+		void suspend   ()                   {        tsk_suspend   (current()); }
 		static
-		void give      ( unsigned _signo )  {        cur_give      (_signo); }
+		void give      ( unsigned _signo )  {        tsk_give      (current(), _signo); }
 		static
-		void signal    ( unsigned _signo )  {        cur_signal    (_signo); }
+		void signal    ( unsigned _signo )  {        tsk_signal    (current(), _signo); }
 #if __cplusplus >= 201402L
 		template<class F> static
 		void setAction ( F&&      _action ) {        new (&current()->act) Act_t(_action);
-		                                             cur_setAction (act_); }
+		                                             tsk_setAction (current(), act_); }
 #else
 		static
-		void setAction ( act_t  * _action ) {        cur_setAction (_action); }
+		void setAction ( act_t  * _action ) {        tsk_setAction (current(), _action); }
 #endif
 	};
 };
