@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.c
     @author  Rajmund Szymanski
-    @date    17.03.2023
+    @date    22.03.2023
     @brief   DemOS port file for ATtiny817 uC.
 
  ******************************************************************************
@@ -31,6 +31,7 @@
 
 #include "os.h"
 #include <avr/interrupt.h>
+#include <assert.h>
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -53,9 +54,9 @@ ISR( TCA0_OVF_vect )
 
 /* --------------------------------------------------------------------------------------------- */
 
-#define PRESCALER 2
+#define PRESCALER 16
 
-static_assert(((F_CPU) / (PRESCALER) / 1000000UL) * (PRESCALER) * 1000000UL == (F_CPU), "prescaler too large");
+static_assert(((F_CPU) / (PRESCALER) / 1000UL) * (PRESCALER) * 1000UL == (F_CPU), "prescaler too large");
 
 #define TCA_SINGLE_CLKSEL_DIV_cc(prescaler) TCA_SINGLE_CLKSEL_DIV##prescaler##_gc
 #define TCA_SINGLE_CLKSEL_DIV_gc(prescaler) TCA_SINGLE_CLKSEL_DIV_cc(prescaler)
@@ -71,22 +72,6 @@ static void port_init( void )
 	TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;
 
 	sei();
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-void sys_udelay( uint16_t micros )
-{
-	uint16_t start = TCA0.SINGLE.CNT;
-	uint16_t cnt;
-	micros = (uint16_t)(micros * (F_CPU / (PRESCALER) / 1000000UL));
-	do
-	{
-		cnt = TCA0.SINGLE.CNT;
-		if (cnt < start)
-			cnt += (uint16_t)(F_CPU / (PRESCALER) / 1000UL);
-	}
-	while (cnt - start < micros);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -107,6 +92,23 @@ cnt_t sys_time( void )
 	cnt = sys_counter;
 	sei();
 	return cnt;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static cnt_t get_counter( void )
+{
+	cnt_t result;
+	do result = sys_counter; while (result != sys_counter);
+	return result;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void sys_delay( cnt_t delay )
+{
+	cnt_t start = get_counter();
+	while (get_counter() - start + 1 <= delay);
 }
 
 /* --------------------------------------------------------------------------------------------- */

@@ -2,7 +2,7 @@
 
     @file    DemOS: os.c
     @author  Rajmund Szymański
-    @date    16.03.2023
+    @date    29.03.2023
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
@@ -34,9 +34,37 @@
 /* --------------------------------------------------------------------------------------------- */
 
 static
-tsk_t  MAIN = { 0, ID_RIP, 0, NULL, &MAIN };
+tsk_t  MAIN = { { 0, 0 }, ID_RIP, 0, NULL, &MAIN };
 
 tsk_t *sys_current = &MAIN;
+
+/* -------------------------------------------------------------------------- */
+
+void sys_start( void )
+{
+	tsk_t *current = sys_current;
+
+	sys_init();
+
+	for (;;)
+	{
+		sys_current = current = current->next;
+
+		if (current->id == ID_RDY)
+		{
+			if (current->tmr.delay > 0)
+			{
+				if (!tmr_expired(&current->tmr))
+					continue;
+
+				current->tmr.start += current->tmr.delay;
+				current->tmr.delay = 0;
+			}
+
+			current->function();
+		}
+	}
+}
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -45,7 +73,9 @@ void tsk_start( tsk_t *tsk )
 	static
 	tsk_t *tail = &MAIN;
 
-	if (tsk->id == ID_RIP)
+	sys_init();
+	
+	if (tsk->id == ID_RIP && tsk->function != NULL)
 	{
 		tsk->state = 0;
 		tsk->id = ID_RDY;
@@ -65,25 +95,17 @@ void sys_stop( void )
 {
 	tsk_t *tsk = &MAIN;
 
-	while ((tsk = tsk->next) != &MAIN)
-		tsk->id = ID_RIP;
+	do tsk->id = ID_RIP;
+	while ((tsk = tsk->next) != &MAIN);
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
-static cnt_t get_counter( void )
+void sys_main( fun_t *fun )
 {
-	cnt_t result;
-	do result = sys_counter; while (result != sys_counter);
-	return result;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-void sys_delay( cnt_t millis )
-{
-	cnt_t start = get_counter();
-	while (get_counter() - start + 1 <= millis);
+	sys_stop();
+	MAIN.function = fun;
+	tsk_start(&MAIN);
 }
 
 /* --------------------------------------------------------------------------------------------- */

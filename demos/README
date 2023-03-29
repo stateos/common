@@ -19,6 +19,13 @@ Features:
 - updated os version
 - added SELF definition
 - removed cur_ definitions
+- rebuilt sys_start function
+- rebuilt tsk_start function
+- added sys_stop function
+- added tsk_startExclusive definition
+- added tsk_killAll definition
+- added tsk_main definition
+- rebuilt timer
 ---------
 0.9
 - added sys_delay function
