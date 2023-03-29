@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    18.03.2023
+    @date    26.03.2023
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -510,6 +510,21 @@ void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg );
 
 /******************************************************************************
  *
+ * Name              : tsk_startExclusive
+ *
+ * Description       : start previously defined/created/stopped task object
+ *
+ * Parameters
+ *   tsk             : pointer to task object, all other tasks will bee reseted
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void tsk_startExclusive( tsk_t *tsk );
+
+/******************************************************************************
+ *
  * Name              : tsk_stop
  * Alias             : tsk_exit
  *
@@ -545,6 +560,20 @@ void tsk_reset( tsk_t *tsk );
 
 __STATIC_INLINE
 void tsk_kill( tsk_t *tsk ) { tsk_reset(tsk); }
+
+/******************************************************************************
+ *
+ * Name              : tsk_killAll
+ *
+ * Description       : reset all tasks and timers except the current one
+ *
+ * Parameters        : none
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void tsk_killAll( void );
 
 /******************************************************************************
  *
@@ -595,6 +624,23 @@ void tsk_pass ( void ) { core_ctx_switch(); }
 
 __NO_RETURN
 void tsk_flip( fun_t *proc );
+
+/******************************************************************************
+ *
+ * Name              : tsk_main
+ *
+ * Description       : reset all tasks and timers, and restart system with
+ *                     main function proc
+ *
+ * Parameters
+ *   proc            : new main proc (main task function)
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+__NO_RETURN
+void tsk_main( fun_t *proc );
 
 /******************************************************************************
  *
@@ -875,6 +921,8 @@ struct baseTask : public __tsk
 		static
 		void kill      ()                   {        tsk_kill      (current()); }
 		static
+		void killAll   ()                   {        tsk_killAll   (); }
+		static
 		void yield     ()                   {        tsk_yield     (); }
 		static
 		void pass      ()                   {        tsk_pass      (); }
@@ -941,7 +989,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	baseTask{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...), baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
 #endif
 
-	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
+	~TaskT() { tsk_kill(this); }
 
 	TaskT( TaskT<size_>&& ) = default;
 	TaskT( const TaskT<size_>& ) = delete;

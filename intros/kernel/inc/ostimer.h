@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    27.03.2023
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -397,6 +397,25 @@ void tmr_startUntil( tmr_t *tmr, cnt_t time );
 
 /******************************************************************************
  *
+ * Name              : tmr_reset
+ * Alias             : tmr_kill
+ *
+ * Description       : stop the given timer
+ *
+ * Parameters
+ *   tmr             : pointer to timer object
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void tmr_reset( tmr_t *tmr );
+
+__STATIC_INLINE
+void tmr_kill( tmr_t *tmr ) { tmr_reset(tmr); }
+
+/******************************************************************************
+ *
  * Name              : tmr_take
  * Alias             : tmr_tryWait
  *
@@ -523,6 +542,8 @@ struct baseTimer : public __tmr
 	template<typename T>
 	void     startFrom    ( const T& _delay, const T& _period, fun_t * _proc )  {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _proc); }
 #endif
+	void     reset        ()                                                    {        tmr_reset        (this); }
+	void     kill         ()                                                    {        tmr_kill         (this); }
 	unsigned take         ()                                                    { return tmr_take         (this); }
 	unsigned tryWait      ()                                                    { return tmr_tryWait      (this); }
 	void     wait         ()                                                    {        tmr_wait         (this); }
@@ -591,7 +612,7 @@ struct Timer : public baseTimer
 	Timer( F&& _proc, A&&... _args ): baseTimer{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)} {}
 #endif
 
-	~Timer() { assert(__tmr::hdr.id == ID_STOPPED); }
+	~Timer() { tmr_kill(this); }
 
 	Timer( Timer&& ) = default;
 	Timer( const Timer& ) = delete;
