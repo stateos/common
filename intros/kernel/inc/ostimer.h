@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    27.03.2023
+    @date    10.04.2023
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -612,7 +612,7 @@ struct Timer : public baseTimer
 	Timer( F&& _proc, A&&... _args ): baseTimer{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)} {}
 #endif
 
-	~Timer() { tmr_kill(this); }
+	~Timer() { assert(__tmr::hdr.id == ID_STOPPED); }
 
 	Timer( Timer&& ) = default;
 	Timer( const Timer& ) = delete;

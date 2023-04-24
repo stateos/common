@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    26.03.2023
+    @date    10.04.2023
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -989,7 +989,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	baseTask{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...), baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
 #endif
 
-	~TaskT() { tsk_kill(this); }
+	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
 
 	TaskT( TaskT<size_>&& ) = default;
 	TaskT( const TaskT<size_>& ) = delete;
