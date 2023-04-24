@@ -2,7 +2,7 @@
 
     @file    DemOS: os.h
     @author  Rajmund Szymański
-    @date    29.03.2023
+    @date    24.04.2023
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
@@ -98,6 +98,13 @@ typedef intptr_t tag_t;
 
 #endif//USE_GOTO
 
+/* Task ( internal ) ======================================================== */
+
+// for internal use; wait while the condition (cnd) is true
+#define TSK_WHILE(cnd)                  TSK_STATE(__LINE__); TSK_LABEL(__LINE__): if (cnd) return; (void)0
+// for internal use; pass control to the next ready task if the condition (cnd) is true
+#define TSK_YIELD(cnd)                  TSK_STATE(__LINE__); if (cnd) return; TSK_LABEL(__LINE__): (void)0
+
 /* Task ===================================================================== */
 // definition of timer
 typedef struct __tmr { cnt_t start; cnt_t delay; } tmr_t;
@@ -129,15 +136,8 @@ void    sys_start( void );           // system function - start the scheduler
            __attribute__((constructor)) void tsk ## __run( void ) { tsk_start(tsk); } \
                                         void tsk ## __fun( void )
 /* -------------------------------------------------------------------------- */
-// for internal use; wait while the condition (cnd) is true
-#define TSK_WHILE(cnd)                  TSK_STATE(__LINE__); TSK_LABEL(__LINE__): if (cnd) return; (void)0
-// for internal use; pass control to the next ready task if the condition (cnd) is true
-#define TSK_YIELD(cnd)                  TSK_STATE(__LINE__); if (cnd) return; TSK_LABEL(__LINE__): (void)0
-/* -------------------------------------------------------------------------- */
 // return the current task
 #define tsk_this()                    ( sys_current )
-// alias
-#define cur_task()                    ( sys_current )
 //alias
 #define SELF                          ( sys_current )
 // check whether the task (tsk) is the current task
