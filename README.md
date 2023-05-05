@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/stateos/common/badge.svg?branch=main)](https://codecov.io/gh/stateos/common)
+
 ## Common submodule for embedded applications
 
 ### OS / RTOS
