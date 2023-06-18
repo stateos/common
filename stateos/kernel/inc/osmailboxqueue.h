@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -702,7 +702,7 @@ struct MailBoxQueueT : public __box
 	static
 	Ptr Create()
 	{
-		auto box = new MailBoxQueueT<limit_, size_>();
+		auto box = new (std::nothrow) MailBoxQueueT<limit_, size_>();
 		if (box != nullptr)
 			box->__box::obj.res = box;
 		return Ptr(box);
@@ -755,7 +755,7 @@ struct MailBoxQueueTT : public MailBoxQueueT<limit_, sizeof(C)>
 	static
 	Ptr Create()
 	{
-		auto box = new MailBoxQueueTT<limit_, C>();
+		auto box = new (std::nothrow) MailBoxQueueTT<limit_, C>();
 		if (box != nullptr)
 			box->__box::obj.res = box;
 		return Ptr(box);

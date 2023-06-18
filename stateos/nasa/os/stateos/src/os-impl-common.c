@@ -117,7 +117,7 @@ int32 OS_API_Impl_Init(osal_objtype_t idtype)
 void OS_IdleLoop_Impl()
 {
     OS_impl_GlobalVars.idle_task = tsk_this();
-    cur_suspend();
+    tsk_suspend(SELF);
 }
 
 /*----------------------------------------------------------------

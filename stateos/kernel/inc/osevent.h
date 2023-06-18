@@ -2,7 +2,7 @@
 
     @file    StateOS: osevent.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -368,7 +368,7 @@ struct Event : public __evt
 	static
 	Ptr Create()
 	{
-		auto evt = new Event();
+		auto evt = new (std::nothrow) Event();
 		if (evt != nullptr)
 			evt->__evt::obj.res = evt;
 		return Ptr(evt);

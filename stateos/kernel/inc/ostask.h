@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    15.03.2023
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -488,6 +488,7 @@ extern "C" {
  *
  * Name              : tsk_this
  * Alias             : cur_task
+ * Alias             : SELF
  *
  * Description       : return current task object
  *
@@ -504,6 +505,8 @@ tsk_t *tsk_this( void ) { return System.cur; }
 
 __STATIC_INLINE
 tsk_t *cur_task( void ) { return System.cur; }
+
+#define SELF                   ( System.cur )
 
 /******************************************************************************
  *
@@ -736,25 +739,6 @@ int tsk_detach( tsk_t *tsk );
 
 /******************************************************************************
  *
- * Name              : cur_detach
- *
- * Description       : detach the current task
- *
- * Parameters        : none
- *
- * Return
- *   E_SUCCESS       : current task was successfully detached
- *   E_FAILURE       : current task cannot be detached
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-int cur_detach( void ) { return tsk_detach(System.cur); }
-
-/******************************************************************************
- *
  * Name              : tsk_join
  *
  * Description       : delay execution of current task until termination of given task
@@ -824,29 +808,6 @@ int tsk_kill( tsk_t *tsk ) { return tsk_reset(tsk); }
 
 /******************************************************************************
  *
- * Name              : cur_reset
- * Alias             : cur_kill
- *
- * Description       : reset the current task and remove it from READY/BLOCKED queue
- *
- * Parameters        : none
- *
- * Return
- *   E_SUCCESS       : current task has been reseted
- *   E_FAILURE       : current task cannot be reseted
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-int cur_reset( void ) { return tsk_reset(System.cur); }
-
-__STATIC_INLINE
-int cur_kill( void ) { return cur_reset(); }
-
-/******************************************************************************
- *
  * Name              : tsk_destroy
  * Alias             : tsk_delete
  *
@@ -867,29 +828,6 @@ int tsk_destroy( tsk_t *tsk );
 
 __STATIC_INLINE
 int tsk_delete( tsk_t *tsk ) { return tsk_destroy(tsk); }
-
-/******************************************************************************
- *
- * Name              : cur_destroy
- * Alias             : cur_delete
- *
- * Description       : reset the current task and free allocated resources
- *
- * Parameters        : none
- *
- * Return
- *   E_SUCCESS       : current task has been destroyed
- *   E_FAILURE       : current task cannot be destroyed
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-int cur_destroy( void ) { return tsk_destroy(System.cur); }
-
-__STATIC_INLINE
-int cur_delete( void ) { return cur_destroy(); }
 
 /******************************************************************************
  *
@@ -1066,24 +1004,6 @@ int tsk_suspend( tsk_t *tsk );
 
 /******************************************************************************
  *
- * Name              : cur_suspend
- *
- * Description       : delay indefinitely execution of current task
- *                     execution of the task can be resumed
- *
- * Parameters        : none
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-void cur_suspend( void ) { tsk_suspend(System.cur); }
-
-/******************************************************************************
- *
  * Name              : tsk_resume
  * ISR alias         : tsk_resumeISR
  *
@@ -1131,28 +1051,6 @@ void tsk_signal( tsk_t *tsk, unsigned signo ) { tsk_give(tsk, signo); }
 
 /******************************************************************************
  *
- * Name              : cur_give
- * Alias             : cur_signal
- *
- * Description       : send given signal to the current task
- *
- * Parameters
- *   signo           : signal number
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-void cur_give( unsigned signo ) { tsk_give(System.cur, signo); }
-
-__STATIC_INLINE
-void cur_signal( unsigned signo ) { cur_give(signo); }
-
-/******************************************************************************
- *
  * Name              : tsk_action
  *
  * Description       : set given function as a signal handler
@@ -1168,25 +1066,6 @@ void cur_signal( unsigned signo ) { cur_give(signo); }
  ******************************************************************************/
 
 void tsk_action( tsk_t *tsk, act_t *action );
-
-/******************************************************************************
- *
- * Name              : cur_action
- *
- * Description       : set given function as a signal handler for current task
- *
- * Parameters
- *   signo           : signal number
- *   action          : signal handler
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
-
-__STATIC_INLINE
-void cur_action( act_t *action ) { tsk_action(System.cur, action); }
 
 /******************************************************************************
  *
@@ -1323,17 +1202,17 @@ struct baseTask : public __tsk
 	struct Current
 	{
 		static
-		int      detach    ()                   { return cur_detach    (); }
+		int      detach    ()                   { return tsk_detach    (current()); }
 		static
 		void     stop      ()                   {        tsk_stop      (); }
 		static
 		void     exit      ()                   {        tsk_exit      (); }
 		static
-		int      reset     ()                   { return cur_reset     (); }
+		int      reset     ()                   { return tsk_reset     (current()); }
 		static
-		int      kill      ()                   { return cur_kill      (); }
+		int      kill      ()                   { return tsk_kill      (current()); }
 		static
-		int      destroy   ()                   { return cur_destroy   (); }
+		int      destroy   ()                   { return tsk_destroy   (current()); }
 		static
 		void     yield     ()                   {        tsk_yield     (); }
 		static
@@ -1365,18 +1244,18 @@ struct baseTask : public __tsk
 		template<typename T> static
 		void     delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
 		static
-		void     suspend   ()                   {        cur_suspend   (); }
+		void     suspend   ()                   {        tsk_suspend   (current()); }
 		static
-		void     give      ( unsigned _signo )  {        cur_give      (_signo); }
+		void     give      ( unsigned _signo )  {        tsk_give      (current(), _signo); }
 		static
-		void     signal    ( unsigned _signo )  {        cur_signal    (_signo); }
+		void     signal    ( unsigned _signo )  {        tsk_signal    (current(), _signo); }
 #if __cplusplus >= 201402L
 		template<class F> static
 		void     action    ( F&&      _action ) {        new (&current()->act) Act_t(_action);
-		                                                 cur_action    (act_); }
+		                                                 tsk_action    (current(), act_); }
 #else
 		static
-		void     action    ( act_t *  _action ) {        cur_action    (_action); }
+		void     action    ( act_t *  _action ) {        tsk_action    (current(), _action); }
 #endif
 	};
 };
@@ -1550,7 +1429,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<class F> static
 	Ptr Create( const unsigned _prio, F&& _proc )
 	{
-		auto tsk = new TaskT<size_>(_prio, _proc);
+		auto tsk = new (std::nothrow) TaskT<size_>(_prio, _proc);
 		if (tsk != nullptr)
 		{
 			tsk->__tsk::obj.res = tsk;
@@ -1604,7 +1483,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<class F> static
 	Ptr Detached( const unsigned _prio, F&& _proc )
 	{
-		auto tsk = new TaskT<size_>(_prio, _proc);
+		auto tsk = new (std::nothrow) TaskT<size_>(_prio, _proc);
 		if (tsk != nullptr)
 		{
 			tsk->__tsk::obj.res = tsk;

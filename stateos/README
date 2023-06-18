@@ -50,6 +50,11 @@ Features:
 - all documentation is contained within source files, in particular header files
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
+7.0
+- updated os version
+- added SELF definition
+- removed cur_ functions
+---------
 6.9
 - updated LockGuard and added UniqueLock
 - added FastLock guard for FastMutex object

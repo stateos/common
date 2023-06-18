@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -744,7 +744,7 @@ struct MessageQueueT : public __msg
 	static
 	Ptr Create()
 	{
-		auto msg = new MessageQueueT<limit_, size_>();
+		auto msg = new (std::nothrow) MessageQueueT<limit_, size_>();
 		if (msg != nullptr)
 			msg->__msg::obj.res = msg;
 		return Ptr(msg);
@@ -821,7 +821,7 @@ struct MessageQueueTT : public MessageQueueT<limit_, sizeof(C)>
 	static
 	Ptr Create()
 	{
-		auto msg = new MessageQueueTT<limit_, C>();
+		auto msg = new (std::nothrow) MessageQueueTT<limit_, C>();
 		if (msg != nullptr)
 			msg->__msg::obj.res = msg;
 		return Ptr(msg);

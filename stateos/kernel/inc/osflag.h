@@ -2,7 +2,7 @@
 
     @file    StateOS: osflag.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -512,7 +512,7 @@ struct Flag : public __flg
 	static
 	Ptr Create( const unsigned _init = 0 )
 	{
-		auto flg = new Flag(_init);
+		auto flg = new (std::nothrow) Flag(_init);
 		if (flg != nullptr)
 			flg->__flg::obj.res = flg;
 		return Ptr(flg);

@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -662,7 +662,7 @@ struct JobQueueT : public __job
 	static
 	Ptr Create()
 	{
-		auto job = new JobQueueT<limit_>();
+		auto job = new (std::nothrow) JobQueueT<limit_>();
 		if (job != nullptr)
 			job->__job::obj.res = job;
 		return Ptr(job);
