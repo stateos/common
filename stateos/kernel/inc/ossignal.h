@@ -2,7 +2,7 @@
 
     @file    StateOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    18.03.2023
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -468,7 +468,7 @@ struct Signal : public __sig
 	static
 	Ptr Create( const unsigned _mask = 0 )
 	{
-		auto sig = new Signal(_mask);
+		auto sig = new (std::nothrow) Signal(_mask);
 		if (sig != nullptr)
 			sig->__sig::obj.res = sig;
 		return Ptr(sig);

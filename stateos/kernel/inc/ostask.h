@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    18.03.2023
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -1429,7 +1429,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<class F> static
 	Ptr Create( const unsigned _prio, F&& _proc )
 	{
-		auto tsk = new TaskT<size_>(_prio, _proc);
+		auto tsk = new (std::nothrow) TaskT<size_>(_prio, _proc);
 		if (tsk != nullptr)
 		{
 			tsk->__tsk::obj.res = tsk;
@@ -1483,7 +1483,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<class F> static
 	Ptr Detached( const unsigned _prio, F&& _proc )
 	{
-		auto tsk = new TaskT<size_>(_prio, _proc);
+		auto tsk = new (std::nothrow) TaskT<size_>(_prio, _proc);
 		if (tsk != nullptr)
 		{
 			tsk->__tsk::obj.res = tsk;

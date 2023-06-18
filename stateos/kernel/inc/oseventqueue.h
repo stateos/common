@@ -2,7 +2,7 @@
 
     @file    StateOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -666,7 +666,7 @@ struct EventQueueT : public __evq
 	static
 	Ptr Create()
 	{
-		auto evq = new EventQueueT<limit_>();
+		auto evq = new (std::nothrow) EventQueueT<limit_>();
 		if (evq != nullptr)
 			evq->__evq::obj.res = evq;
 		return Ptr(evq);

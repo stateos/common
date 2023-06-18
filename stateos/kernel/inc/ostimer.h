@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -1083,7 +1083,7 @@ struct Timer : public baseTimer
 	static
 	Ptr Create()
 	{
-		auto tmr = new Timer();
+		auto tmr = new (std::nothrow) Timer();
 		if (tmr != nullptr)
 			tmr->__tmr::obj.res = tmr;
 		return Ptr(tmr);
@@ -1092,7 +1092,7 @@ struct Timer : public baseTimer
 	template<class F> static
 	Ptr Create( F&& _proc )
 	{
-		auto tmr = new Timer(_proc);
+		auto tmr = new (std::nothrow) Timer(_proc);
 		if (tmr != nullptr)
 			tmr->__tmr::obj.res = tmr;
 		return Ptr(tmr);

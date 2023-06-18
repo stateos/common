@@ -2,7 +2,7 @@
 
     @file    StateOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -445,7 +445,7 @@ struct ConditionVariable : public __cnd
 	static
 	Ptr Create()
 	{
-		auto cnd = new ConditionVariable();
+		auto cnd = new (std::nothrow) ConditionVariable();
 		if (cnd != nullptr)
 			cnd->__cnd::obj.res = cnd;
 		return Ptr(cnd);
