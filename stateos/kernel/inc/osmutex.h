@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -536,7 +536,7 @@ struct Mutex : public __mtx
 	static
 	Ptr Create( const unsigned _mode, const unsigned _prio = 0 )
 	{
-		auto mtx = new Mutex(_mode, _prio);
+		auto mtx = new (std::nothrow) Mutex(_mode, _prio);
 		if (mtx != nullptr)
 			mtx->__mtx::obj.res = mtx;
 		return Ptr(mtx);

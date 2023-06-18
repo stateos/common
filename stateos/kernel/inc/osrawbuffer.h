@@ -2,7 +2,7 @@
 
     @file    StateOS: osrawbuffer.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -671,7 +671,7 @@ struct RawBufferT : public __raw
 	static
 	Ptr Create()
 	{
-		auto raw = new RawBufferT<limit_>();
+		auto raw = new (std::nothrow) RawBufferT<limit_>();
 		if (raw != nullptr)
 			raw->__raw::obj.res = raw;
 		return Ptr(raw);
@@ -742,7 +742,7 @@ struct RawBufferTT : public RawBufferT<limit_*sizeof(C)>
 	static
 	Ptr Create()
 	{
-		auto raw = new RawBufferTT<limit_, C>();
+		auto raw = new (std::nothrow) RawBufferTT<limit_, C>();
 		if (raw != nullptr)
 			raw->__raw::obj.res = raw;
 		return Ptr(raw);

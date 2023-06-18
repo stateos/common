@@ -2,7 +2,7 @@
 
     @file    StateOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -37,8 +37,11 @@
 
 /* -------------------------------------------------------------------------- */
 
-#define sigAny       ( 0U )   // signal mask for any signal
-#define sigAll       ( 0U-1 ) // signal mask for all signals
+#define SIG_LIMIT     (sizeof(unsigned) * CHAR_BIT)
+
+#define SIGSET(signo) (((signo) < (SIG_LIMIT)) ? 1U << (signo) : 0U) // signal mask from the given signal number
+#define sigAny        ( 0U )                                         // signal mask for any signal
+#define sigAll        ( 0U-1 )                                       // signal mask for all signals
 
 /******************************************************************************
  *
@@ -465,7 +468,7 @@ struct Signal : public __sig
 	static
 	Ptr Create( const unsigned _mask = 0 )
 	{
-		auto sig = new Signal(_mask);
+		auto sig = new (std::nothrow) Signal(_mask);
 		if (sig != nullptr)
 			sig->__sig::obj.res = sig;
 		return Ptr(sig);

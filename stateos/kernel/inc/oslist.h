@@ -2,7 +2,7 @@
 
     @file    StateOS: oslist.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -435,7 +435,7 @@ struct ListTT : public __lst
 	static
 	Ptr Create()
 	{
-		auto lst = new ListTT<C>();
+		auto lst = new (std::nothrow) ListTT<C>();
 		if (lst != nullptr)
 			lst->__lst::obj.res = lst;
 		return Ptr(lst);

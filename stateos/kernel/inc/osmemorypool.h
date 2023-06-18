@@ -2,7 +2,7 @@
 
     @file    StateOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -469,7 +469,7 @@ struct MemoryPoolT : public __mem
 	static
 	Ptr Create()
 	{
-		auto mem = new MemoryPoolT<limit_, size_>();
+		auto mem = new (std::nothrow) MemoryPoolT<limit_, size_>();
 		if (mem != nullptr)
 			mem->__mem::lst.obj.res = mem;
 		return Ptr(mem);
@@ -530,7 +530,7 @@ struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
 	static
 	Ptr Create()
 	{
-		auto mem = new MemoryPoolTT<limit_, C>();
+		auto mem = new (std::nothrow) MemoryPoolTT<limit_, C>();
 		if (mem != nullptr)
 			mem->__mem::lst.obj.res = mem;
 		return Ptr(mem);

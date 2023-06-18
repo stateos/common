@@ -2,7 +2,7 @@
 
     @file    StateOS: osrwlock.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -534,7 +534,7 @@ struct RWLock : public __rwl
 	static
 	Ptr Create()
 	{
-		auto rwl = new RWLock();
+		auto rwl = new (std::nothrow) RWLock();
 		if (rwl != nullptr)
 			rwl->__rwl::obj.res = rwl;
 		return Ptr(rwl);

@@ -2,7 +2,7 @@
 
     @file    StateOS: osfastmutex.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -408,7 +408,7 @@ struct FastMutex : public __mut
 	static
 	Ptr Create()
 	{
-		auto mut = new FastMutex();
+		auto mut = new (std::nothrow) FastMutex();
 		if (mut != nullptr)
 			mut->__mut::obj.res = mut;
 		return Ptr(mut);

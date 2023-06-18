@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    01.08.2022
+    @date    18.06.2023
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -848,7 +848,7 @@ struct StateMachineT : public __hsm
 	static
 	Ptr Create()
 	{
-		auto hsm = new StateMachineT<limit_>();
+		auto hsm = new (std::nothrow) StateMachineT<limit_>();
 		if (hsm != nullptr)
 			hsm->__hsm::evq.obj.res = hsm;
 		return Ptr(hsm);
@@ -857,7 +857,7 @@ struct StateMachineT : public __hsm
 	static
 	Ptr Create( const std::vector<Action>& _tab )
 	{
-		auto hsm = new StateMachineT<limit_>(_tab);
+		auto hsm = new (std::nothrow) StateMachineT<limit_>(_tab);
 		if (hsm != nullptr)
 			hsm->__hsm::evq.obj.res = hsm;
 		return Ptr(hsm);
