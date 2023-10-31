@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.h
     @author  Rajmund Szymanski
-    @date    16.03.2023
+    @date    22.03.2023
     @brief   DemOS port definitions for ATtiny817 uC.
 
  ******************************************************************************
@@ -33,7 +33,6 @@
 #define __DEMOSPORT_H
 
 #include <stdint.h>
-#include <avr/io.h>
 
 #ifdef __cplusplus
 extern "C" {

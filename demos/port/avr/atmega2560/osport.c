@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.c
     @author  Rajmund Szymanski
-    @date    10.03.2020
+    @date    22.03.2023
     @brief   DemOS port file for ATtiny817 uC.
 
  ******************************************************************************
@@ -31,6 +31,7 @@
 
 #include "os.h"
 #include <avr/interrupt.h>
+#include <assert.h>
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -39,23 +40,44 @@ cnt_t sys_counter = 0;
 
 /* --------------------------------------------------------------------------------------------- */
 
+__attribute__((weak))
+void sys_hook( void ) {}  // user function - called from counter interrupt
+
+/* --------------------------------------------------------------------------------------------- */
+
 ISR( TIMER1_OVF_vect )
 {
+//	TIFR1 = (1 << OCF1A);
 	sys_counter++;
+	sys_hook();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+#define PRESCALER 64
+
+static_assert(((F_CPU) / (PRESCALER) / 1000UL) * (PRESCALER) * 1000UL == (F_CPU), "prescaler too large");
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void port_init( void )
+{
+	OCR1AH = (F_CPU / (PRESCALER) / 1000 - 1) / 256;
+	OCR1AL = (F_CPU / (PRESCALER) / 1000 - 1) % 256;
+	TCCR1B = (1 << CS11) | (1 << CS10);
+	TCCR1A = (1 << COM1A1) | (1 << COM1A0);
+	TIMSK1 = (1 << OCIE1A);
+
+	sei();
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
 void sys_init( void )
 {
-	OCR1AH = (F_CPU / 1000 / 64 - 1) >> 8;
-	OCR1AL = (F_CPU / 1000 / 64 - 1);
+	static OS_ONE(init);
 
-	TCCR1B = (1 << CS11) | (1 << CS10);
-	TCCR1A = (1 << COM1A1) | (1 << COM1A0);
-	TIMSK1 = (1 << OCIE1A);
-
-	sei();
+	one_call(init, port_init);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -67,6 +89,23 @@ cnt_t sys_time( void )
 	cnt = sys_counter;
 	sei();
 	return cnt;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static cnt_t get_counter( void )
+{
+	cnt_t result;
+	do result = sys_counter; while (result != sys_counter);
+	return result;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void sys_delay( cnt_t delay )
+{
+	cnt_t start = get_counter();
+	while (get_counter() - start + 1 <= delay);
 }
 
 /* --------------------------------------------------------------------------------------------- */
