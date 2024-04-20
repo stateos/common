@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -134,7 +132,7 @@ typedef struct
  * is (mostly) agnostic to the actual network address type.
  *
  * Every network address should be representable as a string (i.e. dotted decimal IP, etc).
- * This can serve as a the "common denominator" to all address types.
+ * This can serve as the "common denominator" to all address types.
  *
  * @{
  */
@@ -208,7 +206,7 @@ int32 OS_SocketAddrFromString(OS_SockAddr_t *Addr, const char *string);
 /**
  * @brief Get the port number of a network address
  *
- * For network prototcols that have the concept of a port number (such
+ * For network protocols that have the concept of a port number (such
  * as TCP/IP and UDP/IP) this function gets the port number from the
  * address structure.
  *
@@ -226,7 +224,7 @@ int32 OS_SocketAddrGetPort(uint16 *PortNum, const OS_SockAddr_t *Addr);
 /**
  * @brief Set the port number of a network address
  *
- * For network prototcols that have the concept of a port number (such
+ * For network protocols that have the concept of a port number (such
  * as TCP/IP and UDP/IP) this function sets the port number from the
  * address structure.
  *
@@ -276,14 +274,13 @@ int32 OS_SocketOpen(osal_id_t *sock_id, OS_SocketDomain_t Domain, OS_SocketType_
 
 /*-------------------------------------------------------------------------------------*/
 /**
- * @brief Binds a socket to a given local address.
+ * @brief Binds a socket to a given local address and enter listening (server) mode.
  *
- * The specified socket will be bound to the local address and port, if available.
+ * This is a convenience/compatibility routine to perform both OS_SocketBindAddress() and
+ * OS_SocketListen() operations in a single call, intended to simplify the setup for a server
+ * role.
  *
  * If the socket is connectionless, then it only binds to the local address.
- *
- * If the socket is connection-oriented (stream), then this will also put the
- * socket into a listening state for incoming connections at the local address.
  *
  * @param[in]   sock_id  The socket ID
  * @param[in]   Addr     The local address to bind to @nonnull
@@ -296,6 +293,47 @@ int32 OS_SocketOpen(osal_id_t *sock_id, OS_SocketDomain_t Domain, OS_SocketType_
  * @retval #OS_ERR_INCORRECT_OBJ_TYPE if the handle is not a socket
  */
 int32 OS_SocketBind(osal_id_t sock_id, const OS_SockAddr_t *Addr);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Places the specified socket into a listening state.
+ *
+ * This function only applies to connection-oriented (stream) sockets that are intended
+ * to be used in a server-side role. This places the socket into a state where it can
+ * accept incoming connections from clients.
+ *
+ * @param[in]   sock_id  The socket ID
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS @copybrief OS_SUCCESS
+ * @retval #OS_ERR_INVALID_ID if the sock_id parameter is not valid
+ * @retval #OS_ERR_INCORRECT_OBJ_STATE if the socket is already listening
+ * @retval #OS_ERR_INCORRECT_OBJ_TYPE if the handle is not a stream socket
+ */
+int32 OS_SocketListen(osal_id_t sock_id);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Binds a socket to a given local address.
+ *
+ * The specified socket will be bound to the local address and port, if available.
+ * This controls the source address reflected in network traffic transmitted via this
+ * socket.
+ *
+ * After binding to the address, a stream socket may be followed by a call to either
+ * OS_SocketListen() for a server role or to OS_SocketConnect() for a client role.
+ *
+ * @param[in]   sock_id  The socket ID
+ * @param[in]   Addr     The local address to bind to @nonnull
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS @copybrief OS_SUCCESS
+ * @retval #OS_ERR_INVALID_ID if the sock_id parameter is not valid
+ * @retval #OS_INVALID_POINTER if argument is NULL
+ * @retval #OS_ERR_INCORRECT_OBJ_STATE if the socket is already bound
+ * @retval #OS_ERR_INCORRECT_OBJ_TYPE if the handle is not a socket
+ */
+int32 OS_SocketBindAddress(osal_id_t sock_id, const OS_SockAddr_t *Addr);
 
 /*-------------------------------------------------------------------------------------*/
 /**

@@ -23,81 +23,102 @@
  *
  */
 
-#ifndef OS_SHARED_QUEUE_H
-#define OS_SHARED_QUEUE_H
+#ifndef OS_SHARED_CONDVAR_H
+#define OS_SHARED_CONDVAR_H
 
-#include "osapi-queue.h"
+#include "osapi-condvar.h"
 #include "os-shared-globaldefs.h"
 
 typedef struct
 {
-    char              queue_name[OS_MAX_API_NAME];
-    size_t            max_size;
-    osal_blockcount_t max_depth;
-} OS_queue_internal_record_t;
+    char obj_name[OS_MAX_API_NAME];
+} OS_condvar_internal_record_t;
 
 /*
  * These record types have extra information with each entry.  These tables are used
  * to share extra data between the common layer and the OS-specific implementation.
  */
-extern OS_queue_internal_record_t OS_queue_table[OS_MAX_QUEUES];
-
-/****************************************************************************************
-                 MESSAGE QUEUE API LOW-LEVEL IMPLEMENTATION FUNCTIONS
-  ***************************************************************************************/
+extern OS_condvar_internal_record_t OS_condvar_table[OS_MAX_CONDVARS];
 
 /*---------------------------------------------------------------------------------------
-   Name: OS_QueueAPI_Init
+   Name: OS_CondVarAPI_Init
 
-   Purpose: Initialize the OS-independent layer for queues
+   Purpose: Initialize the OS-independent layer for condvar objects
 
    returns: OS_SUCCESS on success, or relevant error code
 ---------------------------------------------------------------------------------------*/
-int32 OS_QueueAPI_Init(void);
+int32 OS_CondVarAPI_Init(void);
 
 /*----------------------------------------------------------------
 
-    Purpose: Prepare/Allocate OS resources for a message queue
+    Purpose: Prepare/allocate OS resources for a condvar object
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_QueueCreate_Impl(const OS_object_token_t *token, uint32 flags);
+int32 OS_CondVarCreate_Impl(const OS_object_token_t *token, uint32 options);
 
 /*----------------------------------------------------------------
 
-    Purpose: Free the OS resources associated with the message queue
+    Purpose: Acquires the underlying mutex
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_QueueDelete_Impl(const OS_object_token_t *token);
+int32 OS_CondVarLock_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
 
-    Purpose: Receive a message on a message queue.
-             The calling task will be blocked if no message is immediately available
+    Purpose: Release the underlying mutex
 
     Returns: OS_SUCCESS on success, or relevant error code
-             OS_QUEUE_TIMEOUT must be returned if the timeout expired and no message was received
-             OS_QUEUE_EMPTY must be returned if the queue is empty when polled (OS_CHECK)
-             OS_QUEUE_INVALID_SIZE must be returned if the supplied buffer is too small
  ------------------------------------------------------------------*/
-int32 OS_QueueGet_Impl(const OS_object_token_t *token, void *data, size_t size, size_t *size_copied, int32 timeout);
+int32 OS_CondVarUnlock_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
 
-    Purpose: Put a message into a message queue
+    Purpose: Wake up one blocked task
 
     Returns: OS_SUCCESS on success, or relevant error code
-             OS_QUEUE_FULL must be returned if the queue is full.
  ------------------------------------------------------------------*/
-int32 OS_QueuePut_Impl(const OS_object_token_t *token, const void *data, size_t size, uint32 flags);
+int32 OS_CondVarSignal_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
 
-    Purpose: Obtain OS-specific information about a message queue
+    Purpose: Wake up all blocked tasks
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_QueueGetInfo_Impl(const OS_object_token_t *token, OS_queue_prop_t *queue_prop);
+int32 OS_CondVarBroadcast_Impl(const OS_object_token_t *token);
 
-#endif /* OS_SHARED_QUEUE_H */
+/*----------------------------------------------------------------
+
+    Purpose: Wait indefinitely for the condvar to be signaled
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_CondVarWait_Impl(const OS_object_token_t *token);
+
+/*----------------------------------------------------------------
+
+    Purpose: Time-Limited wait for the condvar to be signaled
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_CondVarTimedWait_Impl(const OS_object_token_t *token, const OS_time_t *abs_wakeup_time);
+
+/*----------------------------------------------------------------
+
+    Purpose: Free the OS resources associated with a condvar object
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_CondVarDelete_Impl(const OS_object_token_t *token);
+
+/*----------------------------------------------------------------
+
+    Purpose: Obtain OS-specific information about the condvar object
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_CondVarGetInfo_Impl(const OS_object_token_t *token, OS_condvar_prop_t *condvar_prop);
+
+#endif /* OS_SHARED_CONDVAR_H */

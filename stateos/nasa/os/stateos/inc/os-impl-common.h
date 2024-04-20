@@ -1,5 +1,5 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as ‚Äúcore Flight System: Bootes‚Äù
+ * NASA Docket No. GSC-18,719-1, and identified as ìcore Flight System: Bootesî
  *
  * Copyright (c) 2020 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
@@ -16,25 +16,16 @@
  * limitations under the License.
  ************************************************************************/
 
-/*
- * File:  bsp_app_run.c
+/**
+ * \file
  *
- * Purpose:
- *   Application run default implementation.
+ * \ingroup  stateos
  *
- * NOTE: This is isolated in a separate compilation unit, so that a user
- *   application may directly provide an OS_Application_Run() implementation
- *   which will override this default.
  */
 
-#include "osapi-common.h"
-#include "bsp-impl.h"
+#ifndef OS_IMPL_COMMON_H
+#define OS_IMPL_COMMON_H
 
-/*
- * The default implementation of OS_Application_Run()
- * just calls the OS_IdleLoop() provided by OSAL.
- */
-void OS_Application_Run(void)
-{
-    OS_IdleLoop();
-}
+void OS_BSP_Init(void);
+
+#endif /* OS_IMPL_COMMON_H */

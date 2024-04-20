@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -60,6 +58,7 @@ typedef enum
     OS_STREAM_STATE_CONNECTED = 0x02, /**< @brief whether the stream is connected */
     OS_STREAM_STATE_READABLE  = 0x04, /**< @brief whether the stream is readable  */
     OS_STREAM_STATE_WRITABLE  = 0x08, /**< @brief whether the stream is writable  */
+    OS_STREAM_STATE_LISTENING = 0x10  /**< @brief whether the stream is listening */
 } OS_StreamState_t;
 
 /** @defgroup OSAPISelect OSAL Select APIs
@@ -70,7 +69,7 @@ typedef enum
 /**
  * @brief Wait for events across multiple file handles
  *
- * Wait for any of the given sets of IDs to be become readable or writable
+ * Wait for any of the given sets of IDs to become readable or writable
  *
  * This function will block until any of the following occurs:
  *  - At least one OSAL ID in the ReadSet is readable

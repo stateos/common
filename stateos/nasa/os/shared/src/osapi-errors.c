@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-errors.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -102,7 +100,23 @@ static const OS_ErrorTable_Entry_t OS_GLOBAL_ERROR_NAME_TABLE[] = {
 
 /*----------------------------------------------------------------
  *
- * Function: OS_GetErrorName
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
+ *
+ *-----------------------------------------------------------------*/
+char *OS_StatusToString(osal_status_t status, os_status_string_t *status_string)
+{
+    char *string = NULL;
+
+    if (status_string != NULL)
+    {
+        snprintf(*status_string, sizeof(*status_string), "%ld", OS_StatusToInteger(status));
+        string = *status_string;
+    }
+    return string;
+}
+
+/*----------------------------------------------------------------
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -146,4 +160,4 @@ int32 OS_GetErrorName(int32 error_num, os_err_name_t *err_name)
     (*err_name)[OS_ERROR_NAME_LENGTH - 1] = '\0';
 
     return return_code;
-} /* end OS_GetErrorName */
+}

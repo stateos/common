@@ -16,25 +16,26 @@
  * limitations under the License.
  ************************************************************************/
 
-/*
- * File:  bsp_app_run.c
+/**
+ * \file
  *
- * Purpose:
- *   Application run default implementation.
+ * \ingroup  stateos
  *
- * NOTE: This is isolated in a separate compilation unit, so that a user
- *   application may directly provide an OS_Application_Run() implementation
- *   which will override this default.
  */
 
-#include "osapi-common.h"
-#include "bsp-impl.h"
+#ifndef OS_IMPL_CONDVAR_H
+#define OS_IMPL_CONDVAR_H
 
-/*
- * The default implementation of OS_Application_Run()
- * just calls the OS_IdleLoop() provided by OSAL.
- */
-void OS_Application_Run(void)
+#include "osconfig.h"
+#include "os.h"
+
+typedef struct
 {
-    OS_IdleLoop();
-}
+    mtx_t *mtx;
+    cnd_t *cnd;
+} OS_impl_condvar_internal_record_t;
+
+/* Tables where the OS object information is stored */
+extern OS_impl_condvar_internal_record_t OS_impl_condvar_table[OS_MAX_CONDVARS];
+
+#endif /* OS_IMPL_CONDVAR_H */

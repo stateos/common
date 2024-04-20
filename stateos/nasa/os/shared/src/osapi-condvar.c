@@ -36,49 +36,37 @@
 /*
  * User defined include files
  */
-#include "os-shared-binsem.h"
 #include "os-shared-idmap.h"
+#include "os-shared-condvar.h"
+
+/*
+ * Other OSAL public APIs used by this module
+ */
+#include "osapi-task.h"
 
 /*
  * Sanity checks on the user-supplied configuration
  * The relevant OS_MAX limit should be defined and greater than zero
  */
-#if !defined(OS_MAX_BIN_SEMAPHORES) || (OS_MAX_BIN_SEMAPHORES <= 0)
-#error "osconfig.h must define OS_MAX_BIN_SEMAPHORES to a valid value"
+#if !defined(OS_MAX_CONDVARS) || (OS_MAX_CONDVARS <= 0)
+#error "osconfig.h must define OS_MAX_CONDVARS to a valid value"
 #endif
 
-/*
- * Global data for the API
- */
-enum
-{
-    LOCAL_NUM_OBJECTS = OS_MAX_BIN_SEMAPHORES,
-    LOCAL_OBJID_TYPE  = OS_OBJECT_TYPE_OS_BINSEM
-};
-
-OS_bin_sem_internal_record_t OS_bin_sem_table[LOCAL_NUM_OBJECTS];
+OS_condvar_internal_record_t OS_condvar_table[OS_MAX_CONDVARS];
 
 /****************************************************************************************
-                                  SEMAPHORE API
+                                  CONDITION VARIABLE API
  ***************************************************************************************/
-
-/*---------------------------------------------------------------------------------------
-   Name: OS_BinSemAPI_Init
-
-   Purpose: Init function for OS-independent layer
-
-   Returns: OS_SUCCESS
-
----------------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------
  *
  *  Purpose: Local helper routine, not part of OSAL API.
+ *           Init function for OS-independent layer
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemAPI_Init(void)
+int32 OS_CondVarAPI_Init(void)
 {
-    memset(OS_bin_sem_table, 0, sizeof(OS_bin_sem_table));
+    memset(OS_condvar_table, 0, sizeof(OS_condvar_table));
     return OS_SUCCESS;
 }
 
@@ -88,30 +76,30 @@ int32 OS_BinSemAPI_Init(void)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemCreate(osal_id_t *sem_id, const char *sem_name, uint32 sem_initial_value, uint32 options)
+int32 OS_CondVarCreate(osal_id_t *var_id, const char *var_name, uint32 options)
 {
     int32                         return_code;
     OS_object_token_t             token;
-    OS_bin_sem_internal_record_t *binsem;
+    OS_condvar_internal_record_t *condvar;
 
     /* Check parameters */
-    OS_CHECK_POINTER(sem_id);
-    OS_CHECK_APINAME(sem_name);
+    OS_CHECK_POINTER(var_id);
+    OS_CHECK_APINAME(var_name);
 
     /* Note - the common ObjectIdAllocate routine will lock the object type and leave it locked. */
-    return_code = OS_ObjectIdAllocateNew(LOCAL_OBJID_TYPE, sem_name, &token);
+    return_code = OS_ObjectIdAllocateNew(OS_OBJECT_TYPE_OS_CONDVAR, var_name, &token);
     if (return_code == OS_SUCCESS)
     {
-        binsem = OS_OBJECT_TABLE_GET(OS_bin_sem_table, token);
+        condvar = OS_OBJECT_TABLE_GET(OS_condvar_table, token);
 
         /* Reset the table entry and save the name */
-        OS_OBJECT_INIT(token, binsem, obj_name, sem_name);
+        OS_OBJECT_INIT(token, condvar, obj_name, var_name);
 
         /* Now call the OS-specific implementation.  This reads info from the table. */
-        return_code = OS_BinSemCreate_Impl(&token, sem_initial_value, options);
+        return_code = OS_CondVarCreate_Impl(&token, options);
 
         /* Check result, finalize record, and unlock global table. */
-        return_code = OS_ObjectIdFinalizeNew(return_code, &token, sem_id);
+        return_code = OS_ObjectIdFinalizeNew(return_code, &token, var_id);
     }
 
     return return_code;
@@ -123,15 +111,15 @@ int32 OS_BinSemCreate(osal_id_t *sem_id, const char *sem_name, uint32 sem_initia
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemDelete(osal_id_t sem_id)
+int32 OS_CondVarDelete(osal_id_t var_id)
 {
     OS_object_token_t token;
     int32             return_code;
 
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_EXCLUSIVE, LOCAL_OBJID_TYPE, sem_id, &token);
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_EXCLUSIVE, OS_OBJECT_TYPE_OS_CONDVAR, var_id, &token);
     if (return_code == OS_SUCCESS)
     {
-        return_code = OS_BinSemDelete_Impl(&token);
+        return_code = OS_CondVarDelete_Impl(&token);
 
         /* Complete the operation via the common routine */
         return_code = OS_ObjectIdFinalizeDelete(return_code, &token);
@@ -146,16 +134,16 @@ int32 OS_BinSemDelete(osal_id_t sem_id)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemGive(osal_id_t sem_id)
+int32 OS_CondVarLock(osal_id_t var_id)
 {
     OS_object_token_t token;
     int32             return_code;
 
     /* Check Parameters */
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, LOCAL_OBJID_TYPE, sem_id, &token);
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_CONDVAR, var_id, &token);
     if (return_code == OS_SUCCESS)
     {
-        return_code = OS_BinSemGive_Impl(&token);
+        return_code = OS_CondVarLock_Impl(&token);
     }
 
     return return_code;
@@ -167,16 +155,16 @@ int32 OS_BinSemGive(osal_id_t sem_id)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemFlush(osal_id_t sem_id)
+int32 OS_CondVarUnlock(osal_id_t var_id)
 {
     OS_object_token_t token;
     int32             return_code;
 
     /* Check Parameters */
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, LOCAL_OBJID_TYPE, sem_id, &token);
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_CONDVAR, var_id, &token);
     if (return_code == OS_SUCCESS)
     {
-        return_code = OS_BinSemFlush_Impl(&token);
+        return_code = OS_CondVarUnlock_Impl(&token);
     }
 
     return return_code;
@@ -188,16 +176,16 @@ int32 OS_BinSemFlush(osal_id_t sem_id)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemTake(osal_id_t sem_id)
+int32 OS_CondVarSignal(osal_id_t var_id)
 {
     OS_object_token_t token;
     int32             return_code;
 
     /* Check Parameters */
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, LOCAL_OBJID_TYPE, sem_id, &token);
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_CONDVAR, var_id, &token);
     if (return_code == OS_SUCCESS)
     {
-        return_code = OS_BinSemTake_Impl(&token);
+        return_code = OS_CondVarSignal_Impl(&token);
     }
 
     return return_code;
@@ -209,16 +197,16 @@ int32 OS_BinSemTake(osal_id_t sem_id)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemTimedWait(osal_id_t sem_id, uint32 msecs)
+int32 OS_CondVarBroadcast(osal_id_t var_id)
 {
     OS_object_token_t token;
     int32             return_code;
 
     /* Check Parameters */
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, LOCAL_OBJID_TYPE, sem_id, &token);
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_CONDVAR, var_id, &token);
     if (return_code == OS_SUCCESS)
     {
-        return_code = OS_BinSemTimedWait_Impl(&token, msecs);
+        return_code = OS_CondVarBroadcast_Impl(&token);
     }
 
     return return_code;
@@ -230,15 +218,60 @@ int32 OS_BinSemTimedWait(osal_id_t sem_id, uint32 msecs)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemGetIdByName(osal_id_t *sem_id, const char *sem_name)
+int32 OS_CondVarWait(osal_id_t var_id)
+{
+    OS_object_token_t token;
+    int32             return_code;
+
+    /* Check Parameters */
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_CONDVAR, var_id, &token);
+    if (return_code == OS_SUCCESS)
+    {
+        return_code = OS_CondVarWait_Impl(&token);
+    }
+
+    return return_code;
+}
+
+/*----------------------------------------------------------------
+ *
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_CondVarTimedWait(osal_id_t var_id, const OS_time_t *abs_wakeup_time)
+{
+    OS_object_token_t token;
+    int32             return_code;
+
+    /* Check parameters */
+    OS_CHECK_POINTER(abs_wakeup_time);
+
+    /* Check Parameters */
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_CONDVAR, var_id, &token);
+    if (return_code == OS_SUCCESS)
+    {
+        return_code = OS_CondVarTimedWait_Impl(&token, abs_wakeup_time);
+    }
+
+    return return_code;
+}
+
+/*----------------------------------------------------------------
+ *
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_CondVarGetIdByName(osal_id_t *var_id, const char *var_name)
 {
     int32 return_code;
 
     /* Check parameters */
-    OS_CHECK_POINTER(sem_id);
-    OS_CHECK_POINTER(sem_name);
+    OS_CHECK_POINTER(var_id);
+    OS_CHECK_POINTER(var_name);
 
-    return_code = OS_ObjectIdFindByName(LOCAL_OBJID_TYPE, sem_name, sem_id);
+    return_code = OS_ObjectIdFindByName(OS_OBJECT_TYPE_OS_CONDVAR, var_name, var_id);
 
     return return_code;
 }
@@ -249,26 +282,26 @@ int32 OS_BinSemGetIdByName(osal_id_t *sem_id, const char *sem_name)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_BinSemGetInfo(osal_id_t sem_id, OS_bin_sem_prop_t *bin_prop)
+int32 OS_CondVarGetInfo(osal_id_t var_id, OS_condvar_prop_t *condvar_prop)
 {
     OS_common_record_t *record;
-    OS_object_token_t   token;
     int32               return_code;
+    OS_object_token_t   token;
 
     /* Check parameters */
-    OS_CHECK_POINTER(bin_prop);
+    OS_CHECK_POINTER(condvar_prop);
 
-    memset(bin_prop, 0, sizeof(OS_bin_sem_prop_t));
+    memset(condvar_prop, 0, sizeof(OS_condvar_prop_t));
 
-    /* Check Parameters */
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_GLOBAL, LOCAL_OBJID_TYPE, sem_id, &token);
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_GLOBAL, OS_OBJECT_TYPE_OS_CONDVAR, var_id, &token);
     if (return_code == OS_SUCCESS)
     {
-        record = OS_OBJECT_TABLE_GET(OS_global_bin_sem_table, token);
+        record = OS_OBJECT_TABLE_GET(OS_global_condvar_table, token);
 
-        strncpy(bin_prop->name, record->name_entry, sizeof(bin_prop->name) - 1);
-        bin_prop->creator = record->creator;
-        return_code       = OS_BinSemGetInfo_Impl(&token, bin_prop);
+        strncpy(condvar_prop->name, record->name_entry, sizeof(condvar_prop->name) - 1);
+        condvar_prop->creator = record->creator;
+
+        return_code = OS_CondVarGetInfo_Impl(&token, condvar_prop);
 
         OS_ObjectIdRelease(&token);
     }

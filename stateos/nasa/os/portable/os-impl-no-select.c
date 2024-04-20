@@ -17,35 +17,38 @@
  ************************************************************************/
 
 /**
- * \file
- * \author   joseph.p.hickey@nasa.gov
+ * \file   os-impl-no-select.c
+ * \author joseph.p.hickey@nasa.gov
  *
- * This file contains the network functionality for
- * systems which implement the POSIX-defined network hostname/id functions.
+ * Purpose: All functions return OS_ERR_NOT_IMPLEMENTED.
+ * This is used when network functionality is disabled by config.
  */
 
 /****************************************************************************************
                                     INCLUDE FILES
  ***************************************************************************************/
 
-/*
- * Inclusions Defined by OSAL layer.
- *
- * This must include whatever is required to get the prototypes of these functions:
- *
- *  gethostname()
- *  gethostid()
- *
- * Both of these routines should conform to X/Open 5 definition.
- */
-#include <string.h>
-#include <errno.h>
-
-#include "os-impl-network.h"
-#include "os-shared-network.h"
+#include <osapi.h>
+#include "os-shared-select.h"
 
 /****************************************************************************************
-                                    Network API
+                                     DEFINES
+ ***************************************************************************************/
+
+/***************************************************************************************
+                                 FUNCTION PROTOTYPES
+ **************************************************************************************/
+
+/****************************************************************************************
+                                   GLOBAL DATA
+ ***************************************************************************************/
+
+/****************************************************************************************
+                                LOCAL FUNCTIONS
+ ***************************************************************************************/
+
+/****************************************************************************************
+                                SELECT API
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
@@ -54,25 +57,9 @@
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_NetworkGetHostName_Impl(char *host_name, size_t name_len)
+int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, int32 msecs)
 {
-    int32 return_code;
-
-    if (gethostname(host_name, name_len) < 0)
-    {
-        return_code = OS_ERROR;
-    }
-    else
-    {
-        /*
-         * posix does not say that the name is always
-         * null terminated, so its worthwhile to ensure it
-         */
-        host_name[name_len - 1] = 0;
-        return_code             = OS_SUCCESS;
-    }
-
-    return return_code;
+    return OS_ERR_NOT_IMPLEMENTED;
 }
 
 /*----------------------------------------------------------------
@@ -81,9 +68,7 @@ int32 OS_NetworkGetHostName_Impl(char *host_name, size_t name_len)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_NetworkGetID_Impl(int32 *IdBuf)
+int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, int32 msecs)
 {
-    /* gethostid() has no failure modes */
-    *IdBuf = gethostid();
-    return OS_SUCCESS;
+    return OS_ERR_NOT_IMPLEMENTED;
 }

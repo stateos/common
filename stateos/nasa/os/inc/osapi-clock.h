@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -125,6 +123,7 @@ int32 OS_SetLocalTime(const OS_time_t *time_struct);
  * structure was defined with separate seconds/microseconds fields.
  *
  * @sa OS_TimeGetMicrosecondsPart()
+ * @sa OS_TimeFromTotalSeconds()
  *
  * @param[in] tm    Time interval value
  * @returns   Whole number of seconds in time interval
@@ -136,9 +135,29 @@ static inline int64 OS_TimeGetTotalSeconds(OS_time_t tm)
 
 /*-------------------------------------------------------------------------------------*/
 /**
+ * @brief Get an OS_time_t interval object from an integer number of seconds
+ *
+ * This is the inverse operation of OS_TimeGetTotalSeconds(), converting the
+ * total number of seconds into an OS_time_t value.
+ *
+ * @sa OS_TimeGetTotalSeconds()
+ *
+ * @param[in] tm    Time interval value, in seconds
+ * @returns   OS_time_t value representing the interval
+ */
+static inline OS_time_t OS_TimeFromTotalSeconds(int64 tm)
+{
+    OS_time_t ostm = {tm * OS_TIME_TICKS_PER_SECOND};
+    return ostm;
+}
+
+/*-------------------------------------------------------------------------------------*/
+/**
  * @brief Get interval from an OS_time_t object normalized to millisecond units
  *
  * Note this refers to the complete interval, not just the fractional part.
+ *
+ * @sa OS_TimeFromTotalMilliseconds()
  *
  * @param[in] tm    Time interval value
  * @returns   Whole number of milliseconds in time interval
@@ -150,9 +169,29 @@ static inline int64 OS_TimeGetTotalMilliseconds(OS_time_t tm)
 
 /*-------------------------------------------------------------------------------------*/
 /**
+ * @brief Get an OS_time_t interval object from a integer number of milliseconds
+ *
+ * This is the inverse operation of OS_TimeGetTotalMilliseconds(), converting the
+ * total number of milliseconds into an OS_time_t value.
+ *
+ * @sa OS_TimeGetTotalMilliseconds()
+ *
+ * @param[in] tm    Time interval value, in milliseconds
+ * @returns   OS_time_t value representing the interval
+ */
+static inline OS_time_t OS_TimeFromTotalMilliseconds(int64 tm)
+{
+    OS_time_t ostm = {tm * OS_TIME_TICKS_PER_MSEC};
+    return ostm;
+}
+
+/*-------------------------------------------------------------------------------------*/
+/**
  * @brief Get interval from an OS_time_t object normalized to microsecond units
  *
  * Note this refers to the complete interval, not just the fractional part.
+ *
+ * @sa OS_TimeFromTotalMicroseconds()
  *
  * @param[in] tm    Time interval value
  * @returns   Whole number of microseconds in time interval
@@ -160,6 +199,24 @@ static inline int64 OS_TimeGetTotalMilliseconds(OS_time_t tm)
 static inline int64 OS_TimeGetTotalMicroseconds(OS_time_t tm)
 {
     return (tm.ticks / OS_TIME_TICKS_PER_USEC);
+}
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Get an OS_time_t interval object from a integer number of microseconds
+ *
+ * This is the inverse operation of OS_TimeGetTotalMicroseconds(), converting the
+ * total number of microseconds into an OS_time_t value.
+ *
+ * @sa OS_TimeGetTotalMicroseconds()
+ *
+ * @param[in] tm    Time interval value, in microseconds
+ * @returns   OS_time_t value representing the interval
+ */
+static inline OS_time_t OS_TimeFromTotalMicroseconds(int64 tm)
+{
+    OS_time_t ostm = {tm * OS_TIME_TICKS_PER_USEC};
+    return ostm;
 }
 
 /*-------------------------------------------------------------------------------------*/
@@ -172,12 +229,32 @@ static inline int64 OS_TimeGetTotalMicroseconds(OS_time_t tm)
  * Applications must use caution to ensure that the interval does not exceed the
  * representable range of a signed 64 bit integer - approximately 140 years.
  *
+ * @sa OS_TimeFromTotalNanoseconds
+ *
  * @param[in] tm    Time interval value
  * @returns   Whole number of microseconds in time interval
  */
 static inline int64 OS_TimeGetTotalNanoseconds(OS_time_t tm)
 {
     return (tm.ticks * OS_TIME_TICK_RESOLUTION_NS);
+}
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Get an OS_time_t interval object from a integer number of nanoseconds
+ *
+ * This is the inverse operation of OS_TimeGetTotalNanoseconds(), converting the
+ * total number of nanoseconds into an OS_time_t value.
+ *
+ * @sa OS_TimeGetTotalNanoseconds()
+ *
+ * @param[in] tm    Time interval value, in nanoseconds
+ * @returns   OS_time_t value representing the interval
+ */
+static inline OS_time_t OS_TimeFromTotalNanoseconds(int64 tm)
+{
+    OS_time_t ostm = {tm / OS_TIME_TICK_RESOLUTION_NS};
+    return ostm;
 }
 
 /*-------------------------------------------------------------------------------------*/
@@ -389,7 +466,8 @@ static inline OS_time_t OS_TimeAssembleFromSubseconds(int64 seconds, uint32 subs
  */
 static inline OS_time_t OS_TimeAdd(OS_time_t time1, OS_time_t time2)
 {
-    return ((OS_time_t) {time1.ticks + time2.ticks});
+    OS_time_t ostm = {time1.ticks + time2.ticks};
+    return ostm;
 }
 
 /*-------------------------------------------------------------------------------------*/
@@ -403,7 +481,8 @@ static inline OS_time_t OS_TimeAdd(OS_time_t time1, OS_time_t time2)
  */
 static inline OS_time_t OS_TimeSubtract(OS_time_t time1, OS_time_t time2)
 {
-    return ((OS_time_t) {time1.ticks - time2.ticks});
+    OS_time_t ostm = {time1.ticks - time2.ticks};
+    return ostm;
 }
 
 /**@}*/

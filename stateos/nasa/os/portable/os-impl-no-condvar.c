@@ -17,39 +17,61 @@
  ************************************************************************/
 
 /**
- * \file
- * \author   joseph.p.hickey@nasa.gov
+ * \file   os-impl-no-condvar.c
+ * \author joseph.p.hickey@nasa.gov
  *
- * This file contains the network implementation for
- * systems where OSAL_CONFIG_INCLUDE_NETWORK is false or otherwise
- * do not provide any network functions.
- *
+ * Purpose: All functions return OS_ERR_NOT_IMPLEMENTED.
+ * This is used when network functionality is disabled by config.
  */
 
-#include "os-shared-network.h"
-
 /****************************************************************************************
-                                    Network API
+                                    INCLUDE FILES
  ***************************************************************************************/
 
-/*----------------------------------------------------------------
- *
- *  Purpose: Implemented per internal OSAL API
- *           See prototype for argument/return detail
- *
- *-----------------------------------------------------------------*/
-int32 OS_NetworkGetID_Impl(int32 *IdBuf)
+#include <osapi.h>
+#include "os-shared-condvar.h"
+
+int32 OS_CondVarCreate_Impl(const OS_object_token_t *token, uint32 options)
 {
     return OS_ERR_NOT_IMPLEMENTED;
 }
 
-/*----------------------------------------------------------------
- *
- *  Purpose: Implemented per internal OSAL API
- *           See prototype for argument/return detail
- *
- *-----------------------------------------------------------------*/
-int32 OS_NetworkGetHostName_Impl(char *host_name, size_t name_len)
+int32 OS_CondVarLock_Impl(const OS_object_token_t *token)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+int32 OS_CondVarUnlock_Impl(const OS_object_token_t *token)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+int32 OS_CondVarSignal_Impl(const OS_object_token_t *token)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+int32 OS_CondVarBroadcast_Impl(const OS_object_token_t *token)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+int32 OS_CondVarWait_Impl(const OS_object_token_t *token)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+int32 OS_CondVarTimedWait_Impl(const OS_object_token_t *token, const OS_time_t *abs_wakeup_time)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+int32 OS_CondVarDelete_Impl(const OS_object_token_t *token)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+int32 OS_CondVarGetInfo_Impl(const OS_object_token_t *token, OS_condvar_prop_t *condvar_prop)
 {
     return OS_ERR_NOT_IMPLEMENTED;
 }
