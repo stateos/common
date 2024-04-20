@@ -1,13 +1,13 @@
 /******************************************************************************
 
     @file    DemOS: osversion.h
-    @author  Rajmund Szymanski
-    @date    25.03.2021
+    @author  Rajmund Szymański
+    @date    18.03.2023
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
 
-   Copyright (c) 2018-2021 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -32,8 +32,8 @@
 #ifndef __DEMOSVERSION_H
 #define __DEMOSVERSION_H
 
-#define __DEMOS_MAJOR        0
-#define __DEMOS_MINOR        8
+#define __DEMOS_MAJOR        1
+#define __DEMOS_MINOR        0
 #define __DEMOS_BUILD        0
 
 #define __DEMOS        ((((__DEMOS_MAJOR)&0xFFUL)<<24)|(((__DEMOS_MINOR)&0xFFUL)<<16)|((__DEMOS_BUILD)&0xFFFFUL))

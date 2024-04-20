@@ -1,13 +1,13 @@
 /******************************************************************************
 
     @file    DemOS: os.c
-    @author  Rajmund Szymanski
-    @date    30.06.2020
+    @author  Rajmund Szymański
+    @date    29.03.2023
     @brief   This file provides set of functions for DemOS.
 
  ******************************************************************************
 
-   Copyright (c) 2018-2021 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -34,9 +34,37 @@
 /* --------------------------------------------------------------------------------------------- */
 
 static
-tsk_t  MAIN = { 0, ID_RIP, 0, NULL, &MAIN };
+tsk_t  MAIN = { { 0, 0 }, ID_RIP, 0, NULL, &MAIN };
 
 tsk_t *sys_current = &MAIN;
+
+/* -------------------------------------------------------------------------- */
+
+void sys_start( void )
+{
+	tsk_t *current = sys_current;
+
+	sys_init();
+
+	for (;;)
+	{
+		sys_current = current = current->next;
+
+		if (current->id == ID_RDY)
+		{
+			if (current->tmr.delay > 0)
+			{
+				if (!tmr_expired(&current->tmr))
+					continue;
+
+				current->tmr.start += current->tmr.delay;
+				current->tmr.delay = 0;
+			}
+
+			current->function();
+		}
+	}
+}
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -45,7 +73,9 @@ void tsk_start( tsk_t *tsk )
 	static
 	tsk_t *tail = &MAIN;
 
-	if (tsk->id == ID_RIP)
+	sys_init();
+	
+	if (tsk->id == ID_RIP && tsk->function != NULL)
 	{
 		tsk->state = 0;
 		tsk->id = ID_RDY;
@@ -57,6 +87,25 @@ void tsk_start( tsk_t *tsk )
 			tail = tsk;
 		}
 	}
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void sys_stop( void )
+{
+	tsk_t *tsk = &MAIN;
+
+	do tsk->id = ID_RIP;
+	while ((tsk = tsk->next) != &MAIN);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void sys_main( fun_t *fun )
+{
+	sys_stop();
+	MAIN.function = fun;
+	tsk_start(&MAIN);
 }
 
 /* --------------------------------------------------------------------------------------------- */

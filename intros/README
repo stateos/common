@@ -35,6 +35,16 @@ Features:
 - all documentation is contained within the source files
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
+5.0
+- updated os version
+- added SELF definition
+- removed cur_ functions
+- added tsk_startExclusive function
+- added tsk_killAll function
+- added tsk_main function
+- added tmr_reset / tmr_kill function
+- rebuilt Task and Timer destructors
+---------
 4.9
 - updated LockGuard and added UniqueLock
 - updated assertions
