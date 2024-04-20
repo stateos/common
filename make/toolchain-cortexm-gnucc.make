@@ -12,7 +12,7 @@ STLINK     := st-link_cli
 CUBE       := stm32_programmer_cli
 QEMU       := qemu-system-gnuarmeclipse
 OPTF       ?=
-STDC       ?= 11
+STDC       ?= 20
 STDCXX     ?= 20
 
 #----------------------------------------------------------#
