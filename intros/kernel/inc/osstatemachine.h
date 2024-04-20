@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    31.07.2022
+    @date    25.03.2023
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -573,6 +573,7 @@ hsm_state_t* hsm_getState( hsm_t *hsm ) { return hsm->state; }
 /* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
+#if __cplusplus >= 201402L
 
 #include <iterator>
 #include <vector>
@@ -692,6 +693,7 @@ struct StateMachineT : public __hsm
 };
 
 }     //  namespace
+#endif//  201402L
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */

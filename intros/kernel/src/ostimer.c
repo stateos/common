@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.c
     @author  Rajmund Szymanski
-    @date    28.07.2022
+    @date    27.03.2023
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -123,6 +123,20 @@ void tmr_startUntil( tmr_t *tmr, cnt_t time )
 		tmr->period = 0;
 
 		priv_tmr_start(tmr);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+void tmr_reset( tmr_t *tmr )
+/* -------------------------------------------------------------------------- */
+{
+	assert(tmr);
+
+	sys_lock();
+	{
+		if (tmr->hdr.id != ID_STOPPED)  // only active timers can be reseted
+			core_tmr_remove(tmr);
 	}
 	sys_unlock();
 }

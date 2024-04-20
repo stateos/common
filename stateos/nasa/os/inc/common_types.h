@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -91,10 +89,24 @@ extern "C"
     typedef size_t    cpusize;
     typedef ptrdiff_t cpudiff;
 
+#ifdef OSAL_OMIT_DEPRECATED
     /**
      * A type to be used for OSAL resource identifiers.
+     * This is a type-safe ID, and cannot be implicitly converted to an integer.
+     * Use the provided inline functions in osapi-idmap.h to interpret ID values.
      */
-    typedef uint32_t osal_id_t;
+    typedef struct
+    {
+        uint32_t v;
+    } osal_id_t;
+#else
+
+/**
+ * A type to be used for OSAL resource identifiers.
+ * This typedef is backward compatible with the IDs from older versions of OSAL
+ */
+typedef uint32 osal_id_t;
+#endif
 
     /**
      * A type used to represent a number of blocks or buffers
@@ -117,6 +129,11 @@ extern "C"
      * A type used to represent the runtime type or category of an OSAL object
      */
     typedef uint32 osal_objtype_t;
+
+    /**
+     * The preferred type to represent OSAL status codes defined in osapi-error.h
+     */
+    typedef int32 osal_status_t;
 
     /**
      * @brief General purpose OSAL callback function
@@ -155,5 +172,6 @@ extern "C"
 #define OSAL_BLOCKCOUNT_C(X) ((osal_blockcount_t)(X))
 #define OSAL_INDEX_C(X)      ((osal_index_t)(X))
 #define OSAL_OBJTYPE_C(X)    ((osal_objtype_t)(X))
+#define OSAL_STATUS_C(X)     ((osal_status_t)(X))
 
 #endif /* COMMON_TYPES_H */

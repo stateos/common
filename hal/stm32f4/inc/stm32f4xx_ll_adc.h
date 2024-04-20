@@ -1879,6 +1879,9 @@ __STATIC_INLINE uint32_t LL_ADC_DMA_GetRegAddr(ADC_TypeDef *ADCx, uint32_t Regis
 #else
 __STATIC_INLINE uint32_t LL_ADC_DMA_GetRegAddr(ADC_TypeDef *ADCx, uint32_t Register)
 {
+  /* Prevent unused argument compilation warning */
+  (void)Register;
+
   /* Retrieve address of register DR */
   return (uint32_t)&(ADCx->DR);
 }
@@ -4015,7 +4018,7 @@ __STATIC_INLINE uint16_t LL_ADC_REG_ReadConversionData10(ADC_TypeDef *ADCx)
   */
 __STATIC_INLINE uint8_t LL_ADC_REG_ReadConversionData8(ADC_TypeDef *ADCx)
 {
-  return (uint16_t)(READ_BIT(ADCx->DR, ADC_DR_DATA));
+  return (uint8_t)(READ_BIT(ADCx->DR, ADC_DR_DATA));
 }
 
 /**
@@ -4030,7 +4033,7 @@ __STATIC_INLINE uint8_t LL_ADC_REG_ReadConversionData8(ADC_TypeDef *ADCx)
   */
 __STATIC_INLINE uint8_t LL_ADC_REG_ReadConversionData6(ADC_TypeDef *ADCx)
 {
-  return (uint16_t)(READ_BIT(ADCx->DR, ADC_DR_DATA));
+  return (uint8_t)(READ_BIT(ADCx->DR, ADC_DR_DATA));
 }
 
 #if defined(ADC_MULTIMODE_SUPPORT)

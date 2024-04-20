@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -58,7 +56,6 @@ extern OS_dir_internal_record_t OS_dir_table[OS_MAX_NUM_OPEN_DIRS];
 int32 OS_DirAPI_Init(void);
 
 /*----------------------------------------------------------------
-   Function: OS_DirCreate_Impl
 
     Purpose: Create a directory in the local filesystem
 
@@ -67,7 +64,6 @@ int32 OS_DirAPI_Init(void);
 int32 OS_DirCreate_Impl(const char *local_path, uint32 access);
 
 /*----------------------------------------------------------------
-   Function: OS_DirOpen_Impl
 
     Purpose: Open a directory and prepare to read the entries
 
@@ -76,7 +72,6 @@ int32 OS_DirCreate_Impl(const char *local_path, uint32 access);
 int32 OS_DirOpen_Impl(const OS_object_token_t *token, const char *local_path);
 
 /*----------------------------------------------------------------
-   Function: OS_DirClose_Impl
 
     Purpose: Close a directory
 
@@ -85,7 +80,6 @@ int32 OS_DirOpen_Impl(const OS_object_token_t *token, const char *local_path);
 int32 OS_DirClose_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_DirRead_Impl
 
     Purpose: Read the next entry from a directory handle
 
@@ -94,7 +88,6 @@ int32 OS_DirClose_Impl(const OS_object_token_t *token);
 int32 OS_DirRead_Impl(const OS_object_token_t *token, os_dirent_t *dirent);
 
 /*----------------------------------------------------------------
-   Function: OS_DirRewind_Impl
 
     Purpose: Rewind a directory handle back to the start
 
@@ -103,7 +96,6 @@ int32 OS_DirRead_Impl(const OS_object_token_t *token, os_dirent_t *dirent);
 int32 OS_DirRewind_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_DirRemove_Impl
 
     Purpose: Remove a directory in the local filesystem
 

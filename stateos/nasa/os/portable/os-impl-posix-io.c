@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file   os-impl-posix-io.c
+ * \file
  * \author joseph.p.hickey@nasa.gov
  *
  * This file contains generic calls for manipulating filehandles
@@ -61,8 +59,6 @@
 
 /*----------------------------------------------------------------
  *
- * Function: OS_GenericClose_Impl
- *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
  *
@@ -92,11 +88,9 @@ int32 OS_GenericClose_Impl(const OS_object_token_t *token)
     }
     impl->fd = -1;
     return OS_SUCCESS;
-} /* end OS_GenericClose_Impl */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_GenericSeek_Impl
  *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
@@ -160,11 +154,9 @@ int32 OS_GenericSeek_Impl(const OS_object_token_t *token, int32 offset, uint32 w
     }
 
     return retval;
-} /* end OS_GenericSeek_Impl */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_GenericRead_Impl
  *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
@@ -214,12 +206,10 @@ int32 OS_GenericRead_Impl(const OS_object_token_t *token, void *buffer, size_t n
         }
     }
 
-    return (return_code);
-} /* end OS_GenericRead_Impl */
+    return return_code;
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_GenericWrite_Impl
  *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
@@ -271,5 +261,5 @@ int32 OS_GenericWrite_Impl(const OS_object_token_t *token, const void *buffer, s
         }
     }
 
-    return (return_code);
-} /* end OS_GenericWrite_Impl */
+    return return_code;
+}

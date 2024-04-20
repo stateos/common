@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-select.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -52,8 +50,6 @@
 
 /*----------------------------------------------------------------
  *
- * Function: OS_SelectSingle
- *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
  *
@@ -75,11 +71,9 @@ int32 OS_SelectSingle(osal_id_t objid, uint32 *StateFlags, int32 msecs)
     }
 
     return return_code;
-} /* end OS_SelectSingle */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SelectMultiple
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -103,11 +97,9 @@ int32 OS_SelectMultiple(OS_FdSet *ReadSet, OS_FdSet *WriteSet, int32 msecs)
     return_code = OS_SelectMultiple_Impl(ReadSet, WriteSet, msecs);
 
     return return_code;
-} /* end OS_SelectMultiple */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SelectFdZero
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -120,11 +112,9 @@ int32 OS_SelectFdZero(OS_FdSet *Set)
 
     memset(Set, 0, sizeof(OS_FdSet));
     return OS_SUCCESS;
-} /* end OS_SelectFdZero */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SelectFdAdd
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -150,11 +140,9 @@ int32 OS_SelectFdAdd(OS_FdSet *Set, osal_id_t objid)
     }
 
     return return_code;
-} /* end OS_SelectFdAdd */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SelectFdClear
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -180,11 +168,9 @@ int32 OS_SelectFdClear(OS_FdSet *Set, osal_id_t objid)
     }
 
     return return_code;
-} /* end OS_SelectFdClear */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SelectFdIsSet
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -210,4 +196,4 @@ bool OS_SelectFdIsSet(const OS_FdSet *Set, osal_id_t objid)
      * and the mask/shift checks the bit within that element.
      */
     return ((Set->object_ids[local_id >> 3] >> (local_id & 0x7)) & 0x1);
-} /* end OS_SelectFdIsSet */
+}

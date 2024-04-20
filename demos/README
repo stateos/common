@@ -15,6 +15,24 @@ Features:
 - once flags
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
+1.0
+- updated os version
+- added SELF definition
+- removed cur_ definitions
+- rebuilt sys_start function
+- rebuilt tsk_start function
+- added sys_stop function
+- added tsk_startExclusive definition
+- added tsk_killAll definition
+- added tsk_main definition
+- rebuilt timer
+---------
+0.9
+- added sys_delay function
+- added sys_stop blocking function
+- added tsk_startExclusive definition
+- updated os version
+---------
 0.8
 - added version header file
 - updated os version

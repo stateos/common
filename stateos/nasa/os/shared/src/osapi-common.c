@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-common.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -42,6 +40,7 @@
  */
 #include "os-shared-binsem.h"
 #include "os-shared-common.h"
+#include "os-shared-condvar.h"
 #include "os-shared-countsem.h"
 #include "os-shared-dir.h"
 #include "os-shared-file.h"
@@ -70,8 +69,6 @@ OS_SharedGlobalVars_t OS_SharedGlobalVars = {
 
 /*----------------------------------------------------------------
  *
- * Function: OS_NotifyEvent
- *
  *  Purpose: Helper function to invoke the user-defined event handler
  *
  *-----------------------------------------------------------------*/
@@ -98,8 +95,6 @@ int32 OS_NotifyEvent(OS_Event_t event, osal_id_t object_id, void *data)
  */
 
 /*----------------------------------------------------------------
- *
- * Function: OS_API_Init
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -190,6 +185,9 @@ int32 OS_API_Init(void)
             case OS_OBJECT_TYPE_OS_CONSOLE:
                 return_code = OS_ConsoleAPI_Init();
                 break;
+            case OS_OBJECT_TYPE_OS_CONDVAR:
+                return_code = OS_CondVarAPI_Init();
+                break;
             default:
                 break;
         }
@@ -243,12 +241,10 @@ int32 OS_API_Init(void)
         OS_SharedGlobalVars.GlobalState = OS_SHUTDOWN_MAGIC_NUMBER;
     }
 
-    return (return_code);
-} /* end OS_API_Init */
+    return return_code;
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_API_Teardown
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -270,8 +266,6 @@ void OS_API_Teardown(void)
 
 /*----------------------------------------------------------------
  *
- * Function: OS_RegisterEventHandler
- *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
  *
@@ -285,8 +279,6 @@ int32 OS_RegisterEventHandler(OS_EventHandler_t handler)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ApplicationExit
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -302,11 +294,9 @@ void OS_ApplicationExit(int32 Status)
     {
         exit(EXIT_FAILURE);
     }
-} /* end OS_ApplicationExit */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_CleanUpObject
  *
  *  Purpose: Local helper routine that can delete ANY object, not part of OSAL API.
  *
@@ -349,14 +339,15 @@ void OS_CleanUpObject(osal_id_t object_id, void *arg)
         case OS_OBJECT_TYPE_OS_DIR:
             OS_DirectoryClose(object_id);
             break;
+        case OS_OBJECT_TYPE_OS_CONDVAR:
+            OS_CondVarDelete(object_id);
+            break;
         default:
             break;
     }
-} /* end OS_CleanUpObject */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_DeleteAllObjects
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -391,11 +382,9 @@ void OS_DeleteAllObjects(void)
         }
         OS_TaskDelay(5);
     }
-} /* end OS_DeleteAllObjects */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_IdleLoop
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -412,11 +401,9 @@ void OS_IdleLoop()
     {
         OS_IdleLoop_Impl();
     }
-} /* end OS_IdleLoop */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ApplicationShutdown
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -435,4 +422,4 @@ void OS_ApplicationShutdown(uint8 flag)
      * should do whatever is needed to wake that task up.
      */
     OS_ApplicationShutdown_Impl();
-} /* end OS_ApplicationShutdown */
+}

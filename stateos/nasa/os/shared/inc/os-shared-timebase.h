@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -68,7 +66,6 @@ int32 OS_TimeBaseAPI_Init(void);
  */
 
 /*----------------------------------------------------------------
-   Function: OS_TimeBaseCreate_Impl
 
     Purpose: Prepare OS resources for a time base
 
@@ -77,7 +74,6 @@ int32 OS_TimeBaseAPI_Init(void);
 int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_TimeBaseSet_Impl
 
     Purpose: Configure the OS resources to provide a timer tick
 
@@ -86,7 +82,6 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token);
 int32 OS_TimeBaseSet_Impl(const OS_object_token_t *token, uint32 start_time, uint32 interval_time);
 
 /*----------------------------------------------------------------
-   Function: OS_TimeBaseDelete_Impl
 
     Purpose: Free the OS resources associated with the time base
 
@@ -99,7 +94,6 @@ int32 OS_TimeBaseDelete_Impl(const OS_object_token_t *token);
 ****************************************************************************************/
 
 /*----------------------------------------------------------------
-   Function: OS_TimeBaseLock_Impl
 
     Purpose: Get exclusive access to the given timebase
              Add/remove of application callbacks is prevented
@@ -107,7 +101,6 @@ int32 OS_TimeBaseDelete_Impl(const OS_object_token_t *token);
 void OS_TimeBaseLock_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_TimeBaseLock_Impl
 
     Purpose: Release exclusive access to the given timebase
              Add/remove of application callbacks is allowed
@@ -115,7 +108,6 @@ void OS_TimeBaseLock_Impl(const OS_object_token_t *token);
 void OS_TimeBaseUnlock_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_TimeBaseGetInfo_Impl
 
     Purpose: Obtain the OS-specific time base information, if any
 
@@ -124,7 +116,6 @@ void OS_TimeBaseUnlock_Impl(const OS_object_token_t *token);
 int32 OS_TimeBaseGetInfo_Impl(const OS_object_token_t *token, OS_timebase_prop_t *timer_prop);
 
 /*----------------------------------------------------------------
-   Function: OS_TimeBase_CallbackThread
 
     Purpose: Implement the time base helper thread
              This is the context for providing application callbacks
@@ -132,7 +123,6 @@ int32 OS_TimeBaseGetInfo_Impl(const OS_object_token_t *token, OS_timebase_prop_t
 void OS_TimeBase_CallbackThread(osal_id_t timebase_id);
 
 /*----------------------------------------------------------------
-   Function: OS_Milli2Ticks
 
     Purpose: Convert milliseconds to ticks
  ------------------------------------------------------------------*/

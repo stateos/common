@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-countsem.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -43,7 +41,7 @@
 
 /*
  * Sanity checks on the user-supplied configuration
- * The relevent OS_MAX limit should be defined and greater than zero
+ * The relevant OS_MAX limit should be defined and greater than zero
  */
 #if !defined(OS_MAX_COUNT_SEMAPHORES) || (OS_MAX_COUNT_SEMAPHORES <= 0)
 #error "osconfig.h must define OS_MAX_COUNT_SEMAPHORES to a valid value"
@@ -66,8 +64,6 @@ OS_count_sem_internal_record_t OS_count_sem_table[LOCAL_NUM_OBJECTS];
 
 /*----------------------------------------------------------------
  *
- * Function: OS_CountSemAPI_Init
- *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Init function for OS-independent layer
  *
@@ -76,11 +72,9 @@ int32 OS_CountSemAPI_Init(void)
 {
     memset(OS_count_sem_table, 0, sizeof(OS_count_sem_table));
     return OS_SUCCESS;
-} /* end OS_CountSemAPI_Init */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_CountSemCreate
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -113,12 +107,9 @@ int32 OS_CountSemCreate(osal_id_t *sem_id, const char *sem_name, uint32 sem_init
     }
 
     return return_code;
-
-} /* end OS_CountSemCreate */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_CountSemDelete
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -139,12 +130,9 @@ int32 OS_CountSemDelete(osal_id_t sem_id)
     }
 
     return return_code;
-
-} /* end OS_CountSemDelete */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_CountSemGive
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -163,12 +151,9 @@ int32 OS_CountSemGive(osal_id_t sem_id)
     }
 
     return return_code;
-
-} /* end OS_CountSemGive */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_CountSemTake
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -187,11 +172,9 @@ int32 OS_CountSemTake(osal_id_t sem_id)
     }
 
     return return_code;
-} /* end OS_CountSemTake */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_CountSemTimedWait
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -210,11 +193,9 @@ int32 OS_CountSemTimedWait(osal_id_t sem_id, uint32 msecs)
     }
 
     return return_code;
-} /* end OS_CountSemTimedWait */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_CountSemGetIdByName
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -231,11 +212,9 @@ int32 OS_CountSemGetIdByName(osal_id_t *sem_id, const char *sem_name)
     return_code = OS_ObjectIdFindByName(LOCAL_OBJID_TYPE, sem_name, sem_id);
 
     return return_code;
-} /* end OS_CountSemGetIdByName */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_CountSemGetInfo
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -267,4 +246,4 @@ int32 OS_CountSemGetInfo(osal_id_t sem_id, OS_count_sem_prop_t *count_prop)
     }
 
     return return_code;
-} /* end OS_CountSemGetInfo */
+}

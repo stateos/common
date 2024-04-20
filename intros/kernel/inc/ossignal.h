@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.03.2023
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -38,8 +38,8 @@
 
 #define SIG_LIMIT     (sizeof(unsigned) * CHAR_BIT)
 
-#define SIGSET(signo) (((signo) < SIG_LIMIT) ? 1U << (signo) : 0U) // signal mask from the given signal number
-#define sigAll        (0U-1)                                       // signal mask for all signals
+#define SIGSET(signo) (((signo) < (SIG_LIMIT)) ? 1U << (signo) : 0U) // signal mask from the given signal number
+#define sigAll        ( 0U-1 )                                       // signal mask for all signals
 
 /******************************************************************************
  *

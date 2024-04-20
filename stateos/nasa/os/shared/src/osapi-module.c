@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-module.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -48,7 +46,7 @@
 
 /*
  * Sanity checks on the user-supplied configuration
- * The relevent OS_MAX limit should be defined and greater than zero
+ * The relevant OS_MAX limit should be defined and greater than zero
  */
 #if !defined(OS_MAX_MODULES) || (OS_MAX_MODULES <= 0)
 #error "osconfig.h must define OS_MAX_MODULES to a valid value"
@@ -86,8 +84,6 @@ extern OS_static_symbol_record_t OS_STATIC_SYMTABLE_SOURCE[];
 
 /*----------------------------------------------------------------
  *
- * Function: OS_SymbolLookup_Static
- *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Checks for a symbol name in the static symbol table
  *
@@ -120,11 +116,9 @@ int32 OS_SymbolLookup_Static(cpuaddr *SymbolAddress, const char *SymbolName, con
     }
 
     return return_code;
-} /* end OS_SymbolLookup_Static */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ModuleLoad_Static
  *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Checks for a module name in the static symbol table
@@ -153,15 +147,13 @@ int32 OS_ModuleLoad_Static(const char *ModuleName)
     }
 
     return return_code;
-} /* end OS_ModuleLoad_Static */
+}
 
 /****************************************************************************************
                                    Module API
  ***************************************************************************************/
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ModuleAPI_Init
  *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Init function for OS-independent layer
@@ -171,11 +163,9 @@ int32 OS_ModuleAPI_Init(void)
 {
     memset(OS_module_table, 0, sizeof(OS_module_table));
     return OS_SUCCESS;
-} /* end OS_ModuleAPI_Init */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ModuleLoad
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -263,13 +253,10 @@ int32 OS_ModuleLoad(osal_id_t *module_id, const char *module_name, const char *f
         return_code = OS_ObjectIdFinalizeNew(return_code, &token, module_id);
     }
 
-    return (return_code);
-
-} /* end OS_ModuleLoad */
+    return return_code;
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ModuleUnload
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -301,11 +288,9 @@ int32 OS_ModuleUnload(osal_id_t module_id)
     }
 
     return return_code;
-} /* end OS_ModuleUnload */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ModuleInfo
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -338,12 +323,9 @@ int32 OS_ModuleInfo(osal_id_t module_id, OS_module_prop_t *module_prop)
     }
 
     return return_code;
-
-} /* end OS_ModuleInfo */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SymbolLookup
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -361,9 +343,9 @@ int32 OS_SymbolLookup(cpuaddr *SymbolAddress, const char *SymbolName)
     OS_CHECK_POINTER(SymbolName);
 
     /*
-     * attempt to find the symbol in the global symbol table.
+     * attempt to find the symbol in the symbol table
      */
-    return_code = OS_GlobalSymbolLookup_Impl(SymbolAddress, SymbolName);
+    return_code = OS_SymbolLookup_Impl(SymbolAddress, SymbolName);
 
     /*
      * If the OS call did not find the symbol or the loader is
@@ -383,13 +365,10 @@ int32 OS_SymbolLookup(cpuaddr *SymbolAddress, const char *SymbolName)
         }
     }
 
-    return (return_code);
-
-} /* end OS_SymbolLookup */
+    return return_code;
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_ModuleSymbolLookup
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -432,13 +411,10 @@ int32 OS_ModuleSymbolLookup(osal_id_t module_id, cpuaddr *symbol_address, const 
         OS_ObjectIdRelease(&token);
     }
 
-    return (return_code);
-
-} /* end OS_ModuleSymbolLookup */
+    return return_code;
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SymbolTableDump
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -459,7 +435,7 @@ int32 OS_SymbolTableDump(const char *filename, size_t SizeLimit)
     return_code = OS_TranslatePath(filename, translated_path);
     if (return_code != OS_SUCCESS)
     {
-        return (return_code);
+        return return_code;
     }
 
     /*
@@ -474,13 +450,12 @@ int32 OS_SymbolTableDump(const char *filename, size_t SizeLimit)
     return_code = OS_ObjectIdTransactionInit(OS_LOCK_MODE_GLOBAL, LOCAL_OBJID_TYPE, &token);
     if (return_code != OS_SUCCESS)
     {
-        return (return_code);
+        return return_code;
     }
 
     return_code = OS_SymbolTableDump_Impl(translated_path, SizeLimit);
 
     OS_ObjectIdTransactionCancel(&token);
 
-    return (return_code);
-
-} /* end OS_SymbolTableDump */
+    return return_code;
+}

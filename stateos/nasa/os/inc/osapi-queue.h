@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -105,7 +103,7 @@ int32 OS_QueueDelete(osal_id_t queue_id);
  * @retval #OS_SUCCESS @copybrief OS_SUCCESS
  * @retval #OS_ERR_INVALID_ID if the given ID does not exist
  * @retval #OS_INVALID_POINTER if a pointer passed in is NULL
- * @retval #OS_QUEUE_EMPTY if the Queue has no messages on it to be recieved
+ * @retval #OS_QUEUE_EMPTY if the Queue has no messages on it to be received
  * @retval #OS_QUEUE_TIMEOUT if the timeout was OS_PEND and the time expired
  * @retval #OS_QUEUE_INVALID_SIZE if the size copied from the queue was not correct
  * @retval #OS_ERROR if the OS call returns an unexpected error @covtest

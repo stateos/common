@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-timebase.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -50,7 +48,7 @@
 
 /*
  * Sanity checks on the user-supplied configuration
- * The relevent OS_MAX limit should be defined and greater than zero
+ * The relevant OS_MAX limit should be defined and greater than zero
  */
 #if !defined(OS_MAX_TIMEBASES) || (OS_MAX_TIMEBASES <= 0)
 #error "osconfig.h must define OS_MAX_TIMEBASES to a valid value"
@@ -76,8 +74,6 @@ OS_timebase_internal_record_t OS_timebase_table[OS_MAX_TIMEBASES];
 
 /*----------------------------------------------------------------
  *
- * Function: OS_TimeBaseAPI_Init
- *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Init function for OS-independent layer
  *
@@ -86,11 +82,9 @@ int32 OS_TimeBaseAPI_Init(void)
 {
     memset(OS_timebase_table, 0, sizeof(OS_timebase_table));
     return OS_SUCCESS;
-} /* end OS_TimeBaseAPI_Init */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseCreate
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -151,11 +145,9 @@ int32 OS_TimeBaseCreate(osal_id_t *timer_id, const char *timebase_name, OS_Timer
     }
 
     return return_code;
-} /* end OS_TimeBaseCreate */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseSet
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -212,11 +204,9 @@ int32 OS_TimeBaseSet(osal_id_t timer_id, uint32 start_time, uint32 interval_time
     }
 
     return return_code;
-} /* end OS_TimeBaseSet */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseDelete
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -248,11 +238,9 @@ int32 OS_TimeBaseDelete(osal_id_t timer_id)
     }
 
     return return_code;
-} /* end OS_TimeBaseDelete */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseGetIdByName
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -280,11 +268,9 @@ int32 OS_TimeBaseGetIdByName(osal_id_t *timer_id, const char *timebase_name)
     return_code = OS_ObjectIdFindByName(OS_OBJECT_TYPE_OS_TIMEBASE, timebase_name, timer_id);
 
     return return_code;
-} /* end OS_TimeBaseGetIdByName */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseGetInfo
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -331,11 +317,9 @@ int32 OS_TimeBaseGetInfo(osal_id_t timebase_id, OS_timebase_prop_t *timebase_pro
     }
 
     return return_code;
-} /* end OS_TimeBaseGetInfo */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TimeBaseGetFreeRun
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -359,11 +343,9 @@ int32 OS_TimeBaseGetFreeRun(osal_id_t timebase_id, uint32 *freerun_val)
     }
 
     return return_code;
-} /* end OS_TimeBaseGetFreeRun */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TimeBase_CallbackThread
  *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Implementation of the time base "helper thread"
@@ -525,11 +507,9 @@ void OS_TimeBase_CallbackThread(osal_id_t timebase_id)
 
         OS_TimeBaseUnlock_Impl(&token);
     }
-} /* end OS_TimeBase_CallbackThread */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_Milli2Ticks
  *
  *  Purpose: Internal helper to convert milliseconds to ticks
  *
@@ -555,4 +535,4 @@ int32 OS_Milli2Ticks(uint32 milli_seconds, int *ticks)
     }
 
     return return_code;
-} /* end OS_Milli2Ticks */
+}

@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     startup.h
 @author   Rajmund Szymanski
-@date     11.12.2019
+@date     08.05.2023
 @brief    Startup file header for cosmic c compiler.
 *******************************************************************************/
 
@@ -11,8 +11,8 @@
  Additional definitions
 *******************************************************************************/
 
-#define __ALIAS(function) __WEAK
-#define __CAST(sp)        (void(*)(void))(sp)
+#define __WEAK_ALIAS(function)   __WEAK
+#define __CAST(sp)                (void(*)(void))(sp)
 
 #ifndef __VECTOR_TABLE
 #define __VECTOR_TABLE            _Vectors

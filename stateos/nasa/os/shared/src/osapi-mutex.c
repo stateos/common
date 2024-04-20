@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-mutex.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -48,7 +46,7 @@
 
 /*
  * Sanity checks on the user-supplied configuration
- * The relevent OS_MAX limit should be defined and greater than zero
+ * The relevant OS_MAX limit should be defined and greater than zero
  */
 #if !defined(OS_MAX_MUTEXES) || (OS_MAX_MUTEXES <= 0)
 #error "osconfig.h must define OS_MAX_MUTEXES to a valid value"
@@ -71,8 +69,6 @@ OS_mutex_internal_record_t OS_mutex_table[LOCAL_NUM_OBJECTS];
 
 /*----------------------------------------------------------------
  *
- * Function: OS_MutexAPI_Init
- *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Init function for OS-independent layer
  *
@@ -81,11 +77,9 @@ int32 OS_MutexAPI_Init(void)
 {
     memset(OS_mutex_table, 0, sizeof(OS_mutex_table));
     return OS_SUCCESS;
-} /* end OS_MutexAPI_Init */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_MutSemCreate
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -118,12 +112,9 @@ int32 OS_MutSemCreate(osal_id_t *sem_id, const char *sem_name, uint32 options)
     }
 
     return return_code;
-
-} /* end OS_MutSemCreate */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_MutSemDelete
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -144,12 +135,9 @@ int32 OS_MutSemDelete(osal_id_t sem_id)
     }
 
     return return_code;
-
-} /* end OS_MutSemDelete */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_MutSemGive
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -182,12 +170,9 @@ int32 OS_MutSemGive(osal_id_t sem_id)
     }
 
     return return_code;
-
-} /* end OS_MutSemGive */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_MutSemTake
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -214,12 +199,9 @@ int32 OS_MutSemTake(osal_id_t sem_id)
     }
 
     return return_code;
-
-} /* end OS_MutSemTake */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_MutSemGetIdByName
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -236,12 +218,9 @@ int32 OS_MutSemGetIdByName(osal_id_t *sem_id, const char *sem_name)
     return_code = OS_ObjectIdFindByName(LOCAL_OBJID_TYPE, sem_name, sem_id);
 
     return return_code;
-
-} /* end OS_MutSemGetIdByName */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_MutSemGetInfo
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -272,5 +251,4 @@ int32 OS_MutSemGetInfo(osal_id_t sem_id, OS_mut_sem_prop_t *mut_prop)
     }
 
     return return_code;
-
-} /* end OS_MutSemGetInfo */
+}

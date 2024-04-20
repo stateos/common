@@ -1,22 +1,20 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * \file
@@ -77,7 +75,7 @@
 enum
 {
     OS_FILESYS_TYPE_UNKNOWN = 0,   /**< Unspecified or unknown file system type */
-    OS_FILESYS_TYPE_FS_BASED,      /**< A emulated virtual file system that maps to another file system location */
+    OS_FILESYS_TYPE_FS_BASED,      /**< An emulated virtual file system that maps to another file system location */
     OS_FILESYS_TYPE_NORMAL_DISK,   /**< A traditional disk drive or something that emulates one */
     OS_FILESYS_TYPE_VOLATILE_DISK, /**< A temporary/volatile file system or RAM disk */
     OS_FILESYS_TYPE_MTD,           /**< A "memory technology device" such as FLASH or EEPROM */
@@ -119,7 +117,6 @@ extern OS_filesys_internal_record_t OS_filesys_table[OS_MAX_FILE_SYSTEMS];
 int32 OS_FileSysAPI_Init(void);
 
 /*----------------------------------------------------------------
-   Function: OS_FileSysStartVolume_Impl
 
     Purpose: Starts/Registers a file system on the target
 
@@ -128,7 +125,6 @@ int32 OS_FileSysAPI_Init(void);
 int32 OS_FileSysStartVolume_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_FileSysStopVolume_Impl
 
     Purpose: Stops/Unregisters a file system on the target
 
@@ -137,7 +133,6 @@ int32 OS_FileSysStartVolume_Impl(const OS_object_token_t *token);
 int32 OS_FileSysStopVolume_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_FileSysFormatVolume_Impl
 
     Purpose: Formats a file system on the target to prepare it for use
 
@@ -146,7 +141,6 @@ int32 OS_FileSysStopVolume_Impl(const OS_object_token_t *token);
 int32 OS_FileSysFormatVolume_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_FileSysCheckVolume_Impl
 
     Purpose: Checks the drives and optionally repairs inconsistencies
 
@@ -155,7 +149,6 @@ int32 OS_FileSysFormatVolume_Impl(const OS_object_token_t *token);
 int32 OS_FileSysCheckVolume_Impl(const OS_object_token_t *token, bool repair);
 
 /*----------------------------------------------------------------
-   Function: OS_FileSysStatVolume_Impl
 
     Purpose: Returns stats about a volume
 
@@ -164,7 +157,6 @@ int32 OS_FileSysCheckVolume_Impl(const OS_object_token_t *token, bool repair);
 int32 OS_FileSysStatVolume_Impl(const OS_object_token_t *token, OS_statvfs_t *result);
 
 /*----------------------------------------------------------------
-   Function: OS_FileSysMountVolume_Impl
 
     Purpose: mounts a drive
 
@@ -173,7 +165,6 @@ int32 OS_FileSysStatVolume_Impl(const OS_object_token_t *token, OS_statvfs_t *re
 int32 OS_FileSysMountVolume_Impl(const OS_object_token_t *token);
 
 /*----------------------------------------------------------------
-   Function: OS_FileSysUnmountVolume_Impl
 
     Purpose: unmounts a drive.
 

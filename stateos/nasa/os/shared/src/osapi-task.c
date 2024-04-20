@@ -1,25 +1,23 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file     osapi-task.c
+ * \file
  * \ingroup  shared
  * \author   joseph.p.hickey@nasa.gov
  *
@@ -49,7 +47,7 @@
 
 /*
  * Sanity checks on the user-supplied configuration
- * The relevent OS_MAX limit should be defined and greater than zero
+ * The relevant OS_MAX limit should be defined and greater than zero
  */
 #if !defined(OS_MAX_TASKS) || (OS_MAX_TASKS <= 0)
 #error "osconfig.h must define OS_MAX_TASKS to a valid value"
@@ -64,8 +62,6 @@ enum
 OS_task_internal_record_t OS_task_table[LOCAL_NUM_OBJECTS];
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskPrepare
  *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Helper function for registering new tasks in the global database.
@@ -113,11 +109,9 @@ static int32 OS_TaskPrepare(osal_id_t task_id, osal_task_entry *entrypt)
     }
 
     return return_code;
-} /* end OS_TaskPrepare */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskEntryPoint
  *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           The entry point for all OSAL tasks
@@ -141,7 +135,7 @@ void OS_TaskEntryPoint(osal_id_t task_id)
 
     /* If the function returns, treat as a normal exit and do the proper cleanup */
     OS_TaskExit();
-} /* end OS_TaskEntryPoint */
+}
 
 /*
  *********************************************************************************
@@ -151,8 +145,6 @@ void OS_TaskEntryPoint(osal_id_t task_id)
 
 /*----------------------------------------------------------------
  *
- * Function: OS_TaskAPI_Init
- *
  *  Purpose: Local helper routine, not part of OSAL API.
  *           Init function for OS-independent layer
  *
@@ -161,11 +153,9 @@ int32 OS_TaskAPI_Init(void)
 {
     memset(OS_task_table, 0, sizeof(OS_task_table));
     return OS_SUCCESS;
-} /* end OS_TaskAPI_Init */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskCreate
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -202,6 +192,9 @@ int32 OS_TaskCreate(osal_id_t *task_id, const char *task_name, osal_task_entry f
         task->entry_function_pointer = function_pointer;
         task->stack_pointer          = stack_pointer;
 
+        /* Add default flags */
+        flags |= OS_ADD_TASK_FLAGS;
+
         /* Now call the OS-specific implementation.  This reads info from the task table. */
         return_code = OS_TaskCreate_Impl(&token, flags);
 
@@ -210,11 +203,9 @@ int32 OS_TaskCreate(osal_id_t *task_id, const char *task_name, osal_task_entry f
     }
 
     return return_code;
-} /* end OS_TaskCreate */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskDelete
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -251,11 +242,9 @@ int32 OS_TaskDelete(osal_id_t task_id)
     }
 
     return return_code;
-} /* end OS_TaskDelete */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskExit
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -279,11 +268,9 @@ void OS_TaskExit()
     OS_TaskExit_Impl();
 
     /* Impl function never returns */
-} /* end OS_TaskExit */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskDelay
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -293,11 +280,9 @@ int32 OS_TaskDelay(uint32 millisecond)
 {
     /* just call the implementation */
     return OS_TaskDelay_Impl(millisecond);
-} /* end OS_TaskDelay */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskSetPriority
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -327,11 +312,9 @@ int32 OS_TaskSetPriority(osal_id_t task_id, osal_priority_t new_priority)
     }
 
     return return_code;
-} /* end OS_TaskSetPriority */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskGetId
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -343,12 +326,10 @@ osal_id_t OS_TaskGetId(void)
 
     task_id = OS_TaskGetId_Impl();
 
-    return (task_id);
-} /* end OS_TaskGetId */
+    return task_id;
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskGetIdByName
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -365,12 +346,9 @@ int32 OS_TaskGetIdByName(osal_id_t *task_id, const char *task_name)
     return_code = OS_ObjectIdFindByName(LOCAL_OBJID_TYPE, task_name, task_id);
 
     return return_code;
-
-} /* end OS_TaskGetIdByName */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskGetInfo
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -409,12 +387,9 @@ int32 OS_TaskGetInfo(osal_id_t task_id, OS_task_prop_t *task_prop)
     }
 
     return return_code;
-
-} /* end OS_TaskGetInfo */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskInstallDeleteHandler
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -442,11 +417,9 @@ int32 OS_TaskInstallDeleteHandler(osal_task_entry function_pointer)
     }
 
     return return_code;
-} /* end OS_TaskInstallDeleteHandler */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_TaskFindIdBySystemData
  *
  *  Purpose: Implemented per public OSAL API
  *           See description in API and header file for detail
@@ -477,4 +450,4 @@ int32 OS_TaskFindIdBySystemData(osal_id_t *task_id, const void *sysdata, size_t 
     }
 
     return return_code;
-} /* end OS_TaskFindIdBySystemData */
+}

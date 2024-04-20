@@ -1,28 +1,26 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
- * \file   os-impl-posix-gettime.c
+ * \file
  * \author joseph.p.hickey@nasa.gov
  *
- * This file contains implementation for OS_GetTime() and OS_SetTime()
+ * This file contains implementation for OS_GetLocalTime() and OS_SetLocalTime()
  * that map to the C library clock_gettime() and clock_settime() calls.
  * This should be usable on any OS that supports those standard calls.
  * The OS-specific code must \#include the correct headers that define the
@@ -63,8 +61,6 @@
 
 /*----------------------------------------------------------------
  *
- * Function: OS_GetLocalTime_Impl
- *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
  *
@@ -89,11 +85,9 @@ int32 OS_GetLocalTime_Impl(OS_time_t *time_struct)
     }
 
     return ReturnCode;
-} /* end OS_GetLocalTime_Impl */
+}
 
 /*----------------------------------------------------------------
- *
- * Function: OS_SetLocalTime_Impl
  *
  *  Purpose: Implemented per internal OSAL API
  *           See prototype for argument/return detail
@@ -120,5 +114,4 @@ int32 OS_SetLocalTime_Impl(const OS_time_t *time_struct)
     }
 
     return ReturnCode;
-
-} /* end OS_SetLocalTime_Impl */
+}

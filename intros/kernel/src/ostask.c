@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.c
     @author  Rajmund Szymanski
-    @date    15.03.2023
+    @date    01.04.2023
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -152,6 +152,33 @@ void priv_tsk_reset( tsk_t *tsk )
 }
 
 /* -------------------------------------------------------------------------- */
+void tsk_startExclusive( tsk_t *tsk )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *nxt;
+
+	tsk_start(tsk);
+
+	port_set_lock();
+	
+	while ((nxt = tsk->hdr.next) != tsk)
+	{
+		if (nxt->hdr.id == ID_READY)
+		{
+			priv_tsk_reset(nxt);
+			core_tsk_remove(nxt);
+		}
+		else
+	//	if (nxt->hdr.id == ID_TIMER)
+		{
+			core_tmr_remove((tmr_t *)nxt);
+		}
+	}
+
+	core_tsk_switch();
+}
+
+/* -------------------------------------------------------------------------- */
 void tsk_stop( void )
 /* -------------------------------------------------------------------------- */
 {
@@ -170,10 +197,38 @@ void tsk_reset( tsk_t *tsk )
 
 	sys_lock();
 	{
-		priv_tsk_reset(tsk);
-		core_tsk_remove(tsk);
-		if (tsk == System.cur)
-			core_ctx_switch();
+		if (tsk->hdr.id != ID_STOPPED)  // only active tasks can be reseted
+		{
+			priv_tsk_reset(tsk);
+			core_tsk_remove(tsk);
+			if (tsk == System.cur)
+				core_ctx_switch();
+		}
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+void tsk_killAll( void )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk;
+	
+	sys_lock();
+	{
+		while ((tsk = System.cur->hdr.next) != System.cur)
+		{
+			if (tsk->hdr.id == ID_READY)
+			{
+				priv_tsk_reset(tsk);
+				core_tsk_remove(tsk);
+			}
+			else
+		//	if (tsk->hdr.id == ID_TIMER)
+			{
+				core_tmr_remove((tmr_t *)tsk);
+			}
+		}
 	}
 	sys_unlock();
 }
@@ -199,6 +254,17 @@ void tsk_flip( fun_t *proc )
 	priv_tsk_reset(System.cur);
 	core_ctx_init(System.cur);
 	core_tsk_switch();
+}
+
+/* -------------------------------------------------------------------------- */
+void tsk_main( fun_t *proc )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_killAll();
+	if (System.cur == &MAIN)
+		tsk_flip(proc);
+	tsk_startFrom(&MAIN, proc);
+	tsk_stop();
 }
 
 /* -------------------------------------------------------------------------- */
