@@ -1,33 +1,28 @@
-/*
- *  NASA Docket No. GSC-18,370-1, and identified as "Operating System Abstraction Layer"
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
  *
- *  Copyright (c) 2019 United States Government as represented by
- *  the Administrator of the National Aeronautics and Space Administration.
- *  All Rights Reserved.
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /*
- * File:     bsp_start.c
- * \ingroup  stateos
- * \author   Rajmund Szymanski
+ * File:  bsp_start.c
  *
+ * Purpose:
+ *   OSAL BSP main entry point.
  */
 
-/*
-**  Include Files
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include "os.h"
@@ -55,7 +50,7 @@ void OS_BSP_Init(void)
     OS_BSP_impl_Global.AccessMutex = mtx_create(mtxErrorCheck + mtxPrioInherit, 0);
     if (OS_BSP_impl_Global.AccessMutex == NULL)
     {
-        BSP_DEBUG("mutex create failed\n");
+        BSP_DEBUG("global access mutex create failed\n");
     }
 }
 
@@ -70,7 +65,7 @@ void OS_BSP_Lock_Impl(void)
     status = mtx_lock(OS_BSP_impl_Global.AccessMutex);
     if (status != E_SUCCESS)
     {
-        BSP_DEBUG("mutex lock errno: %d\n", status);
+        BSP_DEBUG("global access mutex lock error\n");
     }
 }
 
@@ -85,7 +80,7 @@ void OS_BSP_Unlock_Impl(void)
     status = mtx_unlock(OS_BSP_impl_Global.AccessMutex);
     if (status != E_SUCCESS)
     {
-        BSP_DEBUG("mutex unlock errno: %d\n", status);
+        BSP_DEBUG("global access mutex unlock error\n");
     }
 }
 
@@ -121,7 +116,7 @@ int OS_BSP_Main(void)
      * Perform BSP-specific initialization
      * Currently BSP-specific initialization is performed in the API_Init function
      */
-    // OS_BSP_Init();
+//  OS_BSP_Init();
 
     /*
      * Call application specific entry point.

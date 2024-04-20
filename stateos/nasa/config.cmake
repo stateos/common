@@ -18,6 +18,7 @@ target_sources(stateos-nasa
 	${CMAKE_CURRENT_LIST_DIR}/os/shared/src/osapi-binsem.c
 	${CMAKE_CURRENT_LIST_DIR}/os/shared/src/osapi-clock.c
 	${CMAKE_CURRENT_LIST_DIR}/os/shared/src/osapi-common.c
+	${CMAKE_CURRENT_LIST_DIR}/os/shared/src/osapi-condvar.c
 	${CMAKE_CURRENT_LIST_DIR}/os/shared/src/osapi-countsem.c
 	${CMAKE_CURRENT_LIST_DIR}/os/shared/src/osapi-debug.c
 	${CMAKE_CURRENT_LIST_DIR}/os/shared/src/osapi-dir.c
@@ -41,21 +42,23 @@ target_sources(stateos-nasa
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-clock.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-common.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-console.c
+	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-condvar.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-countsem.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-errors.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-idmap.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-mutex.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-dir.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-file.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-filesys.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-heap.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-io.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-loader.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-network.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-select.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-shell.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-sockets.c
-	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-symtab.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-condvar.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-dir.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-file.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-filesys.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-heap.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-io.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-loader.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-network.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-select.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-shell.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-sockets.c
+#	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-no-symtab.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-queue.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-task.c
 	${CMAKE_CURRENT_LIST_DIR}/os/stateos/src/os-impl-timebase.c
