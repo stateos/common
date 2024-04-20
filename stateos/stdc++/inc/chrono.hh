@@ -33,7 +33,11 @@
 #define __STATEOS_CHRONO_HH
 
 #include "inc/osclock.h"
+#if __GNUC__ < 12
 #include <chrono>
+#else
+#include <bits/chrono.h>
+#endif
 
 namespace std {
 namespace chrono {

@@ -36,20 +36,6 @@
 #include "inc/osmutex.h"
 #include "inc/osonceflag.h"
 #include "inc/osconditionvariable.h"
-#include "inc/critical_section.hh"
-#include "inc/chrono.hh"
-
-#if !__cpp_lib_atomic_wait || !__cpp_aligned_new
-#include "inc/barrier.hh"
-#endif
-
-#if !__cpp_lib_atomic_wait
-#include "inc/latch.hh"
-#endif
-
-#if !__cpp_lib_atomic_wait && !_GLIBCXX_HAVE_POSIX_SEMAPHORE
-#include "inc/semaphore.hh"
-#endif
 
 //-----------------------------------------------------------------------------
 
@@ -67,6 +53,7 @@
 #define __GTHREADS_CXX0X 1
 #define __GTHREAD_HAS_COND 1
 #define  _GLIBCXX_HAVE_TLS 1
+#define  _GLIBCXX_THREAD_IMPL 1
 #define  _GLIBCXX_USE_SCHED_YIELD 1
 #define  _GTHREAD_USE_MUTEX_TIMEDLOCK 1
 
@@ -88,6 +75,9 @@ typedef ostime_t __gthread_time_t;
 #define __GTHREAD_MUTEX_INIT           _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0)
 #define __GTHREAD_RECURSIVE_MUTEX_INIT _MTX_INIT(mtxPrioInherit|mtxRecursive, 0)
 #define __GTHREAD_COND_INIT            _CND_INIT()
+
+#include "inc/critical_section.hh"
+#include "inc/chrono.hh"
 
 //-----------------------------------------------------------------------------
 extern "C"
@@ -299,6 +289,20 @@ int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
 
 #endif//_LIBOBJC
 } // extern "C"
+//-----------------------------------------------------------------------------
+
+#if !__cpp_lib_atomic_wait || !__cpp_aligned_new
+#include "inc/barrier.hh"
+#endif
+
+#if !__cpp_lib_atomic_wait
+#include "inc/latch.hh"
+#endif
+
+#if !__cpp_lib_atomic_wait && !_GLIBCXX_HAVE_POSIX_SEMAPHORE
+#include "inc/semaphore.hh"
+#endif
+
 //-----------------------------------------------------------------------------
 
 #endif //_GLIBCXX_GCC_GTHR_STATEOS_H
