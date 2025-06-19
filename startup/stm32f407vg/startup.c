@@ -2,7 +2,7 @@
 
    @file    startup.c
    @author  Rajmund Szymanski
-   @date    08.05.2023
+   @date    07.08.2024
    @brief   Startup file for STM32F407VG uC
 
  ******************************************************************************
@@ -25,6 +25,7 @@
 
 #define __PROGRAM_START
 #include "stm32f4xx.h"
+#include <stddef.h>
 
 /*******************************************************************************
  Configuration of stacks
@@ -56,13 +57,36 @@ void Fault_Handler( void )
 }
 
 /* Default _exit handler */
-__WEAK
+__WEAK __NO_RETURN
 void _exit( int code )
 {
 	(void) code;
 
 	/* Go into an infinite loop */
 	for (;;);
+}
+
+/*******************************************************************************
+ Default memset, memcpy procedures
+*******************************************************************************/
+
+__WEAK
+void* memcpy(void *dst, const void *src, size_t len)
+{
+	char *mem = dst;
+	const char *ptr = src;
+	while (len-- > 0)
+		mem[len] = ptr[len];
+	return dst;
+}
+
+__WEAK
+void* memset(void *dst, int val, size_t len)
+{
+	char *mem = dst;
+	while (len-- > 0)
+		mem[len] = (char)val;
+	return dst;
 }
 
 /*******************************************************************************
