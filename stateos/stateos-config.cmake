@@ -90,4 +90,3 @@ endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/stdc++/config.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmsis/config.cmake)
-include(${CMAKE_CURRENT_LIST_DIR}/nasa/config.cmake)

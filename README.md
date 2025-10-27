@@ -6,7 +6,6 @@
 	- with std::thread support
 	- with CMSIS RTOS support
 	- with CMSIS RTOS2 support
-	- with NASA OSAL support
 - [IntrOS](https://github.com/stateos/IntrOS)
 - [DemOS](https://github.com/stateos/DemOS)
 - CMSIS RTOS
