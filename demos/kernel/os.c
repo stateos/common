@@ -34,21 +34,25 @@
 /* --------------------------------------------------------------------------------------------- */
 
 static
-tsk_t  MAIN = { { 0, 0 }, ID_RIP, 0, NULL, &MAIN };
+tsk_t MAIN = { { 0, 0 }, ID_RIP, 0, NULL, &MAIN };
 
-tsk_t *sys_current = &MAIN;
+sys_t sys = { &MAIN, false };
 
 /* -------------------------------------------------------------------------- */
 
 void sys_start( void )
 {
-	tsk_t *current = sys_current;
+	tsk_t *current = sys.current;
 
 	sys_init();
 
 	for (;;)
 	{
-		sys_current = current = current->next;
+		if (current->id != ID_RDY)
+			sys_resume();
+
+		if (!sys.suspended)
+			sys.current = current = current->next;
 
 		if (current->id == ID_RDY)
 		{

@@ -81,8 +81,8 @@ typedef void * tag_t;
 
 #define TSK_CONCATENATE(tag)            Line ## tag
 #define TSK_LABEL(tag)                  TSK_CONCATENATE(tag)
-#define TSK_STATE(tag)                  sys_current->state = && TSK_LABEL(tag)
-#define TSK_BEGIN()                     if (sys_current->state) goto *sys_current->state
+#define TSK_STATE(tag)                  sys.current->state = && TSK_LABEL(tag)
+#define TSK_BEGIN()                     if (sys.current->state) goto *sys.current->state
 #define TSK_END()
 
 #else//!USE_GOTO
@@ -92,8 +92,8 @@ typedef void * tag_t;
 typedef intptr_t tag_t;
 
 #define TSK_LABEL(tag)                  /* falls through */ case tag
-#define TSK_STATE(tag)                  sys_current->state = tag
-#define TSK_BEGIN()                     switch (sys_current->state) { case 0:
+#define TSK_STATE(tag)                  sys.current->state = tag
+#define TSK_BEGIN()                     switch (sys.current->state) { case 0:
 #define TSK_END()                       }
 
 #endif//USE_GOTO
@@ -112,6 +112,8 @@ typedef struct __tmr { cnt_t start; cnt_t delay; } tmr_t;
 typedef enum   __tid { ID_RIP = 0, ID_RDY, ID_DLY } tid_t;
 // definition of task structure
 typedef struct __tsk { tmr_t tmr; tid_t id; tag_t state; fun_t *function; struct __tsk *next; } tsk_t;
+// definition of system
+typedef struct __sys { tsk_t *current; bool suspended; } sys_t;
 
 // timer initializer
 #define TMR_INIT()                      { 0, 0 }
@@ -119,9 +121,12 @@ typedef struct __tsk { tmr_t tmr; tid_t id; tag_t state; fun_t *function; struct
 #define TSK_INIT(fun)                   { TMR_INIT(), ID_RIP, 0, fun, (tsk_t*)NULL }
 
 extern
-tsk_t * sys_current;                 // system variable - current task
+sys_t   sys;                         // system struct
 void    tsk_start( tsk_t* );         // system function - make the task ready to execute
 void    sys_start( void );           // system function - start the scheduler
+
+#define sys_suspend()              do { sys.suspended = true;                                                      } while(0)
+#define sys_resume()               do { sys.suspended = false;                                                     } while(0)
 
 /* -------------------------------------------------------------------------- */
 // define and initialize the task (tsk) with function (fun)
@@ -137,11 +142,11 @@ void    sys_start( void );           // system function - start the scheduler
                                         void tsk ## __fun( void )
 /* -------------------------------------------------------------------------- */
 // return the current task
-#define tsk_this()                    ( sys_current )
+#define tsk_this()                    ( sys.current )
 //alias
-#define SELF                          ( sys_current )
+#define SELF                          ( sys.current )
 // check whether the task (tsk) is the current task
-#define tsk_self(tsk)                 ( sys_current == (tsk) )
+#define tsk_self(tsk)                 ( sys.current == (tsk) )
 // check whether the task (tsk) is ready to execute
 #define tsk_ready(tsk)                ( (tsk)->id == ID_RDY )
 // check whether the task (tsk) has been stopped
@@ -163,8 +168,6 @@ void    sys_start( void );           // system function - start the scheduler
 #define tsk_waitUntil(cnd)         do { tsk_waitWhile(!(cnd));                                                     } while(0)
 // start new or restart previously stopped task (tsk) with function (fun)
 #define tsk_startFrom(tsk, fun)    do { if ((tsk)->id == ID_RIP) { (tsk)->function = (fun); tsk_start(tsk); }      } while(0)
-// stop all tasks and make task (tsk) ready to exclusive execution
-#define tsk_startExclusive(tsk)    do { sys_stop(); tsk_start(tsk); return;                                        } while(0)
 // wait while the task (tsk) is working
 #define tsk_join(tsk)              do { tsk_waitUntil((tsk)->id == ID_RIP);                                        } while(0)
 // start task (tsk) and wait for the end of execution of (tsk)
@@ -172,11 +175,11 @@ void    sys_start( void );           // system function - start the scheduler
 // start new or restart previously stopped task (tsk) with function (fun) and wait for the end of execution of (tsk)
 #define tsk_callFrom(tsk, fun)     do { tsk_startFrom(tsk, fun); tsk_join(tsk);                                    } while(0)
 // restart the current task from the initial state
-#define tsk_again()                do { sys_current->state = (tag_t)0; return;                                     } while(0)
+#define tsk_again()                do { sys.current->state = (tag_t)0; return;                                     } while(0)
 // stop the current task; it will no longer be executed
-#define tsk_stop()                 do { sys_current->id = ID_RIP; return;                                          } while(0)
+#define tsk_stop()                 do { sys.current->id = ID_RIP; return;                                          } while(0)
 // stop the current task; it will no longer be executed
-#define tsk_exit()                 do { sys_current->id = ID_RIP; return;                                          } while(0)
+#define tsk_exit()                 do { sys.current->id = ID_RIP; return;                                          } while(0)
 // stop the task (tsk); it will no longer be executed
 #define tsk_kill(tsk)              do { (tsk)->id = ID_RIP; if (tsk_self(tsk)) return;                             } while(0)
 // restart the task (tsk) from the initial state
@@ -186,15 +189,15 @@ void    sys_start( void );           // system function - start the scheduler
 // pass control to the next ready task
 #define tsk_yield()                do { TSK_YIELD(true);                                                           } while(0)
 // restart the current task with function (fun)
-#define tsk_flip(fun)              do { sys_current->function = (fun); tsk_again();                                } while(0)
+#define tsk_flip(fun)              do { sys.current->function = (fun); tsk_again();                                } while(0)
 // reset all tasks and restart system with main function proc
 #define tsk_main(fun)              do { sys_main(fun); return;                                                     } while(0)
 // delay execution of current task for given duration of time (dly)
-#define tsk_sleepFor(dly)          do { tmr_startFor(&sys_current->tmr, dly); tsk_yield();                         } while(0)
+#define tsk_sleepFor(dly)          do { tmr_startFor(&sys.current->tmr, dly); tsk_yield();                         } while(0)
 // delay execution of current task for given duration of time (dly) from the end of the previous countdown
-#define tsk_sleepNext(dly)         do { tmr_startNext(&sys_current->tmr, dly); tsk_yield();                        } while(0)
+#define tsk_sleepNext(dly)         do { tmr_startNext(&sys.current->tmr, dly); tsk_yield();                        } while(0)
 // delay execution of current task until given timepoint (tim)
-#define tsk_sleepUntil(tim)        do { tmr_startUntil(&sys_current->tmr, tim); tsk_yield();                       } while(0)
+#define tsk_sleepUntil(tim)        do { tmr_startUntil(&sys.current->tmr, tim); tsk_yield();                       } while(0)
 // delay indefinitely execution of current task
 #define tsk_sleep()                do { tsk_sleepFor(INFINITE);                                                    } while(0)
 // delay execution of current task for given duration of time (dly)
@@ -234,7 +237,7 @@ typedef tsk_t *mtx_t;
 #define OS_MTX(mtx)                     mtx_t mtx[] = { (tsk_t*)NULL }
 /* -------------------------------------------------------------------------- */
 // try to lock the mutex (mtx); return true if the mutex has been successfully locked
-#define mtx_take(mtx)                 ( *(mtx) ? false : ((*(mtx) = sys_current), true) )
+#define mtx_take(mtx)                 ( *(mtx) ? false : ((*(mtx) = sys.current), true) )
 // alias
 #define mtx_tryLock(mtx)                mtx_take(mtx)
 // wait for the released mutex (mtx) and lock it

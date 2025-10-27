@@ -341,7 +341,7 @@ struct Event : public __evt
 	int  waitFor  ( unsigned *_event, const T& _delay ) { return evt_waitFor  (this, _event, Clock::count(_delay)); }
 	template<typename T>
 	int  waitUntil( unsigned *_event, const T& _time )  { return evt_waitUntil(this, _event, Clock::until(_time)); }
-	int  wait     ( unsigned *_event )                  { return evt_wait     (this, _event); }
+	int  wait     ( unsigned *_event = nullptr )        { return evt_wait     (this, _event); }
 	void give     ( unsigned  _event )                  {        evt_give     (this, _event); }
 	void giveISR  ( unsigned  _event )                  {        evt_giveISR  (this, _event); }
 

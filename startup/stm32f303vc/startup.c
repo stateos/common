@@ -7,7 +7,7 @@
 
  ******************************************************************************
 
-   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2025 Rajmund Szymanski. All rights reserved.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,18 +23,12 @@
 
  ******************************************************************************/
 
-#define __PROGRAM_START
+#ifndef __PROGRAM_START
+#define __PROGRAM_START __main
+#endif
+
 #include <stm32f3xx.h>
 #include <stddef.h>
-
-/*******************************************************************************
- Specific definitions for the chip
-*******************************************************************************/
-
-#define   CCM_start 0x10000000
-#define   CCM_end   0x10002000
-#define   RAM_start 0x20000000
-#define   RAM_end   0x2000C000
 
 /*******************************************************************************
  Configuration of stacks
@@ -84,7 +78,7 @@ void* memcpy(void *dst, const void *src, size_t len)
 {
 	char *mem = dst;
 	const char *ptr = src;
-	while (len-- > 0)
+	while ((int)--len >= 0)
 		mem[len] = ptr[len];
 	return dst;
 }
@@ -93,7 +87,7 @@ __WEAK
 void* memset(void *dst, int val, size_t len)
 {
 	char *mem = dst;
-	while (len-- > 0)
+	while ((int)--len >= 0)
 		mem[len] = (char)val;
 	return dst;
 }
@@ -123,6 +117,7 @@ void* memset(void *dst, int val, size_t len)
 __WEAK __NO_RETURN
 void Reset_Handler( void )
 {
+	__set_MSP((uint32_t) __initial_msp);
 #if proc_stack_size > 0
 	/* Initialize the process stack pointer */
 	__set_PSP((uint32_t) __initial_sp);
@@ -137,7 +132,7 @@ void Reset_Handler( void )
 	SystemInit();
 #endif
 	/* Call the application's entry point */
-	__main();
+	__PROGRAM_START();
 }
 
 /*******************************************************************************

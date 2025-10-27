@@ -9,6 +9,7 @@ BUILD      ?= # build folder name
 GNUCC      ?= # toolchain path
 OPENOCD    := openocd
 STLINK     := st-link_cli
+FLASH      := st-flash
 CUBE       := stm32_programmer_cli
 QEMU       := qemu-system-gnuarmeclipse
 OPTF       ?=
@@ -184,7 +185,7 @@ DEBUG_CMD  += -ex "c"
 
 $(info Using '$(MAKECMDGOALS)')
 
-all : $(ELF) $(DMP) $(LSS) print_elf_size
+all : $(HEX) $(DMP) $(LSS) print_elf_size
 
 lib : $(LIB) print_size
 
@@ -261,6 +262,7 @@ flash : all
 	$(OPENOCD) $(OOCD_INIT) $(OOCD_SAVE) $(OOCD_EXEC) $(OOCD_EXIT)
 #	$(CUBE) -q -c port=SWD mode=UR -w $(ELF) -v -hardRst
 #	$(STLINK) -Q -c SWD UR -P $(HEX) -V -HardRst
+#	$(FLASH) --reset --format ihex write $(HEX)
 
 server : all
 	$(info Starting server...)
@@ -283,6 +285,7 @@ reset :
 	$(OPENOCD) $(OOCD_INIT) $(OOCD_EXEC) $(OOCD_EXIT)
 #	$(CUBE) -q -c port=SWD mode=UR -hardRst
 #	$(STLINK) -Q -c SWD UR -HardRst
+#	$(FLASH) reset
 
 .PHONY : all lib clean flash server debug monitor qemu reset
 

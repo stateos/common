@@ -15,6 +15,9 @@ Features:
 - once flags
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
+1.1
+- added sys_suspend and sys_resume definitions
+---------
 1.0
 - updated os version
 - added SELF definition
@@ -22,7 +25,6 @@ Features:
 - rebuilt sys_start function
 - rebuilt tsk_start function
 - added sys_stop function
-- added tsk_startExclusive definition
 - added tsk_killAll definition
 - added tsk_main definition
 - rebuilt timer
@@ -30,7 +32,6 @@ Features:
 0.9
 - added sys_delay function
 - added sys_stop blocking function
-- added tsk_startExclusive definition
 - updated os version
 ---------
 0.8

@@ -33,7 +33,7 @@
 #define __DEMOSVERSION_H
 
 #define __DEMOS_MAJOR        1
-#define __DEMOS_MINOR        0
+#define __DEMOS_MINOR        1
 #define __DEMOS_BUILD        0
 
 #define __DEMOS        ((((__DEMOS_MAJOR)&0xFFUL)<<24)|(((__DEMOS_MINOR)&0xFFUL)<<16)|((__DEMOS_BUILD)&0xFFFFUL))
