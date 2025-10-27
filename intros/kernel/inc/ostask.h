@@ -510,21 +510,6 @@ void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg );
 
 /******************************************************************************
  *
- * Name              : tsk_startExclusive
- *
- * Description       : start previously defined/created/stopped task object
- *
- * Parameters
- *   tsk             : pointer to task object, all other tasks will bee reseted
- *
- * Return            : none
- *
- ******************************************************************************/
-
-void tsk_startExclusive( tsk_t *tsk );
-
-/******************************************************************************
- *
  * Name              : tsk_stop
  * Alias             : tsk_exit
  *

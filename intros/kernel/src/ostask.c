@@ -152,33 +152,6 @@ void priv_tsk_reset( tsk_t *tsk )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_startExclusive( tsk_t *tsk )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *nxt;
-
-	tsk_start(tsk);
-
-	port_set_lock();
-	
-	while ((nxt = tsk->hdr.next) != tsk)
-	{
-		if (nxt->hdr.id == ID_READY)
-		{
-			priv_tsk_reset(nxt);
-			core_tsk_remove(nxt);
-		}
-		else
-	//	if (nxt->hdr.id == ID_TIMER)
-		{
-			core_tmr_remove((tmr_t *)nxt);
-		}
-	}
-
-	core_tsk_switch();
-}
-
-/* -------------------------------------------------------------------------- */
 void tsk_stop( void )
 /* -------------------------------------------------------------------------- */
 {

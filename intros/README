@@ -39,7 +39,6 @@ Features:
 - updated os version
 - added SELF definition
 - removed cur_ functions
-- added tsk_startExclusive function
 - added tsk_killAll function
 - added tsk_main function
 - added tmr_reset / tmr_kill function
