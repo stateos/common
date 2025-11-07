@@ -36,11 +36,12 @@
 #include "critical_section.hh"
 #include <utility>
 
+#ifndef __cpp_lib_barrier
+#define __cpp_lib_barrier 201907L
+
 namespace std _GLIBCXX_VISIBILITY(default)
 {
 _GLIBCXX_BEGIN_NAMESPACE_VERSION
-
-  #define __cpp_lib_barrier 201907L
 
   struct __empty_completion
   {
@@ -119,4 +120,5 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 _GLIBCXX_END_NAMESPACE_VERSION
 } // namespace
 #endif // C++20
+#endif // __cpp_lib_barrier
 #endif // _GLIBCXX_BARRIER

@@ -33,11 +33,12 @@
 #if __cplusplus > 201703L
 #include "critical_section.hh"
 
+#ifndef __cpp_lib_latch
+#define __cpp_lib_latch 201907L
+
 namespace std _GLIBCXX_VISIBILITY(default)
 {
 _GLIBCXX_BEGIN_NAMESPACE_VERSION
-
-  #define __cpp_lib_latch 201907L
 
   class latch
   {
@@ -102,4 +103,5 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 _GLIBCXX_END_NAMESPACE_VERSION
 } // namespace
 #endif // C++20
+#endif // __cpp_lib_latch
 #endif // _GLIBCXX_LATCH

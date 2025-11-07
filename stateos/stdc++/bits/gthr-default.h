@@ -2,7 +2,7 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    15.03.2023
+    @date    07.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -292,15 +292,21 @@ int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
 //-----------------------------------------------------------------------------
 
 #if !__cpp_lib_atomic_wait || !__cpp_aligned_new
+#if __GNUC__ < 13
 #include "inc/barrier.hh"
+#endif
 #endif
 
 #if !__cpp_lib_atomic_wait
+#if __GNUC__ < 13
 #include "inc/latch.hh"
+#endif
 #endif
 
 #if !__cpp_lib_atomic_wait && !_GLIBCXX_HAVE_POSIX_SEMAPHORE
+#if __GNUC__ < 13
 #include "inc/semaphore.hh"
+#endif
 #endif
 
 //-----------------------------------------------------------------------------

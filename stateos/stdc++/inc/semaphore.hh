@@ -34,11 +34,12 @@
 #include "critical_section.hh"
 #include "chrono.hh"
 
+#ifndef __cpp_lib_semaphore
+#define __cpp_lib_semaphore 201907L
+
 namespace std _GLIBCXX_VISIBILITY(default)
 {
 _GLIBCXX_BEGIN_NAMESPACE_VERSION
-
-  #define __cpp_lib_semaphore 201907L
 
   template<ptrdiff_t __least_max_value = __PTRDIFF_MAX__>
   class counting_semaphore
@@ -131,4 +132,5 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 _GLIBCXX_END_NAMESPACE_VERSION
 } // namespace
 #endif // C++20
+#endif // __cpp_lib_semaphore
 #endif // _GLIBCXX_SEMAPHORE
