@@ -1,6 +1,6 @@
 // thread -*- C++ -*-
 
-// Copyright (C) 2008-2021 Free Software Foundation, Inc.
+// Copyright (C) 2008-2025 Free Software Foundation, Inc.
 //
 // This file is part of the GNU ISO C++ Library.  This library is free
 // software; you can redistribute it and/or modify it under the
@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 14.10.2022
+// Modified by Rajmund Szymanski @ StateOS, 08.11.2025
 
 #include <thread>
 #include <mutex>
@@ -114,12 +114,27 @@ namespace std _GLIBCXX_VISIBILITY(default)
   extern "C"
   {
     static void
-    execute_native_thread_routine(void *__p)
+    execute_native_thread_routine(void* __p)
     {
-      thread::_State_ptr __t{ static_cast<thread::_State *>(__p) };
+      thread::_State_ptr __t{ static_cast<thread::_State*>(__p) };
       __t->_M_run();
       __gthread_atexit();
     }
+
+#if _GLIBCXX_THREAD_ABI_COMPAT
+    static void
+    execute_native_thread_routine_compat(void* __p)
+    {
+      thread::_Impl_base* __t = static_cast<thread::_Impl_base*>(__p);
+      thread::__shared_base_type __local;
+      // Now that a new thread has been created we can transfer ownership of
+      // the thread state to a local object, breaking the reference cycle
+      // created in thread::_M_start_thread.
+      __local.swap(__t->_M_this_ptr);
+      __t->_M_run();
+      __gthread_atexit();
+    }
+#endif
   } // extern "C"
 
 _GLIBCXX_BEGIN_NAMESPACE_VERSION
@@ -158,12 +173,35 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
   thread::_M_start_thread(_State_ptr state, void (*)())
   {
     const int err = __gthread_create(&_M_id._M_thread,
-                                     execute_native_thread_routine,
-                                     state.get());
+				     &execute_native_thread_routine,
+				     state.get());
     if (err)
       __throw_system_error(err);
     state.release();
   }
+
+#if _GLIBCXX_THREAD_ABI_COMPAT
+  void
+  thread::_M_start_thread(__shared_base_type __b)
+  {
+    _M_start_thread(std::move(__b), nullptr);
+  }
+
+  void
+  thread::_M_start_thread(__shared_base_type __b, void (*)())
+  {
+    auto ptr = __b.get();
+    // Create a reference cycle that will be broken in the new thread.
+    ptr->_M_this_ptr = std::move(__b);
+    int __e = __gthread_create(&_M_id._M_thread,
+			       &execute_native_thread_routine_compat, ptr);
+    if (__e)
+    {
+      ptr->_M_this_ptr.reset();  // break reference cycle, destroying *ptr.
+      __throw_system_error(__e);
+    }
+  }
+#endif
 
   unsigned int
   thread::hardware_concurrency() noexcept

@@ -25,7 +25,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===---------------------------------------------------------------===//
-// Modified by Rajmund Szymanski @ StateOS, 25.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 08.11.2025
 
 #ifndef _GLIBCXX_BARRIER
 #define _GLIBCXX_BARRIER 1

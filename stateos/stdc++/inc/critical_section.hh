@@ -2,12 +2,12 @@
 
     @file    StateOS: critical_section.hh
     @author  Rajmund Szymanski
-    @date    08.04.2021
+    @date    08.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
 
-   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2025 Rajmund Szymanski. All rights reserved.
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -34,28 +34,22 @@
 
 #include "inc/oscriticalsection.h"
 
-namespace std {
-
-/******************************************************************************
- *
- * Class             : std::critical_section
- *
- ******************************************************************************/
-
-struct critical_section
+namespace std
 {
-	critical_section() { lck_ = core_set_lock(); }
+	struct critical_section
+	{
+		critical_section() { lck_ = core_set_lock(); }
 
-	~critical_section() { core_put_lock(lck_); }
+		~critical_section() { core_put_lock(lck_); }
 
-	critical_section( critical_section&& ) = delete;
-	critical_section( const critical_section& ) = delete;
-	critical_section& operator=( critical_section&& ) = delete;
-	critical_section& operator=( const critical_section& ) = delete;
+		critical_section( critical_section&& ) = delete;
+		critical_section( const critical_section& ) = delete;
+		critical_section& operator=( critical_section&& ) = delete;
+		critical_section& operator=( const critical_section& ) = delete;
 
-	private:
-	lck_t lck_;
-};
+		private:
+		lck_t lck_;
+	};
+}		// namespace std
 
-}     //  namespace std
 #endif//__STATEOS_CRITICAL_SECTION_HH

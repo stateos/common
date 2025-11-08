@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 25.05.2021
+// Modified by Rajmund Szymanski @ StateOS, 08.11.2025
 
 #ifndef _GLIBCXX_LATCH
 #define _GLIBCXX_LATCH 1

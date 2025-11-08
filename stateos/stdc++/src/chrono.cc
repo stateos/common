@@ -1,6 +1,6 @@
 // chrono -*- C++ -*-
 
-// Copyright (C) 2008-2021 Free Software Foundation, Inc.
+// Copyright (C) 2008-2025 Free Software Foundation, Inc.
 //
 // This file is part of the GNU ISO C++ Library.  This library is free
 // software; you can redistribute it and/or modify it under the
@@ -23,7 +23,7 @@
 // <http://www.gnu.org/licenses/>.
 
 // ---------------------------------------------------
-// Modified by Rajmund Szymanski @ StateOS, 16.04.2021
+// Modified by Rajmund Szymanski @ StateOS, 08.11.2025
 
 #include <bits/c++config.h>
 #include <chrono>
@@ -43,26 +43,26 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
   namespace chrono
   {
-    // XXX GLIBCXX_ABI Deprecated
-    inline namespace _V2 {
+_GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE(_V2)
 
     constexpr bool system_clock::is_steady;
 
     system_clock::time_point
     system_clock::now() noexcept
     {
-      return time_point(duration_cast<duration>(systick::duration(::sys_time())));
+      return time_point(systick::duration(::sys_time()));
     }
+
 
     constexpr bool steady_clock::is_steady;
 
     steady_clock::time_point
     steady_clock::now() noexcept
     {
-      return time_point(duration_cast<duration>(systick::duration(::sys_time())));
+      return time_point(systick::duration(::sys_time()));
     }
 
-  } // end inline namespace _V2
+_GLIBCXX_END_INLINE_ABI_NAMESPACE(_V2)
   } // namespace chrono
 
 _GLIBCXX_END_NAMESPACE_VERSION

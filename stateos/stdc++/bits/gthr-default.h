@@ -2,12 +2,12 @@
 
     @file    StateOS: gthr-default.h
     @author  Rajmund Szymanski
-    @date    07.11.2025
+    @date    08.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
 
-   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2025 Rajmund Szymanski. All rights reserved.
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -32,6 +32,18 @@
 #ifndef _GLIBCXX_GCC_GTHR_STATEOS_H
 #define _GLIBCXX_GCC_GTHR_STATEOS_H
 
+//-----------------------------------------------------------------------------
+
+#ifndef _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE
+#define _GLIBCXX_BEGIN_INLINE_ABI_NAMESPACE(X)	inline namespace X {
+#endif
+
+#ifndef _GLIBCXX_END_INLINE_ABI_NAMESPACE
+#define _GLIBCXX_END_INLINE_ABI_NAMESPACE(X)	}
+#endif
+
+//-----------------------------------------------------------------------------
+
 #include "inc/ostask.h"
 #include "inc/osmutex.h"
 #include "inc/osonceflag.h"
@@ -39,7 +51,11 @@
 
 //-----------------------------------------------------------------------------
 
-#if   __cplusplus < 201103L
+#if     __GNUC__ < 12
+#error  Required gcc12 or above.
+#endif
+
+#if     __cplusplus < 201103L
 #error  Required C++11 or above.
 #endif
 
@@ -54,6 +70,7 @@
 #define __GTHREAD_HAS_COND 1
 #define  _GLIBCXX_HAVE_TLS 1
 #define  _GLIBCXX_THREAD_IMPL 1
+#define  _GLIBCXX_HAS_GTHREADS 1
 #define  _GLIBCXX_USE_SCHED_YIELD 1
 #define  _GTHREAD_USE_MUTEX_TIMEDLOCK 1
 
@@ -82,47 +99,6 @@ typedef ostime_t __gthread_time_t;
 //-----------------------------------------------------------------------------
 extern "C"
 {
-#ifdef _LIBOBJC
-
-static void *thread_local_storage = NULL;
-
-int           __gthread_objc_init_thread_system(void);
-int           __gthread_objc_close_thread_system(void);
-objc_thread_t __gthread_objc_thread_detach(void(*func)(void *), void *arg);
-int           __gthread_objc_thread_set_priority(int priority);
-int           __gthread_objc_thread_get_priority(void);
-void          __gthread_objc_thread_yield(void);
-int           __gthread_objc_thread_exit(void);
-objc_thread_t __gthread_objc_thread_id(void);
-
-static inline
-int __gthread_objc_thread_set_data(void *value)
-{
-  thread_local_storage = value;
-  return 0;
-}
-
-static inline
-void *__gthread_objc_thread_get_data(void)
-{
-  return thread_local_storage;
-}
-
-int __gthread_objc_mutex_allocate(objc_mutex_t mutex);
-int __gthread_objc_mutex_deallocate(objc_mutex_t mutex);
-int __gthread_objc_mutex_lock(objc_mutex_t mutex);
-int __gthread_objc_mutex_trylock(objc_mutex_t mutex);
-int __gthread_objc_mutex_unlock(objc_mutex_t mutex);
-
-int __gthread_objc_condition_allocate(objc_condition_t condition);
-int __gthread_objc_condition_deallocate(objc_condition_t condition);
-int __gthread_objc_condition_wait(objc_condition_t condition, objc_mutex_t mutex);
-int __gthread_objc_condition_broadcast(objc_condition_t condition);
-int __gthread_objc_condition_signal(objc_condition_t condition);
-
-//-----------------------------------------------------------------------------
-#else//_LIBOBJC
-//-----------------------------------------------------------------------------
 
 static inline constexpr
 int __gthread_active_p()
@@ -287,24 +263,13 @@ int   __gthread_key_delete(__gthread_key_t key);
 void *__gthread_getspecific(__gthread_key_t key);
 int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
 
-#endif//_LIBOBJC
 } // extern "C"
 //-----------------------------------------------------------------------------
 
-#if !__cpp_lib_atomic_wait || !__cpp_aligned_new
-#if __GNUC__ < 13
-#include "inc/barrier.hh"
-#endif
-#endif
-
 #if !__cpp_lib_atomic_wait
-#if __GNUC__ < 13
+#include "inc/barrier.hh"
 #include "inc/latch.hh"
-#endif
-#endif
-
-#if !__cpp_lib_atomic_wait && !_GLIBCXX_HAVE_POSIX_SEMAPHORE
-#if __GNUC__ < 13
+#if !_GLIBCXX_HAVE_POSIX_SEMAPHORE
 #include "inc/semaphore.hh"
 #endif
 #endif

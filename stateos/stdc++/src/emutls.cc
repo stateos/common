@@ -2,12 +2,12 @@
 
     @file    StateOS: emutls.cc
     @author  Rajmund Szymanski
-    @date    18.04.2021
+    @date    08.11.2025
     @brief   This file provides set of variables and functions for StateOS.
 
  ******************************************************************************
 
-   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2025 Rajmund Szymanski. All rights reserved.
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -38,7 +38,14 @@
 
 extern "C"
 {
+#ifndef EMUTLS_ATTR
+#define EMUTLS_ATTR
+#endif
+
+EMUTLS_ATTR
 void *__emutls_get_address(void *);
+
+EMUTLS_ATTR
 void  __emutls_register_common(void *, size_t, size_t, void *);
 }
 

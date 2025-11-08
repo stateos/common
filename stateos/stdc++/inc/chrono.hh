@@ -2,12 +2,12 @@
 
     @file    StateOS: chrono.hh
     @author  Rajmund Szymanski
-    @date    11.04.2021
+    @date    08.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
 
-   Copyright (c) 2018-2022 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2025 Rajmund Szymanski. All rights reserved.
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -33,57 +33,47 @@
 #define __STATEOS_CHRONO_HH
 
 #include "inc/osclock.h"
-#if __GNUC__ < 12
-#include <chrono>
-#else
 #include <bits/chrono.h>
-#endif
 
-namespace std {
-namespace chrono {
-
-/******************************************************************************
- *
- * Class             : std::chrono::systick
- *
- ******************************************************************************/
-
-struct systick
+namespace std
 {
-	using rep        = cnt_t;
-	using period     = ratio<1, OS_FREQUENCY>;
-	using duration   = chrono::duration<rep, period>;
-	using time_point = chrono::time_point<systick>;
-
-	static constexpr bool is_steady = true;
-
-	static
-	time_point now() noexcept
+	namespace chrono
 	{
-		return time_point(duration(::sys_time()));
-	}
+		struct systick
+		{
+			using rep        = cnt_t;
+			using period     = ratio<1, OS_FREQUENCY>;
+			using duration   = chrono::duration<rep, period>;
+			using time_point = chrono::time_point<systick>;
 
-	template<class Rep, class Period> static constexpr
-	rep count( const chrono::duration<Rep, Period>& _delay )
-	{
-		return duration_cast<duration>(_delay).count();
-	}
+			static constexpr bool is_steady = true;
 
-	template<class Clock, class Duration> static constexpr
-	rep until( const chrono::time_point<Clock, Duration>& _time )
-	{
-		return duration_cast<duration>(_time.time_since_epoch()).count();
-	}
+			static
+			time_point now() noexcept
+			{
+				return time_point(duration(::sys_time()));
+			}
 
-	static constexpr
-	rep count( const rep _delay ) { return _delay; }
+			template<class Rep, class Period> static constexpr
+			rep count( const chrono::duration<Rep, Period>& _delay )
+			{
+				return duration_cast<duration>(_delay).count();
+			}
 
-	static constexpr
-	rep until( const rep _time )  { return _time; }
-};
+			template<class Clock, class Duration> static constexpr
+			rep until( const chrono::time_point<Clock, Duration>& _time )
+			{
+				return duration_cast<duration>(_time.time_since_epoch()).count();
+			}
 
-}     //  namespace chrono
-}     //  namespace std
+			static constexpr
+			rep count( const rep _delay ) { return _delay; }
+
+			static constexpr
+			rep until( const rep _time )  { return _time; }
+		};
+	}		// namespace chrono
+}			// namespace std
 
 //-----------------------------------------------------------------------------
 
