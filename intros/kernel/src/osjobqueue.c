@@ -31,6 +31,7 @@
 
 #include "inc/osjobqueue.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void job_init( job_t *job, fun_t **data, size_t bufsize )
@@ -163,7 +164,7 @@ void job_wait( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	while (job_take(job) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -204,7 +205,7 @@ void job_send( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
 	while (job_give(job, fun) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */

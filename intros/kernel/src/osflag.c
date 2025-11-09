@@ -31,6 +31,7 @@
 
 #include "inc/osflag.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void flg_init( flg_t *flg, unsigned init )
@@ -73,7 +74,7 @@ void flg_wait( flg_t *flg, unsigned flags, bool all )
 /* -------------------------------------------------------------------------- */
 {
 	while (flags = flg_take(flg, flags, all), flags != 0)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */

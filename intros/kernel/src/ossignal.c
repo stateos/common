@@ -31,6 +31,7 @@
 
 #include "inc/ossignal.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void sig_init( sig_t *sig, unsigned mask )
@@ -78,7 +79,7 @@ unsigned sig_wait( sig_t *sig, unsigned sigset )
 	unsigned result;
 
 	while (result = sig_take(sig, sigset), result == FAILURE)
-		core_ctx_switch();
+		tsk_yield();
 
 	return result;
 }

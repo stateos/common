@@ -548,20 +548,6 @@ void tsk_kill( tsk_t *tsk ) { tsk_reset(tsk); }
 
 /******************************************************************************
  *
- * Name              : tsk_killAll
- *
- * Description       : reset all tasks and timers except the current one
- *
- * Parameters        : none
- *
- * Return            : none
- *
- ******************************************************************************/
-
-void tsk_killAll( void );
-
-/******************************************************************************
- *
  * Name              : tsk_join
  *
  * Description       : delay execution of current task until termination of given task
@@ -609,23 +595,6 @@ void tsk_pass ( void ) { core_ctx_switch(); }
 
 __NO_RETURN
 void tsk_flip( fun_t *proc );
-
-/******************************************************************************
- *
- * Name              : tsk_main
- *
- * Description       : reset all tasks and timers, and restart system with
- *                     main function proc
- *
- * Parameters
- *   proc            : new main proc (main task function)
- *
- * Return            : none
- *
- ******************************************************************************/
-
-__NO_RETURN
-void tsk_main( fun_t *proc );
 
 /******************************************************************************
  *
@@ -905,8 +874,6 @@ struct baseTask : public __tsk
 		void reset     ()                   {        tsk_reset     (current()); }
 		static
 		void kill      ()                   {        tsk_kill      (current()); }
-		static
-		void killAll   ()                   {        tsk_killAll   (); }
 		static
 		void yield     ()                   {        tsk_yield     (); }
 		static

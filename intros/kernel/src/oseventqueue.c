@@ -31,6 +31,7 @@
 
 #include "inc/oseventqueue.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void evq_init( evq_t *evq, unsigned *data, size_t bufsize )
@@ -159,7 +160,7 @@ unsigned evq_wait( evq_t *evq )
 	unsigned result;
 
 	while (result = evq_take(evq), result == FAILURE)
-		core_ctx_switch();
+		tsk_yield();
 
 	return result;
 }
@@ -201,7 +202,7 @@ void evq_send( evq_t *evq, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	while (evq_give(evq, event) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */

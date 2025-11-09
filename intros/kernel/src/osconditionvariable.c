@@ -62,11 +62,10 @@ void cnd_wait( cnd_t *cnd, mtx_t *mtx )
 	sys_lock();
 	{
 		signal = cnd->signal;
+		while (cnd->signal == signal)
+			core_ctx_switch();
 	}
 	sys_unlock();
-
-	while (cnd->signal == signal)
-		core_ctx_switch();
 
 	mtx_wait(mtx);
 }

@@ -31,6 +31,7 @@
 
 #include "inc/osmailboxqueue.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void box_init( box_t *box, size_t size, void *data, size_t bufsize )
@@ -158,7 +159,7 @@ void box_wait( box_t *box, void *data )
 /* -------------------------------------------------------------------------- */
 {
 	while (box_take(box, data) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -199,7 +200,7 @@ void box_send( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
 	while (box_give(box, data) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */

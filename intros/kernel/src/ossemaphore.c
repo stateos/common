@@ -31,6 +31,7 @@
 
 #include "inc/ossemaphore.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void sem_init( sem_t *sem, unsigned init, unsigned limit )
@@ -93,7 +94,7 @@ void sem_wait( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
 	while (sem_take(sem) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */

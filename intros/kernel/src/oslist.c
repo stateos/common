@@ -31,6 +31,7 @@
 
 #include "inc/oslist.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void lst_init( lst_t *lst )
@@ -90,7 +91,7 @@ void *lst_wait( lst_t *lst )
 	void *result;
 
 	while (result = lst_take(lst), result == NULL)
-		core_ctx_switch();
+		tsk_yield();
 
 	return result;
 }

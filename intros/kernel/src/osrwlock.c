@@ -31,6 +31,7 @@
 
 #include "inc/osrwlock.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void rwl_init( rwl_t *rwl )
@@ -80,7 +81,7 @@ void rwl_waitRead( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
 	while (rwl_takeRead(rwl) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -133,7 +134,7 @@ void rwl_waitWrite( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
 	while (rwl_takeWrite(rwl) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */

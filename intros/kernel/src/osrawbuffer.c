@@ -31,6 +31,7 @@
 
 #include "inc/osrawbuffer.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void raw_init( raw_t *raw, void *data, size_t bufsize )
@@ -137,7 +138,7 @@ size_t raw_wait( raw_t *raw, void *data, size_t size )
 	size_t result;
 
 	while (result = raw_take(raw, data, size), result == 0)
-		core_ctx_switch();
+		tsk_yield();
 
 	return result;
 }
@@ -184,7 +185,7 @@ unsigned raw_send( raw_t *raw, const void *data, size_t size )
 		return FAILURE;
 
 	while (raw_give(raw, data, size) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 
 	return SUCCESS;
 }

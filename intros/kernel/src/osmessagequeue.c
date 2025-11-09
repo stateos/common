@@ -31,6 +31,7 @@
 
 #include "inc/osmessagequeue.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void msg_init( msg_t *msg, size_t size, void *data, size_t bufsize )
@@ -177,7 +178,7 @@ size_t msg_wait( msg_t *msg, void *data, size_t size )
 		return 0;
 
 	while (result = msg_take(msg, data, size), result == 0)
-		core_ctx_switch();
+		tsk_yield();
 
 	return result;
 }
@@ -227,7 +228,7 @@ unsigned msg_send( msg_t *msg, const void *data, size_t size )
 		return FAILURE;
 
 	while (msg_give(msg, data, size) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 
 	return SUCCESS;
 }

@@ -182,38 +182,17 @@ void tsk_reset( tsk_t *tsk )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_killAll( void )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-	
-	sys_lock();
-	{
-		while ((tsk = System.cur->hdr.next) != System.cur)
-		{
-			if (tsk->hdr.id == ID_READY)
-			{
-				priv_tsk_reset(tsk);
-				core_tsk_remove(tsk);
-			}
-			else
-		//	if (tsk->hdr.id == ID_TIMER)
-			{
-				core_tmr_remove((tmr_t *)tsk);
-			}
-		}
-	}
-	sys_unlock();
-}
-
-/* -------------------------------------------------------------------------- */
 void tsk_join( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);
 
-	while (tsk->hdr.id != ID_STOPPED)
-		core_ctx_switch();
+	sys_lock();
+	{
+		while (tsk->hdr.id != ID_STOPPED)
+			core_ctx_switch();
+	}
+	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -222,22 +201,12 @@ void tsk_flip( fun_t *proc )
 {
 	assert(proc);
 
-	System.cur->proc = proc;
+	port_set_lock();
 
+	System.cur->proc = proc;
 	priv_tsk_reset(System.cur);
 	core_ctx_init(System.cur);
 	core_tsk_switch();
-}
-
-/* -------------------------------------------------------------------------- */
-void tsk_main( fun_t *proc )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_killAll();
-	if (System.cur == &MAIN)
-		tsk_flip(proc);
-	tsk_startFrom(&MAIN, proc);
-	tsk_stop();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -275,10 +244,11 @@ void tsk_sleepNext( cnt_t delay )
 void tsk_sleepUntil( cnt_t time )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *cur = System.cur;
+	tsk_t *cur;
 
 	sys_lock();
 	{
+		cur = System.cur;
 		cur->start = core_sys_time();
 		cur->delay = time - cur->start;
 		if (cur->delay > CNT_LIMIT)
@@ -293,30 +263,46 @@ void tsk_sleepUntil( cnt_t time )
 unsigned tsk_suspend( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
+	unsigned result;
+	
 	assert(tsk);
 
-	if (tsk->hdr.id != ID_READY || tsk->delay != 0)
-		return FAILURE;
+	sys_lock();
+	{
+		if (tsk->hdr.id == ID_READY && tsk->delay == 0)
+		{
+			tsk->delay = INFINITE;
+			if (tsk == System.cur)
+				core_ctx_switch();
+			result = SUCCESS;
+		}
+		else result = FAILURE;
+	}
+	sys_unlock();
 
-	tsk->delay = INFINITE;
-	if (tsk == System.cur)
-		core_ctx_switch();
-
-	return SUCCESS;
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
 unsigned tsk_resume( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
+	unsigned result;
+
 	assert(tsk);
 
-	if (tsk->hdr.id != ID_READY || tsk->delay != INFINITE)
-		return FAILURE;
+	sys_lock();
+	{
+		if (tsk->hdr.id == ID_READY && tsk->delay == INFINITE)
+		{
+			tsk->delay = 0;
+			result = SUCCESS;
+		}
+		else result = FAILURE;
+	}
+	sys_unlock();
 
-	tsk->delay = 0;
-
-	return SUCCESS;
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */

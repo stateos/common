@@ -31,6 +31,7 @@
 
 #include "inc/osmutex.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 void mtx_init( mtx_t *mtx )
@@ -81,7 +82,7 @@ void mtx_wait( mtx_t *mtx )
 /* -------------------------------------------------------------------------- */
 {
 	while (mtx_take(mtx) != SUCCESS)
-		core_ctx_switch();
+		tsk_yield();
 }
 
 /* -------------------------------------------------------------------------- */

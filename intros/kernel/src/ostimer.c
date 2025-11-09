@@ -145,12 +145,17 @@ void tmr_reset( tmr_t *tmr )
 unsigned tmr_take( tmr_t *tmr )
 /* -------------------------------------------------------------------------- */
 {
+	unsigned result;
+
 	assert(tmr);
 
-	if (tmr->hdr.id == ID_STOPPED)
-		return SUCCESS;
+	sys_lock();
+	{
+		result = tmr->hdr.id == ID_STOPPED ? SUCCESS : FAILURE;
+	}
+	sys_unlock();
 
-	return FAILURE;
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -161,17 +166,13 @@ void tmr_wait( tmr_t *tmr )
 
 	assert(tmr);
 
-	if (tmr->hdr.id == ID_STOPPED)
-		return;
-
 	sys_lock();
 	{
 		signal = tmr->signal;
+		while (tmr->hdr.id != ID_STOPPED && tmr->signal == signal)
+			core_ctx_switch();
 	}
 	sys_unlock();
-
-	while (tmr->signal == signal)
-		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

@@ -60,18 +60,19 @@ void bar_wait( bar_t *bar )
 
 	sys_lock();
 	{
-		signal = bar->signal;
-
 		if (--bar->count == 0)
 		{
 			bar->count = bar->limit;
 			bar->signal++;
 		}
+		else
+		{
+			signal = bar->signal;
+			while (bar->signal == signal)
+				core_ctx_switch();
+		}
 	}
 	sys_unlock();
-
-	while (bar->signal == signal)
-		core_ctx_switch();
 }
 
 /* -------------------------------------------------------------------------- */

@@ -31,6 +31,7 @@
 
 #include "inc/osmemorypool.h"
 #include "inc/oscriticalsection.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 static
@@ -118,7 +119,7 @@ void *mem_wait( mem_t *mem )
 	void *result;
 
 	while (result = mem_take(mem), result == NULL)
-		core_ctx_switch();
+		tsk_yield();
 
 	return result;
 }
