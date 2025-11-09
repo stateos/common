@@ -69,8 +69,6 @@ typedef void fun_t( void );
 // system functions
 void    sys_init ( void );           // port function - initialize the system timer
 cnt_t   sys_time ( void );           // port function - get current value of the system timer (in milliseconds)
-void    sys_stop ( void );           // core function - stop all tasks
-void    sys_main ( fun_t* );         // core function - reset all tasks and restart system
 void    sys_delay( cnt_t );          // core function - blocking delay
 
 #ifdef  USE_GOTO
@@ -190,8 +188,6 @@ void    sys_start( void );           // system function - start the scheduler
 #define tsk_yield()                do { TSK_YIELD(true);                                                           } while(0)
 // restart the current task with function (fun)
 #define tsk_flip(fun)              do { sys.current->function = (fun); tsk_again();                                } while(0)
-// reset all tasks and restart system with main function proc
-#define tsk_main(fun)              do { sys_main(fun); return;                                                     } while(0)
 // delay execution of current task for given duration of time (dly)
 #define tsk_sleepFor(dly)          do { tmr_startFor(&sys.current->tmr, dly); tsk_yield();                         } while(0)
 // delay execution of current task for given duration of time (dly) from the end of the previous countdown

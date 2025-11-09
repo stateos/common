@@ -17,6 +17,9 @@ Features:
 ---------
 1.1
 - added sys_suspend and sys_resume definitions
+- removed sys_stop function
+- removed tsk_killAll definition
+- removed tsk_main definition
 ---------
 1.0
 - updated os version
