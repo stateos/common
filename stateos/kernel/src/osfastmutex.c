@@ -226,3 +226,92 @@ int mut_give( mut_t *mut )
 }
 
 /* -------------------------------------------------------------------------- */
+
+#if OS_ATOMICS
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_mut_takeAsync( mut_t *mut )
+/* -------------------------------------------------------------------------- */
+{
+	const uintptr_t cur = (uintptr_t)System.cur;
+	atomic_uintptr_t owner = atomic_load((atomic_uintptr_t *)&mut->owner);
+
+	if (owner == cur)
+		return E_FAILURE;
+	
+	while (owner == 0)
+		if (atomic_compare_exchange_weak((atomic_uintptr_t *)&mut->owner, &owner, cur))
+			return E_SUCCESS;
+
+	return E_TIMEOUT;
+}
+
+/* -------------------------------------------------------------------------- */
+int mut_takeAsync( mut_t *mut )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert_tsk_context();
+	assert(mut);
+	assert(mut->obj.res!=RELEASED);
+
+	sys_lock();
+	{
+		result = priv_mut_takeAsync(mut);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int mut_waitAsync( mut_t *mut )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+	
+	while (result = mut_takeAsync(mut), result == E_TIMEOUT)
+		core_ctx_switchNow();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_mut_giveAsync( mut_t *mut )
+/* -------------------------------------------------------------------------- */
+{
+	const uintptr_t cur = (uintptr_t)System.cur;
+	atomic_uintptr_t owner = atomic_load((atomic_uintptr_t *)&mut->owner);
+
+	while (owner == cur)
+		if (atomic_compare_exchange_weak((atomic_uintptr_t *)&mut->owner, &owner, 0))
+			return E_SUCCESS;
+
+	return E_FAILURE;
+}
+
+/* -------------------------------------------------------------------------- */
+int mut_giveAsync( mut_t *mut )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert_tsk_context();
+	assert(mut);
+	assert(mut->obj.res!=RELEASED);
+
+	sys_lock();
+	{
+		result = priv_mut_giveAsync(mut);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+
+#endif//OS_ATOMICS

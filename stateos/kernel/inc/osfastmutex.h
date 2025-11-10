@@ -217,6 +217,7 @@ void mut_delete( mut_t *mut ) { mut_destroy(mut); }
  *
  * Name              : mut_take
  * Alias             : mut_tryLock
+ * Async alias       : mut_takeAsync
  *
  * Description       : try to lock the fast mutex object,
  *                     don't wait if the fast mutex object can't be locked immediately
@@ -237,6 +238,10 @@ int mut_take( mut_t *mut );
 
 __STATIC_INLINE
 int mut_tryLock( mut_t *mut ) { return mut_take(mut); }
+
+#if OS_ATOMICS
+int mut_takeAsync( mut_t *mut );
+#endif
 
 /******************************************************************************
  *
@@ -292,6 +297,7 @@ int mut_waitUntil( mut_t *mut, cnt_t time );
  *
  * Name              : mut_wait
  * Alias             : mut_lock
+ * Async alias       : mut_waitAsync
  *
  * Description       : try to lock the fast mutex object,
  *                     wait indefinitely if the fast mutex object can't be locked immediately
@@ -302,8 +308,8 @@ int mut_waitUntil( mut_t *mut, cnt_t time );
  * Return
  *   E_SUCCESS       : fast mutex object was successfully locked
  *   E_FAILURE       : fast mutex object can't be locked by owner task
- *   E_STOPPED       : fast mutex object was reseted
- *   E_DELETED       : fast mutex object was deleted
+ *   E_STOPPED       : fast mutex object was reseted (unavailable for async version)
+ *   E_DELETED       : fast mutex object was deleted (unavailable for async version)
  *
  * Note              : use only in thread mode
  *
@@ -315,10 +321,15 @@ int mut_wait( mut_t *mut ) { return mut_waitFor(mut, INFINITE); }
 __STATIC_INLINE
 int mut_lock( mut_t *mut ) { return mut_wait(mut); }
 
+#if OS_ATOMICS
+int mut_waitAsync( mut_t *mut );
+#endif
+
 /******************************************************************************
  *
  * Name              : mut_give
  * Alias             : mut_unlock
+ * Async alias       : mut_giveAsync
  *
  * Description       : try to unlock the fast mutex object (only owner task can unlock fast mutex object),
  *                     don't wait if the fast mutex object can't be unlocked
@@ -338,6 +349,10 @@ int mut_give( mut_t *mut );
 
 __STATIC_INLINE
 int mut_unlock( mut_t *mut ) { return mut_give(mut); }
+
+#if OS_ATOMICS
+int mut_giveAsync( mut_t *mut );
+#endif
 
 #ifdef __cplusplus
 }
@@ -384,6 +399,11 @@ struct FastMutex : public __mut
 	int  lock     ()                  { return mut_lock     (this); }
 	int  give     ()                  { return mut_give     (this); }
 	int  unlock   ()                  { return mut_unlock   (this); }
+#if OS_ATOMICS
+	int  takeAsync ()                 { return mut_takeAsync (this); }
+	int  waitAsync ()                 { return mut_waitAsync (this); }
+	int  giveAsync ()                 { return mut_giveAsync (this); }
+#endif
 
 #if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<FastMutex>;
