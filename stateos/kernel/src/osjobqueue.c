@@ -486,7 +486,8 @@ static
 bool priv_job_emptyAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	return atomic_load((atomic_size_t *)&job->count) == 0;
+	unsigned count = atomic_load(&job->count);
+	return count == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -494,7 +495,8 @@ static
 bool priv_job_fullAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	return atomic_load((atomic_size_t *)&job->count) == job->limit;
+	unsigned count = atomic_load(&job->count);
+	return count == job->limit;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -503,7 +505,7 @@ void priv_job_decAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	job->head = job->head + 1 < job->limit ? job->head + 1 : 0;
-	atomic_fetch_sub((atomic_size_t *)&job->count, 1);
+	atomic_fetch_sub(&job->count, 1);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -512,7 +514,7 @@ void priv_job_incAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	job->tail = job->tail + 1 < job->limit ? job->tail + 1 : 0;
-	atomic_fetch_add((atomic_size_t *)&job->count, 1);
+	atomic_fetch_add(&job->count, 1);
 }
 
 /* -------------------------------------------------------------------------- */

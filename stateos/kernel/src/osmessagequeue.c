@@ -536,7 +536,8 @@ static
 bool priv_msg_emptyAsync( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	return atomic_load((atomic_size_t *)&msg->count) == 0;
+	unsigned count = atomic_load(&msg->count);
+	return count == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -544,7 +545,8 @@ static
 bool priv_msg_fullAsync( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	return atomic_load((atomic_size_t *)&msg->count) == msg->limit;
+	unsigned count = atomic_load(&msg->count);
+	return count == msg->limit;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -553,7 +555,7 @@ void priv_msg_decAsync( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
 	msg->head = msg->head + msg->size < msg->limit ? msg->head + msg->size : 0;
-	atomic_fetch_sub((atomic_size_t *)&msg->count, msg->size);
+	atomic_fetch_sub(&msg->count, msg->size);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -562,7 +564,7 @@ void priv_msg_incAsync( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
 	msg->tail = msg->tail + msg->size < msg->limit ? msg->tail + msg->size : 0;
-	atomic_fetch_add((atomic_size_t *)&msg->count, msg->size);
+	atomic_fetch_add(&msg->count, msg->size);
 }
 
 /* -------------------------------------------------------------------------- */

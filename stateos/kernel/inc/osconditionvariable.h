@@ -53,6 +53,9 @@ typedef struct __cnd cnd_t;
 struct __cnd
 {
 	obj_t    obj;   // object header
+#if OS_ATOMICS
+	unsigned count;	// notify counter
+#endif
 };
 
 typedef struct __cnd cnd_id [];
@@ -71,7 +74,11 @@ typedef struct __cnd cnd_id [];
  *
  ******************************************************************************/
 
+#if OS_ATOMICS
+#define               _CND_INIT() { _OBJ_INIT(), 0 }
+#else
 #define               _CND_INIT() { _OBJ_INIT() }
+#endif
 
 /******************************************************************************
  *
@@ -273,6 +280,7 @@ int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time );
 /******************************************************************************
  *
  * Name              : cnd_wait
+ * Async alias       : cnd_waitAsync
  *
  * Description       : wait indefinitely on the condition variable releasing the currently owned mutex,
  *                     and finally lock the mutex again
@@ -285,8 +293,8 @@ int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time );
  *   E_SUCCESS       : condition variable object was successfully signalled; owned mutex was locked again
  *   OWNERDEAD       : owned mutex was locked again but previous owner of the mutex was reseted
  *   E_FAILURE       : mutex object can't be unlocked
- *   E_STOPPED       : condition variable or mutex object was reseted
- *   E_DELETED       : condition variable or mutex object was deleted
+ *   E_STOPPED       : condition variable or mutex object was reseted (unavailable for async version)
+ *   E_DELETED       : condition variable or mutex object was deleted (unavailable for async version)
  *
  * Note              : use only in thread mode
  *
@@ -295,10 +303,15 @@ int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time );
 __STATIC_INLINE
 int cnd_wait( cnd_t *cnd, mtx_t *mtx ) { return cnd_waitFor(cnd, mtx, INFINITE); }
 
+#if OS_ATOMICS
+int cnd_waitAsync( cnd_t *cnd, mtx_t *mtx );
+#endif
+
 /******************************************************************************
  *
  * Name              : cnd_give
  * ISR alias         : cnd_giveISR
+ * Async alias       : cnd_giveAsync
  *
  * Description       : signal one or all tasks that are waiting on the condition variable
  *
@@ -319,6 +332,10 @@ void cnd_give( cnd_t *cnd, bool all );
 
 __STATIC_INLINE
 void cnd_giveISR( cnd_t *cnd, bool all ) { cnd_give(cnd, all); }
+
+#if OS_ATOMICS
+void cnd_giveAsync( cnd_t *cnd, bool all );
+#endif
 
 /******************************************************************************
  *
@@ -421,6 +438,10 @@ struct ConditionVariable : public __cnd
 		while (!_stopWaiting() && (result = wait(_mtx)) == E_SUCCESS);
 		return result;
 	}
+#if OS_ATOMICS
+	int  waitAsync( mtx_t& _mtx )                  { return cnd_waitAsync(this, &_mtx); }
+	void giveAsync( bool   _all = cndAll )         {        cnd_giveAsync(this,  _all); }
+#endif
 
 #if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<ConditionVariable>;

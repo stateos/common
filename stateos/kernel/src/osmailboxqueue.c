@@ -482,7 +482,8 @@ static
 bool priv_box_emptyAsync( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
-	return atomic_load((atomic_size_t *)&box->count) == 0;
+	unsigned count = atomic_load(&box->count);
+	return count == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -490,7 +491,8 @@ static
 bool priv_box_fullAsync( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
-	return atomic_load((atomic_size_t *)&box->count) == box->limit;
+	unsigned count = atomic_load(&box->count);
+	return count == box->limit;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -499,7 +501,7 @@ void priv_box_decAsync( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	box->head = box->head + box->size < box->limit ? box->head + box->size : 0;
-	atomic_fetch_sub((atomic_size_t *)&box->count, box->size);
+	atomic_fetch_sub(&box->count, box->size);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -508,7 +510,7 @@ void priv_box_incAsync( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	box->tail = box->tail + box->size < box->limit ? box->tail + box->size : 0;
-	atomic_fetch_add((atomic_size_t *)&box->count, box->size);
+	atomic_fetch_add(&box->count, box->size);
 }
 
 /* -------------------------------------------------------------------------- */

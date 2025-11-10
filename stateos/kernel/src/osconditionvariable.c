@@ -193,3 +193,64 @@ void cnd_give( cnd_t *cnd, bool all )
 }
 
 /* -------------------------------------------------------------------------- */
+
+#if OS_ATOMICS
+
+/* -------------------------------------------------------------------------- */
+bool priv_cnd_waitAsync( cnd_t *cnd )
+/* -------------------------------------------------------------------------- */
+{
+	unsigned count = atomic_load(&cnd->count);
+	while (count > 0)
+		if (atomic_compare_exchange_weak(&cnd->count, &count, count - 1))
+			return true;
+	return false;
+}
+
+/* -------------------------------------------------------------------------- */
+int cnd_waitAsync( cnd_t *cnd, mtx_t *mtx )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert_tsk_context();
+	assert(cnd);
+	assert(cnd->obj.res!=RELEASED);
+	assert(mtx);
+	assert(mtx->obj.res!=RELEASED);
+	assert((mtx->mode & mtxRecursive) == 0);
+
+	sys_lock();
+	{
+		result = mtx_giveAsync(mtx);
+		if (result == E_SUCCESS)
+		{
+			while (!priv_cnd_waitAsync(cnd))
+				core_ctx_switchNow();
+			result = mtx_waitAsync(mtx);
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+void cnd_giveAsync( cnd_t *cnd, bool all )
+/* -------------------------------------------------------------------------- */
+{
+	assert(cnd);
+	assert(cnd->obj.res!=RELEASED);
+
+	sys_lock();
+	{
+		atomic_store(&cnd->count, all ? -1U : 1U);
+		core_ctx_switchNow();
+		atomic_store(&cnd->count, 0);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+
+#endif//OS_ATOMICS

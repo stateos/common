@@ -114,25 +114,7 @@ void mtx_destroy( mtx_t *mtx )
 }
 
 /* -------------------------------------------------------------------------- */
-void mtx_setPrio( mtx_t *mtx, unsigned prio )
-/* -------------------------------------------------------------------------- */
-{
-	assert_tsk_context();
-	assert(mtx);
-	assert(mtx->obj.res!=RELEASED);
-
-	sys_lock();
-	{
-		mtx->prio = prio;
-		if ((mtx->mode & mtxPrioMASK) == mtxPrioProtect)
-			while (mtx->obj.queue && mtx->obj.queue->prio > prio)
-				core_one_wakeup(mtx->obj.queue, E_FAILURE);
-	}
-	sys_unlock();
-}
-
-/* -------------------------------------------------------------------------- */
-unsigned mtx_getPrio( mtx_t *mtx )
+unsigned mtx_prio( mtx_t *mtx )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned prio;
@@ -312,3 +294,122 @@ int mtx_give( mtx_t *mtx )
 }
 
 /* -------------------------------------------------------------------------- */
+
+#if OS_ATOMICS
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_mtx_takeAsync( mtx_t *mtx )
+/* -------------------------------------------------------------------------- */
+{
+	if ((mtx->mode & mtxPrioMASK) == mtxPrioProtect && mtx->prio < System.cur->prio)
+		return E_FAILURE;
+
+	tsk_t *owner = atomic_load(&mtx->owner);
+	while (owner == NULL)
+	{
+		if (atomic_compare_exchange_weak(&mtx->owner, &owner, System.cur))
+		{
+			if ((mtx->mode & mtxInconsistent))
+			{
+				mtx->mode &= ~mtxInconsistent;
+				return OWNERDEAD;
+			}
+			return E_SUCCESS;
+		}
+	}
+
+	if ((mtx->mode & mtxTypeMASK) == mtxNormal || owner != System.cur)
+		return E_TIMEOUT;
+
+	if ((mtx->mode & mtxTypeMASK) == mtxRecursive)
+	{
+		unsigned count = atomic_load(&mtx->count);
+		while (count < MTX_LIMIT)
+			if (atomic_compare_exchange_weak(&mtx->count, &count, count + 1))
+				return E_SUCCESS;
+	}
+
+	return E_FAILURE;
+}
+
+/* -------------------------------------------------------------------------- */
+int mtx_takeAsync( mtx_t *mtx )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert_tsk_context();
+	assert(mtx);
+	assert(mtx->obj.res!=RELEASED);
+	assert((mtx->mode & ~mtxMASK) == 0);
+	assert((mtx->mode &  mtxTypeMASK) != mtxTypeMASK);
+	assert((mtx->mode &  mtxPrioMASK) != mtxPrioMASK);
+
+	sys_lock();
+	{
+		result = priv_mtx_takeAsync(mtx);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int mtx_waitAsync( mtx_t *mtx )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+	
+	while (result = mtx_takeAsync(mtx), result == E_TIMEOUT)
+		core_ctx_switchNow();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_mtx_giveAsync( mtx_t *mtx )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *owner = atomic_load(&mtx->owner);
+	const bool is_normal = (mtx->mode & (mtxTypeMASK + mtxRobust)) == mtxNormal;
+	const tsk_t *cur = is_normal ? owner : System.cur;
+
+	unsigned count = atomic_load(&mtx->count);
+	while (owner == cur && count > 0)
+	    if (atomic_compare_exchange_weak(&mtx->count, &count, count - 1))
+    	    return E_SUCCESS;
+
+	while (owner == cur)
+		if (atomic_compare_exchange_weak(&mtx->owner, &owner, NULL))
+			return E_SUCCESS;
+
+	return E_FAILURE;
+}
+
+/* -------------------------------------------------------------------------- */
+int mtx_giveAsync( mtx_t *mtx )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert_tsk_context();
+	assert(mtx);
+	assert(mtx->obj.res!=RELEASED);
+	assert((mtx->mode & ~mtxMASK) == 0);
+	assert((mtx->mode &  mtxTypeMASK) != mtxTypeMASK);
+	assert((mtx->mode &  mtxPrioMASK) != mtxPrioMASK);
+
+	sys_lock();
+	{
+		result = priv_mtx_giveAsync(mtx);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+
+#endif//OS_ATOMICS

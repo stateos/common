@@ -234,14 +234,13 @@ static
 int priv_mut_takeAsync( mut_t *mut )
 /* -------------------------------------------------------------------------- */
 {
-	const uintptr_t cur = (uintptr_t)System.cur;
-	atomic_uintptr_t owner = atomic_load((atomic_uintptr_t *)&mut->owner);
+	tsk_t *owner = atomic_load(&mut->owner);
 
-	if (owner == cur)
+	if (owner == System.cur)
 		return E_FAILURE;
 	
-	while (owner == 0)
-		if (atomic_compare_exchange_weak((atomic_uintptr_t *)&mut->owner, &owner, cur))
+	while (owner == NULL)
+		if (atomic_compare_exchange_weak(&mut->owner, &owner, System.cur))
 			return E_SUCCESS;
 
 	return E_TIMEOUT;
@@ -283,11 +282,10 @@ static
 int priv_mut_giveAsync( mut_t *mut )
 /* -------------------------------------------------------------------------- */
 {
-	const uintptr_t cur = (uintptr_t)System.cur;
-	atomic_uintptr_t owner = atomic_load((atomic_uintptr_t *)&mut->owner);
+	tsk_t *owner = atomic_load(&mut->owner);
 
-	while (owner == cur)
-		if (atomic_compare_exchange_weak((atomic_uintptr_t *)&mut->owner, &owner, 0))
+	while (owner == System.cur)
+		if (atomic_compare_exchange_weak(&mut->owner, &owner, NULL))
 			return E_SUCCESS;
 
 	return E_FAILURE;

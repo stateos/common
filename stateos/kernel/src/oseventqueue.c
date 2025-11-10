@@ -487,7 +487,8 @@ static
 bool priv_evq_emptyAsync( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
-	return atomic_load((atomic_size_t *)&evq->count) == 0;
+	unsigned count = atomic_load(&evq->count);
+	return count == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -495,7 +496,8 @@ static
 bool priv_evq_fullAsync( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
-	return atomic_load((atomic_size_t *)&evq->count) == evq->limit;
+	unsigned count = atomic_load(&evq->count);
+	return count == evq->limit;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -504,7 +506,7 @@ void priv_evq_decAsync( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
 	evq->head = evq->head + 1 < evq->limit ? evq->head + 1 : 0;
-	atomic_fetch_sub((atomic_size_t *)&evq->count, 1);
+	atomic_fetch_sub(&evq->count, 1);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -513,7 +515,7 @@ void priv_evq_incAsync( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
 	evq->tail = evq->tail + 1 < evq->limit ? evq->tail + 1 : 0;
-	atomic_fetch_add((atomic_size_t *)&evq->count, 1);
+	atomic_fetch_add(&evq->count, 1);
 }
 
 /* -------------------------------------------------------------------------- */
