@@ -60,7 +60,11 @@
 #endif
 
 #if     OS_TASK_EXIT == 0
-#error  osconfig.h: Invalid OS_TASK_EXIT value! It must be a value other than 0.
+#error  osconfig.h: Invalid OS_TASK_EXIT value! It must not be 0.
+#endif
+
+#if     OS_ATOMICS != 0
+#error  osconfig.h: Invalid OS_ATOMICS value! It must be 0.
 #endif
 
 //-----------------------------------------------------------------------------
