@@ -487,8 +487,7 @@ static
 bool priv_evq_emptyAsync( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned count = atomic_load(&evq->count);
-	return count == 0;
+	return atomic_load(&evq->count) == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -496,8 +495,7 @@ static
 bool priv_evq_fullAsync( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned count = atomic_load(&evq->count);
-	return count == evq->limit;
+	return atomic_load(&evq->count) == evq->limit;
 }
 
 /* -------------------------------------------------------------------------- */

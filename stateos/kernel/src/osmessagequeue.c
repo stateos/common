@@ -536,8 +536,7 @@ static
 bool priv_msg_emptyAsync( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned count = atomic_load(&msg->count);
-	return count == 0;
+	return atomic_load(&msg->count) == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -545,8 +544,7 @@ static
 bool priv_msg_fullAsync( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned count = atomic_load(&msg->count);
-	return count == msg->limit;
+	return atomic_load(&msg->count) == msg->limit;
 }
 
 /* -------------------------------------------------------------------------- */

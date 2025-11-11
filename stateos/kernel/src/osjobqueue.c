@@ -486,8 +486,7 @@ static
 bool priv_job_emptyAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned count = atomic_load(&job->count);
-	return count == 0;
+	return atomic_load(&job->count) == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -495,8 +494,7 @@ static
 bool priv_job_fullAsync( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned count = atomic_load(&job->count);
-	return count == job->limit;
+	return atomic_load(&job->count) == job->limit;
 }
 
 /* -------------------------------------------------------------------------- */

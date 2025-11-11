@@ -306,7 +306,6 @@ unsigned mtx_prio( mtx_t *mtx );
  *
  * Name              : mtx_take
  * Alias             : mtx_tryLock
- * Async alias       : mtx_takeAsync
  *
  * Description       : try to lock the mutex object,
  *                     don't wait if the mutex object can't be locked immediately
@@ -328,10 +327,6 @@ int mtx_take( mtx_t *mtx );
 
 __STATIC_INLINE
 int mtx_tryLock( mtx_t *mtx ) { return mtx_take(mtx); }
-
-#if OS_ATOMICS
-int mtx_takeAsync( mtx_t *mtx );
-#endif
 
 /******************************************************************************
  *
@@ -389,7 +384,6 @@ int mtx_waitUntil( mtx_t *mtx, cnt_t time );
  *
  * Name              : mtx_wait
  * Alias             : mtx_lock
- * Async alias       : mtx_waitAsync
  *
  * Description       : try to lock the mutex object,
  *                     wait indefinitely if the mutex object can't be locked immediately
@@ -401,8 +395,8 @@ int mtx_waitUntil( mtx_t *mtx, cnt_t time );
  *   E_SUCCESS       : mutex object was successfully locked
  *   OWNERDEAD       : mutex object was successfully locked, previous owner was reseted
  *   E_FAILURE       : mutex object can't be locked
- *   E_STOPPED       : mutex object was reseted (unavailable for async version)
- *   E_DELETED       : mutex object was deleted (unavailable for async version)
+ *   E_STOPPED       : mutex object was reseted
+ *   E_DELETED       : mutex object was deleted
  *
  * Note              : use only in thread mode
  *
@@ -414,15 +408,10 @@ int mtx_wait( mtx_t *mtx ) { return mtx_waitFor(mtx, INFINITE); }
 __STATIC_INLINE
 int mtx_lock( mtx_t *mtx ) { return mtx_wait(mtx); }
 
-#if OS_ATOMICS
-int mtx_waitAsync( mtx_t *mtx );
-#endif
-
 /******************************************************************************
  *
  * Name              : mtx_give
  * Alias             : mtx_unlock
- * Async alias       : mtx_giveAsync
  *
  * Description       : try to unlock the mutex object (only owner task can unlock mutex object),
  *                     don't wait if the mutex object can't be unlocked
@@ -442,10 +431,6 @@ int mtx_give( mtx_t *mtx );
 
 __STATIC_INLINE
 int mtx_unlock( mtx_t *mtx ) { return mtx_give(mtx); }
-
-#if OS_ATOMICS
-int mtx_giveAsync( mtx_t *mtx );
-#endif
 
 #ifdef __cplusplus
 }
@@ -497,11 +482,6 @@ struct Mutex : public __mtx
 	int      lock     ()                  { return mtx_lock     (this); }
 	int      give     ()                  { return mtx_give     (this); }
 	int      unlock   ()                  { return mtx_unlock   (this); }
-#if OS_ATOMICS
-	int      takeAsync ()                 { return mtx_takeAsync (this); }
-	int      waitAsync ()                 { return mtx_waitAsync (this); }
-	int      giveAsync ()                 { return mtx_giveAsync (this); }
-#endif
 
 #if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<Mutex>;

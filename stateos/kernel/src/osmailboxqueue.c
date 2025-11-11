@@ -482,8 +482,7 @@ static
 bool priv_box_emptyAsync( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned count = atomic_load(&box->count);
-	return count == 0;
+	return atomic_load(&box->count) == 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -491,8 +490,7 @@ static
 bool priv_box_fullAsync( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned count = atomic_load(&box->count);
-	return count == box->limit;
+	return atomic_load(&box->count) == box->limit;
 }
 
 /* -------------------------------------------------------------------------- */
