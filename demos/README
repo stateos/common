@@ -16,7 +16,9 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 1.1
-- added sys_suspend and sys_resume definitions
+- updated os version
+- added sys_suspend definition
+- added sys_resume definition
 - removed sys_stop function
 - removed tsk_killAll definition
 - removed tsk_main definition
