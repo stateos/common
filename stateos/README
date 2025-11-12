@@ -51,6 +51,8 @@ Features:
 ---------
 7.1
 - updated os version
+- added sys_suspend function
+- added sys_resume function
 ---------
 7.0
 - updated os version

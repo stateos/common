@@ -85,6 +85,8 @@ void core_tmr_insert( tmr_t *tmr )
 void core_tmr_remove( tmr_t *tmr )
 {
 	priv_tmr_remove(tmr);
+	if (tmr == (tmr_t *)System.tsk)
+		System.tsk = NULL;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -185,6 +187,8 @@ void priv_tsk_insert( tsk_t *tsk )
 		do nxt = nxt->hdr.next;
 		while (tsk->prio <= nxt->prio);
 
+	tsk->hdr.id = ID_READY;
+
 	prv = nxt->hdr.prev;
 
 	tsk->hdr.prev = prv;
@@ -201,6 +205,8 @@ void priv_tsk_remove( tsk_t *tsk )
 	tsk_t *prv = tsk->hdr.prev;
 	tsk_t *nxt = tsk->hdr.next;
 
+	tsk->hdr.id = ID_STOPPED;
+
 	nxt->hdr.prev = prv;
 	prv->hdr.next = nxt;
 }
@@ -209,7 +215,6 @@ void priv_tsk_remove( tsk_t *tsk )
 
 void core_tsk_insert( tsk_t *tsk )
 {
-	tsk->hdr.id = ID_READY;
 	priv_tsk_insert(tsk);
 	#if OS_ROBIN
 	if (tsk == IDLE.hdr.next)
@@ -221,8 +226,9 @@ void core_tsk_insert( tsk_t *tsk )
 
 void core_tsk_remove( tsk_t *tsk )
 {
-	tsk->hdr.id = ID_STOPPED;
 	priv_tsk_remove(tsk);
+	if (tsk == System.tsk)
+		System.tsk = NULL;
 	if (tsk == System.cur)
 		port_ctx_switchNow();
 }
@@ -341,7 +347,6 @@ void core_tsk_append( tsk_t *tsk, tsk_t **que )
 {
 	tsk_t *nxt = *que;
 	tsk->guard  = que;
-	tsk->hdr.id = ID_READY;
 
 	while (nxt && tsk->prio <= nxt->prio)
 	{
@@ -386,9 +391,10 @@ int core_tsk_wait( tsk_t *tsk, tsk_t **que )
 
 	if (que)
 	{
-		priv_tsk_remove(tsk);
-		core_tmr_insert((tmr_t *)tsk); // sets ID_TIMER for a while
-		core_tsk_append(tsk, que);     // must be last; sets ID_READY back
+		priv_tsk_remove(tsk);          // sets ID_STOPPED
+		core_tmr_insert((tmr_t *)tsk); // sets ID_TIMER
+		tsk->hdr.id = ID_READY;        // sets ID_READY back
+		core_tsk_append(tsk, que);
 	}
 
 	if (tsk == System.cur)
@@ -589,6 +595,9 @@ void *core_tsk_switch( void *sp )
 			priv_tsk_insert(nxt);
 			nxt = IDLE.hdr.next;
 		}
+
+		if (System.tsk != NULL)
+			nxt = System.tsk->guard ? &IDLE : System.tsk;
 
 		System.cur = nxt;
 		sp = nxt->sp;

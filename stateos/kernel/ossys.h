@@ -58,8 +58,49 @@ extern "C" {
 #endif
 void sys_init( void );
 
+/******************************************************************************
+ *
+ * Name              : sys_suspend
+ *
+ * Description       : enter to system suspend mode (executes only current task)
+ *
+ * Parameters        : none
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void sys_suspend( void );
+
+/******************************************************************************
+ *
+ * Name              : sys_resume
+ *
+ * Description       : exit from system suspend mode
+ *
+ * Parameters        : none
+ *
+ * Return            : none
+ *
+ ******************************************************************************/
+
+void sys_resume( void );
+
 #ifdef __cplusplus
 }
 #endif
+
+/* -------------------------------------------------------------------------- */
+
+#ifdef __cplusplus
+namespace stateos {
+
+static inline void suspend() { sys_suspend(); }
+static inline void resume () { sys_resume (); }
+
+}     //  namespace
+#endif//__cplusplus
+
+/* -------------------------------------------------------------------------- */
 
 #endif//__STATEOS_SYS_H
