@@ -57,7 +57,7 @@ bool priv_evq_empty( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	return atomic_load((atomic_size_t *)&evq->count) == 0;
+	return atomic_load(&evq->count) == 0;
 #else
 	return evq->count == 0;
 #endif
@@ -69,7 +69,7 @@ bool priv_evq_full( evq_t *evq )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	return atomic_load((atomic_size_t *)&evq->count) == evq->limit;
+	return atomic_load(&evq->count) == evq->limit;
 #else
 	return evq->count == evq->limit;
 #endif
@@ -82,7 +82,7 @@ void priv_evq_dec( evq_t *evq )
 {
 	evq->head = evq->head + 1 < evq->limit ? evq->head + 1 : 0;
 #if OS_ATOMICS
-	atomic_fetch_sub((atomic_size_t *)&evq->count, 1);
+	atomic_fetch_sub(&evq->count, 1);
 #else
 	evq->count -= 1;
 #endif
@@ -95,7 +95,7 @@ void priv_evq_inc( evq_t *evq )
 {
 	evq->tail = evq->tail + 1 < evq->limit ? evq->tail + 1 : 0;
 #if OS_ATOMICS
-	atomic_fetch_add((atomic_size_t *)&evq->count, 1);
+	atomic_fetch_add(&evq->count, 1);
 #else
 	evq->count += 1;
 #endif

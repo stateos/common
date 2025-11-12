@@ -59,7 +59,7 @@ bool priv_msg_empty( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	return atomic_load((atomic_size_t *)&msg->count) == 0;
+	return atomic_load(&msg->count) == 0;
 #else
 	return msg->count == 0;
 #endif
@@ -71,7 +71,7 @@ bool priv_msg_full( msg_t *msg )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	return atomic_load((atomic_size_t *)&msg->count) == msg->limit;
+	return atomic_load(&msg->count) == msg->limit;
 #else
 	return msg->count == msg->limit;
 #endif
@@ -84,7 +84,7 @@ void priv_msg_dec( msg_t *msg )
 {
 	msg->head = msg->head + msg->size < msg->limit ? msg->head + msg->size : 0;
 #if OS_ATOMICS
-	atomic_fetch_sub((atomic_size_t *)&msg->count, msg->size);
+	atomic_fetch_sub(&msg->count, msg->size);
 #else
 	msg->count -= msg->size;
 #endif
@@ -97,7 +97,7 @@ void priv_msg_inc( msg_t *msg )
 {
 	msg->tail = msg->tail + msg->size < msg->limit ? msg->tail + msg->size : 0;
 #if OS_ATOMICS
-	atomic_fetch_add((atomic_size_t *)&msg->count, msg->size);
+	atomic_fetch_add(&msg->count, msg->size);
 #else
 	msg->count += msg->size;
 #endif

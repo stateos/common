@@ -89,6 +89,8 @@ void core_tsk_remove( tsk_t *tsk )
 	tsk_t *nxt = tsk->hdr.next;
 
 	tsk->hdr.id = ID_STOPPED;
+	if (System.tsk == tsk)
+		System.tsk = NULL;
 
 	nxt->hdr.prev = prv;
 	prv->hdr.next = nxt;
@@ -227,7 +229,11 @@ void core_tsk_switch( void )
 			continue;
 
 		if (cur->hdr.id == ID_READY)
+		{
+			if (System.tsk != NULL && System.tsk != cur)
+				continue;
 			break;
+		}
 
 //		if (cur->hdr.id == ID_TIMER)
 		{

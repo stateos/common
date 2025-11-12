@@ -57,7 +57,7 @@ bool priv_job_empty( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	return atomic_load((atomic_size_t *)&job->count) == 0;
+	return atomic_load(&job->count) == 0;
 #else
 	return job->count == 0;
 #endif
@@ -69,7 +69,7 @@ bool priv_job_full( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	return atomic_load((atomic_size_t *)&job->count) == job->limit;
+	return atomic_load(&job->count) == job->limit;
 #else
 	return job->count == job->limit;
 #endif
@@ -82,7 +82,7 @@ void priv_job_dec( job_t *job )
 {
 	job->head = job->head + 1 < job->limit ? job->head + 1 : 0;
 #if OS_ATOMICS
-	atomic_fetch_sub((atomic_size_t *)&job->count, 1);
+	atomic_fetch_sub(&job->count, 1);
 #else
 	job->count -= 1;
 #endif
@@ -95,7 +95,7 @@ void priv_job_inc( job_t *job )
 {
 	job->tail = job->tail + 1 < job->limit ? job->tail + 1 : 0;
 #if OS_ATOMICS
-	atomic_fetch_add((atomic_size_t *)&job->count, 1);
+	atomic_fetch_add(&job->count, 1);
 #else
 	job->count += 1;
 #endif

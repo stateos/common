@@ -33,7 +33,7 @@
 #define __INTROSVERSION_H
 
 #define __INTROS_MAJOR        5
-#define __INTROS_MINOR        0
+#define __INTROS_MINOR        1
 #define __INTROS_BUILD        0
 
 #define __INTROS        ((((__INTROS_MAJOR)&0xFFUL)<<24)|(((__INTROS_MINOR)&0xFFUL)<<16)|((__INTROS_BUILD)&0xFFFFUL))

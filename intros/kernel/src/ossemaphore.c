@@ -57,9 +57,9 @@ unsigned priv_sem_take( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	unsigned count = atomic_load((atomic_uint *)&sem->count);
+	unsigned count = atomic_load(&sem->count);
 	while (count > 0)
-		if (atomic_compare_exchange_weak((atomic_uint *)&sem->count, &count, count - 1))
+		if (atomic_compare_exchange_weak(&sem->count, &count, count - 1))
 			return SUCCESS;
 	return FAILURE;
 #else
@@ -103,9 +103,9 @@ unsigned priv_sem_give( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	unsigned count = atomic_load((atomic_uint *)&sem->count);
+	unsigned count = atomic_load(&sem->count);
 	while (count < sem->limit)
-		if (atomic_compare_exchange_weak((atomic_uint *)&sem->count, &count, count + 1))
+		if (atomic_compare_exchange_weak(&sem->count, &count, count + 1))
 			return SUCCESS;
 	return FAILURE;
 #else

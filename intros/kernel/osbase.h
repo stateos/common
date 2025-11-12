@@ -184,6 +184,7 @@ void core_hdr_init( hdr_t *hdr )
 typedef struct __sys
 {
 	tsk_t  * cur;   // pointer to the current task control block
+	tsk_t  * tsk;	// task executed in system suspend mode
 #if HW_TIMER_SIZE < OS_TIMER_SIZE
 	volatile
 	cnt_t    cnt;   // system timer counter

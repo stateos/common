@@ -59,7 +59,7 @@ bool priv_box_empty( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	return atomic_load((atomic_size_t *)&box->count) == 0;
+	return atomic_load(&box->count) == 0;
 #else
 	return box->count == 0;
 #endif
@@ -71,7 +71,7 @@ bool priv_box_full( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 #if OS_ATOMICS
-	return atomic_load((atomic_size_t *)&box->count) == box->limit;
+	return atomic_load(&box->count) == box->limit;
 #else
 	return box->count == box->limit;
 #endif
@@ -84,7 +84,7 @@ void priv_box_dec( box_t *box )
 {
 	box->head = box->head + box->size < box->limit ? box->head + box->size : 0;
 #if OS_ATOMICS
-	atomic_fetch_sub((atomic_size_t *)&box->count, box->size);
+	atomic_fetch_sub(&box->count, box->size);
 #else
 	box->count -= box->size;
 #endif
@@ -97,7 +97,7 @@ void priv_box_inc( box_t *box )
 {
 	box->tail = box->tail + box->size < box->limit ? box->tail + box->size : 0;
 #if OS_ATOMICS
-	atomic_fetch_add((atomic_size_t *)&box->count, box->size);
+	atomic_fetch_add(&box->count, box->size);
 #else
 	box->count += box->size;
 #endif

@@ -36,8 +36,11 @@ Features:
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 5.1
+- updated os version
 - removed tsk_killAll function
 - removed tsk_main function
+- added sys_suspend function
+- added sys_resume function
 ---------
 5.0
 - updated os version
