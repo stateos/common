@@ -38,6 +38,46 @@
 // SYSTEM TIMER SERVICES
 /* -------------------------------------------------------------------------- */
 
+#if HW_TIMER_SIZE
+
+static
+bool priv_tmr_expired( tmr_t *tmr )
+{
+	port_tmr_stop();
+
+	if (tmr->delay == INFINITE)
+	return false; // return if timer counting indefinitely
+
+	if (tmr->delay < core_sys_time() - tmr->start + 1)
+	return true;  // return if timer finished counting
+
+	port_tmr_start((hwt_t)(tmr->start + tmr->delay));
+
+	if (tmr->delay >= core_sys_time() - tmr->start + 1)
+	return false; // return if timer still counts
+
+	port_tmr_stop();
+
+	return true;  // however timer finished counting
+}
+
+/* -------------------------------------------------------------------------- */
+
+#else
+
+static
+bool priv_tmr_expired( tmr_t *tmr )
+{
+	if (tmr->delay < core_sys_time() - tmr->start + 1)
+	return true;  // return if timer finished counting
+
+	return false; // return if timer still counts or counting indefinitely
+}
+
+#endif
+
+/* -------------------------------------------------------------------------- */
+
 static
 void priv_tmr_insert( tmr_t *tmr )
 {
@@ -88,46 +128,6 @@ void core_tmr_remove( tmr_t *tmr )
 	if (tmr == (tmr_t *)System.tsk)
 		System.tsk = NULL;
 }
-
-/* -------------------------------------------------------------------------- */
-
-#if HW_TIMER_SIZE
-
-static
-bool priv_tmr_expired( tmr_t *tmr )
-{
-	port_tmr_stop();
-
-	if (tmr->delay == INFINITE)
-	return false; // return if timer counting indefinitely
-
-	if (tmr->delay < core_sys_time() - tmr->start + 1)
-	return true;  // return if timer finished counting
-
-	port_tmr_start((hwt_t)(tmr->start + tmr->delay));
-
-	if (tmr->delay >= core_sys_time() - tmr->start + 1)
-	return false; // return if timer still counts
-
-	port_tmr_stop();
-
-	return true;  // however timer finished counting
-}
-
-/* -------------------------------------------------------------------------- */
-
-#else
-
-static
-bool priv_tmr_expired( tmr_t *tmr )
-{
-	if (tmr->delay < core_sys_time() - tmr->start + 1)
-	return true;  // return if timer finished counting
-
-	return false; // return if timer still counts or counting indefinitely
-}
-
-#endif
 
 /* -------------------------------------------------------------------------- */
 
@@ -426,8 +426,11 @@ int core_tsk_waitNext( tsk_t **que, cnt_t delay )
 
 	cur->delay = delay;
 
-	if (cur->delay == IMMEDIATE)
+	if (core_sys_time() - cur->start >= cur->delay)
+	{
+		cur->start += cur->delay;
 		return E_TIMEOUT;
+	}
 
 	return core_tsk_wait(cur, que);
 }
