@@ -33,7 +33,7 @@
 #define __STATEOSVERSION_H
 
 #define __STATEOS_MAJOR       7
-#define __STATEOS_MINOR       0
+#define __STATEOS_MINOR       1
 #define __STATEOS_BUILD       0
 
 #define __STATEOS       ((((__STATEOS_MAJOR)&0xFFUL)<<24)|(((__STATEOS_MINOR)&0xFFUL)<<16)|((__STATEOS_BUILD)&0xFFFFUL))

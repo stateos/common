@@ -326,7 +326,7 @@ void priv_tsk_idle( void )
 	sys_lock();
 	{
 		core_tsk_deleter();              // call garbage collection procedure
-		IDLE.proc = core_tsk_idle;      // restore default idle procedure
+		IDLE.proc = core_tsk_idle;       // restore default idle procedure
 	}
 	sys_unlock();
 }
@@ -337,7 +337,7 @@ void priv_tsk_destroy( void )
 /* -------------------------------------------------------------------------- */
 {
 	core_tsk_deleter();                  // call garbage collection procedure
-	IDLE.proc = priv_tsk_idle;          // set task deleter as idle procedure
+	IDLE.proc = priv_tsk_idle;           // set task deleter as idle procedure
 	core_tsk_waitFor(&IDLE.obj.queue, INFINITE); // wait for removal
 
 	assert(false);                       // system cannot return here
@@ -651,7 +651,7 @@ void priv_sig_dispatch( tsk_t *tsk )
 	assert_ctx_integrity(tsk, tsk->sp);
 	port_ctx_init(tsk->sp, priv_sig_deliver);
 
-	if (tsk->guard)
+	if (tsk->guard != 0)
 		core_tsk_wakeup(tsk, 0);
 }
 
