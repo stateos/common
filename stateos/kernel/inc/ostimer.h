@@ -513,6 +513,7 @@ void tmr_stop( tmr_t *tmr ) { tmr_start(tmr, 0, 0); }
 /******************************************************************************
  *
  * Name              : tmr_take
+ * Alias             : tmr_expired
  * Alias             : tmr_tryWait
  * ISR alias         : tmr_takeISR
  *
@@ -532,6 +533,9 @@ void tmr_stop( tmr_t *tmr ) { tmr_start(tmr, 0, 0); }
  ******************************************************************************/
 
 int tmr_take( tmr_t *tmr );
+
+__STATIC_INLINE
+int tmr_expired( tmr_t *tmr ) { return tmr_take(tmr); }
 
 __STATIC_INLINE
 int tmr_tryWait( tmr_t *tmr ) { return tmr_take(tmr); }
@@ -732,6 +736,7 @@ struct baseTimer : public __tmr
 #endif
 	void stop         ()                                                    {        tmr_stop         (this); }
 	int  take         ()                                                    { return tmr_take         (this); }
+	int  expired      ()                                                    { return tmr_expired      (this); }
 	int  tryWait      ()                                                    { return tmr_tryWait      (this); }
 	int  takeISR      ()                                                    { return tmr_takeISR      (this); }
 	template<typename T>

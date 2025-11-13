@@ -417,6 +417,7 @@ void tmr_kill( tmr_t *tmr ) { tmr_reset(tmr); }
 /******************************************************************************
  *
  * Name              : tmr_take
+ * Alias             : tmr_expired
  * Alias             : tmr_tryWait
  *
  * Description       : check if the timer finishes countdown
@@ -431,6 +432,9 @@ void tmr_kill( tmr_t *tmr ) { tmr_reset(tmr); }
  ******************************************************************************/
 
 unsigned tmr_take( tmr_t *tmr );
+
+__STATIC_INLINE
+unsigned tmr_expired( tmr_t *tmr ) { return tmr_take(tmr); }
 
 __STATIC_INLINE
 unsigned tmr_tryWait( tmr_t *tmr ) { return tmr_take(tmr); }
@@ -545,6 +549,7 @@ struct baseTimer : public __tmr
 	void     reset        ()                                                    {        tmr_reset        (this); }
 	void     kill         ()                                                    {        tmr_kill         (this); }
 	unsigned take         ()                                                    { return tmr_take         (this); }
+	unsigned expired      ()                                                    { return tmr_expired      (this); }
 	unsigned tryWait      ()                                                    { return tmr_tryWait      (this); }
 	void     wait         ()                                                    {        tmr_wait         (this); }
 	explicit
