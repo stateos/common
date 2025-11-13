@@ -303,7 +303,7 @@ void core_ctx_switch( void )
 {
 	tsk_t *cur = IDLE.hdr.next;
 	tsk_t *nxt = cur->hdr.next;
-	if (nxt->prio == cur->prio)
+	if (nxt->prio == cur->prio && System.tsk == NULL)
 		port_ctx_switch();
 }
 
@@ -313,7 +313,7 @@ void core_ctx_switchNow( void )
 {
 	tsk_t *cur = IDLE.hdr.next;
 	tsk_t *nxt = cur->hdr.next;
-	if (nxt->prio == cur->prio)
+	if (nxt->prio == cur->prio && System.tsk == NULL)
 		port_ctx_switchNow();
 }
 
