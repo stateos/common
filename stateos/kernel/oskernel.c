@@ -614,7 +614,7 @@ void *core_tsk_switch( void *sp )
 
 		#if __MPU_USED == 1
 	//	port_mpu_disable();
-		port_mpu_stackUpdate(nxt == &MAIN ? NULL : nxt->stack);
+		port_mpu_stackUpdate(cur == &MAIN ? NULL : cur->stack);
 	//	port_mpu_enable();
 		#endif
 	}
