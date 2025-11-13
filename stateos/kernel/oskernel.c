@@ -216,10 +216,8 @@ void priv_tsk_remove( tsk_t *tsk )
 void core_tsk_insert( tsk_t *tsk )
 {
 	priv_tsk_insert(tsk);
-	#if OS_ROBIN
 	if (tsk == IDLE.hdr.next)
 		port_ctx_switch();
-	#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -523,10 +521,8 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		if (tsk == System.cur)       // current task
 		{
 			tsk = tsk->hdr.next;
-			#if OS_ROBIN
 			if (tsk->prio > prio)
 				port_ctx_switch();
-			#endif
 		}
 		else
 		if (tsk->guard != 0)         // blocked task
@@ -563,18 +559,42 @@ void core_cur_prio( unsigned prio )
 	{
 		tsk->prio = prio;
 		tsk = tsk->hdr.next;
-		#if OS_ROBIN
 		if (tsk->prio > prio)
 			port_ctx_switch();
-		#endif
 	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+static
+tsk_t *priv_tsk_switch( tsk_t *cur )
+{
+	tsk_t *nxt;
+
+	nxt = IDLE.hdr.next;
+
+	#if OS_ROBIN && HW_TIMER_SIZE == 0
+	if (cur == nxt || (nxt->slice >= (OS_FREQUENCY)/(OS_ROBIN) && (nxt->slice = 0) == 0))
+	#else
+	if (cur == nxt)
+	#endif
+	{
+		priv_tsk_remove(nxt);
+		priv_tsk_insert(nxt);
+		nxt = IDLE.hdr.next;
+	}
+
+	if (System.tsk != NULL)
+		nxt = System.tsk->guard ? &IDLE : System.tsk;
+
+	return nxt;
 }
 
 /* -------------------------------------------------------------------------- */
 
 void *core_tsk_switch( void *sp )
 {
-	tsk_t *cur, *nxt;
+	tsk_t *cur;
 
 	assert_ctx_integrity(System.cur, sp);
 
@@ -586,25 +606,11 @@ void *core_tsk_switch( void *sp )
 		if (cur->sp == 0)
 			cur->sp = sp;
 
-		nxt = IDLE.hdr.next;
+		cur = priv_tsk_switch(cur);
 
-		#if OS_ROBIN && HW_TIMER_SIZE == 0
-		if (cur == nxt || (nxt->slice >= (OS_FREQUENCY)/(OS_ROBIN) && (nxt->slice = 0) == 0))
-		#else
-		if (cur == nxt)
-		#endif
-		{
-			priv_tsk_remove(nxt);
-			priv_tsk_insert(nxt);
-			nxt = IDLE.hdr.next;
-		}
-
-		if (System.tsk != NULL)
-			nxt = System.tsk->guard ? &IDLE : System.tsk;
-
-		System.cur = nxt;
-		sp = nxt->sp;
-		nxt->sp = 0;
+		System.cur = cur;
+		sp = cur->sp;
+		cur->sp = 0;
 
 		#if __MPU_USED == 1
 	//	port_mpu_disable();

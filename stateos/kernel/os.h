@@ -60,4 +60,8 @@
 #include "inc/ostask.h"
 #include "inc/osstatemachine.h"
 
+#ifdef __cplusplus
+namespace os = stateos;
+#endif
+
 #endif//__STATEOS_H
