@@ -58,4 +58,8 @@
 #include "inc/ostask.h"
 #include "inc/osstatemachine.h"
 
+#ifdef __cplusplus
+namespace os = intros;
+#endif
+
 #endif//__INTROS_H
