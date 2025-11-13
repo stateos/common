@@ -71,7 +71,6 @@ void sys_suspend( void )
 	sys_lock();
 	{
 		System.tsk = System.cur;
-		System.tsk->prio = -1U;
 	}
 	sys_unlock();
 }
@@ -82,8 +81,10 @@ void sys_resume( void )
 {
 	sys_lock();
 	{
-		core_tsk_prio(System.tsk, System.tsk->basic);
 		System.tsk = NULL;
+		#if OS_ROBIN
+		port_ctx_switchNow();
+		#endif
 	}
 	sys_unlock();
 }

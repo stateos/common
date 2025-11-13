@@ -216,8 +216,10 @@ void priv_tsk_remove( tsk_t *tsk )
 void core_tsk_insert( tsk_t *tsk )
 {
 	priv_tsk_insert(tsk);
+	#if OS_ROBIN
 	if (tsk == IDLE.hdr.next)
 		port_ctx_switch();
+	#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -324,7 +326,7 @@ void core_tsk_loop( void )
 		port_clr_lock();
 		((fun_a *)System.cur->proc)(System.cur->arg);
 		port_set_lock();
-		core_ctx_switchNow();
+		port_ctx_switchNow();
 	}
 }
 
@@ -521,8 +523,10 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		if (tsk == System.cur)       // current task
 		{
 			tsk = tsk->hdr.next;
+			#if OS_ROBIN
 			if (tsk->prio > prio)
 				port_ctx_switch();
+			#endif
 		}
 		else
 		if (tsk->guard != 0)         // blocked task
@@ -559,8 +563,10 @@ void core_cur_prio( unsigned prio )
 	{
 		tsk->prio = prio;
 		tsk = tsk->hdr.next;
+		#if OS_ROBIN
 		if (tsk->prio > prio)
 			port_ctx_switch();
+		#endif
 	}
 }
 
