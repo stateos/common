@@ -453,7 +453,7 @@ void tsk_yield( void )
 
 	sys_lock();
 	{
-		port_ctx_switchNow();
+		core_ctx_switchNow();
 	}
 	sys_unlock();
 }

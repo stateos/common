@@ -217,7 +217,7 @@ void core_tsk_insert( tsk_t *tsk )
 {
 	priv_tsk_insert(tsk);
 	#if OS_ROBIN
-	if (tsk == IDLE.hdr.next)
+	if (tsk == IDLE.hdr.next && System.tsk == NULL)
 		port_ctx_switch();
 	#endif
 }
@@ -313,7 +313,7 @@ void core_ctx_switchNow( void )
 {
 	tsk_t *cur = IDLE.hdr.next;
 	tsk_t *nxt = cur->hdr.next;
-	if (nxt->prio == cur->prio && System.tsk == NULL)
+	if (nxt->prio == cur->prio || System.cur != cur)
 		port_ctx_switchNow();
 }
 
@@ -326,7 +326,7 @@ void core_tsk_loop( void )
 		port_clr_lock();
 		((fun_a *)System.cur->proc)(System.cur->arg);
 		port_set_lock();
-		port_ctx_switchNow();
+		core_ctx_switchNow();
 	}
 }
 
@@ -524,7 +524,7 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		{
 			tsk = tsk->hdr.next;
 			#if OS_ROBIN
-			if (tsk->prio > prio)
+			if (tsk->prio > prio && System.tsk == NULL)
 				port_ctx_switch();
 			#endif
 		}
@@ -564,7 +564,7 @@ void core_cur_prio( unsigned prio )
 		tsk->prio = prio;
 		tsk = tsk->hdr.next;
 		#if OS_ROBIN
-		if (tsk->prio > prio)
+		if (tsk->prio > prio && System.tsk == NULL)
 			port_ctx_switch();
 		#endif
 	}

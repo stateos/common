@@ -83,7 +83,7 @@ void sys_resume( void )
 	{
 		System.tsk = NULL;
 		#if OS_ROBIN
-		port_ctx_switchNow();
+		core_ctx_switchNow();
 		#endif
 	}
 	sys_unlock();
