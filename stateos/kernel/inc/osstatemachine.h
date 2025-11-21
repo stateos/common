@@ -34,7 +34,6 @@
 
 #include "oskernel.h"
 #include "osclock.h"
-#include "ostask.h"
 #include "oseventqueue.h"
 
 /* -------------------------------------------------------------------------- */

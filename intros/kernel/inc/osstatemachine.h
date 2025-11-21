@@ -449,27 +449,6 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize );
 
 /******************************************************************************
  *
- * Name              : hsm_reset
- * Alias             : hsm_kill
- *
- * Description       : reset the hsm object and wake up all waiting tasks with 'E_STOPPED' event value
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
-
-void hsm_reset( hsm_t *hsm );
-
-__STATIC_INLINE
-void hsm_kill( hsm_t *hsm ) { hsm_reset(hsm); }
-
-/******************************************************************************
- *
  * Name              : hsm_link
  *
  * Description       : link hsm state action to the state action queue
@@ -504,6 +483,27 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 #if OS_ATOMICS
 void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : hsm_reset
+ * Alias             : hsm_kill
+ *
+ * Description       : reset the hsm object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   hsm             : pointer to hsm object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void hsm_reset( hsm_t *hsm );
+
+__STATIC_INLINE
+void hsm_kill( hsm_t *hsm ) { hsm_reset(hsm); }
 
 /******************************************************************************
  *
