@@ -2,7 +2,7 @@
 
     @file    StateOS: ossignal.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    18.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************

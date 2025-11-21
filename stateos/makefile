@@ -27,7 +27,6 @@ SRCS += $(COMMON)/stateos/kernel/src/osbarrier.c
 SRCS += $(COMMON)/stateos/kernel/src/osconditionvariable.c
 SRCS += $(COMMON)/stateos/kernel/src/osevent.c
 SRCS += $(COMMON)/stateos/kernel/src/oseventqueue.c
-SRCS += $(COMMON)/stateos/kernel/src/osfastmutex.c
 SRCS += $(COMMON)/stateos/kernel/src/osflag.c
 SRCS += $(COMMON)/stateos/kernel/src/osjobqueue.c
 SRCS += $(COMMON)/stateos/kernel/src/oslist.c

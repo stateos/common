@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.c
     @author  Rajmund Szymanski
-    @date    01.11.2022
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -30,6 +30,7 @@
  ******************************************************************************/
 
 #include "inc/ossemaphore.h"
+#include "inc/ostask.h"
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
@@ -86,7 +87,7 @@ void priv_sem_reset( sem_t *sem, int event )
 {
 	sem->count = 0;
 
-	core_all_wakeup(sem->obj.queue, event);
+	core_all_wakeup(&sem->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -200,7 +201,7 @@ static
 int priv_sem_give( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
-	if (core_one_wakeup(sem->obj.queue, E_SUCCESS) != NULL)
+	if (core_one_wakeup(&sem->obj.queue, E_SUCCESS))
 		return E_SUCCESS;
 
 	if (sem->count >= sem->limit)
@@ -234,7 +235,7 @@ static
 int priv_sem_release( sem_t *sem, unsigned num )
 /* -------------------------------------------------------------------------- */
 {
-	num -= core_num_wakeup(sem->obj.queue, E_SUCCESS, num);
+	num -= core_num_wakeup(&sem->obj.queue, E_SUCCESS, num);
 
 	if (num > sem->limit - sem->count)
 	{
@@ -326,7 +327,7 @@ int sem_waitAsync( sem_t *sem )
 	assert_tsk_context();
 
 	while (sem_takeAsync(sem) != E_SUCCESS)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return E_SUCCESS;
 }

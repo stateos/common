@@ -46,7 +46,6 @@
 #include "inc/osbarrier.h"
 #include "inc/ossemaphore.h"
 #include "inc/osmutex.h"
-#include "inc/osfastmutex.h"
 #include "inc/osconditionvariable.h"
 #include "inc/osrwlock.h"
 #include "inc/oslist.h"

@@ -2,7 +2,7 @@
 
     @file    StateOS: osmemorypool.c
     @author  Rajmund Szymanski
-    @date    07.05.2021
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -38,21 +38,20 @@ static
 void priv_mem_bind( mem_t *mem )
 /* -------------------------------------------------------------------------- */
 {
-	que_t *ptr = &mem->lst.head;
-	que_t *data = mem->data;
+	que_t *ptr;
 
-	assert(mem->limit);
-	assert(mem->size);
-	assert(mem->data);
-
-	do
+	if (mem->limit > 0)
 	{
-		ptr = ptr->next = data;
-		data += 1 + mem->size;
-	}
-	while (--mem->limit > 0);
+		assert(mem->size);
+		assert(mem->data);
 
-	ptr->next = NULL;
+		ptr = mem->lst.head.next = mem->data;
+
+		while (--mem->limit > 0)
+			ptr = ptr->next = ptr + 1 + mem->size;
+
+		ptr->next = NULL;
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -115,7 +114,7 @@ static
 void priv_mem_reset( mem_t *mem, int event )
 /* -------------------------------------------------------------------------- */
 {
-	core_all_wakeup(mem->lst.obj.queue, event);
+	core_all_wakeup(&mem->lst.obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -151,6 +150,14 @@ void mem_destroy( mem_t *mem )
 
 /* -------------------------------------------------------------------------- */
 static
+bool priv_lst_empty( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	return lst->head.next == NULL;
+}
+
+/* -------------------------------------------------------------------------- */
+static
 void *priv_lst_popFront( lst_t *lst )
 /* -------------------------------------------------------------------------- */
 {
@@ -164,10 +171,9 @@ static
 int priv_mem_take( mem_t *mem, void **data )
 /* -------------------------------------------------------------------------- */
 {
-	if (mem->limit)
-		priv_mem_bind(mem);
+	priv_mem_bind(mem);
 
-	if (mem->lst.head.next == NULL)
+	if (priv_lst_empty(&mem->lst))
 		return E_TIMEOUT;
 
 	*data = priv_lst_popFront(&mem->lst);
@@ -262,7 +268,7 @@ static
 void priv_mem_give( mem_t *mem, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *tsk = core_one_wakeup(mem->lst.obj.queue, E_SUCCESS);
+	tsk_t *tsk = core_one_wakeup(&mem->lst.obj.queue, E_SUCCESS);
 
 	if (tsk)
 	{
@@ -270,9 +276,7 @@ void priv_mem_give( mem_t *mem, void *data )
 	}
 	else
 	{
-		if (mem->limit)
-			priv_mem_bind(mem);
-
+		priv_mem_bind(mem);
 		priv_lst_pushBack(&mem->lst, data);
 	}
 }

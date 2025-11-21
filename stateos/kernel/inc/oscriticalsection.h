@@ -2,7 +2,7 @@
 
     @file    StateOS: oscriticalsection.h
     @author  Rajmund Szymanski
-    @date    03.04.2021
+    @date    17.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************

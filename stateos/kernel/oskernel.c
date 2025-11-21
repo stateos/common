@@ -141,7 +141,7 @@ void priv_tmr_wakeup( tmr_t *tmr, int event )
 	if (tmr->delay >= core_sys_time() - tmr->start + 1)
 		priv_tmr_insert(tmr);
 
-	core_all_wakeup(tmr->obj.queue, event);
+	core_all_wakeup(&tmr->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -227,8 +227,10 @@ void core_tsk_insert( tsk_t *tsk )
 void core_tsk_remove( tsk_t *tsk )
 {
 	priv_tsk_remove(tsk);
+
 	if (tsk == System.tsk)
 		System.tsk = NULL;
+
 	if (tsk == System.cur)
 		port_ctx_switchNow();
 }
@@ -475,29 +477,29 @@ tsk_t *core_tsk_wakeup( tsk_t *tsk, int event )
 
 /* -------------------------------------------------------------------------- */
 
-unsigned core_num_wakeup( tsk_t *tsk, int event, unsigned num )
+unsigned core_num_wakeup( tsk_t **que, int event, unsigned num )
 {
 	unsigned cnt = 0;
 
-	while (tsk && num > 0) { tsk = core_tsk_wakeup(tsk, event)->obj.queue; ++cnt; --num; }
+	while (num > 0 && core_one_wakeup(que, event)) { cnt++; num--; }
 
 	return cnt;
 }
 
 /* -------------------------------------------------------------------------- */
 
-void core_all_wakeup( tsk_t *tsk, int event )
+void core_all_wakeup( tsk_t **que, int event )
 {
-	while (tsk) { tsk = core_tsk_wakeup(tsk, event)->obj.queue; }
+	while (core_one_wakeup(que, event));
 }
 
 /* -------------------------------------------------------------------------- */
 
-unsigned core_tsk_count( tsk_t *tsk )
+unsigned core_tsk_count( tsk_t **que )
 {
 	unsigned cnt = 0;
 
-	while (tsk) { tsk = tsk->obj.queue; ++cnt; }
+	while (*que) { que = &(*que)->obj.queue; cnt++; }
 
 	return cnt;
 }
@@ -683,7 +685,7 @@ tsk_t *core_mtx_transferLock( mtx_t *mtx, int event )
 	tsk_t *tsk;
 
 	core_mtx_unlink(mtx);
-	tsk = core_one_wakeup(mtx->obj.queue, event);
+	tsk = core_one_wakeup(&mtx->obj.queue, event);
 	core_mtx_link(mtx, tsk);
 
 	return tsk;
@@ -694,7 +696,7 @@ tsk_t *core_mtx_transferLock( mtx_t *mtx, int event )
 void core_mtx_reset( mtx_t *mtx, int event )
 {
 	core_mtx_unlink(mtx);
-	core_all_wakeup(mtx->obj.queue, event);
+	core_all_wakeup(&mtx->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */

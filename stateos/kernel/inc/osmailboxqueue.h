@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    17.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -500,7 +500,7 @@ int box_sendAsync( box_t *box, const void *data );
  * Name              : box_push
  * ISR alias         : box_pushISR
  *
- * Description       : try to transfer mailbox data to the mailbox queue object,
+ * Description       : transfer mailbox data to the mailbox queue object,
  *                     remove the oldest mailbox data if the mailbox queue object is full
  *
  * Parameters

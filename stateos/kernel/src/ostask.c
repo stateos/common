@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.c
     @author  Rajmund Szymanski
-    @date    18.03.2023
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -305,6 +305,15 @@ void priv_mtx_remove( tsk_t *tsk )
 
 /* -------------------------------------------------------------------------- */
 static
+void priv_sig_reset( tsk_t *tsk )
+/* -------------------------------------------------------------------------- */
+{
+	tsk->sig.sigset = 0;
+	tsk->sig.backup.sp = 0;
+}
+
+/* -------------------------------------------------------------------------- */
+static
 void priv_tsk_stop( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
@@ -341,15 +350,6 @@ void priv_tsk_destroy( void )
 	core_tsk_waitFor(&IDLE.obj.queue, INFINITE); // wait for removal
 
 	assert(false);                       // system cannot return here
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_sig_reset( tsk_t *tsk )
-/* -------------------------------------------------------------------------- */
-{
-	tsk->sig.sigset = 0;
-	tsk->sig.backup.sp = 0;
 }
 
 /* -------------------------------------------------------------------------- */

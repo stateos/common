@@ -2,7 +2,7 @@
 
     @file    StateOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    18.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -494,7 +494,7 @@ void tmr_startUntil( tmr_t *tmr, cnt_t time );
 
 /******************************************************************************
  *
- * Name              : tmr_stop
+ * Alias             : tmr_stop
  *
  * Description       : stop timer
  *
@@ -818,12 +818,6 @@ struct Timer : public baseTimer
 	Timer& operator=( Timer&& ) = delete;
 	Timer& operator=( const Timer& ) = delete;
 
-#if __cplusplus >= 201402L
-	using Ptr = std::unique_ptr<Timer>;
-#else
-	using Ptr = Timer *;
-#endif
-
 /******************************************************************************
  *
  * Name              : Timer::Make
@@ -1066,6 +1060,12 @@ struct Timer : public baseTimer
 	{
 		return StartUntil(_time, std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
+#endif
+
+#if __cplusplus >= 201402L
+	using Ptr = std::unique_ptr<Timer>;
+#else
+	using Ptr = Timer *;
 #endif
 
 /******************************************************************************

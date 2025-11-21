@@ -2,7 +2,7 @@
 
     @file    StateOS: osflag.c
     @author  Rajmund Szymanski
-    @date    17.12.2020
+    @date    18.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -85,7 +85,7 @@ void priv_flg_reset( flg_t *flg, int event )
 {
 	flg->flags = 0;
 
-	core_all_wakeup(flg->obj.queue, event);
+	core_all_wakeup(&flg->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -126,12 +126,8 @@ unsigned priv_flg_take( flg_t *flg, unsigned flags, unsigned mode )
 {
 	unsigned result = flags;
 
-	if ((mode & flgIgnore) == 0)
-	{
+	if ((mode & flgNew) == 0)
 		result &= ~flg->flags;
-		if ((mode & flgProtect) == 0)
-			flg->flags &= ~flags;
-	}
 
 	if (result != flags && (mode & flgAll) == 0)
 		result = 0;
@@ -145,7 +141,6 @@ unsigned flg_take( flg_t *flg, unsigned flags, unsigned mode )
 {
 	assert(flg);
 	assert(flg->obj.res!=RELEASED);
-	assert((mode & ~flgMASK) == 0);
 
 	sys_lock();
 	{
@@ -165,7 +160,6 @@ int flg_waitFor( flg_t *flg, unsigned flags, unsigned mode, cnt_t delay )
 	assert_tsk_context();
 	assert(flg);
 	assert(flg->obj.res!=RELEASED);
-	assert((mode & ~flgMASK) == 0);
 
 	sys_lock();
 	{
@@ -191,7 +185,6 @@ int flg_waitUntil( flg_t *flg, unsigned flags, unsigned mode, cnt_t time )
 	assert_tsk_context();
 	assert(flg);
 	assert(flg->obj.res!=RELEASED);
-	assert((mode & ~flgMASK) == 0);
 
 	sys_lock();
 	{
@@ -213,9 +206,7 @@ unsigned flg_give( flg_t *flg, unsigned flags )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned result;
-
-	obj_t *obj;
-	tsk_t *tsk;
+	tsk_t  * tsk;
 
 	assert(flg);
 	assert(flg->obj.res!=RELEASED);
@@ -223,15 +214,13 @@ unsigned flg_give( flg_t *flg, unsigned flags )
 	sys_lock();
 	{
 		flg->flags |= flags;
+		result = flg->flags;
 
-		obj = &flg->obj;
-		while (obj->queue)
+		tsk = flg->obj.queue;
+		while (tsk)
 		{
-			tsk = obj->queue;
 			if (tsk->tmp.flg.flags & flags)
 			{
-				if ((tsk->tmp.flg.mode & flgProtect) == 0)
-					flg->flags &= ~(tsk->tmp.flg.flags & flags);
 				tsk->tmp.flg.flags &= ~flags;
 				if (tsk->tmp.flg.flags == 0 || (tsk->tmp.flg.mode & flgAll) == 0)
 				{
@@ -239,10 +228,8 @@ unsigned flg_give( flg_t *flg, unsigned flags )
 					continue;
 				}
 			}
-			obj = &tsk->obj;
+			tsk = tsk->obj.queue;
 		}
-
-		result = flg->flags;
 	}
 	sys_unlock();
 

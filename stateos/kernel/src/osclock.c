@@ -2,7 +2,7 @@
 
     @file    StateOS: osclock.c
     @author  Rajmund Szymanski
-    @date    13.05.2020
+    @date    17.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************

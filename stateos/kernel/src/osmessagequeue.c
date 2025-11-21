@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.c
     @author  Rajmund Szymanski
-    @date    01.11.2022
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -97,7 +97,7 @@ void priv_msg_reset( msg_t *msg, int event )
 	msg->head  = 0;
 	msg->tail  = 0;
 
-	core_all_wakeup(msg->obj.queue, event);
+	core_all_wakeup(&msg->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -203,11 +203,22 @@ size_t priv_msg_getUpdate( msg_t *msg, char *data )
 	tsk_t *tsk;
 
 	size_t size = priv_msg_get(msg, data);
-	tsk = core_one_wakeup(msg->obj.queue, E_SUCCESS);
-	if (tsk)
-		priv_msg_put(msg, tsk->tmp.msg.data.out, tsk->tmp.msg.size);
+	tsk = core_one_wakeup(&msg->obj.queue, E_SUCCESS);
+	if (tsk) priv_msg_put(msg, tsk->tmp.msg.data.out, tsk->tmp.msg.size);
 
 	return size;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_msg_skipUpdate( msg_t *msg )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk;
+
+	priv_msg_dec(msg);
+	tsk = core_one_wakeup(&msg->obj.queue, E_SUCCESS);
+	if (tsk) priv_msg_put(msg, tsk->tmp.msg.data.out, tsk->tmp.msg.size);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -218,25 +229,8 @@ void priv_msg_putUpdate( msg_t *msg, const char *data, size_t size )
 	tsk_t *tsk;
 
 	priv_msg_put(msg, data, size);
-	tsk = core_one_wakeup(msg->obj.queue, E_SUCCESS);
-	if (tsk)
-		tsk->tmp.msg.size = priv_msg_get(msg, tsk->tmp.msg.data.in);
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_msg_skipUpdate( msg_t *msg )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	while (priv_msg_full(msg))
-	{
-		priv_msg_dec(msg);
-		tsk = core_one_wakeup(msg->obj.queue, E_SUCCESS);
-		if (tsk)
-			priv_msg_put(msg, tsk->tmp.msg.data.out, tsk->tmp.msg.size);
-	}
+	tsk = core_one_wakeup(&msg->obj.queue, E_SUCCESS);
+	if (tsk) tsk->tmp.msg.size = priv_msg_get(msg, tsk->tmp.msg.data.in);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -445,8 +439,9 @@ int priv_msg_push( msg_t *msg, const void *data, size_t size )
 	if (MSG_SIZE(size) > msg->limit)
 		return E_FAILURE;
 
-	priv_msg_skipUpdate(msg);
-	priv_msg_putUpdate(msg, data, size);
+	while (priv_msg_full(msg))
+		priv_msg_skipUpdate(msg);
+	priv_msg_put(msg, data, size);
 
 	return E_SUCCESS;
 }
@@ -643,7 +638,7 @@ int msg_waitAsync( msg_t *msg, void *data, size_t size, size_t *read )
 	assert_tsk_context();
 
 	while (result = msg_takeAsync(msg, data, size, read), result == E_TIMEOUT)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return result;
 }
@@ -694,7 +689,7 @@ int msg_sendAsync( msg_t *msg, const void *data, size_t size )
 	assert_tsk_context();
 
 	while (result = msg_giveAsync(msg, data, size), result == E_TIMEOUT)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return E_SUCCESS;
 }

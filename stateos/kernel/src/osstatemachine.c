@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    15.03.2023
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -30,6 +30,8 @@
  ******************************************************************************/
 
 #include "inc/osstatemachine.h"
+#include "inc/ostask.h"
+#include "inc/oseventqueue.h"
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
@@ -358,7 +360,7 @@ void priv_hsm_reset( hsm_t *hsm, int event )
 	hsm->evq.head  = 0;
 	hsm->evq.tail  = 0;
 
-	core_all_wakeup(hsm->evq.obj.queue, event);
+	core_all_wakeup(&hsm->evq.obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    17.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -487,7 +487,7 @@ int job_sendAsync( job_t *job, fun_t *fun );
  * Name              : job_push
  * ISR alias         : job_pushISR
  *
- * Description       : try to transfer job data to the job queue object,
+ * Description       : transfer job data to the job queue object,
  *                     remove the oldest job data if the job queue object is full
  *
  * Parameters

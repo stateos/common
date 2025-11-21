@@ -2,7 +2,7 @@
 
     @file    StateOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    17.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -491,7 +491,7 @@ int evq_sendAsync( evq_t *evq, unsigned event );
  * Name              : evq_push
  * ISR alias         : evq_pushISR
  *
- * Description       : try to transfer event value to the event queue object,
+ * Description       : transfer event value to the event queue object,
  *                     remove the oldest event value if the event queue object is full
  *
  * Parameters
@@ -612,23 +612,26 @@ struct EventQueueT : public __evq
 	void     reset    ()                                    {        evq_reset    (this); }
 	void     kill     ()                                    {        evq_kill     (this); }
 	void     destroy  ()                                    {        evq_destroy  (this); }
-	int      take     ( unsigned *_event )                  { return evq_take     (this, _event); }
-	int      tryWait  ( unsigned *_event )                  { return evq_tryWait  (this, _event); }
-	int      takeISR  ( unsigned *_event )                  { return evq_takeISR  (this, _event); }
+	int      take     ( unsigned *_event = nullptr )        { return evq_take     (this,  _event); }
+	int      take     ( unsigned &_event )                  { return evq_take     (this, &_event); }
+	int      tryWait  ( unsigned *_event = nullptr )        { return evq_tryWait  (this,  _event); }
+	int      tryWait  ( unsigned &_event )                  { return evq_tryWait  (this, &_event); }
+	int      takeISR  ( unsigned *_event )                  { return evq_takeISR  (this,  _event); }
 	template<typename T>
-	int      waitFor  ( unsigned *_event, const T& _delay ) { return evq_waitFor  (this, _event, Clock::count(_delay)); }
+	int      waitFor  ( unsigned *_event, const T& _delay ) { return evq_waitFor  (this,  _event, Clock::count(_delay)); }
 	template<typename T>
-	int      waitUntil( unsigned *_event, const T& _time )  { return evq_waitUntil(this, _event, Clock::until(_time)); }
-	int      wait     ( unsigned *_event )                  { return evq_wait     (this, _event); }
-	int      give     ( unsigned  _event )                  { return evq_give     (this, _event); }
-	int      giveISR  ( unsigned  _event )                  { return evq_giveISR  (this, _event); }
+	int      waitUntil( unsigned *_event, const T& _time )  { return evq_waitUntil(this,  _event, Clock::until(_time)); }
+	int      wait     ( unsigned *_event = nullptr )        { return evq_wait     (this,  _event); }
+	int      wait     ( unsigned &_event )                  { return evq_wait     (this, &_event); }
+	int      give     ( unsigned  _event )                  { return evq_give     (this,  _event); }
+	int      giveISR  ( unsigned  _event )                  { return evq_giveISR  (this,  _event); }
 	template<typename T>
-	int      sendFor  ( unsigned  _event, const T& _delay ) { return evq_sendFor  (this, _event, Clock::count(_delay)); }
+	int      sendFor  ( unsigned  _event, const T& _delay ) { return evq_sendFor  (this,  _event, Clock::count(_delay)); }
 	template<typename T>
-	int      sendUntil( unsigned  _event, const T& _time )  { return evq_sendUntil(this, _event, Clock::until(_time)); }
-	int      send     ( unsigned  _event )                  { return evq_send     (this, _event); }
-	void     push     ( unsigned  _event )                  {        evq_push     (this, _event); }
-	void     pushISR  ( unsigned  _event )                  {        evq_pushISR  (this, _event); }
+	int      sendUntil( unsigned  _event, const T& _time )  { return evq_sendUntil(this,  _event, Clock::until(_time)); }
+	int      send     ( unsigned  _event )                  { return evq_send     (this,  _event); }
+	void     push     ( unsigned  _event )                  {        evq_push     (this,  _event); }
+	void     pushISR  ( unsigned  _event )                  {        evq_pushISR  (this,  _event); }
 	unsigned count    ()                                    { return evq_count    (this); }
 	unsigned countISR ()                                    { return evq_countISR (this); }
 	unsigned space    ()                                    { return evq_space    (this); }
@@ -636,10 +639,12 @@ struct EventQueueT : public __evq
 	unsigned limit    ()                                    { return evq_limit    (this); }
 	unsigned limitISR ()                                    { return evq_limitISR (this); }
 #if OS_ATOMICS
-	int      takeAsync( unsigned *_event )                  { return evq_takeAsync(this, _event); }
-	int      waitAsync( unsigned *_event )                  { return evq_waitAsync(this, _event); }
-	int      giveAsync( unsigned  _event )                  { return evq_giveAsync(this, _event); }
-	int      sendAsync( unsigned  _event )                  { return evq_sendAsync(this, _event); }
+	int      takeAsync( unsigned *_event = nullptr )        { return evq_takeAsync(this,  _event); }
+	int      takeAsync( unsigned &_event )                  { return evq_takeAsync(this, &_event); }
+	int      waitAsync( unsigned *_event = nullptr )        { return evq_waitAsync(this,  _event); }
+	int      waitAsync( unsigned &_event )                  { return evq_waitAsync(this, &_event); }
+	int      giveAsync( unsigned  _event )                  { return evq_giveAsync(this,  _event); }
+	int      sendAsync( unsigned  _event )                  { return evq_sendAsync(this,  _event); }
 #endif
 
 #if __cplusplus >= 201402L

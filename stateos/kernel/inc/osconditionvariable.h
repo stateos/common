@@ -2,7 +2,7 @@
 
     @file    StateOS: osconditionvariable.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    17.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -44,7 +44,6 @@
 /******************************************************************************
  *
  * Name              : condition variable
- *                     like a POSIX pthread_cond_t
  *
  ******************************************************************************/
 
@@ -336,7 +335,7 @@ void cnd_giveISR( cnd_t *cnd, bool all ) { cnd_give(cnd, all); }
  ******************************************************************************/
 
 __STATIC_INLINE
-void cnd_notifyOne( cnd_t *cnd ) { cnd_give(cnd, false); }
+void cnd_notifyOne( cnd_t *cnd ) { cnd_give(cnd, cndOne); }
 
 /******************************************************************************
  *
@@ -354,7 +353,7 @@ void cnd_notifyOne( cnd_t *cnd ) { cnd_give(cnd, false); }
  ******************************************************************************/
 
 __STATIC_INLINE
-void cnd_notifyAll( cnd_t *cnd ) { cnd_give(cnd, true); }
+void cnd_notifyAll( cnd_t *cnd ) { cnd_give(cnd, cndAll); }
 
 #ifdef __cplusplus
 }

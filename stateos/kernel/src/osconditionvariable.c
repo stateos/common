@@ -2,7 +2,7 @@
 
     @file    StateOS: osconditionvariable.c
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    17.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -80,7 +80,7 @@ static
 void priv_cnd_reset( cnd_t *cnd, int event )
 /* -------------------------------------------------------------------------- */
 {
-	core_all_wakeup(cnd->obj.queue, event);
+	core_all_wakeup(&cnd->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -187,7 +187,7 @@ void cnd_give( cnd_t *cnd, bool all )
 
 	sys_lock();
 	{
-		while (core_one_wakeup(cnd->obj.queue, E_SUCCESS) && all);
+		while (core_one_wakeup(&cnd->obj.queue, E_SUCCESS) && all);
 	}
 	sys_unlock();
 }

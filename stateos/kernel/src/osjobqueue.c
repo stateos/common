@@ -2,7 +2,7 @@
 
     @file    StateOS: osjobqueue.c
     @author  Rajmund Szymanski
-    @date    01.11.2022
+    @date    18.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -94,7 +94,7 @@ void priv_job_reset( job_t *job, int event )
 	job->head  = 0;
 	job->tail  = 0;
 
-	core_all_wakeup(job->obj.queue, event);
+	core_all_wakeup(&job->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -192,11 +192,22 @@ fun_t *priv_job_getUpdate( job_t *job )
 	tsk_t *tsk;
 
 	fun_t *fun = priv_job_get(job);
-
-	tsk = core_one_wakeup(job->obj.queue, E_SUCCESS);
+	tsk = core_one_wakeup(&job->obj.queue, E_SUCCESS);
 	if (tsk) priv_job_put(job, tsk->tmp.job.fun);
 
 	return fun;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_skipUpdate( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk;
+
+	priv_job_dec(job);
+	tsk = core_one_wakeup(&job->obj.queue, E_SUCCESS);
+	if (tsk) priv_job_put(job, tsk->tmp.job.fun);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -207,25 +218,8 @@ void priv_job_putUpdate( job_t *job, fun_t *fun )
 	tsk_t *tsk;
 
 	priv_job_put(job, fun);
-
-	tsk = core_one_wakeup(job->obj.queue, E_SUCCESS);
+	tsk = core_one_wakeup(&job->obj.queue, E_SUCCESS);
 	if (tsk) tsk->tmp.job.fun = priv_job_get(job);
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_job_skipUpdate( job_t *job )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	while (priv_job_full(job))
-	{
-		priv_job_dec(job);
-
-		tsk = core_one_wakeup(job->obj.queue, E_SUCCESS);
-		if (tsk) priv_job_put(job, tsk->tmp.job.fun);
-	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -406,6 +400,16 @@ int job_sendUntil( job_t *job, fun_t *fun, cnt_t time )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_job_push( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	while (priv_job_full(job))
+		priv_job_skipUpdate(job);
+	priv_job_put(job, fun);
+}
+
+/* -------------------------------------------------------------------------- */
 void job_push( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
@@ -417,8 +421,7 @@ void job_push( job_t *job, fun_t *fun )
 
 	sys_lock();
 	{
-		priv_job_skipUpdate(job);
-		priv_job_putUpdate(job, fun);
+		priv_job_push(job, fun);
 	}
 	sys_unlock();
 }
@@ -581,7 +584,7 @@ int job_waitAsync( job_t *job )
 	assert_tsk_context();
 
 	while (job_takeAsync(job) != E_SUCCESS)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return E_SUCCESS;
 }
@@ -627,7 +630,7 @@ int job_sendAsync( job_t *job, fun_t *fun )
 	assert_tsk_context();
 
 	while (job_giveAsync(job, fun) != E_SUCCESS)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return E_SUCCESS;
 }

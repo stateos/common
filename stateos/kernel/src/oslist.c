@@ -81,7 +81,7 @@ static
 void priv_lst_reset( lst_t *lst, int event )
 /* -------------------------------------------------------------------------- */
 {
-	core_all_wakeup(lst->obj.queue, event);
+	core_all_wakeup(&lst->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -117,6 +117,14 @@ void lst_destroy( lst_t *lst )
 
 /* -------------------------------------------------------------------------- */
 static
+bool priv_lst_empty( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	return lst->head.next == NULL;
+}
+
+/* -------------------------------------------------------------------------- */
+static
 void *priv_lst_popFront( lst_t *lst )
 /* -------------------------------------------------------------------------- */
 {
@@ -130,7 +138,7 @@ static
 int priv_lst_take( lst_t *lst, void **data )
 /* -------------------------------------------------------------------------- */
 {
-	if (lst->head.next == NULL)
+	if (priv_lst_empty(lst))
 		return E_TIMEOUT;
 
 	*data = priv_lst_popFront(lst);
@@ -225,7 +233,7 @@ static
 void priv_lst_give( lst_t *lst, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *tsk = core_one_wakeup(lst->obj.queue, E_SUCCESS);
+	tsk_t *tsk = core_one_wakeup(&lst->obj.queue, E_SUCCESS);
 
 	if (tsk)
 	{

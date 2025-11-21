@@ -2,7 +2,7 @@
 
     @file    StateOS: osspinlock.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************

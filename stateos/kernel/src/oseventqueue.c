@@ -2,7 +2,7 @@
 
     @file    StateOS: oseventqueue.c
     @author  Rajmund Szymanski
-    @date    01.11.2022
+    @date    18.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -94,7 +94,7 @@ void priv_evq_reset( evq_t *evq, int event )
 	evq->head  = 0;
 	evq->tail  = 0;
 
-	core_all_wakeup(evq->obj.queue, event);
+	core_all_wakeup(&evq->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -176,7 +176,7 @@ unsigned priv_evq_get( evq_t *evq )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_evq_put( evq_t *evq, const unsigned event )
+void priv_evq_put( evq_t *evq, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	evq->data[evq->tail] = event;
@@ -192,26 +192,10 @@ unsigned priv_evq_getUpdate( evq_t *evq )
 	tsk_t *tsk;
 
 	unsigned event = priv_evq_get(evq);
-
-	tsk = core_one_wakeup(evq->obj.queue, E_SUCCESS);
-	if (tsk)
-		priv_evq_put(evq, tsk->tmp.evq.event);
+	tsk = core_one_wakeup(&evq->obj.queue, E_SUCCESS);
+	if (tsk) priv_evq_put(evq, tsk->tmp.evq.event);
 
 	return event;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_evq_putUpdate( evq_t *evq, const unsigned event )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	priv_evq_put(evq, event);
-
-	tsk = core_one_wakeup(evq->obj.queue, E_SUCCESS);
-	if (tsk)
-		tsk->tmp.evq.event = priv_evq_get(evq);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -221,14 +205,21 @@ void priv_evq_skipUpdate( evq_t *evq )
 {
 	tsk_t *tsk;
 
-	while (priv_evq_full(evq))
-	{
-		priv_evq_dec(evq);
+	priv_evq_dec(evq);
+	tsk = core_one_wakeup(&evq->obj.queue, E_SUCCESS);
+	if (tsk) priv_evq_put(evq, tsk->tmp.evq.event);
+}
 
-		tsk = core_one_wakeup(evq->obj.queue, E_SUCCESS);
-		if (tsk)
-			priv_evq_put(evq, tsk->tmp.evq.event);
-	}
+/* -------------------------------------------------------------------------- */
+static
+void priv_evq_putUpdate( evq_t *evq, unsigned event )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk;
+
+	priv_evq_put(evq, event);
+	tsk = core_one_wakeup(&evq->obj.queue, E_SUCCESS);
+	if (tsk) tsk->tmp.evq.event = priv_evq_get(evq);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -408,6 +399,16 @@ int evq_sendUntil( evq_t *evq, unsigned event, cnt_t time )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_evq_push( evq_t *evq, unsigned event )
+/* -------------------------------------------------------------------------- */
+{
+	while (priv_evq_full(evq))
+		priv_evq_skipUpdate(evq);
+	priv_evq_put(evq, event);
+}
+
+/* -------------------------------------------------------------------------- */
 void evq_push( evq_t *evq, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
@@ -418,8 +419,7 @@ void evq_push( evq_t *evq, unsigned event )
 
 	sys_lock();
 	{
-		priv_evq_skipUpdate(evq);
-		priv_evq_putUpdate(evq, event);
+		priv_evq_push(evq, event);
 	}
 	sys_unlock();
 }
@@ -530,7 +530,7 @@ unsigned priv_evq_getAsync( evq_t *evq )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_evq_putAsync( evq_t *evq, const unsigned event )
+void priv_evq_putAsync( evq_t *evq, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	evq->data[evq->tail] = event;
@@ -582,7 +582,7 @@ int evq_waitAsync( evq_t *evq, unsigned *event )
 	assert_tsk_context();
 
 	while (evq_takeAsync(evq, event) != E_SUCCESS)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return E_SUCCESS;
 }
@@ -627,7 +627,7 @@ int evq_sendAsync( evq_t *evq, unsigned event )
 	assert_tsk_context();
 
 	while (evq_giveAsync(evq, event) != E_SUCCESS)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return E_SUCCESS;
 }

@@ -2,7 +2,7 @@
 
     @file    StateOS: osrwlock.c
     @author  Rajmund Szymanski
-    @date    08.07.2020
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -30,6 +30,7 @@
  ******************************************************************************/
 
 #include "inc/osrwlock.h"
+#include "inc/ostask.h"
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
@@ -80,8 +81,8 @@ static
 void priv_rwl_reset( rwl_t *rwl, int event )
 /* -------------------------------------------------------------------------- */
 {
-	core_all_wakeup(rwl->obj.queue, event);
-	core_all_wakeup(rwl->queue, event);
+	core_all_wakeup(&rwl->obj.queue, event);
+	core_all_wakeup(&rwl->queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -193,9 +194,9 @@ static
 void priv_rwl_giveRead( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	if (core_one_wakeup(rwl->queue, E_SUCCESS) == NULL)
+	if (core_one_wakeup(&rwl->queue, E_SUCCESS) == NULL)
 		if (--rwl->count == 0)
-			if (core_one_wakeup(rwl->obj.queue, E_SUCCESS) != NULL)
+			if (core_one_wakeup(&rwl->obj.queue, E_SUCCESS) != NULL)
 				rwl->write = true;
 }
 
@@ -294,11 +295,11 @@ static
 void priv_rwl_giveWrite( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	if (core_one_wakeup(rwl->obj.queue, E_SUCCESS) == NULL)
+	if (core_one_wakeup(&rwl->obj.queue, E_SUCCESS) == NULL)
 	{
 		rwl->write = false;
-		rwl->count = core_tsk_count(rwl->queue);
-		core_all_wakeup(rwl->queue, E_SUCCESS);
+		rwl->count = core_tsk_count(&rwl->queue);
+		core_all_wakeup(&rwl->queue, E_SUCCESS);
 	}
 }
 

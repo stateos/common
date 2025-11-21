@@ -2,7 +2,7 @@
 
     @file    StateOS: osbarrier.c
     @author  Rajmund Szymanski
-    @date    02.07.2020
+    @date    17.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -84,7 +84,7 @@ static
 void priv_bar_reset( bar_t *bar, int event )
 /* -------------------------------------------------------------------------- */
 {
-	core_all_wakeup(bar->obj.queue, event);
+	core_all_wakeup(&bar->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -123,9 +123,9 @@ static
 int priv_bar_take( bar_t *bar )
 /* -------------------------------------------------------------------------- */
 {
-	if (core_tsk_count(bar->obj.queue) + 1 == bar->limit)
+	if (core_tsk_count(&bar->obj.queue) + 1 == bar->limit)
 	{
-		core_all_wakeup(bar->obj.queue, E_SUCCESS);
+		core_all_wakeup(&bar->obj.queue, E_SUCCESS);
 		return E_SUCCESS;
 	}
 

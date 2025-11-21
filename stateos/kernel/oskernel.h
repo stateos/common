@@ -229,35 +229,35 @@ void core_tsk_suspend( tsk_t *tsk );
 // return 'tsk'
 tsk_t *core_tsk_wakeup( tsk_t *tsk, int event );
 
-// resume execution of first task from blocked queue with event value 'event'; 'tsk' is the head (first task) of the queue
+// resume execution of first task from blocked queue 'que' with event value 'event'
 // remove resumed task from guard object blocked queue
 // remove resumed task from timers READY queue
 // insert resumed task into tasks READY queue
 // force context switch if priority of resumed task is greater then priority of the current task and kernel works in preemptive mode
 // return 'tsk'
 __STATIC_INLINE
-tsk_t *core_one_wakeup( tsk_t *tsk, int event )
+tsk_t *core_one_wakeup( tsk_t **que, int event )
 {
-	return core_tsk_wakeup(tsk, event);
+	return core_tsk_wakeup(*que, event);
 }
 
-// resume execution of no more than 'num' tasks from blocked queue with event value 'event'; 'tsk' is the head (first task) of the queue
+// resume execution of no more than 'num' tasks from blocked queue 'que' with event value 'event'
 // remove resumed tasks from guard object blocked queue
 // remove resumed tasks from timers READY queue
 // insert resumed tasks into tasks READY queue
 // force context switch if priority of any resumed task is greater then priority of the current task and kernel works in preemptive mode
 // return the number of resumed tasks
-unsigned core_num_wakeup( tsk_t *tsk, int event, unsigned num );
+unsigned core_num_wakeup( tsk_t **que, int event, unsigned num );
 
-// resume execution of all tasks from blocked queue with event value 'event'; 'tsk' is the head (first task) of the queue
+// resume execution of all tasks from blocked queue 'que' with event value 'event'
 // remove resumed tasks from guard object blocked queue
 // remove resumed tasks from timers READY queue
 // insert resumed tasks into tasks READY queue
 // force context switch if priority of any resumed task is greater then priority of the current task and kernel works in preemptive mode
-void core_all_wakeup( tsk_t *tsk, int event );
+void core_all_wakeup( tsk_t **que, int event );
 
 // return count of tasks blocked on the queue; 'tsk' is the head (first task) of the queue
-unsigned core_tsk_count( tsk_t *tsk );
+unsigned core_tsk_count( tsk_t **que );
 
 // set task 'tsk' priority
 // force context switch if new priority of task 'tsk' is greater then priority of current task and kernel works in preemptive mode

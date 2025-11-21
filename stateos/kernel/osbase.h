@@ -2,7 +2,7 @@
 
     @file    StateOS: osbase.h
     @author  Rajmund Szymanski
-    @date    18.03.2023
+    @date    18.11.2025
     @brief   This file contains basic definitions for StateOS.
 
  ******************************************************************************

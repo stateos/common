@@ -29,7 +29,6 @@ target_sources(stateos
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osconditionvariable.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osevent.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/oseventqueue.c
-	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osfastmutex.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osflag.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osjobqueue.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/oslist.c

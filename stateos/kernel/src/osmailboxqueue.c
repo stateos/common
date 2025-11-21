@@ -2,7 +2,7 @@
 
     @file    StateOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    01.11.2022
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -97,7 +97,7 @@ void priv_box_reset( box_t *box, int event )
 	box->head  = 0;
 	box->tail  = 0;
 
-	core_all_wakeup(box->obj.queue, event);
+	core_all_wakeup(&box->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -191,9 +191,20 @@ void priv_box_getUpdate( box_t *box, char *data )
 	tsk_t *tsk;
 
 	priv_box_get(box, data);
-	tsk = core_one_wakeup(box->obj.queue, E_SUCCESS);
-	if (tsk)
-		priv_box_put(box, tsk->tmp.box.data.out);
+	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
+	if (tsk) priv_box_put(box, tsk->tmp.box.data.out);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_skipUpdate( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk;
+
+	priv_box_dec(box);
+	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
+	if (tsk) priv_box_put(box, tsk->tmp.box.data.out);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -204,25 +215,8 @@ void priv_box_putUpdate( box_t *box, const char *data )
 	tsk_t *tsk;
 
 	priv_box_put(box, data);
-	tsk = core_one_wakeup(box->obj.queue, E_SUCCESS);
-	if (tsk)
-		priv_box_get(box, tsk->tmp.box.data.in);
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_box_skipUpdate( box_t *box )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	while (priv_box_full(box))
-	{
-		priv_box_dec(box);
-		tsk = core_one_wakeup(box->obj.queue, E_SUCCESS);
-		if (tsk)
-			priv_box_put(box, tsk->tmp.box.data.out);
-	}
+	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
+	if (tsk) priv_box_get(box, tsk->tmp.box.data.in);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -402,6 +396,16 @@ int box_sendUntil( box_t *box, const void *data, cnt_t time )
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_box_push( box_t *box, const void *data )
+/* -------------------------------------------------------------------------- */
+{
+	while (priv_box_full(box))
+		priv_box_skipUpdate(box);
+	priv_box_put(box, data);
+}
+
+/* -------------------------------------------------------------------------- */
 void box_push( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
@@ -413,8 +417,7 @@ void box_push( box_t *box, const void *data )
 
 	sys_lock();
 	{
-		priv_box_skipUpdate(box);
-		priv_box_putUpdate(box, data);
+		priv_box_push(box, data);
 	}
 	sys_unlock();
 }
@@ -570,7 +573,7 @@ int box_waitAsync( box_t *box, void *data )
 	assert_tsk_context();
 
 	while (box_takeAsync(box, data) != E_SUCCESS)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return E_SUCCESS;
 }
@@ -616,7 +619,7 @@ int box_sendAsync( box_t *box, const void *data )
 	assert_tsk_context();
 
 	while (box_giveAsync(box, data) != E_SUCCESS)
-		core_ctx_switchNow();
+		tsk_yield();
 
 	return E_SUCCESS;
 }

@@ -2,7 +2,7 @@
 
     @file    StateOS: osrawbuffer.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -94,7 +94,7 @@ void priv_raw_reset( raw_t *raw, int event )
 	raw->head  = 0;
 	raw->tail  = 0;
 
-	core_all_wakeup(raw->obj.queue, event);
+	core_all_wakeup(&raw->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -138,10 +138,21 @@ void priv_raw_get( raw_t *raw, char *data, size_t size )
 	raw->count -= size;
 	while (size--)
 	{
-		*data++ = raw->data[head++];
-		if (head == raw->limit) head = 0;
+		*data++ = raw->data[head];
+		if (++head >= raw->limit) head = 0;
 	}
 	raw->head = head;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_raw_skip( raw_t *raw, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	raw->count -= size;
+	raw->head  += size;
+	if (raw->head >= raw->limit)
+		raw->head -= raw->limit;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -162,17 +173,6 @@ void priv_raw_put( raw_t *raw, const char *data, size_t size )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_raw_skip( raw_t *raw, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	raw->count -= size;
-	raw->head  += size;
-	if (raw->head >= raw->limit)
-		raw->head -= raw->limit;
-}
-
-/* -------------------------------------------------------------------------- */
-static
 size_t priv_raw_getUpdate( raw_t *raw, void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
@@ -184,10 +184,21 @@ size_t priv_raw_getUpdate( raw_t *raw, void *data, size_t size )
 	while (raw->obj.queue != 0 && raw->count + raw->obj.queue->tmp.raw.size <= raw->limit)
 	{
 		priv_raw_put(raw, raw->obj.queue->tmp.raw.data.out, raw->obj.queue->tmp.raw.size);
-		core_one_wakeup(raw->obj.queue, E_SUCCESS);
+		core_one_wakeup(&raw->obj.queue, E_SUCCESS);
 	}
 
 	return size;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_raw_skipUpdate( raw_t *raw )
+/* -------------------------------------------------------------------------- */
+{
+	if (raw->count + raw->obj.queue->tmp.raw.size > raw->limit)
+		priv_raw_skip(raw, raw->count + raw->obj.queue->tmp.raw.size - raw->limit);
+	priv_raw_put(raw, raw->obj.queue->tmp.raw.data.out, raw->obj.queue->tmp.raw.size);
+	core_one_wakeup(&raw->obj.queue, E_SUCCESS);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -203,25 +214,8 @@ void priv_raw_putUpdate( raw_t *raw, const void *data, size_t size )
 		if (size > raw->count) size = raw->count;
 		raw->obj.queue->tmp.raw.size = size;
 		priv_raw_get(raw, raw->obj.queue->tmp.raw.data.in, size);
-		core_one_wakeup(raw->obj.queue, E_SUCCESS);
+		core_one_wakeup(&raw->obj.queue, E_SUCCESS);
 	}
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_raw_skipUpdate( raw_t *raw, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	while (raw->obj.queue != 0)
-	{
-		if (raw->count + raw->obj.queue->tmp.raw.size > raw->limit)
-			priv_raw_skip(raw, raw->count + raw->obj.queue->tmp.raw.size - raw->limit);
-		priv_raw_put(raw, raw->obj.queue->tmp.raw.data.out, raw->obj.queue->tmp.raw.size);
-		core_one_wakeup(raw->obj.queue, E_SUCCESS);
-	}
-
-	if (raw->count + size > raw->limit)
-		priv_raw_skip(raw, raw->count + size - raw->limit);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -427,7 +421,10 @@ int priv_raw_push( raw_t *raw, const void *data, size_t size )
 	if (size > raw->limit)
 		return E_FAILURE;
 
-	priv_raw_skipUpdate(raw, size);
+	while (raw->obj.queue)
+		priv_raw_skipUpdate(raw);
+	if (raw->count + size > raw->limit)
+		priv_raw_skip(raw, raw->count + size - raw->limit);
 	priv_raw_putUpdate(raw, data, size);
 
 	return E_SUCCESS;

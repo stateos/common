@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.c
     @author  Rajmund Szymanski
-    @date    03.07.2020
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************

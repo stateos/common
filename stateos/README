@@ -31,7 +31,6 @@ Features:
 - barriers
 - semaphores (binary, limited, counting)
 - mutexes with configurable type, protocol and robustness
-- fast mutexes (error checking)
 - condition variables
 - read/write locks
 - memory pools
@@ -53,6 +52,7 @@ Features:
 - updated os version
 - added sys_suspend function
 - added sys_resume function
+- removed fast mutex
 ---------
 7.0
 - updated os version

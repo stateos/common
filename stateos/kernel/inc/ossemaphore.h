@@ -2,7 +2,7 @@
 
     @file    StateOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    18.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -45,7 +45,6 @@
 /******************************************************************************
  *
  * Name              : semaphore
- *                     like a POSIX semaphore
  *
  ******************************************************************************/
 
@@ -368,6 +367,7 @@ int sem_waitUntil( sem_t *sem, cnt_t time );
  *   E_DELETED       : semaphore object was deleted (unavailable for async version)
  *
  * Note              : use only in thread mode
+ *                     use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 

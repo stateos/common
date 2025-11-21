@@ -2,7 +2,7 @@
 
     @file    StateOS: ostask.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    18.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -1155,7 +1155,7 @@ struct baseTask : public __tsk
 	void     startFrom( F&&      _proc )   {        new (&fun) Fun_t(_proc);
 	                                                tsk_startFrom(this, fun_); }
 #else
-	void     startFrom( fun_t *  _proc )   {        tsk_startFrom(this, _proc); }
+	void     startFrom( fun_t  * _proc )   {        tsk_startFrom(this, _proc); }
 #endif
 	int      detach   ()                   { return tsk_detach   (this); }
 	int      join     ()                   { return tsk_join     (this); }
@@ -1223,7 +1223,7 @@ struct baseTask : public __tsk
 		                                                 tsk_flip      (fun_); }
 #else
 		static
-		void     flip      ( fun_t *  _proc )   {        tsk_flip      (_proc); }
+		void     flip      ( fun_t  * _proc )   {        tsk_flip      (_proc); }
 #endif
 		static
 		void     setPrio   ( unsigned _prio )   {        tsk_setPrio   (_prio); }
@@ -1255,7 +1255,7 @@ struct baseTask : public __tsk
 		                                                 tsk_action    (current(), act_); }
 #else
 		static
-		void     action    ( act_t *  _action ) {        tsk_action    (current(), _action); }
+		void     action    ( act_t  * _action ) {        tsk_action    (current(), _action); }
 #endif
 	};
 };
@@ -1306,13 +1306,6 @@ struct TaskT : public baseTask, public baseStack<size_>
 	TaskT( const TaskT<size_>& ) = delete;
 	TaskT<size_>& operator=( TaskT<size_>&& ) = delete;
 	TaskT<size_>& operator=( const TaskT<size_>& ) = delete;
-
-#if __cplusplus >= 201402L
-	using Deleter = struct _Deleter { void operator()( void* ) const {} };
-	using Ptr = std::unique_ptr<TaskT<size_>, Deleter>;
-#else
-	using Ptr = TaskT<size_> *;
-#endif
 
 /******************************************************************************
  *
@@ -1404,6 +1397,13 @@ struct TaskT : public baseTask, public baseStack<size_>
 		return Start(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
 	}
 #endif
+#endif
+
+#if __cplusplus >= 201402L
+	using Deleter = struct _Deleter { void operator()( void* ) const {} };
+	using Ptr = std::unique_ptr<TaskT<size_>, Deleter>;
+#else
+	using Ptr = TaskT<size_> *;
 #endif
 
 /******************************************************************************

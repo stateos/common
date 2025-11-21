@@ -68,6 +68,8 @@ void sys_init( void )
 void sys_suspend( void )
 /* -------------------------------------------------------------------------- */
 {
+	assert_tsk_context();
+
 	sys_lock();
 	{
 		System.tsk = System.cur;
@@ -79,6 +81,8 @@ void sys_suspend( void )
 void sys_resume( void )
 /* -------------------------------------------------------------------------- */
 {
+	assert_tsk_context();
+
 	sys_lock();
 	{
 		System.tsk = NULL;

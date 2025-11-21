@@ -68,6 +68,8 @@ void sys_init( void );
  *
  * Return            : none
  *
+ * Note              : use only in thread mode
+ *
  ******************************************************************************/
 
 void sys_suspend( void );
@@ -81,6 +83,8 @@ void sys_suspend( void );
  * Parameters        : none
  *
  * Return            : none
+ *
+ * Note              : use only in thread mode
  *
  ******************************************************************************/
 

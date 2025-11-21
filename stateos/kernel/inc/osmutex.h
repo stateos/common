@@ -2,7 +2,7 @@
 
     @file    StateOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    17.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -66,7 +66,6 @@
 /******************************************************************************
  *
  * Name              : mutex
- *                     like a POSIX pthread_mutex_t
  *
  ******************************************************************************/
 
@@ -458,6 +457,8 @@ namespace stateos {
 
 struct Mutex : public __mtx
 {
+	constexpr
+	Mutex(): __mtx _MTX_INIT(mtxPrioInherit|mtxErrorCheck, 0) {}
 	constexpr
 	Mutex( const unsigned _mode, const unsigned _prio = 0 ): __mtx _MTX_INIT(_mode, _prio) {}
 

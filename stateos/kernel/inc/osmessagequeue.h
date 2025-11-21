@@ -2,7 +2,7 @@
 
     @file    StateOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    17.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -705,12 +705,12 @@ struct MessageQueueT : public __msg
 	int      send     ( const void *_data, size_t _size )                                  { return msg_send     (this, _data, _size); }
 	int      push     ( const void *_data, size_t _size )                                  { return msg_push     (this, _data, _size); }
 	int      pushISR  ( const void *_data, size_t _size )                                  { return msg_pushISR  (this, _data, _size); }
-	unsigned count    ()                                                                   { return msg_count    (this); }
-	unsigned countISR ()                                                                   { return msg_countISR (this); }
-	unsigned space    ()                                                                   { return msg_space    (this); }
-	unsigned spaceISR ()                                                                   { return msg_spaceISR (this); }
-	unsigned limit    ()                                                                   { return msg_limit    (this); }
-	unsigned limitISR ()                                                                   { return msg_limitISR (this); }
+	size_t   count    ()                                                                   { return msg_count    (this); }
+	size_t   countISR ()                                                                   { return msg_countISR (this); }
+	size_t   space    ()                                                                   { return msg_space    (this); }
+	size_t   spaceISR ()                                                                   { return msg_spaceISR (this); }
+	size_t   limit    ()                                                                   { return msg_limit    (this); }
+	size_t   limitISR ()                                                                   { return msg_limitISR (this); }
 	size_t   size     ()                                                                   { return msg_size     (this); }
 	size_t   sizeISR  ()                                                                   { return msg_sizeISR  (this); }
 #if OS_ATOMICS

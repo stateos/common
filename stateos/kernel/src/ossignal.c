@@ -2,7 +2,7 @@
 
     @file    StateOS: ossignal.c
     @author  Rajmund Szymanski
-    @date    17.12.2020
+    @date    19.11.2025
     @brief   This file provides set of functions for StateOS.
 
  ******************************************************************************
@@ -85,7 +85,7 @@ void priv_sig_reset( sig_t *sig, int event )
 {
 	sig->sigset = 0;
 
-	core_all_wakeup(sig->obj.queue, event);
+	core_all_wakeup(&sig->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -248,7 +248,6 @@ void sig_clear( sig_t *sig, unsigned signo )
 
 	assert(sig);
 	assert(sig->obj.res!=RELEASED);
-	assert(sigset);
 
 	sys_lock();
 	{

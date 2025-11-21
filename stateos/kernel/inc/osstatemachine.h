@@ -2,7 +2,7 @@
 
     @file    StateOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    18.06.2023
+    @date    18.11.2025
     @brief   This file contains definitions for StateOS.
 
  ******************************************************************************
@@ -702,7 +702,7 @@ hsm_state_t *hsm_getState( hsm_t *hsm );
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
+#if defined(__cplusplus) && (__cplusplus >= 201402L) && !defined(_GLIBCXX_HAS_GTHREADS)
 
 #include <iterator>
 #include <vector>
