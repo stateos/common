@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define __INTROS_BOX_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /******************************************************************************
  *
@@ -44,6 +45,8 @@ typedef struct __box box_t;
 
 struct __box
 {
+	obj_t    obj;   // object header
+
 	size_t   count; // size of used memory in the mailbox buffer (in bytes)
 	size_t   limit; // size of the mailbox buffer (in bytes)
 	size_t   size;  // size of a single mail (in bytes)
@@ -72,7 +75,7 @@ typedef struct __box box_id [];
  *
  ******************************************************************************/
 
-#define               _BOX_INIT( _limit, _size, _data ) { 0, _limit * _size, _size, 0, 0, _data }
+#define               _BOX_INIT( _limit, _size, _data ) { _OBJ_INIT(), 0, _limit * _size, _size, 0, 0, _data }
 
 /******************************************************************************
  *
@@ -201,6 +204,27 @@ void box_init( box_t *box, size_t size, void *data, size_t bufsize );
 
 /******************************************************************************
  *
+ * Name              : box_reset
+ * Alias             : box_kill
+ *
+ * Description       : reset the mailbox queue object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   box             : pointer to mailbox queue object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void box_reset( box_t *box );
+
+__STATIC_INLINE
+void box_kill( box_t *box ) { box_reset(box); }
+
+/******************************************************************************
+ *
  * Name              : box_take
  * Alias             : box_tryWait
  * Async alias       : box_takeAsync
@@ -213,20 +237,65 @@ void box_init( box_t *box, size_t size, void *data, size_t bufsize );
  *   data            : pointer to store mailbox data
  *
  * Return
- *   SUCCESS         : mailbox data was successfully transferred from the mailbox queue object
- *   FAILURE         : mailbox queue object is empty
+ *   E_SUCCESS       : mailbox data was successfully transferred from the mailbox queue object
+ *   E_TIMEOUT       : mailbox queue object is empty, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned box_take( box_t *box, void *data );
+int box_take( box_t *box, void *data );
 
 __STATIC_INLINE
-unsigned box_tryWait( box_t *box, void *data ) { return box_take(box, data); }
+int box_tryWait( box_t *box, void *data ) { return box_take(box, data); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned box_takeAsync( box_t *box, void *data ) { return box_take(box, data); }
+int box_takeAsync( box_t *box, void *data );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : box_waitFor
+ *
+ * Description       : try to transfer mailbox data from the mailbox queue object,
+ *                     wait for given duration of time while the mailbox queue object is empty
+ *
+ * Parameters
+ *   box             : pointer to mailbox queue object
+ *   data            : pointer to store mailbox data
+ *   delay           : duration of time (maximum number of ticks to wait while the mailbox queue object is empty)
+ *                     IMMEDIATE: don't wait if the mailbox queue object is empty
+ *                     INFINITE:  wait indefinitely while the mailbox queue object is empty
+ *
+ * Return
+ *   E_SUCCESS       : mailbox data was successfully transferred from the mailbox queue object
+ *   E_STOPPED       : mailbox queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : mailbox queue object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int box_waitFor( box_t *box, void *data, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : box_waitUntil
+ *
+ * Description       : try to transfer mailbox data from the mailbox queue object,
+ *                     wait until given timepoint while the mailbox queue object is empty
+ *
+ * Parameters
+ *   box             : pointer to mailbox queue object
+ *   data            : pointer to store mailbox data
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : mailbox data was successfully transferred from the mailbox queue object
+ *   E_STOPPED       : mailbox queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : mailbox queue object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int box_waitUntil( box_t *box, void *data, cnt_t time );
 
 /******************************************************************************
  *
@@ -240,15 +309,19 @@ unsigned box_takeAsync( box_t *box, void *data ) { return box_take(box, data); }
  *   box             : pointer to mailbox queue object
  *   data            : pointer to store mailbox data
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : mailbox data was successfully transferred from the mailbox queue object
+ *   E_STOPPED       : mailbox queue object was reseted (unavailable for async version)
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-void box_wait( box_t *box, void *data );
+__STATIC_INLINE
+int box_wait( box_t *box, void *data ) { return box_waitFor(box, data, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-void box_waitAsync( box_t *box, void *data ) { box_wait(box, data); }
+int box_waitAsync( box_t *box, void *data );
 #endif
 
 /******************************************************************************
@@ -264,17 +337,62 @@ void box_waitAsync( box_t *box, void *data ) { box_wait(box, data); }
  *   data            : pointer to mailbox data
  *
  * Return
- *   SUCCESS         : mailbox data was successfully transferred to the mailbox queue object
- *   FAILURE         : mailbox queue object is full
+ *   E_SUCCESS       : mailbox data was successfully transferred to the mailbox queue object
+ *   E_TIMEOUT       : mailbox queue object is full, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned box_give( box_t *box, const void *data );
+int box_give( box_t *box, const void *data );
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned box_giveAsync( box_t *box, const void *data ) { return box_give(box, data); }
+int box_giveAsync( box_t *box, const void *data );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : box_sendFor
+ *
+ * Description       : try to transfer mailbox data to the mailbox queue object,
+ *                     wait for given duration of time while the mailbox queue object is full
+ *
+ * Parameters
+ *   box             : pointer to mailbox queue object
+ *   data            : pointer to mailbox data
+ *   delay           : duration of time (maximum number of ticks to wait while the mailbox queue object is full)
+ *                     IMMEDIATE: don't wait if the mailbox queue object is full
+ *                     INFINITE:  wait indefinitely while the mailbox queue object is full
+ *
+ * Return
+ *   E_SUCCESS       : mailbox data was successfully transferred to the mailbox queue object
+ *   E_STOPPED       : mailbox queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : mailbox queue object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int box_sendFor( box_t *box, const void *data, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : box_sendUntil
+ *
+ * Description       : try to transfer mailbox data to the mailbox queue object,
+ *                     wait until given timepoint while the mailbox queue object is full
+ *
+ * Parameters
+ *   box             : pointer to mailbox queue object
+ *   data            : pointer to mailbox data
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : mailbox data was successfully transferred to the mailbox queue object
+ *   E_STOPPED       : mailbox queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : mailbox queue object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int box_sendUntil( box_t *box, const void *data, cnt_t time );
 
 /******************************************************************************
  *
@@ -288,15 +406,19 @@ unsigned box_giveAsync( box_t *box, const void *data ) { return box_give(box, da
  *   box             : pointer to mailbox queue object
  *   data            : pointer to mailbox data
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : mailbox data was successfully transferred to the mailbox queue object
+ *   E_STOPPED       : mailbox queue object was reseted (unavailable for async version)
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-void box_send( box_t *box, const void *data );
+__STATIC_INLINE
+int box_send( box_t *box, const void *data ) { return box_sendFor(box, data, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-void box_sendAsync( box_t *box, const void *data ) { box_send(box, data); }
+int box_sendAsync( box_t *box, const void *data );
 #endif
 
 /******************************************************************************
@@ -318,7 +440,7 @@ void box_push( box_t *box, const void *data );
 
 /******************************************************************************
  *
- * Name              : box_getCount
+ * Name              : box_count
  *
  * Description       : return the amount of data contained in the mailbox queue
  *
@@ -329,11 +451,11 @@ void box_push( box_t *box, const void *data );
  *
  ******************************************************************************/
 
-unsigned box_getCount( box_t *box );
+unsigned box_count( box_t *box );
 
 /******************************************************************************
  *
- * Name              : box_getSpace
+ * Name              : box_space
  *
  * Description       : return the amount of free space in the mailbox queue
  *
@@ -344,11 +466,11 @@ unsigned box_getCount( box_t *box );
  *
  ******************************************************************************/
 
-unsigned box_getSpace( box_t *box );
+unsigned box_space( box_t *box );
 
 /******************************************************************************
  *
- * Name              : box_getLimit
+ * Name              : box_limit
  *
  * Description       : return the size of the mailbox queue
  *
@@ -359,11 +481,11 @@ unsigned box_getSpace( box_t *box );
  *
  ******************************************************************************/
 
-unsigned box_getLimit( box_t *box );
+unsigned box_limit( box_t *box );
 
 /******************************************************************************
  *
- * Name              : box_getSize
+ * Name              : box_size
  *
  * Description       : return size of a single mail
  *
@@ -375,7 +497,7 @@ unsigned box_getLimit( box_t *box );
  ******************************************************************************/
 
 __STATIC_INLINE
-size_t box_getSize( box_t *box ) { return box->size; }
+size_t box_size( box_t *box ) { return box->size; }
 
 #ifdef __cplusplus
 }
@@ -383,7 +505,7 @@ size_t box_getSize( box_t *box ) { return box->size; }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -404,26 +526,38 @@ struct MailBoxQueueT : public __box
 	constexpr
 	MailBoxQueueT(): __box _BOX_INIT(limit_, size_, data_) {}
 
+	~MailBoxQueueT() { assert(__box::obj.queue == nullptr); }
+
 	MailBoxQueueT( MailBoxQueueT&& ) = default;
 	MailBoxQueueT( const MailBoxQueueT& ) = delete;
 	MailBoxQueueT& operator=( MailBoxQueueT&& ) = delete;
 	MailBoxQueueT& operator=( const MailBoxQueueT& ) = delete;
 
-	unsigned take     (       void *_data ) { return box_take     (this, _data); }
-	unsigned tryWait  (       void *_data ) { return box_tryWait  (this, _data); }
-	void     wait     (       void *_data ) {        box_wait     (this, _data); }
-	unsigned give     ( const void *_data ) { return box_give     (this, _data); }
-	void     send     ( const void *_data ) {        box_send     (this, _data); }
-	void     push     ( const void *_data ) {        box_push     (this, _data); }
-	unsigned getCount ()                    { return box_getCount (this); }
-	unsigned getSpace ()                    { return box_getSpace (this); }
-	unsigned getLimit ()                    { return box_getLimit (this); }
-	size_t   getSize  ()                    { return box_getSize  (this); }
+	void     reset    ()                                     {        box_reset    (this); }
+	void     kill     ()                                     {        box_kill     (this); }
+	int      take     (       void *_data )                  { return box_take     (this, _data); }
+	int      tryWait  (       void *_data )                  { return box_tryWait  (this, _data); }
+	template<typename T>
+	int      waitFor  (       void *_data, const T& _delay ) { return box_waitFor  (this, _data, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil(       void *_data, const T& _time )  { return box_waitUntil(this, _data, Clock::until(_time)); }
+	int      wait     (       void *_data )                  { return box_wait     (this, _data); }
+	int      give     ( const void *_data )                  { return box_give     (this, _data); }
+	template<typename T>
+	int      sendFor  ( const void *_data, const T& _delay ) { return box_sendFor  (this, _data, Clock::count(_delay)); }
+	template<typename T>
+	int      sendUntil( const void *_data, const T& _time )  { return box_sendUntil(this, _data, Clock::until(_time)); }
+	int      send     ( const void *_data )                  { return box_send     (this, _data); }
+	void     push     ( const void *_data )                  {        box_push     (this, _data); }
+	unsigned count    ()                                     { return box_count    (this); }
+	unsigned space    ()                                     { return box_space    (this); }
+	unsigned limit    ()                                     { return box_limit    (this); }
+	size_t   size     ()                                     { return box_size     (this); }
 #if OS_ATOMICS
-	unsigned takeAsync(       void *_data ) { return box_takeAsync(this, _data); }
-	void     waitAsync(       void *_data ) {        box_waitAsync(this, _data); }
-	unsigned giveAsync( const void *_data ) { return box_giveAsync(this, _data); }
-	void     sendAsync( const void *_data ) {        box_sendAsync(this, _data); }
+	int      takeAsync(       void *_data )                  { return box_takeAsync(this, _data); }
+	int      waitAsync(       void *_data )                  { return box_waitAsync(this, _data); }
+	int      giveAsync( const void *_data )                  { return box_giveAsync(this, _data); }
+	int      sendAsync( const void *_data )                  { return box_sendAsync(this, _data); }
 #endif
 
 	private:
@@ -443,7 +577,11 @@ struct MailBoxQueueT : public __box
  ******************************************************************************/
 
 template<unsigned limit_, class C>
-using MailBoxQueueTT = MailBoxQueueT<limit_, sizeof(C)>;
+struct MailBoxQueueTT : public MailBoxQueueT<limit_, sizeof(C)>
+{
+	constexpr
+	MailBoxQueueTT(): MailBoxQueueT<limit_, sizeof(C)>() {}
+};
 
 }     //  namespace
 #endif//__cplusplus

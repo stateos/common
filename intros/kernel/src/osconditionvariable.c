@@ -2,7 +2,7 @@
 
     @file    IntrOS: osconditionvariable.c
     @author  Rajmund Szymanski
-    @date    11.07.2022
+    @date    17.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,14 @@
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_cnd_init( cnd_t *cnd )
+/* -------------------------------------------------------------------------- */
+{
+	memset(cnd, 0, sizeof(cnd_t));
+}
+
+/* -------------------------------------------------------------------------- */
 void cnd_init( cnd_t *cnd )
 /* -------------------------------------------------------------------------- */
 {
@@ -40,45 +48,97 @@ void cnd_init( cnd_t *cnd )
 
 	sys_lock();
 	{
-		memset(cnd, 0, sizeof(cnd_t));
+		priv_cnd_init(cnd);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-void cnd_wait( cnd_t *cnd, mtx_t *mtx )
+static
+void priv_cnd_reset( cnd_t *cnd, int event )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
-	unsigned signal;
+	core_all_wakeup(&cnd->obj.queue, event);
+}
+
+/* -------------------------------------------------------------------------- */
+void cnd_reset( cnd_t *cnd )
+/* -------------------------------------------------------------------------- */
+{
+	assert(cnd);
+
+	sys_lock();
+	{
+		priv_cnd_reset(cnd, E_STOPPED);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+int cnd_waitFor( cnd_t *cnd, mtx_t *mtx, cnt_t delay )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+	int wait_result;
 
 	assert(cnd);
 	assert(mtx);
 
-	result = mtx_give(mtx);
-	assert(result == SUCCESS);
-	(void) result;
-
 	sys_lock();
 	{
-		signal = cnd->signal;
-		while (cnd->signal == signal)
-			core_ctx_switch();
+		result = mtx_give(mtx);
+		assert(result == E_SUCCESS);
+		if (result == E_SUCCESS)
+		{
+			wait_result = core_tsk_waitFor(&cnd->obj.queue, delay);
+			result = mtx_wait(mtx);
+			assert(result == E_SUCCESS);
+			if (result == E_SUCCESS)
+				result = wait_result;
+		}
 	}
 	sys_unlock();
 
-	mtx_wait(mtx);
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
-void cnd_give( cnd_t *cnd )
+int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+	int wait_result;
+
+	assert(cnd);
+	assert(mtx);
+
+	sys_lock();
+	{
+		result = mtx_give(mtx);
+		assert(result == E_SUCCESS);
+		if (result == E_SUCCESS)
+		{
+			wait_result = core_tsk_waitUntil(&cnd->obj.queue, time);
+			result = mtx_wait(mtx);
+			assert(result == E_SUCCESS);
+			if (result == E_SUCCESS)
+				result = wait_result;
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+void cnd_give( cnd_t *cnd, bool all )
 /* -------------------------------------------------------------------------- */
 {
 	assert(cnd);
 
 	sys_lock();
 	{
-		cnd->signal++;
+		while (core_one_wakeup(&cnd->obj.queue, E_SUCCESS) && all);
 	}
 	sys_unlock();
 }

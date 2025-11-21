@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,11 +33,16 @@
 #define __INTROS_FLG_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /* -------------------------------------------------------------------------- */
 
-#define flgAny        ( false )
-#define flgAll        ( true  )
+#define flgAny          0U
+#define flgAll          1U
+#define flgNew          2U
+
+#define flgAnyNew     ( flgAny | flgNew  )
+#define flgAllNew     ( flgAll | flgNew  )
 
 /******************************************************************************
  *
@@ -49,6 +54,8 @@ typedef struct __flg flg_t;
 
 struct __flg
 {
+	obj_t    obj;   // object header
+
 	unsigned flags; // pending flags
 };
 
@@ -69,7 +76,7 @@ typedef struct __flg flg_id [];
  *
  ******************************************************************************/
 
-#define               _FLG_INIT( _init ) { _init }
+#define               _FLG_INIT( _init ) { _OBJ_INIT(), _init }
 
 /******************************************************************************
  *
@@ -167,6 +174,27 @@ void flg_init( flg_t *flg, unsigned init );
 
 /******************************************************************************
  *
+ * Name              : flg_reset
+ * Alias             : flg_kill
+ *
+ * Description       : reset the flag object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   flg             : pointer to flag object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void flg_reset( flg_t *flg );
+
+__STATIC_INLINE
+void flg_kill( flg_t *flg ) { flg_reset(flg); }
+
+/******************************************************************************
+ *
  * Name              : flg_take
  * Alias             : flg_tryWait
  *
@@ -175,18 +203,74 @@ void flg_init( flg_t *flg, unsigned init );
  * Parameters
  *   flg             : pointer to flag object
  *   flags           : all flags to wait
- *   all             : waiting mode
+ *   mode            : waiting mode
  *                     flgAny: wait for any flags to be set
  *                     flgAll: wait for all flags to be set
+ *                     flgNew: ignore flags in flag object that have been set before
+ *                     ( either flgAny or flgAll can be used with flgNew )
  *
- * Return            : remaining flags
+ * Return
+ *   0               : required flags have been set
+ *   another value   : remaining flags, try again
  *
  ******************************************************************************/
 
-unsigned flg_take( flg_t *flg, unsigned flags, bool all );
+unsigned flg_take( flg_t *flg, unsigned flags, unsigned mode );
 
 __STATIC_INLINE
-unsigned flg_tryWait( flg_t *flg, unsigned flags, bool all ) { return flg_take(flg, flags, all); }
+unsigned flg_tryWait( flg_t *flg, unsigned flags, unsigned mode ) { return flg_take(flg, flags, mode); }
+
+/******************************************************************************
+ *
+ * Name              : flg_waitFor
+ *
+ * Description       : wait on flag object for given flags for given duration of time
+ *
+ * Parameters
+ *   flg             : pointer to flag object
+ *   flags           : all flags to wait
+ *   mode            : waiting mode
+ *                     flgAny: wait for any flags to be set
+ *                     flgAll: wait for all flags to be set
+ *                     flgNew: ignore flags in flag object that have been set before
+ *                     ( either flgAny or flgAll can be used with flgNew )
+ *   delay           : duration of time (maximum number of ticks to wait on flag object for given flags)
+ *                     IMMEDIATE: don't wait until required flags have been set
+ *                     INFINITE:  wait indefinitely until required flags have been set
+ *
+ * Return
+ *   E_SUCCESS       : required flags have been set
+ *   E_STOPPED       : flag object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : required flags have not been set before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int flg_waitFor( flg_t *flg, unsigned flags, unsigned mode, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : flg_waitUntil
+ *
+ * Description       : wait on flag object for given flags until given timepoint
+ *
+ * Parameters
+ *   flg             : pointer to flag object
+ *   flags           : all flags to wait
+ *   mode            : waiting mode
+ *                     flgAny: wait for any flags to be set
+ *                     flgAll: wait for all flags to be set
+ *                     flgNew: ignore flags in flag object that have been set before
+ *                     ( either flgAny or flgAll can be used with flgNew )
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : required flags have been set
+ *   E_STOPPED       : flag object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : required flags have not been set before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int flg_waitUntil( flg_t *flg, unsigned flags, unsigned mode, cnt_t time );
 
 /******************************************************************************
  *
@@ -197,15 +281,20 @@ unsigned flg_tryWait( flg_t *flg, unsigned flags, bool all ) { return flg_take(f
  * Parameters
  *   flg             : pointer to flag object
  *   flags           : all flags to wait
- *   all             : waiting mode
+ *   mode            : waiting mode
  *                     flgAny: wait for any flags to be set
  *                     flgAll: wait for all flags to be set
+ *                     flgNew: ignore flags in flag object that have been set before
+ *                     ( either flgAny or flgAll can be used with flgNew )
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : required flags have been set
+ *   E_STOPPED       : flag object was reseted
  *
  ******************************************************************************/
 
-void flg_wait( flg_t *flg, unsigned flags, bool all );
+__STATIC_INLINE
+int flg_wait( flg_t *flg, unsigned flags, unsigned mode ) { return flg_waitFor(flg, flags, mode, INFINITE); }
 
 /******************************************************************************
  *
@@ -264,7 +353,7 @@ unsigned flg_get( flg_t *flg );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -283,18 +372,26 @@ struct Flag : public __flg
 	constexpr
 	Flag( const unsigned _init = 0 ): __flg _FLG_INIT(_init) {}
 
+	~Flag() { assert(__flg::obj.queue == nullptr); }
+
 	Flag( Flag&& ) = default;
 	Flag( const Flag& ) = delete;
 	Flag& operator=( Flag&& ) = delete;
 	Flag& operator=( const Flag& ) = delete;
 
-	unsigned take   ( unsigned _flags, bool _all = true ) { return flg_take   (this, _flags, _all); }
-	unsigned tryWait( unsigned _flags, bool _all = true ) { return flg_tryWait(this, _flags, _all); }
-	void     wait   ( unsigned _flags, bool _all = true ) { return flg_wait   (this, _flags, _all); }
-	unsigned give   ( unsigned _flags )                   { return flg_give   (this, _flags); }
-	unsigned set    ( unsigned _flags )                   { return flg_set    (this, _flags); }
-	unsigned clear  ( unsigned _flags )                   { return flg_clear  (this, _flags); }
-	unsigned get    ()                                    { return flg_get    (this); }
+	void     reset    ()                                               {        flg_reset    (this); }
+	void     kill     ()                                               {        flg_kill     (this); }
+	unsigned take     ( unsigned _flags, char _mode = flgAll )         { return flg_take     (this, _flags, _mode); }
+	unsigned tryWait  ( unsigned _flags, char _mode = flgAll )         { return flg_tryWait  (this, _flags, _mode); }
+	template<typename T>
+	int      waitFor  ( unsigned _flags, char _mode, const T& _delay ) { return flg_waitFor  (this, _flags, _mode, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil( unsigned _flags, char _mode, const T& _time )  { return flg_waitUntil(this, _flags, _mode, Clock::until(_time)); }
+	int      wait     ( unsigned _flags, char _mode = flgAll )         { return flg_wait     (this, _flags, _mode); }
+	unsigned give     ( unsigned _flags )                              { return flg_give     (this, _flags); }
+	unsigned set      ( unsigned _flags )                              { return flg_set      (this, _flags); }
+	unsigned clear    ( unsigned _flags )                              { return flg_clear    (this, _flags); }
+	unsigned get      ()                                               { return flg_get      (this); }
 };
 
 }     //  namespace

@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    18.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,9 +33,11 @@
 #define __INTROS_SEM_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /* -------------------------------------------------------------------------- */
 
+#define semDirect    ( 0U )   // direct semaphore (producer can't free the semaphore, it can post the semaphore only to the pending task)
 #define semBinary    ( 1U )   // binary semaphore
 #define semCounting  ( 0U-1 ) // counting semaphore
 #define semDefault     semCounting
@@ -50,6 +52,8 @@ typedef struct __sem sem_t;
 
 struct __sem
 {
+	obj_t    obj;   // object header
+
 	unsigned count; // current value of the semaphore counter
 	unsigned limit; // limit value of the semaphore counter
 };
@@ -65,6 +69,7 @@ typedef struct __sem sem_id [];
  * Parameters
  *   init            : initial value of semaphore counter
  *   limit           : maximum value of semaphore counter
+ *                     semDirect: direct semaphore
  *                     semBinary: binary semaphore
  *                     semCounting: counting semaphore
  *                     otherwise: limited semaphore
@@ -75,7 +80,7 @@ typedef struct __sem sem_id [];
  *
  ******************************************************************************/
 
-#define               _SEM_INIT( _init, _limit ) { _init < _limit ? _init : _limit, _limit }
+#define               _SEM_INIT( _init, _limit ) { _OBJ_INIT(), _init < _limit ? _init : _limit, _limit }
 
 /******************************************************************************
  *
@@ -100,6 +105,7 @@ typedef struct __sem sem_id [];
  *   sem             : name of a pointer to semaphore object
  *   init            : initial value of semaphore counter
  *   limit           : (optional) maximum value of semaphore counter
+ *                     semDirect: direct semaphore
  *                     semBinary: binary semaphore
  *                     semCounting: counting semaphore (default)
  *                     otherwise: limited semaphore
@@ -121,6 +127,7 @@ typedef struct __sem sem_id [];
  * Parameters
  *   init            : initial value of semaphore counter
  *   limit           : (optional) maximum value of semaphore counter
+ *                     semDirect: direct semaphore
  *                     semBinary: binary semaphore
  *                     semCounting: counting semaphore (default)
  *                     otherwise: limited semaphore
@@ -146,6 +153,7 @@ typedef struct __sem sem_id [];
  * Parameters
  *   init            : initial value of semaphore counter
  *   limit           : (optional) maximum value of semaphore counter
+ *                     semDirect: direct semaphore
  *                     semBinary: binary semaphore
  *                     semCounting: counting semaphore (default)
  *                     otherwise: limited semaphore
@@ -177,6 +185,7 @@ extern "C" {
  *   sem             : pointer to semaphore object
  *   init            : initial value of semaphore counter
  *   limit           : maximum value of semaphore counter
+ *                     semDirect: direct semaphore
  *                     semBinary: binary semaphore
  *                     semCounting: counting semaphore
  *                     otherwise: limited semaphore
@@ -186,6 +195,27 @@ extern "C" {
  ******************************************************************************/
 
 void sem_init( sem_t *sem, unsigned init, unsigned limit );
+
+/******************************************************************************
+ *
+ * Name              : sem_reset
+ * Alias             : sem_kill
+ *
+ * Description       : reset the semaphore object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   sem             : pointer to semaphore object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void sem_reset( sem_t *sem );
+
+__STATIC_INLINE
+void sem_kill( sem_t *sem ) { sem_reset(sem); }
 
 /******************************************************************************
  *
@@ -200,20 +230,63 @@ void sem_init( sem_t *sem, unsigned init, unsigned limit );
  *   sem             : pointer to semaphore object
  *
  * Return
- *   SUCCESS         : semaphore object was successfully locked
- *   FAILURE         : semaphore object can't be locked immediately
+ *   E_SUCCESS       : semaphore object was successfully locked
+ *   E_TIMEOUT       : semaphore object can't be locked immediately, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned sem_take( sem_t *sem );
+int sem_take( sem_t *sem );
 
 __STATIC_INLINE
-unsigned sem_tryWait( sem_t *sem ) { return sem_take(sem); }
+int sem_tryWait( sem_t *sem ) { return sem_take(sem); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned sem_takeAsync( sem_t *sem ) { return sem_take(sem); }
+int sem_takeAsync( sem_t *sem );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : sem_waitFor
+ *
+ * Description       : try to lock the semaphore object,
+ *                     wait for given duration of time if the semaphore object can't be locked immediately
+ *
+ * Parameters
+ *   sem             : pointer to semaphore object
+ *   delay           : duration of time (maximum number of ticks to wait for lock the semaphore object)
+ *                     IMMEDIATE: don't wait if the semaphore object can't be locked immediately
+ *                     INFINITE:  wait indefinitely until the semaphore object has been locked
+ *
+ * Return
+ *   E_SUCCESS       : semaphore object was successfully locked
+ *   E_STOPPED       : semaphore object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : semaphore object was not locked before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int sem_waitFor( sem_t *sem, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : sem_waitUntil
+ *
+ * Description       : try to lock the semaphore object,
+ *                     wait until given timepoint if the semaphore object can't be locked immediately
+ *
+ * Parameters
+ *   sem             : pointer to semaphore object
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : semaphore object was successfully locked
+ *   E_STOPPED       : semaphore object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : semaphore object was not locked before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int sem_waitUntil( sem_t *sem, cnt_t time );
 
 /******************************************************************************
  *
@@ -226,15 +299,19 @@ unsigned sem_takeAsync( sem_t *sem ) { return sem_take(sem); }
  * Parameters
  *   sem             : pointer to semaphore object
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : semaphore object was successfully locked
+ *   E_STOPPED       : semaphore object was reseted (unavailable for async version)
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-void sem_wait( sem_t *sem );
+__STATIC_INLINE
+int sem_wait( sem_t *sem ) { return sem_waitFor(sem, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-void sem_waitAsync( sem_t *sem ) { sem_wait(sem); }
+int sem_waitAsync( sem_t *sem );
 #endif
 
 /******************************************************************************
@@ -250,19 +327,20 @@ void sem_waitAsync( sem_t *sem ) { sem_wait(sem); }
  *   sem             : pointer to semaphore object
  *
  * Return
- *   SUCCESS         : semaphore object was successfully unlocked
- *   FAILURE         : semaphore object can't be unlocked immediately
+ *   E_SUCCESS       : semaphore object was successfully unlocked
+ *   E_TIMEOUT       : semaphore object can't be unlocked immediately, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned sem_give( sem_t *sem );
+int sem_give( sem_t *sem );
 
 __STATIC_INLINE
-unsigned sem_post( sem_t *sem ) { return sem_give(sem); }
+int sem_post( sem_t *sem ) { return sem_give(sem); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned sem_giveAsync( sem_t *sem ) { return sem_give(sem); }
+int sem_giveAsync( sem_t *sem );
 #endif
 
 /******************************************************************************
@@ -276,12 +354,12 @@ unsigned sem_giveAsync( sem_t *sem ) { return sem_give(sem); }
  *   num             : update value of semaphore counter
  *
  * Return
- *   SUCCESS         : semaphore counter was successfully updated
- *   FAILURE         : semaphore counter was updated to the limit value
+ *   E_SUCCESS       : semaphore counter was successfully updated
+ *   E_TIMEOUT       : semaphore counter was updated to the limit value
  *
  ******************************************************************************/
 
-unsigned sem_release( sem_t *sem, unsigned num );
+int sem_release( sem_t *sem, unsigned num );
 
 /******************************************************************************
  *
@@ -304,7 +382,7 @@ unsigned sem_getValue( sem_t *sem );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -316,6 +394,7 @@ namespace intros {
  * Constructor parameters
  *   init            : initial value of semaphore counter
  *   limit           : maximum value of semaphore counter
+ *                     semDirect: direct semaphore
  *                     semBinary: binary semaphore
  *                     semCounting: counting semaphore (default)
  *                     otherwise: limited semaphore
@@ -329,29 +408,61 @@ struct Semaphore : public __sem
 	constexpr
 	Semaphore( const unsigned _init, const unsigned _limit = semDefault ): __sem _SEM_INIT(_init, _limit) {}
 
+	~Semaphore() { assert(__sem::obj.queue == nullptr); }
+
 	Semaphore( Semaphore&& ) = default;
 	Semaphore( const Semaphore& ) = delete;
 	Semaphore& operator=( Semaphore&& ) = delete;
 	Semaphore& operator=( const Semaphore& ) = delete;
 
-	unsigned take     ()                { return sem_take     (this); }
-	unsigned tryWait  ()                { return sem_tryWait  (this); }
-	void     wait     ()                {        sem_wait     (this); }
-	unsigned give     ()                { return sem_give     (this); }
-	unsigned post     ()                { return sem_post     (this); }
-	unsigned release  ( unsigned _num ) { return sem_release  (this, _num); }
-	unsigned getValue ()                { return sem_getValue (this); }
+	void     reset     ()                  {        sem_reset     (this); }
+	void     kill      ()                  {        sem_kill      (this); }
+	int      take      ()                  { return sem_take      (this); }
+	int      tryWait   ()                  { return sem_tryWait   (this); }
+	template<typename T>
+	int      waitFor   ( const T& _delay ) { return sem_waitFor   (this, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil ( const T& _time )  { return sem_waitUntil (this, Clock::until(_time)); }
+	int      wait      ()                  { return sem_wait      (this); }
+	int      give      ()                  { return sem_give      (this); }
+	int      post      ()                  { return sem_post      (this); }
+	int      release   ( unsigned _num )   { return sem_release   (this, _num); }
+	unsigned getValue  ()                  { return sem_getValue  (this); }
 #if OS_ATOMICS
-	unsigned takeAsync()                { return sem_takeAsync(this); }
-	void     waitAsync()                {        sem_waitAsync(this); }
-	unsigned giveAsync()                { return sem_giveAsync(this); }
+	int      takeAsync ()                  { return sem_takeAsync (this); }
+	int      waitAsync ()                  { return sem_waitAsync (this); }
+	int      giveAsync ()                  { return sem_giveAsync (this); }
 #endif
+
+#if __cplusplus >= 201402L
+	using Ptr = std::unique_ptr<Semaphore>;
+#else
+	using Ptr = Semaphore *;
+#endif
+
+/******************************************************************************
+ *
+ * Name              : Semaphore::Direct
+ *
+ * Description       : create and initialize static direct semaphore
+ *
+ * Parameters        : none
+ *
+ * Return            : Semaphore object
+ *
+ ******************************************************************************/
+
+	static
+	Semaphore Direct()
+	{
+		return { 0, semDirect };
+	}
 
 /******************************************************************************
  *
  * Name              : Semaphore::Binary
  *
- * Description       : create and initialize binary semaphore object
+ * Description       : create and initialize static binary semaphore
  *
  * Parameters
  *   init            : initial value of semaphore counter
@@ -360,7 +471,7 @@ struct Semaphore : public __sem
  *
  ******************************************************************************/
 
-	static constexpr
+	static
 	Semaphore Binary( const unsigned _init = 0 )
 	{
 		return { _init, semBinary };
@@ -370,7 +481,7 @@ struct Semaphore : public __sem
  *
  * Name              : Semaphore::Counting
  *
- * Description       : create and initialize counting semaphore object
+ * Description       : create and initialize static counting semaphore
  *
  * Parameters
  *   init            : initial value of semaphore counter
@@ -379,7 +490,7 @@ struct Semaphore : public __sem
  *
  ******************************************************************************/
 
-	static constexpr
+	static
 	Semaphore Counting( const unsigned _init = 0 )
 	{
 		return { _init, semCounting };

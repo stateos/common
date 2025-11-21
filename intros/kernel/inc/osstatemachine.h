@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.h
     @author  Rajmund Szymanski
-    @date    25.03.2023
+    @date    18.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,7 +33,7 @@
 #define __INTROS_HSM_H
 
 #include "oskernel.h"
-#include "ostask.h"
+#include "osclock.h"
 #include "oseventqueue.h"
 
 /* -------------------------------------------------------------------------- */
@@ -449,6 +449,27 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize );
 
 /******************************************************************************
  *
+ * Name              : hsm_reset
+ * Alias             : hsm_kill
+ *
+ * Description       : reset the hsm object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   hsm             : pointer to hsm object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void hsm_reset( hsm_t *hsm );
+
+__STATIC_INLINE
+void hsm_kill( hsm_t *hsm ) { hsm_reset(hsm); }
+
+/******************************************************************************
+ *
  * Name              : hsm_link
  *
  * Description       : link hsm state action to the state action queue
@@ -481,8 +502,7 @@ void hsm_link( hsm_action_t *action );
 void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 
 #if OS_ATOMICS
-__STATIC_INLINE
-void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState ) { hsm_start(hsm, tsk, initState); }
+void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 #endif
 
 /******************************************************************************
@@ -498,17 +518,62 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState ) { hsm_star
  *   event           : event value
  *
  * Return
- *   SUCCESS         : event data was successfully transferred to the hsm object
- *   FAILURE         : hsm event queue is full
+ *   E_SUCCESS       : event data was successfully transferred to the hsm object
+ *   E_TIMEOUT       : hsm event queue is full, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned hsm_give( hsm_t *hsm, unsigned event );
+int hsm_give( hsm_t *hsm, unsigned event );
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned hsm_giveAsync( hsm_t *hsm, unsigned event ) { return hsm_give(hsm, event); }
+int hsm_giveAsync( hsm_t *hsm, unsigned event );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : hsm_sendFor
+ *
+ * Description       : try to transfer event value to the hsm event queue,
+ *                     wait for given duration of time while the hsm event queue is full
+ *
+ * Parameters
+ *   hsm             : pointer to hsm object
+ *   event           : event value
+ *   delay           : duration of time (maximum number of ticks to wait while the hsm event queue is full)
+ *                     IMMEDIATE: don't wait if the hsm event queue is full
+ *                     INFINITE:  wait indefinitely while the hsm event queue is full
+ *
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred to the hsm object
+ *   E_STOPPED       : hsm object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : hsm event queue is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int hsm_sendFor( hsm_t *hsm, unsigned event, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : hsm_sendUntil
+ *
+ * Description       : try to transfer event value to the hsm event queue,
+ *                     wait until given timepoint while the hsm event queue is full
+ *
+ * Parameters
+ *   hsm             : pointer to hsm object
+ *   event           : event value
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred to the hsm object
+ *   E_STOPPED       : hsm object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : hsm event queue is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int hsm_sendUntil( hsm_t *hsm, unsigned event, cnt_t time );
 
 /******************************************************************************
  *
@@ -522,15 +587,19 @@ unsigned hsm_giveAsync( hsm_t *hsm, unsigned event ) { return hsm_give(hsm, even
  *   hsm             : pointer to hsm object
  *   event           : event value
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : event data was successfully transferred to the hsm object
+ *   E_STOPPED       : hsm object was reseted (unavailable for async version)
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-void hsm_send( hsm_t *hsm, unsigned event );
+__STATIC_INLINE
+int hsm_send( hsm_t *hsm, unsigned event ) { return hsm_sendFor(hsm, event, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-void hsm_sendAsync( hsm_t *hsm, unsigned event ) { hsm_send(hsm, event); }
+int hsm_sendAsync( hsm_t *hsm, unsigned event );
 #endif
 
 /******************************************************************************
@@ -563,8 +632,7 @@ void hsm_push( hsm_t *hsm, unsigned event );
  *
  ******************************************************************************/
 
-__STATIC_INLINE
-hsm_state_t* hsm_getState( hsm_t *hsm ) { return hsm->state; }
+hsm_state_t *hsm_getState( hsm_t *hsm );
 
 #ifdef __cplusplus
 }
@@ -572,8 +640,7 @@ hsm_state_t* hsm_getState( hsm_t *hsm ) { return hsm->state; }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
-#if __cplusplus >= 201402L
+#if defined(__cplusplus) && (__cplusplus >= 201402L)
 
 #include <iterator>
 #include <vector>
@@ -676,8 +743,14 @@ struct StateMachineT : public __hsm
 	void          add       ( const std::vector<Action>& _tab )   {        std::copy(std::begin(_tab), std::end(_tab), std::back_inserter(tab_)); }
 	void          start     ( tsk_t& _task, hsm_state_t& _init )  {        for (auto& _action: tab_) _action.link();
 	                                                                       hsm_start     (this, &_task, &_init); }
-	unsigned      give      ( unsigned _event )                   { return hsm_give      (this,  _event); }
-	void          send      ( unsigned _event )                   {        hsm_send      (this,  _event); }
+	void          reset     ()                                    {        hsm_reset     (this); }
+	void          kill      ()                                    {        hsm_kill      (this); }
+	int           give      ( unsigned _event )                   { return hsm_give      (this,  _event); }
+	template<typename T>
+	int           sendFor   ( unsigned _event, const T& _delay )  { return hsm_sendFor  (this,   _event, Clock::count(_delay)); }
+	template<typename T>
+	int           sendUntil ( unsigned _event, const T& _time )   { return hsm_sendUntil(this,   _event, Clock::until(_time)); }
+	int           send      ( unsigned _event )                   { return hsm_send      (this,  _event); }
 	void          push      ( unsigned _event )                   {        hsm_push      (this,  _event); }
 	hsm_state_t * getState  ()                                    { return hsm_getState  (this); }
 #if OS_ATOMICS
@@ -693,7 +766,6 @@ struct StateMachineT : public __hsm
 };
 
 }     //  namespace
-#endif//  201402L
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */

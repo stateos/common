@@ -2,7 +2,7 @@
 
     @file    IntrOS: oslist.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define __INTROS_LST_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /******************************************************************************
  *
@@ -73,6 +74,8 @@ typedef struct __lst lst_t;
 
 struct __lst
 {
+	obj_t    obj;   // object header
+
 	que_t    head;  // list head
 };
 
@@ -92,7 +95,7 @@ typedef struct __lst lst_id [];
  *
  ******************************************************************************/
 
-#define               _LST_INIT() { _QUE_INIT() }
+#define               _LST_INIT() { _OBJ_INIT(), _QUE_INIT() }
 
 /******************************************************************************
  *
@@ -174,6 +177,27 @@ void lst_init( lst_t *lst );
 
 /******************************************************************************
  *
+ * Name              : lst_reset
+ * Alias             : lst_kill
+ *
+ * Description       : wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   lst             : pointer to list object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void lst_reset( lst_t *lst );
+
+__STATIC_INLINE
+void lst_kill( lst_t *lst ) { lst_reset(lst); }
+
+/******************************************************************************
+ *
  * Name              : lst_take
  * Alias             : lst_tryWait
  *
@@ -182,16 +206,62 @@ void lst_init( lst_t *lst );
  *
  * Parameters
  *   lst             : pointer to list object
+ *   data            : pointer to store the pointer to the memory object
  *
- * Return            : pointer to the memory object
- *   NULL            : list object is empty
+ * Return
+ *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
+ *   E_TIMEOUT       : list object is empty, try again
  *
  ******************************************************************************/
 
-void *lst_take( lst_t *lst );
+int lst_take( lst_t *lst, void **data );
 
 __STATIC_INLINE
-void *lst_tryWait( lst_t *lst ) { return lst_take(lst); }
+int lst_tryWait( lst_t *lst, void **data ) { return lst_take(lst, data); }
+
+/******************************************************************************
+ *
+ * Name              : lst_waitFor
+ *
+ * Description       : try to get memory object from the list object,
+ *                     wait for given duration of time while the list object is empty
+ *
+ * Parameters
+ *   lst             : pointer to list object
+ *   data            : pointer to store the pointer to the memory object
+ *   delay           : duration of time (maximum number of ticks to wait while the list object is empty)
+ *                     IMMEDIATE: don't wait if the list object is empty
+ *                     INFINITE:  wait indefinitely while the list object is empty
+ *
+ * Return
+ *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
+ *   E_STOPPED       : list object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : list object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int lst_waitFor( lst_t *lst, void **data, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : lst_waitUntil
+ *
+ * Description       : try to get memory object from the list object,
+ *                     wait until given timepoint while the list object is empty
+ *
+ * Parameters
+ *   lst             : pointer to list object
+ *   data            : pointer to store the pointer to the memory object
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
+ *   E_STOPPED       : list object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : list object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int lst_waitUntil( lst_t *lst, void **data, cnt_t time );
 
 /******************************************************************************
  *
@@ -202,12 +272,16 @@ void *lst_tryWait( lst_t *lst ) { return lst_take(lst); }
  *
  * Parameters
  *   lst             : pointer to list object
+ *   data            : pointer to store the pointer to the memory object
  *
- * Return            : pointer to the memory object
+ * Return
+ *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
+ *   E_STOPPED       : list object was reseted
  *
  ******************************************************************************/
 
-void *lst_wait( lst_t *lst );
+__STATIC_INLINE
+int lst_wait( lst_t *lst, void **data ) { return lst_waitFor(lst, data, INFINITE); }
 
 /******************************************************************************
  *
@@ -231,7 +305,7 @@ void lst_give( lst_t *lst, void *data );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -251,15 +325,23 @@ struct ListTT : public __lst
 	constexpr
 	ListTT(): __lst _LST_INIT() {}
 
+	~ListTT() { assert(__lst::obj.queue == nullptr); }
+
 	ListTT( ListTT&& ) = default;
 	ListTT( const ListTT& ) = delete;
 	ListTT& operator=( ListTT&& ) = delete;
 	ListTT& operator=( const ListTT& ) = delete;
 
-	C  * take   ()           { return reinterpret_cast<C *>(lst_take   (this)); }
-	C  * tryWait()           { return reinterpret_cast<C *>(lst_tryWait(this)); }
-	C  * wait   ()           { return reinterpret_cast<C *>(lst_wait   (this)); }
-	void give   ( C *_data ) {                              lst_give   (this, _data); }
+	void reset    ()                               {        lst_reset    (this); }
+	void kill     ()                               {        lst_kill     (this); }
+	int  take     ( C   **_data )                  { return lst_take     (this, reinterpret_cast<void **>(_data)); }
+	int  tryWait  ( C   **_data )                  { return lst_tryWait  (this, reinterpret_cast<void **>(_data)); }
+	template<typename T>
+	int  waitFor  ( C   **_data, const T& _delay ) { return lst_waitFor  (this, reinterpret_cast<void **>(_data), Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( C   **_data, const T& _time )  { return lst_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }
+	int  wait     ( C   **_data )                  { return lst_wait     (this, reinterpret_cast<void **>(_data)); }
+	void give     ( void *_data )                  {        lst_give     (this,                           _data); }
 };
 
 /******************************************************************************

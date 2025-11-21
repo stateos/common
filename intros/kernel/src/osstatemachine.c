@@ -2,7 +2,7 @@
 
     @file    IntrOS: osstatemachine.c
     @author  Rajmund Szymanski
-    @date    15.03.2023
+    @date    19.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -30,6 +30,7 @@
  ******************************************************************************/
 
 #include "inc/osstatemachine.h"
+#include "inc/ostask.h"
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
@@ -189,9 +190,10 @@ void priv_eventDispatcher( hsm_t *hsm )
 
 	for (;;)
 	{
-		unsigned event = evq_wait(&hsm->evq);
+		unsigned event;
+		int      result = evq_wait(&hsm->evq, &event);
 
-		if (event == hsmStop)
+		if (result != E_SUCCESS || event == hsmStop)
 			break;
 
 		assert(event >= hsmUser);
@@ -249,6 +251,17 @@ void hsm_initAction( hsm_action_t *action, hsm_state_t *owner, unsigned event, h
 }
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_hsm_init( hsm_t *hsm, unsigned *data, size_t bufsize )
+/* -------------------------------------------------------------------------- */
+{
+	memset(hsm, 0, sizeof(hsm_t));
+
+	hsm->evq.limit = bufsize / sizeof(unsigned);
+	hsm->evq.data  = data;
+}
+
+/* -------------------------------------------------------------------------- */
 void hsm_init( hsm_t *hsm, void *data, size_t bufsize )
 /* -------------------------------------------------------------------------- */
 {
@@ -258,9 +271,7 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize )
 
 	sys_lock();
 	{
-		memset(hsm, 0, sizeof(hsm_t));
-
-		evq_init(&hsm->evq, data, bufsize);
+		priv_hsm_init(hsm, data, bufsize);
 	}
 	sys_unlock();
 }
@@ -308,7 +319,34 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned hsm_give( hsm_t *hsm, unsigned event )
+static
+void priv_hsm_reset( hsm_t *hsm, int event )
+/* -------------------------------------------------------------------------- */
+{
+	hsm->state = NULL;
+
+	hsm->evq.count = 0;
+	hsm->evq.head  = 0;
+	hsm->evq.tail  = 0;
+
+	core_all_wakeup(&hsm->evq.obj.queue, event);
+}
+
+/* -------------------------------------------------------------------------- */
+void hsm_reset( hsm_t *hsm )
+/* -------------------------------------------------------------------------- */
+{
+	assert(hsm);
+
+	sys_lock();
+	{
+		priv_hsm_reset(hsm, E_STOPPED);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+int hsm_give( hsm_t *hsm, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm);
@@ -318,13 +356,23 @@ unsigned hsm_give( hsm_t *hsm, unsigned event )
 }
 
 /* -------------------------------------------------------------------------- */
-void hsm_send( hsm_t *hsm, unsigned event )
+int hsm_sendFor( hsm_t *hsm, unsigned event, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
 	assert(hsm);
 	assert(event >= hsmUser || event == hsmStop);
 
-	evq_send(&hsm->evq, event);
+	return evq_sendFor(&hsm->evq, event, delay);
+}
+
+/* -------------------------------------------------------------------------- */
+int hsm_sendUntil( hsm_t *hsm, unsigned event, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
+
+	return evq_sendUntil(&hsm->evq, event, time);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -338,3 +386,105 @@ void hsm_push( hsm_t *hsm, unsigned event )
 }
 
 /* -------------------------------------------------------------------------- */
+hsm_state_t *hsm_getState( hsm_t *hsm )
+/* -------------------------------------------------------------------------- */
+{
+	hsm_state_t *result;
+
+	assert(hsm);
+
+	sys_lock();
+	{
+		result = hsm->state;
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+
+#if OS_ATOMICS
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_eventDispatcherAsync( hsm_t *hsm )
+/* -------------------------------------------------------------------------- */
+{
+	assert(hsm);
+
+	for (;;)
+	{
+		unsigned event;
+		int      result = evq_waitAsync(&hsm->evq, &event);
+
+		if (result != E_SUCCESS || event == hsmStop)
+			break;
+
+		assert(event >= hsmUser);
+
+		sys_lock();
+		{
+			if (event >= hsmUser)
+				priv_eventHandler(hsm, event);
+		}
+		sys_unlock();
+	}
+
+	sys_lock();
+	{
+		priv_transition(hsm, NULL);
+	}
+	sys_unlock();
+#if OS_TASK_EXIT == 0
+	tsk_stop();
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
+void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
+/* -------------------------------------------------------------------------- */
+{
+	assert(hsm);
+	assert(hsm->state == NULL);
+	assert(tsk);
+	assert(initState);
+	assert(initState->parent == NULL);
+
+	sys_lock();
+	{
+		if (hsm->state == NULL)
+		{
+			hsm->evq.count = 0; // reset hsm event queue
+			hsm->evq.head  = 0; //
+			hsm->evq.tail  = 0; //
+			priv_transition(hsm, initState);
+			tsk_startWith(tsk, (fun_a *)priv_eventDispatcherAsync, hsm);
+		}
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+int hsm_giveAsync( hsm_t *hsm, unsigned event )
+/* -------------------------------------------------------------------------- */
+{
+	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
+
+	return evq_giveAsync(&hsm->evq, event);
+}
+
+/* -------------------------------------------------------------------------- */
+int hsm_sendAsync( hsm_t *hsm, unsigned event )
+/* -------------------------------------------------------------------------- */
+{
+	assert(hsm);
+	assert(event >= hsmUser || event == hsmStop);
+
+	return evq_sendAsync(&hsm->evq, event);
+}
+
+/* -------------------------------------------------------------------------- */
+
+#endif//OS_ATOMICS

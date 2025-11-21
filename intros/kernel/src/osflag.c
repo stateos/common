@@ -2,7 +2,7 @@
 
     @file    IntrOS: osflag.c
     @author  Rajmund Szymanski
-    @date    05.05.2021
+    @date    18.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -30,8 +30,18 @@
  ******************************************************************************/
 
 #include "inc/osflag.h"
-#include "inc/oscriticalsection.h"
 #include "inc/ostask.h"
+#include "inc/oscriticalsection.h"
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_flg_init( flg_t *flg, unsigned init )
+/* -------------------------------------------------------------------------- */
+{
+	memset(flg, 0, sizeof(flg_t));
+
+	flg->flags = init;
+}
 
 /* -------------------------------------------------------------------------- */
 void flg_init( flg_t *flg, unsigned init )
@@ -41,28 +51,82 @@ void flg_init( flg_t *flg, unsigned init )
 
 	sys_lock();
 	{
-		memset(flg, 0, sizeof(flg_t));
-
-		flg->flags = init;
+		priv_flg_init(flg, init);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned flg_take( flg_t *flg, unsigned flags, bool all )
+static
+void priv_flg_reset( flg_t *flg, int event )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	flg->flags = 0;
+
+	core_all_wakeup(&flg->obj.queue, event);
+}
+
+/* -------------------------------------------------------------------------- */
+void flg_reset( flg_t *flg )
+/* -------------------------------------------------------------------------- */
+{
+	assert(flg);
+
+	sys_lock();
+	{
+		priv_flg_reset(flg, E_STOPPED);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+unsigned priv_flg_take( flg_t *flg, unsigned flags, unsigned mode )
+/* -------------------------------------------------------------------------- */
+{
+	unsigned result = flags;
+
+	if ((mode & flgNew) == 0)
+		result &= ~flg->flags;
+
+	if (result != flags && (mode & flgAll) == 0)
+		result = 0;
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+unsigned flg_take( flg_t *flg, unsigned flags, unsigned mode )
+/* -------------------------------------------------------------------------- */
+{
+	assert(flg);
+
+	sys_lock();
+	{
+		flags = priv_flg_take(flg, flags, mode);
+	}
+	sys_unlock();
+
+	return flags;
+}
+
+/* -------------------------------------------------------------------------- */
+int flg_waitFor( flg_t *flg, unsigned flags, unsigned mode, cnt_t delay )
+/* -------------------------------------------------------------------------- */
+{
+	int result = E_SUCCESS;
 
 	assert(flg);
 
 	sys_lock();
 	{
-		result = flags & ~flg->flags;
-		flg->flags &= ~flags;
-
-		if (result != flags && !all)
-			result = 0;
+		flags = priv_flg_take(flg, flags, mode);
+		if (flags != 0)
+		{
+			System.cur->tmp.flg.flags = flags;
+			System.cur->tmp.flg.mode  = mode;
+			result = core_tsk_waitFor(&flg->obj.queue, delay);
+		}
 	}
 	sys_unlock();
 
@@ -70,11 +134,26 @@ unsigned flg_take( flg_t *flg, unsigned flags, bool all )
 }
 
 /* -------------------------------------------------------------------------- */
-void flg_wait( flg_t *flg, unsigned flags, bool all )
+int flg_waitUntil( flg_t *flg, unsigned flags, unsigned mode, cnt_t time )
 /* -------------------------------------------------------------------------- */
 {
-	while (flags = flg_take(flg, flags, all), flags != 0)
-		tsk_yield();
+	int result = E_SUCCESS;
+
+	assert(flg);
+
+	sys_lock();
+	{
+		flags = priv_flg_take(flg, flags, mode);
+		if (flags != 0)
+		{
+			System.cur->tmp.flg.flags = flags;
+			System.cur->tmp.flg.mode  = mode;
+			result = core_tsk_waitUntil(&flg->obj.queue, time);
+		}
+	}
+	sys_unlock();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -82,6 +161,7 @@ unsigned flg_give( flg_t *flg, unsigned flags )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned result;
+	tsk_t  * tsk;
 
 	assert(flg);
 
@@ -89,6 +169,21 @@ unsigned flg_give( flg_t *flg, unsigned flags )
 	{
 		flg->flags |= flags;
 		result = flg->flags;
+
+		tsk = flg->obj.queue;
+		while (tsk)
+		{
+			if (tsk->tmp.flg.flags & flags)
+			{
+				tsk->tmp.flg.flags &= ~flags;
+				if (tsk->tmp.flg.flags == 0 || (tsk->tmp.flg.mode & flgAll) == 0)
+				{
+					core_tsk_wakeup(tsk, E_SUCCESS);
+					continue;
+				}
+			}
+			tsk = tsk->obj.queue;
+		}
 	}
 	sys_unlock();
 

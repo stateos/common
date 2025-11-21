@@ -2,7 +2,7 @@
 
     @file    IntrOS: osevent.c
     @author  Rajmund Szymanski
-    @date    05.05.2021
+    @date    17.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -30,7 +30,16 @@
  ******************************************************************************/
 
 #include "inc/osevent.h"
+#include "inc/ostask.h"
 #include "inc/oscriticalsection.h"
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_evt_init( evt_t *evt )
+/* -------------------------------------------------------------------------- */
+{
+	memset(evt, 0, sizeof(evt_t));
+}
 
 /* -------------------------------------------------------------------------- */
 void evt_init( evt_t *evt )
@@ -40,59 +49,82 @@ void evt_init( evt_t *evt )
 
 	sys_lock();
 	{
-		memset(evt, 0, sizeof(evt_t));
+		priv_evt_init(evt);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned evt_take( evt_t *evt )
+static
+void priv_evt_reset( evt_t *evt, int event )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned event;
-
-	assert(evt);
-
-	sys_lock();
-	{
-		event = evt->event;
-	}
-	sys_unlock();
-
-	return event;
+	core_all_wakeup(&evt->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned evt_wait( evt_t *evt )
+void evt_reset( evt_t *evt )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned event;
-	unsigned signal;
+	assert(evt);
+
+	sys_lock();
+	{
+		priv_evt_reset(evt, E_STOPPED);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+int evt_waitFor( evt_t *evt, unsigned *event, cnt_t delay )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
 
 	assert(evt);
 
 	sys_lock();
 	{
-		signal = evt->signal;
-		while (evt->signal == signal)
-			core_ctx_switch();
-		event = evt->event;
+		result = core_tsk_waitFor(&evt->obj.queue, delay);
+		if (result == E_SUCCESS && event != NULL)
+			*event = System.cur->tmp.evt.event;
 	}
 	sys_unlock();
 
-	return event;
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int evt_waitUntil( evt_t *evt, unsigned *event, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(evt);
+
+	sys_lock();
+	{
+		result = core_tsk_waitUntil(&evt->obj.queue, time);
+		if (result == E_SUCCESS && event != NULL)
+			*event = System.cur->tmp.evt.event;
+	}
+	sys_unlock();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
 void evt_give( evt_t *evt, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
+	tsk_t *tsk;
+
 	assert(evt);
 
 	sys_lock();
 	{
-		evt->event = event;
-		evt->signal++;
+		while (tsk = core_one_wakeup(&evt->obj.queue, E_SUCCESS), tsk != NULL)
+			tsk->tmp.evt.event = event;
 	}
 	sys_unlock();
 }

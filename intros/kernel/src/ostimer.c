@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.c
     @author  Rajmund Szymanski
-    @date    27.03.2023
+    @date    19.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,19 @@
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_tmr_init( tmr_t *tmr, fun_t *proc, void *arg )
+/* -------------------------------------------------------------------------- */
+{
+	memset(tmr, 0, sizeof(tmr_t));
+
+	core_hdr_init(&tmr->hdr);
+
+	tmr->proc = proc;
+	tmr->arg  = arg;
+}
+
+/* -------------------------------------------------------------------------- */
 void tmr_init( tmr_t *tmr, fun_t *proc )
 /* -------------------------------------------------------------------------- */
 {
@@ -40,11 +53,32 @@ void tmr_init( tmr_t *tmr, fun_t *proc )
 
 	sys_lock();
 	{
-		memset(tmr, 0, sizeof(tmr_t));
+		priv_tmr_init(tmr, proc, NULL);
+	}
+	sys_unlock();
+}
 
-		core_hdr_init(&tmr->hdr);
+/* -------------------------------------------------------------------------- */
+static
+void priv_tmr_reset( tmr_t *tmr, int event )
+/* -------------------------------------------------------------------------- */
+{
+	if (tmr->hdr.id != ID_STOPPED)
+	{
+		core_all_wakeup(&tmr->obj.queue, event);
+		core_tmr_remove(tmr);
+	}
+}
 
-		tmr->proc = proc;
+/* -------------------------------------------------------------------------- */
+void tmr_reset( tmr_t *tmr )
+/* -------------------------------------------------------------------------- */
+{
+	assert(tmr);
+
+	sys_lock();
+	{
+		priv_tmr_reset(tmr, E_STOPPED);
 	}
 	sys_unlock();
 }
@@ -116,8 +150,8 @@ void tmr_startUntil( tmr_t *tmr, cnt_t time )
 
 	sys_lock();
 	{
-		tmr->start  = core_sys_time();
-		tmr->delay  = time - tmr->start;
+		tmr->start = core_sys_time();
+		tmr->delay = time - tmr->start;
 		if (tmr->delay > CNT_LIMIT)
 			tmr->delay = 0;
 		tmr->period = 0;
@@ -128,30 +162,30 @@ void tmr_startUntil( tmr_t *tmr, cnt_t time )
 }
 
 /* -------------------------------------------------------------------------- */
-void tmr_reset( tmr_t *tmr )
+static
+int priv_tmr_take( tmr_t *tmr )
 /* -------------------------------------------------------------------------- */
 {
-	assert(tmr);
+	if (tmr->hdr.next == 0)
+		return E_FAILURE; // timer has not yet been started
 
-	sys_lock();
-	{
-		if (tmr->hdr.id != ID_STOPPED)  // only active timers can be reseted
-			core_tmr_remove(tmr);
-	}
-	sys_unlock();
+	if (tmr->hdr.id == ID_STOPPED)
+		return E_SUCCESS;
+
+	return E_TIMEOUT;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned tmr_take( tmr_t *tmr )
+int tmr_take( tmr_t *tmr )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result;
 
 	assert(tmr);
 
 	sys_lock();
 	{
-		result = tmr->hdr.id == ID_STOPPED ? SUCCESS : FAILURE;
+		result = priv_tmr_take(tmr);
 	}
 	sys_unlock();
 
@@ -159,20 +193,60 @@ unsigned tmr_take( tmr_t *tmr )
 }
 
 /* -------------------------------------------------------------------------- */
-void tmr_wait( tmr_t *tmr )
+int tmr_waitFor( tmr_t *tmr, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned signal;
+	int result;
 
 	assert(tmr);
 
 	sys_lock();
 	{
-		signal = tmr->signal;
-		while (tmr->hdr.id != ID_STOPPED && tmr->signal == signal)
-			core_ctx_switch();
+		result = priv_tmr_take(tmr);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitFor(&tmr->obj.queue, delay);
 	}
 	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int tmr_waitNext( tmr_t *tmr, cnt_t delay )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(tmr);
+
+	sys_lock();
+	{
+		result = priv_tmr_take(tmr);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitNext(&tmr->obj.queue, delay);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int tmr_waitUntil( tmr_t *tmr, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(tmr);
+
+	sys_lock();
+	{
+		result = priv_tmr_take(tmr);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitUntil(&tmr->obj.queue, time);
+	}
+	sys_unlock();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */

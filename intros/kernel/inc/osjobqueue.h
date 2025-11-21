@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define __INTROS_JOB_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /******************************************************************************
  *
@@ -44,6 +45,8 @@ typedef struct __job job_t;
 
 struct __job
 {
+	obj_t    obj;   // object header
+
 	unsigned count; // inherited from semaphore
 	unsigned limit; // inherited from semaphore
 
@@ -70,7 +73,7 @@ typedef struct __job job_id [];
  *
  ******************************************************************************/
 
-#define               _JOB_INIT( _limit, _data ) { 0, _limit, 0, 0, _data }
+#define               _JOB_INIT( _limit, _data ) { _OBJ_INIT(), 0, _limit, 0, 0, _data }
 
 /******************************************************************************
  *
@@ -193,6 +196,27 @@ void job_init( job_t *job, fun_t **data, size_t bufsize );
 
 /******************************************************************************
  *
+ * Name              : job_reset
+ * Alias             : job_kill
+ *
+ * Description       : reset the job queue object and wake up all waiting tasks with 'E_STOPPED' event
+ *
+ * Parameters
+ *   job             : pointer to job queue object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void job_reset( job_t *job );
+
+__STATIC_INLINE
+void job_kill( job_t *job ) { job_reset(job); }
+
+/******************************************************************************
+ *
  * Name              : job_take
  * Alias             : job_tryWait
  * Async alias       : job_takeAsync
@@ -204,20 +228,63 @@ void job_init( job_t *job, fun_t **data, size_t bufsize );
  *   job             : pointer to job queue object
  *
  * Return
- *   SUCCESS         : job data was successfully transferred from the job queue object
- *   FAILURE         : job queue object is empty
+ *   E_SUCCESS       : job data was successfully transferred from the job queue object
+ *   E_TIMEOUT       : job queue object is empty, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned job_take( job_t *job );
+int job_take( job_t *job );
 
 __STATIC_INLINE
-unsigned job_tryWait( job_t *job ) { return job_take(job); }
+int job_tryWait( job_t *job ) { return job_take(job); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned job_takeAsync( job_t *job ) { return job_take(job); }
+int job_takeAsync( job_t *job );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : job_waitFor
+ *
+ * Description       : try to transfer job data from the job queue object and execute the job procedure,
+ *                     wait for given duration of time while the job queue object is empty
+ *
+ * Parameters
+ *   job             : pointer to job queue object
+ *   delay           : duration of time (maximum number of ticks to wait while the job queue object is empty)
+ *                     IMMEDIATE: don't wait if the job queue object is empty
+ *                     INFINITE:  wait indefinitely while the job queue object is empty
+ *
+ * Return
+ *   E_SUCCESS       : job data was successfully transferred from the job queue object
+ *   E_STOPPED       : job queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : job queue object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int job_waitFor( job_t *job, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : job_waitUntil
+ *
+ * Description       : try to transfer job data from the job queue object and execute the job procedure,
+ *                     wait until given timepoint while the job queue object is empty
+ *
+ * Parameters
+ *   job             : pointer to job queue object
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : job data was successfully transferred from the job queue object
+ *   E_STOPPED       : job queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : job queue object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int job_waitUntil( job_t *job, cnt_t time );
 
 /******************************************************************************
  *
@@ -230,15 +297,19 @@ unsigned job_takeAsync( job_t *job ) { return job_take(job); }
  * Parameters
  *   job             : pointer to job queue object
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : job data was successfully transferred from the job queue object
+ *   E_STOPPED       : job queue object was reseted (unavailable for async version)
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-void job_wait( job_t *job );
+__STATIC_INLINE
+int job_wait( job_t *job ) { return job_waitFor(job, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-void job_waitAsync( job_t *job ) { job_wait(job); }
+int job_waitAsync( job_t *job );
 #endif
 
 /******************************************************************************
@@ -254,17 +325,62 @@ void job_waitAsync( job_t *job ) { job_wait(job); }
  *   fun             : pointer to job procedure
  *
  * Return
- *   SUCCESS         : job data was successfully transferred to the job queue object
- *   FAILURE         : job queue object is full
+ *   E_SUCCESS       : job data was successfully transferred to the job queue object
+ *   E_TIMEOUT       : job queue object is full, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned job_give( job_t *job, fun_t *fun );
+int job_give( job_t *job, fun_t *fun );
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned job_giveAsync( job_t *job, fun_t *fun ) { return job_give(job, fun); }
+int job_giveAsync( job_t *job, fun_t *fun );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : job_sendFor
+ *
+ * Description       : try to transfer job data to the job queue object,
+ *                     wait for given duration of time while the job queue object is full
+ *
+ * Parameters
+ *   job             : pointer to job queue object
+ *   fun             : pointer to job procedure
+ *   delay           : duration of time (maximum number of ticks to wait while the job queue object is full)
+ *                     IMMEDIATE: don't wait if the job queue object is full
+ *                     INFINITE:  wait indefinitely while the job queue object is full
+ *
+ * Return
+ *   E_SUCCESS       : job data was successfully transferred to the job queue object
+ *   E_STOPPED       : job queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : job queue object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int job_sendFor( job_t *job, fun_t *fun, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : job_sendUntil
+ *
+ * Description       : try to transfer job data to the job queue object,
+ *                     wait until given timepoint while the job queue object is full
+ *
+ * Parameters
+ *   job             : pointer to job queue object
+ *   fun             : pointer to job procedure
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : job data was successfully transferred to the job queue object
+ *   E_STOPPED       : job queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : job queue object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int job_sendUntil( job_t *job, fun_t *fun, cnt_t time );
 
 /******************************************************************************
  *
@@ -278,15 +394,19 @@ unsigned job_giveAsync( job_t *job, fun_t *fun ) { return job_give(job, fun); }
  *   job             : pointer to job queue object
  *   fun             : pointer to job procedure
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : job data was successfully transferred to the job queue object
+ *   E_STOPPED       : job queue object was reseted (unavailable for async version)
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-void job_send( job_t *job, fun_t *fun );
+__STATIC_INLINE
+int job_send( job_t *job, fun_t *fun ) { return job_sendFor(job, fun, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-void job_sendAsync( job_t *job, fun_t *fun ) { job_send(job, fun); }
+int job_sendAsync( job_t *job, fun_t *fun );
 #endif
 
 /******************************************************************************
@@ -308,7 +428,7 @@ void job_push( job_t *job, fun_t *fun );
 
 /******************************************************************************
  *
- * Name              : job_getCount
+ * Name              : job_count
  *
  * Description       : return the amount of data contained in the job queue
  *
@@ -319,11 +439,11 @@ void job_push( job_t *job, fun_t *fun );
  *
  ******************************************************************************/
 
-unsigned job_getCount( job_t *job );
+unsigned job_count( job_t *job );
 
 /******************************************************************************
  *
- * Name              : job_getSpace
+ * Name              : job_space
  *
  * Description       : return the amount of free space in the job queue
  *
@@ -334,11 +454,11 @@ unsigned job_getCount( job_t *job );
  *
  ******************************************************************************/
 
-unsigned job_getSpace( job_t *job );
+unsigned job_space( job_t *job );
 
 /******************************************************************************
  *
- * Name              : job_getLimit
+ * Name              : job_limit
  *
  * Description       : return the size of the job queue
  *
@@ -349,7 +469,7 @@ unsigned job_getSpace( job_t *job );
  *
  ******************************************************************************/
 
-unsigned job_getLimit( job_t *job );
+unsigned job_limit( job_t *job );
 
 #ifdef __cplusplus
 }
@@ -357,7 +477,7 @@ unsigned job_getLimit( job_t *job );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -377,25 +497,37 @@ struct JobQueueT : public __job
 	constexpr
 	JobQueueT(): __job _JOB_INIT(limit_, data_) {}
 
+	~JobQueueT() { assert(__job::obj.queue == nullptr); }
+
 	JobQueueT( JobQueueT&& ) = default;
 	JobQueueT( const JobQueueT& ) = delete;
 	JobQueueT& operator=( JobQueueT&& ) = delete;
 	JobQueueT& operator=( const JobQueueT& ) = delete;
 
-	unsigned take     ()              { return job_take     (this); }
-	unsigned tryWait  ()              { return job_tryWait  (this); }
-	void     wait     ()              {        job_wait     (this); }
-	unsigned give     ( fun_t *_fun ) { return job_give     (this, _fun); }
-	void     send     ( fun_t *_fun ) {        job_send     (this, _fun); }
-	void     push     ( fun_t *_fun ) {        job_push     (this, _fun); }
-	unsigned getCount ()              { return job_getCount (this); }
-	unsigned getSpace ()              { return job_getSpace (this); }
-	unsigned getLimit ()              { return job_getLimit (this); }
+	void     reset    ()                               {        job_reset    (this); }
+	void     kill     ()                               {        job_kill     (this); }
+	int      take     ()                               { return job_take     (this); }
+	int      tryWait  ()                               { return job_tryWait  (this); }
+	template<typename T>
+	int      waitFor  ( const T& _delay )              { return job_waitFor  (this, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil( const T& _time )               { return job_waitUntil(this, Clock::until(_time)); }
+	int      wait     ()                               { return job_wait     (this); }
+	int      give     ( fun_t *_fun )                  { return job_give     (this, _fun); }
+	template<typename T>
+	int      sendFor  ( fun_t *_fun, const T& _delay ) { return job_sendFor  (this, _fun, Clock::count(_delay)); }
+	template<typename T>
+	int      sendUntil( fun_t *_fun, const T& _time )  { return job_sendUntil(this, _fun, Clock::until(_time)); }
+	int      send     ( fun_t *_fun )                  { return job_send     (this, _fun); }
+	void     push     ( fun_t *_fun )                  {        job_push     (this, _fun); }
+	unsigned count    ()                               { return job_count    (this); }
+	unsigned space    ()                               { return job_space    (this); }
+	unsigned limit    ()                               { return job_limit    (this); }
 #if OS_ATOMICS
-	unsigned takeAsync()              { return job_takeAsync(this); }
-	void     waitAsync()              {        job_waitAsync(this); }
-	unsigned giveAsync( fun_t *_fun ) { return job_giveAsync(this, _fun); }
-	void     sendAsync( fun_t *_fun ) {        job_sendAsync(this, _fun); }
+	int      takeAsync()                               { return job_takeAsync(this); }
+	int      waitAsync()                               { return job_waitAsync(this); }
+	int      giveAsync( fun_t *_fun )                  { return job_giveAsync(this, _fun); }
+	int      sendAsync( fun_t *_fun )                  { return job_sendAsync(this, _fun); }
 #endif
 
 	private:

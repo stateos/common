@@ -2,7 +2,7 @@
 
     @file    IntrOS: oseventqueue.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define __INTROS_EVQ_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /******************************************************************************
  *
@@ -44,6 +45,8 @@ typedef struct __evq evq_t;
 
 struct __evq
 {
+	obj_t    obj;   // object header
+
 	unsigned count; // inherited from semaphore
 	unsigned limit; // inherited from semaphore
 
@@ -70,7 +73,7 @@ typedef struct __evq evq_id [];
  *
  ******************************************************************************/
 
-#define               _EVQ_INIT( _limit, _data ) { 0, _limit, 0, 0, _data }
+#define               _EVQ_INIT( _limit, _data ) { _OBJ_INIT(), 0, _limit, 0, 0, _data }
 
 /******************************************************************************
  *
@@ -193,6 +196,27 @@ void evq_init( evq_t *evq, unsigned *data, size_t bufsize );
 
 /******************************************************************************
  *
+ * Name              : evq_reset
+ * Alias             : evq_kill
+ *
+ * Description       : reset the event queue object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   evq             : pointer to event queue object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void evq_reset( evq_t *evq );
+
+__STATIC_INLINE
+void evq_kill( evq_t *evq ) { evq_reset(evq); }
+
+/******************************************************************************
+ *
  * Name              : evq_take
  * Alias             : evq_tryWait
  * Async alias       : evq_takeAsync
@@ -202,21 +226,68 @@ void evq_init( evq_t *evq, unsigned *data, size_t bufsize );
  *
  * Parameters
  *   evq             : pointer to event queue object
+ *   event           : pointer to store event value
  *
- * Return            : event value
- *   FAILURE         : event queue object is empty
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred from the event queue object
+ *   E_TIMEOUT       : event queue object is empty, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned evq_take( evq_t *evq );
+int evq_take( evq_t *evq, unsigned *event );
 
 __STATIC_INLINE
-unsigned evq_tryWait( evq_t *evq ) { return evq_take(evq); }
+int evq_tryWait( evq_t *evq, unsigned *event ) { return evq_take(evq, event); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned evq_takeAsync( evq_t *evq ) { return evq_take(evq); }
+int evq_takeAsync( evq_t *evq, unsigned *event );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : evq_waitFor
+ *
+ * Description       : try to transfer event value from the event queue object,
+ *                     wait for given duration of time while the event queue object is empty
+ *
+ * Parameters
+ *   evq             : pointer to event queue object
+ *   event           : pointer to store event value
+ *   delay           : duration of time (maximum number of ticks to wait while the event queue object is empty)
+ *                     IMMEDIATE: don't wait if the event queue object is empty
+ *                     INFINITE:  wait indefinitely while the event queue object is empty
+ *
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred from the event queue object
+ *   E_STOPPED       : event queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : event queue object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int evq_waitFor( evq_t *evq, unsigned *event, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : evq_waitUntil
+ *
+ * Description       : try to transfer event value from the event queue object,
+ *                     wait until given timepoint while the event queue object is empty
+ *
+ * Parameters
+ *   evq             : pointer to event queue object
+ *   event           : pointer to store event value
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred from the event queue object
+ *   E_STOPPED       : event queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : event queue object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int evq_waitUntil( evq_t *evq, unsigned *event, cnt_t time );
 
 /******************************************************************************
  *
@@ -228,16 +299,21 @@ unsigned evq_takeAsync( evq_t *evq ) { return evq_take(evq); }
  *
  * Parameters
  *   evq             : pointer to event queue object
+ *   event           : pointer to store event value
  *
- * Return            : event value
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred from the event queue object
+ *   E_STOPPED       : event queue object was reseted (unavailable for async version)
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned evq_wait( evq_t *evq );
+__STATIC_INLINE
+int evq_wait( evq_t *evq, unsigned *event ) { return evq_waitFor(evq, event, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned evq_waitAsync( evq_t *evq ) { return evq_wait(evq); }
+int evq_waitAsync( evq_t *evq, unsigned *event );
 #endif
 
 /******************************************************************************
@@ -253,17 +329,62 @@ unsigned evq_waitAsync( evq_t *evq ) { return evq_wait(evq); }
  *   event           : event value
  *
  * Return
- *   SUCCESS         : event value was successfully transferred to the event queue object
- *   FAILURE         : event queue object is full
+ *   E_SUCCESS       : event value was successfully transferred to the event queue object
+ *   E_TIMEOUT       : event queue object is full, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned evq_give( evq_t *evq, unsigned event );
+int evq_give( evq_t *evq, unsigned event );
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned evq_giveAsync( evq_t *evq, unsigned event ) { return evq_give(evq, event); }
+int evq_giveAsync( evq_t *evq, unsigned event );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : evq_sendFor
+ *
+ * Description       : try to transfer event value to the event queue object,
+ *                     wait for given duration of time while the event queue object is full
+ *
+ * Parameters
+ *   evq             : pointer to event queue object
+ *   event           : event value
+ *   delay           : duration of time (maximum number of ticks to wait while the event queue object is full)
+ *                     IMMEDIATE: don't wait if the event queue object is full
+ *                     INFINITE:  wait indefinitely while the event queue object is full
+ *
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred to the event queue object
+ *   E_STOPPED       : event queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : event queue object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int evq_sendFor( evq_t *evq, unsigned event, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : evq_sendUntil
+ *
+ * Description       : try to transfer event value to the event queue object,
+ *                     wait until given timepoint while the event queue object is full
+ *
+ * Parameters
+ *   evq             : pointer to event queue object
+ *   event           : event value
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred to the event queue object
+ *   E_STOPPED       : event queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : event queue object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int evq_sendUntil( evq_t *evq, unsigned event, cnt_t time );
 
 /******************************************************************************
  *
@@ -277,15 +398,19 @@ unsigned evq_giveAsync( evq_t *evq, unsigned event ) { return evq_give(evq, even
  *   evq             : pointer to event queue object
  *   event           : event value
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : event value was successfully transferred to the event queue object
+ *   E_STOPPED       : event queue object was reseted (unavailable for async version)
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-void evq_send( evq_t *evq, unsigned event );
+__STATIC_INLINE
+int evq_send( evq_t *evq, unsigned event ) { return evq_sendFor(evq, event, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-void evq_sendAsync( evq_t *evq, unsigned event ) { evq_send(evq, event); }
+int evq_sendAsync( evq_t *evq, unsigned event );
 #endif
 
 /******************************************************************************
@@ -307,7 +432,7 @@ void evq_push( evq_t *evq, unsigned event );
 
 /******************************************************************************
  *
- * Name              : evq_getCount
+ * Name              : evq_count
  *
  * Description       : return the amount of data contained in the event queue
  *
@@ -318,11 +443,11 @@ void evq_push( evq_t *evq, unsigned event );
  *
  ******************************************************************************/
 
-unsigned evq_getCount( evq_t *evq );
+unsigned evq_count( evq_t *evq );
 
 /******************************************************************************
  *
- * Name              : evq_getSpace
+ * Name              : evq_space
  *
  * Description       : return the amount of free space in the event queue
  *
@@ -333,11 +458,11 @@ unsigned evq_getCount( evq_t *evq );
  *
  ******************************************************************************/
 
-unsigned evq_getSpace( evq_t *evq );
+unsigned evq_space( evq_t *evq );
 
 /******************************************************************************
  *
- * Name              : evq_getLimit
+ * Name              : evq_limit
  *
  * Description       : return the size of the event queue
  *
@@ -348,7 +473,7 @@ unsigned evq_getSpace( evq_t *evq );
  *
  ******************************************************************************/
 
-unsigned evq_getLimit( evq_t *evq );
+unsigned evq_limit( evq_t *evq );
 
 #ifdef __cplusplus
 }
@@ -356,7 +481,7 @@ unsigned evq_getLimit( evq_t *evq );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -376,25 +501,42 @@ struct EventQueueT : public __evq
 	constexpr
 	EventQueueT(): __evq _EVQ_INIT(limit_, data_) {}
 
+	~EventQueueT() { assert(__evq::obj.queue == nullptr); }
+
 	EventQueueT( EventQueueT&& ) = default;
 	EventQueueT( const EventQueueT& ) = delete;
 	EventQueueT& operator=( EventQueueT&& ) = delete;
 	EventQueueT& operator=( const EventQueueT& ) = delete;
 
-	unsigned take     ()                  { return evq_take     (this); }
-	unsigned tryWait  ()                  { return evq_tryWait  (this); }
-	unsigned wait     ()                  { return evq_wait     (this); }
-	unsigned give     ( unsigned _event ) { return evq_give     (this, _event); }
-	void     send     ( unsigned _event ) {        evq_send     (this, _event); }
-	void     push     ( unsigned _event ) {        evq_push     (this, _event); }
-	unsigned getCount ()                  { return evq_getCount (this); }
-	unsigned getSpace ()                  { return evq_getSpace (this); }
-	unsigned getLimit ()                  { return evq_getLimit (this); }
+	void     reset    ()                                    {        evq_reset    (this); }
+	void     kill     ()                                    {        evq_kill     (this); }
+	int      take     ( unsigned *_event = nullptr )        { return evq_take     (this,  _event); }
+	int      take     ( unsigned &_event )                  { return evq_take     (this, &_event); }
+	int      tryWait  ( unsigned *_event = nullptr )        { return evq_tryWait  (this,  _event); }
+	int      tryWait  ( unsigned &_event )                  { return evq_tryWait  (this, &_event); }
+	template<typename T>
+	int      waitFor  ( unsigned *_event, const T& _delay ) { return evq_waitFor  (this,  _event, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil( unsigned *_event, const T& _time )  { return evq_waitUntil(this,  _event, Clock::until(_time)); }
+	int      wait     ( unsigned *_event = nullptr )        { return evq_wait     (this,  _event); }
+	int      wait     ( unsigned &_event )                  { return evq_wait     (this, &_event); }
+	int      give     ( unsigned  _event )                  { return evq_give     (this,  _event); }
+	template<typename T>
+	int      sendFor  ( unsigned  _event, const T& _delay ) { return evq_sendFor  (this,  _event, Clock::count(_delay)); }
+	template<typename T>
+	int      sendUntil( unsigned  _event, const T& _time )  { return evq_sendUntil(this,  _event, Clock::until(_time)); }
+	int      send     ( unsigned  _event )                  { return evq_send     (this,  _event); }
+	void     push     ( unsigned  _event )                  {        evq_push     (this,  _event); }
+	unsigned count    ()                                    { return evq_count    (this); }
+	unsigned space    ()                                    { return evq_space    (this); }
+	unsigned limit    ()                                    { return evq_limit    (this); }
 #if OS_ATOMICS
-	unsigned takeAsync()                  { return evq_takeAsync(this); }
-	unsigned waitAsync()                  { return evq_waitAsync(this); }
-	unsigned giveAsync( unsigned _event ) { return evq_giveAsync(this, _event); }
-	void     sendAsync( unsigned _event ) {        evq_sendAsync(this, _event); }
+	int      takeAsync( unsigned *_event = nullptr )        { return evq_takeAsync(this,  _event); }
+	int      takeAsync( unsigned &_event )                  { return evq_takeAsync(this, &_event); }
+	int      waitAsync( unsigned *_event = nullptr )        { return evq_waitAsync(this,  _event); }
+	int      waitAsync( unsigned &_event )                  { return evq_waitAsync(this, &_event); }
+	int      giveAsync( unsigned  _event )                  { return evq_giveAsync(this,  _event); }
+	int      sendAsync( unsigned  _event )                  { return evq_sendAsync(this,  _event); }
 #endif
 
 	private:

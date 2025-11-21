@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.c
     @author  Rajmund Szymanski
-    @date    07.05.2021
+    @date    19.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -30,25 +30,40 @@
  ******************************************************************************/
 
 #include "inc/osmemorypool.h"
-#include "inc/oscriticalsection.h"
 #include "inc/ostask.h"
+#include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
 static
 void priv_mem_bind( mem_t *mem )
 /* -------------------------------------------------------------------------- */
 {
-	que_t *ptr = mem->lst.head.next = mem->data;
-	size_t cnt = mem->limit;
+	que_t *ptr;
 
-	assert(mem->size);
-	assert(mem->data);
+	if (mem->limit > 0)
+	{
+		assert(mem->size);
+		assert(mem->data);
 
-	while (--cnt > 0)
-		ptr = ptr->next = ptr + 1 + mem->size;
+		ptr = mem->lst.head.next = mem->data;
 
-	ptr->next = NULL;
-	mem->limit = 0;
+		while (--mem->limit > 0)
+			ptr = ptr->next = ptr + 1 + mem->size;
+
+		ptr->next = NULL;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize )
+/* -------------------------------------------------------------------------- */
+{
+	memset(mem, 0, sizeof(mem_t));
+
+	mem->data  = data;
+	mem->size  = MEM_SIZE(size);
+	mem->limit = bufsize / (1 + mem->size) / sizeof(que_t);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -62,13 +77,38 @@ void mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize )
 
 	sys_lock();
 	{
-		memset(mem, 0, sizeof(mem_t));
-
-		mem->data  = data;
-		mem->size  = MEM_SIZE(size);
-		mem->limit = bufsize / (1 + mem->size) / sizeof(que_t);
+		priv_mem_init(mem, size, data, bufsize);
 	}
 	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_mem_reset( mem_t *mem, int event )
+/* -------------------------------------------------------------------------- */
+{
+	core_all_wakeup(&mem->lst.obj.queue, event);
+}
+
+/* -------------------------------------------------------------------------- */
+void mem_reset( mem_t *mem )
+/* -------------------------------------------------------------------------- */
+{
+	assert(mem);
+
+	sys_lock();
+	{
+		priv_mem_reset(mem, E_STOPPED);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_lst_empty( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	return lst->head.next == NULL;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -83,29 +123,31 @@ void *priv_lst_popFront( lst_t *lst )
 
 /* -------------------------------------------------------------------------- */
 static
-void *priv_mem_take( mem_t *mem )
+int priv_mem_take( mem_t *mem, void **data )
 /* -------------------------------------------------------------------------- */
 {
-	if (mem->limit)
-		priv_mem_bind(mem);
+	priv_mem_bind(mem);
 
-	if (mem->lst.head.next == NULL)
-		return NULL;
+	if (priv_lst_empty(&mem->lst))
+		return E_TIMEOUT;
 
-	return priv_lst_popFront(&mem->lst);
+	*data = priv_lst_popFront(&mem->lst);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-void *mem_take( mem_t *mem )
+int mem_take( mem_t *mem, void **data )
 /* -------------------------------------------------------------------------- */
 {
-	void *result;
+	int result;
 
 	assert(mem);
+	assert(data);
 
 	sys_lock();
 	{
-		result = priv_mem_take(mem);
+		result = priv_mem_take(mem, data);
 	}
 	sys_unlock();
 
@@ -113,13 +155,49 @@ void *mem_take( mem_t *mem )
 }
 
 /* -------------------------------------------------------------------------- */
-void *mem_wait( mem_t *mem )
+int mem_waitFor( mem_t *mem, void **data, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	void *result;
+	int result;
 
-	while (result = mem_take(mem), result == NULL)
-		tsk_yield();
+	assert(mem);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_mem_take(mem, data);
+		if (result == E_TIMEOUT)
+		{
+			result = core_tsk_waitFor(&mem->lst.obj.queue, delay);
+			if (result == E_SUCCESS)
+				*data = System.cur->tmp.lst.data;
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int mem_waitUntil( mem_t *mem, void **data, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(mem);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_mem_take(mem, data);
+		if (result == E_TIMEOUT)
+		{
+			result = core_tsk_waitUntil(&mem->lst.obj.queue, time);
+			if (result == E_SUCCESS)
+				*data = System.cur->tmp.lst.data;
+		}
+	}
+	sys_unlock();
 
 	return result;
 }
@@ -140,10 +218,17 @@ static
 void priv_mem_give( mem_t *mem, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (mem->limit)
-		priv_mem_bind(mem);
+	tsk_t *tsk = core_one_wakeup(&mem->lst.obj.queue, E_SUCCESS);
 
-	priv_lst_pushBack(&mem->lst, data);
+	if (tsk)
+	{
+		tsk->tmp.lst.data = data;
+	}
+	else
+	{
+		priv_mem_bind(mem);
+		priv_lst_pushBack(&mem->lst, data);
+	}
 }
 
 /* -------------------------------------------------------------------------- */

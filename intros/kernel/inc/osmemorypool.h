@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmemorypool.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define __INTROS_MEM_H
 
 #include "oskernel.h"
+#include "osclock.h"
 #include "oslist.h"
 
 /* -------------------------------------------------------------------------- */
@@ -205,6 +206,27 @@ void mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize );
 
 /******************************************************************************
  *
+ * Name              : mem_reset
+ * Alias             : mem_kill
+ *
+ * Description       : reset the memory pool object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   mem             : pointer to memory pool object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void mem_reset( mem_t *mem );
+
+__STATIC_INLINE
+void mem_kill( mem_t *mem ) { mem_reset(mem); }
+
+/******************************************************************************
+ *
  * Name              : mem_take
  * Alias             : mem_tryWait
  *
@@ -213,16 +235,62 @@ void mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize );
  *
  * Parameters
  *   mem             : pointer to memory pool object
+ *   data            : pointer to store the pointer to the memory object
  *
- * Return            : pointer to the memory object
- *   NULL            : memory pool object is empty
+ * Return
+ *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
+ *   E_TIMEOUT       : memory pool object is empty
  *
  ******************************************************************************/
 
-void *mem_take( mem_t *mem );
+int mem_take( mem_t *mem, void **data );
 
 __STATIC_INLINE
-void *mem_tryWait( mem_t *mem ) { return mem_take(mem); }
+int mem_tryWait( mem_t *mem, void **data ) { return mem_take(mem, data); }
+
+/******************************************************************************
+ *
+ * Name              : mem_waitFor
+ *
+ * Description       : try to get memory object from the memory pool object,
+ *                     wait for given duration of time while the memory pool object is empty
+ *
+ * Parameters
+ *   mem             : pointer to memory pool object
+ *   data            : pointer to store the pointer to the memory object
+ *   delay           : duration of time (maximum number of ticks to wait while the memory pool object is empty)
+ *                     IMMEDIATE: don't wait if the memory pool object is empty
+ *                     INFINITE:  wait indefinitely while the memory pool object is empty
+ *
+ * Return
+ *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
+ *   E_STOPPED       : memory pool object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : memory pool object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int mem_waitFor( mem_t *mem, void **data, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : mem_waitUntil
+ *
+ * Description       : try to get memory object from the memory pool object,
+ *                     wait until given timepoint while the memory pool object is empty
+ *
+ * Parameters
+ *   mem             : pointer to memory pool object
+ *   data            : pointer to store the pointer to the memory object
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
+ *   E_STOPPED       : memory pool object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : memory pool object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int mem_waitUntil( mem_t *mem, void **data, cnt_t time );
 
 /******************************************************************************
  *
@@ -233,12 +301,16 @@ void *mem_tryWait( mem_t *mem ) { return mem_take(mem); }
  *
  * Parameters
  *   mem             : pointer to memory pool object
+ *   data            : pointer to store the pointer to the memory object
  *
- * Return            : pointer to the memory object
+ * Return
+ *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
+ *   E_STOPPED       : memory pool object was reseted
  *
  ******************************************************************************/
 
-void *mem_wait( mem_t *mem );
+__STATIC_INLINE
+int mem_wait( mem_t *mem, void **data ) { return mem_waitFor(mem, data, INFINITE); }
 
 /******************************************************************************
  *
@@ -262,7 +334,7 @@ void mem_give( mem_t *mem, void *data );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -282,15 +354,23 @@ struct MemoryPoolT : public __mem
 {
 	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) {}
 
+	~MemoryPoolT() { assert(__mem::lst.obj.queue == nullptr); }
+
 	MemoryPoolT( MemoryPoolT&& ) = default;
 	MemoryPoolT( const MemoryPoolT& ) = delete;
 	MemoryPoolT& operator=( MemoryPoolT&& ) = delete;
 	MemoryPoolT& operator=( const MemoryPoolT& ) = delete;
 
-	void *take   ()              { return mem_take   (this); }
-	void *tryWait()              { return mem_tryWait(this); }
-	void *wait   ()              { return mem_wait   (this); }
-	void  give   ( void *_data ) {        mem_give   (this, _data); }
+	void reset    ()                                {        mem_reset    (this); }
+	void kill     ()                                {        mem_kill     (this); }
+	int  take     ( void **_data )                  { return mem_take     (this, _data); }
+	int  tryWait  ( void **_data )                  { return mem_tryWait  (this, _data); }
+	template<typename T>
+	int  waitFor  ( void **_data, const T& _delay ) { return mem_waitFor  (this, _data, Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( void **_data, const T& _time )  { return mem_waitUntil(this, _data, Clock::until(_time)); }
+	int  wait     ( void **_data )                  { return mem_wait     (this, _data); }
+	void give     ( void  *_data )                  {        mem_give     (this, _data); }
 
 	private:
 	que_t data_[limit_ * (1 + MEM_SIZE(size_))];
@@ -313,9 +393,13 @@ struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
 {
 	MemoryPoolTT(): MemoryPoolT<limit_, sizeof(C)>() {}
 
-	C *take   () { return reinterpret_cast<C *>(mem_take   (this)); }
-	C *tryWait() { return reinterpret_cast<C *>(mem_tryWait(this)); }
-	C *wait   () { return reinterpret_cast<C *>(mem_wait   (this)); }
+	int  take     ( C **_data )                  { return mem_take     (this, reinterpret_cast<void **>(_data)); }
+	int  tryWait  ( C **_data )                  { return mem_tryWait  (this, reinterpret_cast<void **>(_data)); }
+	template<typename T>
+	int  waitFor  ( C **_data, const T& _delay ) { return mem_waitFor  (this, reinterpret_cast<void **>(_data), Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( C **_data, const T& _time )  { return mem_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }
+	int  wait     ( C **_data )                  { return mem_wait     (this, reinterpret_cast<void **>(_data)); }
 };
 
 }     //  namespace

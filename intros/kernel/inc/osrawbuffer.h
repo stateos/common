@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrawbuffer.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define __INTROS_RAW_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /******************************************************************************
  *
@@ -44,6 +45,8 @@ typedef struct __raw raw_t;
 
 struct __raw
 {
+	obj_t    obj;   // object header
+
 	size_t   count; // size of used memory in the raw buffer (in bytes)
 	size_t   limit; // size of the raw buffer (in bytes)
 
@@ -70,7 +73,7 @@ typedef struct __raw raw_id [];
  *
  ******************************************************************************/
 
-#define               _RAW_INIT( _limit, _data ) { 0, _limit, 0, 0, _data }
+#define               _RAW_INIT( _limit, _data ) { _OBJ_INIT(), 0, _limit, 0, 0, _data }
 
 /******************************************************************************
  *
@@ -209,6 +212,27 @@ void raw_init( raw_t *raw, void *data, size_t bufsize );
 
 /******************************************************************************
  *
+ * Name              : raw_reset
+ * Alias             : raw_kill
+ *
+ * Description       : reset the raw buffer object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   raw             : pointer to raw buffer object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void raw_reset( raw_t *raw );
+
+__STATIC_INLINE
+void raw_kill( raw_t *raw ) { raw_reset(raw); }
+
+/******************************************************************************
+ *
  * Name              : raw_take
  * Alias             : raw_tryWait
  *
@@ -219,16 +243,66 @@ void raw_init( raw_t *raw, void *data, size_t bufsize );
  *   raw             : pointer to raw buffer object
  *   data            : pointer to the buffer
  *   size            : size of the buffer
+ *   read            : pointer to the variable getting number of read bytes
  *
- * Return            : number of read bytes
- *   0               : raw buffer object is empty
+ * Return
+ *   E_SUCCESS       : variable 'read' contains the number of bytes read from the raw buffer
+ *   E_TIMEOUT       : raw buffer object is empty, try again
  *
  ******************************************************************************/
 
-size_t raw_take( raw_t *raw, void *data, size_t size );
+int raw_take( raw_t *raw, void *data, size_t size, size_t *read );
 
 __STATIC_INLINE
-size_t raw_tryWait( raw_t *raw, void *data, size_t size ) { return raw_take(raw, data, size); }
+int raw_tryWait( raw_t *raw, void *data, size_t size, size_t *read ) { return raw_take(raw, data, size, read); }
+
+/******************************************************************************
+ *
+ * Name              : raw_waitFor
+ *
+ * Description       : try to transfer data from the raw buffer object,
+ *                     wait for given duration of time while the raw buffer object is empty
+ *
+ * Parameters
+ *   raw             : pointer to raw buffer object
+ *   data            : pointer to the buffer
+ *   size            : size of the buffer
+ *   read            : pointer to the variable getting number of read bytes
+ *   delay           : duration of time (maximum number of ticks to wait while the raw buffer object is empty)
+ *                     IMMEDIATE: don't wait if the raw buffer object is empty
+ *                     INFINITE:  wait indefinitely while the raw buffer object is empty
+ *
+ * Return
+ *   E_SUCCESS       : variable 'read' contains the number of bytes read from the raw buffer
+ *   E_STOPPED       : raw buffer object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : raw buffer object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int raw_waitFor( raw_t *raw, void *data, size_t size, size_t *read, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : raw_waitUntil
+ *
+ * Description       : try to transfer data from the raw buffer object,
+ *                     wait until given timepoint while the raw buffer object is empty
+ *
+ * Parameters
+ *   raw             : pointer to raw buffer object
+ *   data            : pointer to the buffer
+ *   size            : size of the buffer
+ *   read            : pointer to the variable getting number of read bytes
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : variable 'read' contains the number of bytes read from the raw buffer
+ *   E_STOPPED       : raw buffer object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : raw buffer object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int raw_waitUntil( raw_t *raw, void *data, size_t size, size_t *read, cnt_t time );
 
 /******************************************************************************
  *
@@ -241,12 +315,16 @@ size_t raw_tryWait( raw_t *raw, void *data, size_t size ) { return raw_take(raw,
  *   raw             : pointer to raw buffer object
  *   data            : pointer to the buffer
  *   size            : size of the buffer
+ *   read            : pointer to the variable getting number of read bytes
  *
- * Return            : number of read bytes
+ * Return
+ *   E_SUCCESS       : variable 'read' contains the number of bytes read from the raw buffer
+ *   E_STOPPED       : raw buffer object was reseted
  *
  ******************************************************************************/
 
-size_t raw_wait( raw_t *raw, void *data, size_t size );
+__STATIC_INLINE
+int raw_wait( raw_t *raw, void *data, size_t size, size_t *read ) { return raw_waitFor(raw, data, size, read, INFINITE); }
 
 /******************************************************************************
  *
@@ -261,12 +339,61 @@ size_t raw_wait( raw_t *raw, void *data, size_t size );
  *   size            : size of the buffer
  *
  * Return
- *   SUCCESS         : data was successfully transferred to the raw buffer object
- *   FAILURE         : not enough space in the raw buffer
+ *   E_SUCCESS       : data was successfully transferred to the raw buffer object
+ *   E_FAILURE       : size of the data is out of the limit
+ *   E_TIMEOUT       : not enough space in the raw buffer, try again
  *
  ******************************************************************************/
 
-unsigned raw_give( raw_t *raw, const void *data, size_t size );
+int raw_give( raw_t *raw, const void *data, size_t size );
+
+/******************************************************************************
+ *
+ * Name              : raw_sendFor
+ *
+ * Description       : try to transfer data to the raw buffer object,
+ *                     wait for given duration of time while the raw buffer object is full
+ *
+ * Parameters
+ *   raw             : pointer to raw buffer object
+ *   data            : pointer to the buffer
+ *   size            : size of the buffer
+ *   delay           : duration of time (maximum number of ticks to wait while the raw buffer object is full)
+ *                     IMMEDIATE: don't wait if the raw buffer object is full
+ *                     INFINITE:  wait indefinitely while the raw buffer object is full
+ *
+ * Return
+ *   E_SUCCESS       : data was successfully transferred to the raw buffer object
+ *   E_FAILURE       : size of the data is out of the limit
+ *   E_STOPPED       : raw buffer object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : raw buffer object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int raw_sendFor( raw_t *raw, const void *data, size_t size, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : raw_sendUntil
+ *
+ * Description       : try to transfer data to the raw buffer object,
+ *                     wait until given timepoint while the raw buffer object is full
+ *
+ * Parameters
+ *   raw             : pointer to raw buffer object
+ *   data            : pointer to the buffer
+ *   size            : size of the buffer
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : data was successfully transferred to the raw buffer object
+ *   E_FAILURE       : size of the data is out of the limit
+ *   E_STOPPED       : raw buffer object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : raw buffer object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int raw_sendUntil( raw_t *raw, const void *data, size_t size, cnt_t time );
 
 /******************************************************************************
  *
@@ -281,12 +408,14 @@ unsigned raw_give( raw_t *raw, const void *data, size_t size );
  *   size            : size of the buffer
  *
  * Return
- *   SUCCESS         : data was successfully transferred to the raw buffer object
- *   FAILURE         : size of the raw data is out of the limit
+ *   E_SUCCESS       : data was successfully transferred to the raw buffer object
+ *   E_FAILURE       : size of the data is out of the limit
+ *   E_STOPPED       : raw buffer object was reseted
  *
  ******************************************************************************/
 
-unsigned raw_send( raw_t *raw, const void *data, size_t size );
+__STATIC_INLINE
+int raw_send( raw_t *raw, const void *data, size_t size ) { return raw_sendFor(raw, data, size, INFINITE); }
 
 /******************************************************************************
  *
@@ -301,16 +430,16 @@ unsigned raw_send( raw_t *raw, const void *data, size_t size );
  *   size            : size of the buffer
  *
  * Return
- *   SUCCESS         : data was successfully transferred to the raw buffer object
- *   FAILURE         : size of the data is out of the limit
+ *   E_SUCCESS       : data was successfully transferred to the raw buffer object
+ *   E_FAILURE       : size of the data is out of the limit
  *
  ******************************************************************************/
 
-unsigned raw_push( raw_t *raw, const void *data, size_t size );
+int raw_push( raw_t *raw, const void *data, size_t size );
 
 /******************************************************************************
  *
- * Name              : raw_getCount
+ * Name              : raw_count
  *
  * Description       : return the amount of data contained in the raw buffer
  *
@@ -321,11 +450,11 @@ unsigned raw_push( raw_t *raw, const void *data, size_t size );
  *
  ******************************************************************************/
 
-size_t raw_getCount( raw_t *raw );
+size_t raw_count( raw_t *raw );
 
 /******************************************************************************
  *
- * Name              : raw_getSpace
+ * Name              : raw_space
  *
  * Description       : return the amount of free space in the raw buffer
  *
@@ -336,11 +465,11 @@ size_t raw_getCount( raw_t *raw );
  *
  ******************************************************************************/
 
-size_t raw_getSpace( raw_t *raw );
+size_t raw_space( raw_t *raw );
 
 /******************************************************************************
  *
- * Name              : raw_getLimit
+ * Name              : raw_limit
  *
  * Description       : return the size of the raw buffer
  *
@@ -351,7 +480,7 @@ size_t raw_getSpace( raw_t *raw );
  *
  ******************************************************************************/
 
-size_t raw_getLimit( raw_t *raw );
+size_t raw_limit( raw_t *raw );
 
 #ifdef __cplusplus
 }
@@ -359,7 +488,7 @@ size_t raw_getLimit( raw_t *raw );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -379,20 +508,32 @@ struct RawBufferT : public __raw
 	constexpr
 	RawBufferT(): __raw _RAW_INIT(limit_, data_) {}
 
+	~RawBufferT() { assert(__raw::obj.queue == nullptr); }
+
 	RawBufferT( RawBufferT&& ) = default;
 	RawBufferT( const RawBufferT& ) = delete;
 	RawBufferT& operator=( RawBufferT&& ) = delete;
 	RawBufferT& operator=( const RawBufferT& ) = delete;
 
-	size_t   take    (       void *_data, size_t _size ) { return raw_take    (this, _data, _size); }
-	size_t   tryWait (       void *_data, size_t _size ) { return raw_tryWait (this, _data, _size); }
-	size_t   wait    (       void *_data, size_t _size ) { return raw_wait    (this, _data, _size); }
-	unsigned give    ( const void *_data, size_t _size ) { return raw_give    (this, _data, _size); }
-	unsigned send    ( const void *_data, size_t _size ) { return raw_send    (this, _data, _size); }
-	unsigned push    ( const void *_data, size_t _size ) { return raw_push    (this, _data, _size); }
-	size_t   getCount()                                  { return raw_getCount(this); }
-	size_t   getSpace()                                  { return raw_getSpace(this); }
-	size_t   getLimit()                                  { return raw_getLimit(this); }
+	void   reset    ()                                                                   {        raw_reset    (this); }
+	void   kill     ()                                                                   {        raw_kill     (this); }
+	int    take     (       void *_data, size_t _size, size_t *_read = nullptr )         { return raw_take     (this, _data, _size, _read); }
+	int    tryWait  (       void *_data, size_t _size, size_t *_read = nullptr )         { return raw_tryWait  (this, _data, _size, _read); }
+	template<typename T>
+	int    waitFor  (       void *_data, size_t _size, size_t *_read,  const T& _delay ) { return raw_waitFor  (this, _data, _size, _read, _delay); }
+	template<typename T>
+	int    waitUntil(       void *_data, size_t _size, size_t *_read,  const T& _time )  { return raw_waitUntil(this, _data, _size, _read, _time); }
+	int    wait     (       void *_data, size_t _size, size_t *_read = nullptr )         { return raw_wait     (this, _data, _size, _read); }
+	int    give     ( const void *_data, size_t _size )                                  { return raw_give     (this, _data, _size); }
+	template<typename T>
+	int    sendFor  ( const void *_data, size_t _size, const T& _delay )                 { return raw_sendFor  (this, _data, _size, _delay); }
+	template<typename T>
+	int    sendUntil( const void *_data, size_t _size, const T& _time )                  { return raw_sendUntil(this, _data, _size, _time); }
+	int    send     ( const void *_data, size_t _size )                                  { return raw_send     (this, _data, _size); }
+	int    push     ( const void *_data, size_t _size )                                  { return raw_push     (this, _data, _size); }
+	size_t count    ()                                                                   { return raw_count    (this); }
+	size_t space    ()                                                                   { return raw_space    (this); }
+	size_t limit    ()                                                                   { return raw_limit    (this); }
 
 	private:
 	char data_[limit_];
@@ -416,12 +557,20 @@ struct RawBufferTT : public RawBufferT<limit_*sizeof(C)>
 	constexpr
 	RawBufferTT(): RawBufferT<limit_*sizeof(C)>() {}
 
-	unsigned take   (       C *_data ) { return raw_take   (this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }
-	unsigned tryWait(       C *_data ) { return raw_tryWait(this, _data, sizeof(C)) == 0 ? FAILURE : SUCCESS; }
-	void     wait   (       C *_data ) {        raw_wait   (this, _data, sizeof(C)); }
-	unsigned give   ( const C *_data ) { return raw_give   (this, _data, sizeof(C)); }
-	unsigned send   ( const C *_data ) { return raw_send   (this, _data, sizeof(C)); }
-	unsigned push   ( const C *_data ) { return raw_push   (this, _data, sizeof(C)); }
+	int take     (       C *_data )                  { return raw_take     (this, _data, sizeof(C), nullptr); }
+	int tryWait  (       C *_data )                  { return raw_tryWait  (this, _data, sizeof(C), nullptr); }
+	template<typename T>                               
+	int waitFor  (       C *_data, const T& _delay ) { return raw_waitFor  (this, _data, sizeof(C), nullptr, _delay); }
+	template<typename T>                               
+	int waitUntil(       C *_data, const T& _time )  { return raw_waitUntil(this, _data, sizeof(C), nullptr, _time); }
+	int wait     (       C *_data )                  { return raw_wait     (this, _data, sizeof(C), nullptr); }
+	int give     ( const C *_data )                  { return raw_give     (this, _data, sizeof(C)); }
+	template<typename T>                               
+	int sendFor  ( const C *_data, const T& _delay ) { return raw_sendFor  (this, _data, sizeof(C), _delay); }
+	template<typename T>                               
+	int sendUntil( const C *_data, const T& _time )  { return raw_sendUntil(this, _data, sizeof(C), _time); }
+	int send     ( const C *_data )                  { return raw_send     (this, _data, sizeof(C)); }
+	int push     ( const C *_data )                  { return raw_push     (this, _data, sizeof(C)); }
 };
 
 }     //  namespace

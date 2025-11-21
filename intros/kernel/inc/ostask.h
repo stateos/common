@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.h
     @author  Rajmund Szymanski
-    @date    10.04.2023
+    @date    18.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -54,25 +54,85 @@
 
 struct __tsk
 {
+	obj_t    obj;   // object header
 	hdr_t    hdr;   // timer / task header
 
-	fun_t *  proc;  // task proc (initial task function, doesn't have to be noreturn-type)
-	void *   arg;   // reserved for internal use
+	fun_t  * proc;  // task proc (initial task function, doesn't have to be noreturn-type)
+	void   * arg;   // reserved for internal use
 	cnt_t    start; // inherited from timer
 	cnt_t    delay; // inherited from timer
 	cnt_t    period;// inherited from timer
 
-	stk_t *  stack; // base of stack
+	stk_t  * stack; // base of stack
 	size_t   size;  // size of stack (in bytes)
+
+	tsk_t ** guard; // BLOCKED queue for the pending process
+	int      event; // wakeup event
 
 	struct {
 	unsigned sigset;// pending signals
-	act_t *  action;// signal handler
+	act_t  * action;// signal handler
 	struct {
-	fun_t *  pc;
+	fun_t  * pc;
 	cnt_t    delay;
 	}        backup;
 	}        sig;
+
+	union  {
+
+	struct {
+	unsigned event;
+	}        evt;   // temporary data used by event object
+
+	struct {
+	unsigned sigset;
+	unsigned signo;
+	}        sig;   // temporary data used by signal object
+
+	struct {
+	unsigned flags;
+	unsigned mode;
+	}        flg;   // temporary data used by flag object
+
+	struct {
+	void   * data;
+	}        lst;   // temporary data used by list / memory pool object
+
+	struct {
+	union  {
+	const
+	char   * out;
+	char   * in;
+	}        data;
+	size_t   size;
+	}        raw;   // temporary data used by raw buffer object
+
+	struct {
+	union  {
+	const
+	char   * out;
+	char   * in;
+	}        data;
+	size_t   size;
+	}        msg;   // temporary data used by message buffer object
+
+	struct {
+	union  {
+	const
+	void   * out;
+	void   * in;
+	}        data;
+	}        box;   // temporary data used by mailbox queue object
+
+	struct {
+	unsigned event;
+	}        evq;   // temporary data used by event queue object
+
+	struct {
+	fun_t  * fun;
+	}        job;   // temporary data used by job queue object
+
+	}        tmp;
 
 	union  {
 	ctx_t    reg;   // task context
@@ -101,7 +161,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #define               _TSK_INIT( _proc, _stack, _size ) \
-                    { _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, { 0, NULL, { NULL, 0 } }, { _CTX_INIT() } }
+                    { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, NULL, 0, \
+                    { 0, NULL, { NULL, 0 } }, { { 0 } }, { _CTX_INIT() } }
 
 /******************************************************************************
  *
@@ -548,21 +609,6 @@ void tsk_kill( tsk_t *tsk ) { tsk_reset(tsk); }
 
 /******************************************************************************
  *
- * Name              : tsk_join
- *
- * Description       : delay execution of current task until termination of given task
- *
- * Parameters
- *   tsk             : pointer to task object
- *
- * Return            : none
- *
- ******************************************************************************/
-
-void tsk_join( tsk_t *tsk );
-
-/******************************************************************************
- *
  * Name              : tsk_yield
  * Alias             : tsk_pass
  *
@@ -677,30 +723,30 @@ void tsk_sleep( void ) { tsk_sleepFor(INFINITE); }
  *   tsk             : pointer to task object
  *
  * Return
- *   SUCCESS         : task was successfully suspended
- *   FAILURE         : task cannot be suspended
+ *   E_SUCCESS       : task was successfully suspended
+ *   E_FAILURE       : task cannot be suspended
  *
  ******************************************************************************/
 
-unsigned tsk_suspend( tsk_t *tsk );
+int tsk_suspend( tsk_t *tsk );
 
 /******************************************************************************
  *
  * Name              : tsk_resume
  *
  * Description       : resume execution of given suspended task
- *                     only suspended or indefinitely delayed tasks can be resumed
+ *                     only suspended or indefinitely blocked tasks can be resumed
  *
  * Parameters
- *   tsk             : pointer to delayed task object
+ *   tsk             : pointer to suspended task object
  *
  * Return
- *   SUCCESS         : task was successfully resumed
- *   FAILURE         : task cannot be resumed
+ *   E_SUCCESS       : task was successfully resumed
+ *   E_FAILURE       : task cannot be resumed
  *
  ******************************************************************************/
 
-unsigned tsk_resume( tsk_t *tsk );
+int tsk_resume( tsk_t *tsk );
 
 /******************************************************************************
  *
@@ -724,7 +770,7 @@ void tsk_signal( tsk_t *tsk, unsigned signo ) { tsk_give(tsk, signo); }
 
 /******************************************************************************
  *
- * Name              : tsk_setAction
+ * Name              : tsk_action
  *
  * Description       : set given function as a signal handler
  *
@@ -736,7 +782,7 @@ void tsk_signal( tsk_t *tsk, unsigned signo ) { tsk_give(tsk, signo); }
  *
  ******************************************************************************/
 
-void tsk_setAction( tsk_t *tsk, act_t *action );
+void tsk_action( tsk_t *tsk, act_t *action );
 
 /******************************************************************************
  *
@@ -767,7 +813,7 @@ size_t tsk_stackSpace( void )
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -827,19 +873,18 @@ struct baseTask : public __tsk
 #else
 	void     startFrom( fun_t  * _proc )   {        tsk_startFrom(this, _proc); }
 #endif
-	void     join     ()                   {        tsk_join     (this); }
 	void     reset    ()                   {        tsk_reset    (this); }
 	void     kill     ()                   {        tsk_kill     (this); }
-	unsigned suspend  ()                   { return tsk_suspend  (this); }
-	unsigned resume   ()                   { return tsk_resume   (this); }
+	int      suspend  ()                   { return tsk_suspend  (this); }
+	int      resume   ()                   { return tsk_resume   (this); }
 	void     give     ( unsigned _signo )  {        tsk_give     (this, _signo); }
 	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
 #if __cplusplus >= 201402L
 	template<class F>
-	void     setAction( F&&      _action ) {        new (&act) Act_t(_action);
-	                                                tsk_setAction(this, act_); }
+	void     action   ( F&&      _action ) {        new (&act) Act_t(_action);
+	                                                tsk_action   (this, act_); }
 #else
-	void     setAction( act_t  * _action ) {        tsk_setAction(this, _action); }
+	void     action   ( act_t *  _action ) {        tsk_action   (this, _action); }
 #endif
 	explicit
 	operator bool     () const             { return __tsk::hdr.id != ID_STOPPED; }
@@ -867,48 +912,48 @@ struct baseTask : public __tsk
 	struct Current
 	{
 		static
-		void stop      ()                   {        tsk_stop      (); }
+		void     stop      ()                   {        tsk_stop      (); }
 		static
-		void exit      ()                   {        tsk_exit      (); }
+		void     exit      ()                   {        tsk_exit      (); }
 		static
-		void reset     ()                   {        tsk_reset     (current()); }
+		void     reset     ()                   {        tsk_reset     (current()); }
 		static
-		void kill      ()                   {        tsk_kill      (current()); }
+		void     kill      ()                   {        tsk_kill      (current()); }
 		static
-		void yield     ()                   {        tsk_yield     (); }
+		void     yield     ()                   {        tsk_yield     (); }
 		static
-		void pass      ()                   {        tsk_pass      (); }
+		void     pass      ()                   {        tsk_pass      (); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void flip      ( F&&      _proc )   {        new (&current()->fun) Fun_t(_proc);
-		                                             tsk_flip      (fun_); }
+		void     flip      ( F&&      _proc )   {        new (&current()->fun) Fun_t(_proc);
+		                                                 tsk_flip      (fun_); }
 #else
 		static
-		void flip      ( fun_t  * _proc )   {        tsk_flip      (_proc); }
+		void     flip      ( fun_t  * _proc )   {        tsk_flip      (_proc); }
 #endif
 		template<typename T> static
-		void sleepFor  ( const T& _delay )  {        tsk_sleepFor  (Clock::count(_delay)); }
+		void     sleepFor  ( const T& _delay )  {        tsk_sleepFor  (Clock::count(_delay)); }
 		template<typename T> static
-		void sleepNext ( const T& _delay )  {        tsk_sleepNext (Clock::count(_delay)); }
+		void     sleepNext ( const T& _delay )  {        tsk_sleepNext (Clock::count(_delay)); }
 		template<typename T> static
-		void sleepUntil( const T& _time )   {        tsk_sleepUntil(Clock::until(_time)); }
+		void     sleepUntil( const T& _time )   {        tsk_sleepUntil(Clock::until(_time)); }
 		static
-		void sleep     ()                   {        tsk_sleep     (); }
+		void     sleep     ()                   {        tsk_sleep     (); }
 		template<typename T> static
-		void delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
+		void     delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
 		static
-		void suspend   ()                   {        tsk_suspend   (current()); }
+		void     suspend   ()                   {        tsk_suspend   (current()); }
 		static
-		void give      ( unsigned _signo )  {        tsk_give      (current(), _signo); }
+		void     give      ( unsigned _signo )  {        tsk_give      (current(), _signo); }
 		static
-		void signal    ( unsigned _signo )  {        tsk_signal    (current(), _signo); }
+		void     signal    ( unsigned _signo )  {        tsk_signal    (current(), _signo); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void setAction ( F&&      _action ) {        new (&current()->act) Act_t(_action);
-		                                             tsk_setAction (current(), act_); }
+		void     action    ( F&&      _action ) {        new (&current()->act) Act_t(_action);
+		                                                 tsk_action    (current(), act_); }
 #else
 		static
-		void setAction ( act_t  * _action ) {        tsk_setAction (current(), _action); }
+		void     action    ( act_t  * _action ) {        tsk_action    (current(), _action); }
 #endif
 	};
 };
@@ -938,7 +983,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 #if __cplusplus >= 201402L
 	template<typename F, typename... A>
 	TaskT( F&& _proc, A&&... _args ):
-	baseTask{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...), baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
+	TaskT<size_>{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)} {}
 #endif
 
 	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
@@ -952,7 +997,7 @@ struct TaskT : public baseTask, public baseStack<size_>
  *
  * Name              : TaskT<>::Make
  *
- * Description       : create and initialize task object
+ * Description       : create and initialize static task
  *
  * Parameters
  *   size            : size of task private stack (in bytes)
@@ -982,7 +1027,7 @@ struct TaskT : public baseTask, public baseStack<size_>
  *
  * Name              : TaskT<>::Start
  *
- * Description       : create, initialize and start task object
+ * Description       : create, initialize and start static task
  *
  * Parameters
  *   size            : size of task private stack (in bytes)

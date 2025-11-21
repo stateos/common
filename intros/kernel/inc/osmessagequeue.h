@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmessagequeue.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define __INTROS_MSG_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /******************************************************************************
  *
@@ -63,6 +64,8 @@ typedef struct __msg msg_t;
 
 struct __msg
 {
+	obj_t    obj;   // object header
+
 	size_t   count; // size of used memory in the message queue buffer (in bytes)
 	size_t   limit; // size of the message queue buffer (in bytes)
 	size_t   size;  // max size of a single message with preceding size of the maeesage (in bytes)
@@ -92,7 +95,7 @@ typedef struct __msg msg_id [];
  ******************************************************************************/
 
 #define               _MSG_INIT( _limit, _size, _data ) \
-                     { 0, _limit * MSG_SIZE(_size), MSG_SIZE(_size), 0, 0, _data }
+                    { _OBJ_INIT(), 0, _limit * MSG_SIZE(_size), MSG_SIZE(_size), 0, 0, _data }
 
 /******************************************************************************
  *
@@ -221,6 +224,27 @@ void msg_init( msg_t *msg, size_t size, void *data, size_t bufsize );
 
 /******************************************************************************
  *
+ * Name              : msg_reset
+ * Alias             : msg_kill
+ *
+ * Description       : reset the message queue object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   msg             : pointer to message queue object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void msg_reset( msg_t *msg );
+
+__STATIC_INLINE
+void msg_kill( msg_t *msg ) { msg_reset(msg); }
+
+/******************************************************************************
+ *
  * Name              : msg_take
  * Alias             : msg_tryWait
  * Async alias       : msg_takeAsync
@@ -232,21 +256,75 @@ void msg_init( msg_t *msg, size_t size, void *data, size_t bufsize );
  *   msg             : pointer to message queue object
  *   data            : pointer to the buffer
  *   size            : size of the buffer
+ *   read            : pointer to the variable getting number of read bytes
  *
- * Return            : number of read bytes
- *   0               : message queue object is empty or not enough space in the buffer
+ * Return
+ *   E_SUCCESS       : variable 'read' contains the number of bytes read from the message queue
+ *   E_FAILURE       : not enough space in the buffer
+ *   E_TIMEOUT       : message queue object is empty, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-size_t msg_take( msg_t *msg, void *data, size_t size );
+int msg_take( msg_t *msg, void *data, size_t size, size_t *read );
 
 __STATIC_INLINE
-size_t msg_tryWait( msg_t *msg, void *data, size_t size ) { return msg_take(msg, data, size); }
+int msg_tryWait( msg_t *msg, void *data, size_t size, size_t *read ) { return msg_take(msg, data, size, read); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-size_t msg_takeAsync( msg_t *msg, void *data, size_t size ) { return msg_take(msg, data, size); }
+int msg_takeAsync( msg_t *msg, void *data, size_t size, size_t *read );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : msg_waitFor
+ *
+ * Description       : try to transfer data from the message queue object,
+ *                     wait for given duration of time while the message queue object is empty
+ *
+ * Parameters
+ *   msg             : pointer to message queue object
+ *   data            : pointer to the buffer
+ *   size            : size of the buffer
+ *   read            : pointer to the variable getting number of read bytes
+ *   delay           : duration of time (maximum number of ticks to wait while the message queue object is empty)
+ *                     IMMEDIATE: don't wait if the message queue object is empty
+ *                     INFINITE:  wait indefinitely while the message queue object is empty
+ *
+ * Return
+ *   E_SUCCESS       : variable 'read' contains the number of bytes read from the message queue
+ *   E_FAILURE       : not enough space in the buffer
+ *   E_STOPPED       : message queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : message queue object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int msg_waitFor( msg_t *msg, void *data, size_t size, size_t *read, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : msg_waitUntil
+ *
+ * Description       : try to transfer data from the message queue object,
+ *                     wait until given timepoint while the message queue object is empty
+ *
+ * Parameters
+ *   msg             : pointer to message queue object
+ *   data            : pointer to the buffer
+ *   size            : size of the buffer
+ *   read            : pointer to the variable getting number of read bytes
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : variable 'read' contains the number of bytes read from the message queue
+ *   E_FAILURE       : not enough space in the buffer
+ *   E_STOPPED       : message queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : message queue object is empty and was not received data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int msg_waitUntil( msg_t *msg, void *data, size_t size, size_t *read, cnt_t time );
 
 /******************************************************************************
  *
@@ -260,17 +338,22 @@ size_t msg_takeAsync( msg_t *msg, void *data, size_t size ) { return msg_take(ms
  *   msg             : pointer to message queue object
  *   data            : pointer to the buffer
  *   size            : size of the buffer
+ *   read            : pointer to the variable getting number of read bytes
  *
- * Return            : number of read bytes
- *   0               : not enough space in the buffer
+ * Return
+ *   E_SUCCESS       : variable 'read' contains the number of bytes read from the message queue
+ *   E_FAILURE       : not enough space in the buffer
+ *   E_STOPPED       : message queue object was reseted
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-size_t msg_wait( msg_t *msg, void *data, size_t size );
+__STATIC_INLINE
+int msg_wait( msg_t *msg, void *data, size_t size, size_t *read ) { return msg_waitFor(msg, data, size, read, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-size_t msg_waitAsync( msg_t *msg, void *data, size_t size ) { return msg_wait(msg, data, size); }
+int msg_waitAsync( msg_t *msg, void *data, size_t size, size_t *read );
 #endif
 
 /******************************************************************************
@@ -287,17 +370,67 @@ size_t msg_waitAsync( msg_t *msg, void *data, size_t size ) { return msg_wait(ms
  *   size            : size of the buffer
  *
  * Return
- *   SUCCESS         : message data was successfully transferred to the message queue object
- *   FAILURE         : message queue object is full or too much data in the buffer
+ *   E_SUCCESS       : message data was successfully transferred to the message queue object
+ *   E_FAILURE       : too much data in the buffer
+ *   E_TIMEOUT       : message queue object is full, try again
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned msg_give( msg_t *msg, const void *data, size_t size );
+int msg_give( msg_t *msg, const void *data, size_t size );
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned msg_giveAsync( msg_t *msg, const void *data, size_t size ) { return msg_give(msg, data, size); }
+int msg_giveAsync( msg_t *msg, const void *data, size_t size );
 #endif
+
+/******************************************************************************
+ *
+ * Name              : msg_sendFor
+ *
+ * Description       : try to transfer data to the message queue object,
+ *                     wait for given duration of time while the message queue object is full
+ *
+ * Parameters
+ *   msg             : pointer to message queue object
+ *   data            : pointer to the buffer
+ *   size            : size of the buffer
+ *   delay           : duration of time (maximum number of ticks to wait while the message queue object is full)
+ *                     IMMEDIATE: don't wait if the message queue object is full
+ *                     INFINITE:  wait indefinitely while the message queue object is full
+ *
+ * Return
+ *   E_SUCCESS       : message data was successfully transferred to the message queue object
+ *   E_FAILURE       : too much data in the buffer
+ *   E_STOPPED       : message queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : message queue object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int msg_sendFor( msg_t *msg, const void *data, size_t size, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : msg_sendUntil
+ *
+ * Description       : try to transfer data to the message queue object,
+ *                     wait until given timepoint while the message queue object is full
+ *
+ * Parameters
+ *   msg             : pointer to message queue object
+ *   data            : pointer to the buffer
+ *   size            : size of the buffer
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : message data was successfully transferred to the message queue object
+ *   E_FAILURE       : too much data in the buffer
+ *   E_STOPPED       : message queue object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : message queue object is full and was not issued data before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int msg_sendUntil( msg_t *msg, const void *data, size_t size, cnt_t time );
 
 /******************************************************************************
  *
@@ -313,16 +446,19 @@ unsigned msg_giveAsync( msg_t *msg, const void *data, size_t size ) { return msg
  *   size            : size of the buffer
  *
  * Return
- *   SUCCESS         : message data was successfully transferred to the message queue object
- *   FAILURE         : too much data in the buffer
+ *   E_SUCCESS       : message data was successfully transferred to the message queue object
+ *   E_FAILURE       : too much data in the buffer
+ *   E_STOPPED       : message queue object was reseted
+ *
+ * Note              : use Async alias for communication with unmasked interrupt handlers
  *
  ******************************************************************************/
 
-unsigned msg_send( msg_t *msg, const void *data, size_t size );
+__STATIC_INLINE
+int msg_send( msg_t *msg, const void *data, size_t size ) { return msg_sendFor(msg, data, size, INFINITE); }
 
 #if OS_ATOMICS
-__STATIC_INLINE
-unsigned msg_sendAsync( msg_t *msg, const void *data, size_t size ) { return msg_send(msg, data, size); }
+int msg_sendAsync( msg_t *msg, const void *data, size_t size );
 #endif
 
 /******************************************************************************
@@ -338,16 +474,16 @@ unsigned msg_sendAsync( msg_t *msg, const void *data, size_t size ) { return msg
  *   size            : size of the buffer
  *
  * Return
- *   SUCCESS         : message data was successfully transferred to the message queue object
- *   FAILURE         : too much data in the buffer
+ *   E_SUCCESS       : message data was successfully transferred to the message queue object
+ *   E_FAILURE       : too much data in the buffer
  *
  ******************************************************************************/
 
-unsigned msg_push( msg_t *msg, const void *data, size_t size );
+int msg_push( msg_t *msg, const void *data, size_t size );
 
 /******************************************************************************
  *
- * Name              : msg_getCount
+ * Name              : msg_count
  *
  * Description       : return the amount of data contained in the message queue
  *
@@ -358,11 +494,11 @@ unsigned msg_push( msg_t *msg, const void *data, size_t size );
  *
  ******************************************************************************/
 
-unsigned msg_getCount( msg_t *msg );
+size_t msg_count( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_getSpace
+ * Name              : msg_space
  *
  * Description       : return the amount of free space in the message queue
  *
@@ -373,11 +509,11 @@ unsigned msg_getCount( msg_t *msg );
  *
  ******************************************************************************/
 
-unsigned msg_getSpace( msg_t *msg );
+size_t msg_space( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_getLimit
+ * Name              : msg_limit
  *
  * Description       : return the size of the message queue
  *
@@ -388,11 +524,11 @@ unsigned msg_getSpace( msg_t *msg );
  *
  ******************************************************************************/
 
-unsigned msg_getLimit( msg_t *msg );
+size_t msg_limit( msg_t *msg );
 
 /******************************************************************************
  *
- * Name              : msg_getSize
+ * Name              : msg_size
  *
  * Description       : return max size of a message in the message queue
  *
@@ -404,7 +540,7 @@ unsigned msg_getLimit( msg_t *msg );
  ******************************************************************************/
 
 __STATIC_INLINE
-size_t msg_getSize( msg_t *msg ) { return msg->size - sizeof(size_t); }
+size_t msg_size( msg_t *msg ) { return msg->size - sizeof(size_t); }
 
 #ifdef __cplusplus
 }
@@ -412,7 +548,7 @@ size_t msg_getSize( msg_t *msg ) { return msg->size - sizeof(size_t); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -433,26 +569,38 @@ struct MessageQueueT : public __msg
 	constexpr
 	MessageQueueT(): __msg _MSG_INIT(limit_, size_, data_) {}
 
+	~MessageQueueT() { assert(__msg::obj.queue == nullptr); }
+
 	MessageQueueT( MessageQueueT&& ) = default;
 	MessageQueueT( const MessageQueueT& ) = delete;
 	MessageQueueT& operator=( MessageQueueT&& ) = delete;
 	MessageQueueT& operator=( const MessageQueueT& ) = delete;
 
-	size_t   take     (       void *_data, size_t _size ) { return msg_take     (this, _data, _size); }
-	size_t   tryWait  (       void *_data, size_t _size ) { return msg_tryWait  (this, _data, _size); }
-	size_t   wait     (       void *_data, size_t _size ) { return msg_wait     (this, _data, _size); }
-	unsigned give     ( const void *_data, size_t _size ) { return msg_give     (this, _data, _size); }
-	unsigned send     ( const void *_data, size_t _size ) { return msg_send     (this, _data, _size); }
-	unsigned push     ( const void *_data, size_t _size ) { return msg_push     (this, _data, _size); }
-	unsigned getCount ()                                  { return msg_getCount (this); }
-	unsigned getSpace ()                                  { return msg_getSpace (this); }
-	unsigned getLimit ()                                  { return msg_getLimit (this); }
-	size_t   getSize  ()                                  { return msg_getSize  (this); }
+	void     reset    ()                                                                   {        msg_reset    (this); }
+	void     kill     ()                                                                   {        msg_kill     (this); }
+	int      take     (       void *_data, size_t _size, size_t *_read = nullptr )         { return msg_take     (this, _data, _size, _read); }
+	int      tryWait  (       void *_data, size_t _size, size_t *_read = nullptr )         { return msg_tryWait  (this, _data, _size, _read); }
+	template<typename T>
+	int      waitFor  (       void *_data, size_t _size, size_t *_read,  const T& _delay ) { return msg_waitFor  (this, _data, _size, _read, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil(       void *_data, size_t _size, size_t *_read,  const T& _time )  { return msg_waitUntil(this, _data, _size, _read, Clock::until(_time)); }
+	int      wait     (       void *_data, size_t _size, size_t *_read = nullptr )         { return msg_wait     (this, _data, _size, _read); }
+	int      give     ( const void *_data, size_t _size )                                  { return msg_give     (this, _data, _size); }
+	template<typename T>
+	int      sendFor  ( const void *_data, size_t _size, const T& _delay )                 { return msg_sendFor  (this, _data, _size, Clock::count(_delay)); }
+	template<typename T>
+	int      sendUntil( const void *_data, size_t _size, const T& _time )                  { return msg_sendUntil(this, _data, _size, Clock::until(_time)); }
+	int      send     ( const void *_data, size_t _size )                                  { return msg_send     (this, _data, _size); }
+	int      push     ( const void *_data, size_t _size )                                  { return msg_push     (this, _data, _size); }
+	size_t   count    ()                                                                   { return msg_count    (this); }
+	size_t   space    ()                                                                   { return msg_space    (this); }
+	size_t   limit    ()                                                                   { return msg_limit    (this); }
+	size_t   size     ()                                                                   { return msg_size     (this); }
 #if OS_ATOMICS
-	size_t   takeAsync(       void *_data, size_t _size ) { return msg_takeAsync(this, _data, _size); }
-	size_t   waitAsync(       void *_data, size_t _size ) { return msg_waitAsync(this, _data, _size); }
-	unsigned giveAsync( const void *_data, size_t _size ) { return msg_giveAsync(this, _data, _size); }
-	unsigned sendAsync( const void *_data, size_t _size ) { return msg_sendAsync(this, _data, _size); }
+	int      takeAsync(       void *_data, size_t _size, size_t *_read = nullptr )         { return msg_takeAsync(this, _data, _size, _read); }
+	int      waitAsync(       void *_data, size_t _size, size_t *_read = nullptr )         { return msg_waitAsync(this, _data, _size, _read); }
+	int      giveAsync( const void *_data, size_t _size )                                  { return msg_giveAsync(this, _data, _size); }
+	int      sendAsync( const void *_data, size_t _size )                                  { return msg_sendAsync(this, _data, _size); }
 #endif
 
 	private:
@@ -477,17 +625,25 @@ struct MessageQueueTT : public MessageQueueT<limit_, sizeof(C)>
 	constexpr
 	MessageQueueTT(): MessageQueueT<limit_, sizeof(C)>() {}
 
-	unsigned take     (       C *_data ) { return msg_take     (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned tryWait  (       C *_data ) { return msg_tryWait  (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned wait     (       C *_data ) { return msg_wait     (this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned give     ( const C *_data ) { return msg_give     (this, _data, sizeof(C)); }
-	unsigned send     ( const C *_data ) { return msg_send     (this, _data, sizeof(C)); }
-	unsigned push     ( const C *_data ) { return msg_push     (this, _data, sizeof(C)); }
+	int      take     (       C *_data, size_t *_read = nullptr )         { return msg_take     (this, _data, sizeof(C), _read); }
+	int      tryWait  (       C *_data, size_t *_read = nullptr )         { return msg_tryWait  (this, _data, sizeof(C), _read); }
+	template<typename T>
+	int      waitFor  (       C *_data, size_t *_read,  const T& _delay ) { return msg_waitFor  (this, _data, sizeof(C), _read, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil(       C *_data, size_t *_read,  const T& _time )  { return msg_waitUntil(this, _data, sizeof(C), _read, Clock::until(_time)); }
+	int      wait     (       C *_data, size_t *_read = nullptr )         { return msg_wait     (this, _data, sizeof(C), _read); }
+	int      give     ( const C *_data )                                  { return msg_give     (this, _data, sizeof(C)); }
+	template<typename T>
+	int      sendFor  ( const C *_data, const T& _delay )                 { return msg_sendFor  (this, _data, sizeof(C), Clock::count(_delay)); }
+	template<typename T>
+	int      sendUntil( const C *_data, const T& _time )                  { return msg_sendUntil(this, _data, sizeof(C), Clock::until(_time)); }
+	int      send     ( const C *_data )                                  { return msg_send     (this, _data, sizeof(C)); }
+	int      push     ( const C *_data )                                  { return msg_push     (this, _data, sizeof(C)); }
 #if OS_ATOMICS
-	unsigned takeAsync(       C *_data ) { return msg_takeAsync(this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned waitAsync(       C *_data ) { return msg_waitAsync(this, _data, sizeof(C)) == sizeof(C) ? SUCCESS : FAILURE; }
-	unsigned giveAsync( const C *_data ) { return msg_giveAsync(this, _data, sizeof(C)); }
-	unsigned sendAsync( const C *_data ) { return msg_sendAsync(this, _data, sizeof(C)); }
+	int      takeAsync(       C *_data, size_t *_read = nullptr )         { return msg_takeAsync(this, _data, sizeof(C), _read); }
+	int      waitAsync(       C *_data, size_t *_read = nullptr )         { return msg_waitAsync(this, _data, sizeof(C), _read); }
+	int      giveAsync( const C *_data )                                  { return msg_giveAsync(this, _data, sizeof(C)); }
+	int      sendAsync( const C *_data )                                  { return msg_sendAsync(this, _data, sizeof(C)); }
 #endif
 };
 

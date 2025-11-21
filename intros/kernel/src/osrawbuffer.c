@@ -2,7 +2,7 @@
 
     @file    IntrOS: osrawbuffer.c
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    19.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -30,8 +30,19 @@
  ******************************************************************************/
 
 #include "inc/osrawbuffer.h"
-#include "inc/oscriticalsection.h"
 #include "inc/ostask.h"
+#include "inc/oscriticalsection.h"
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_raw_init( raw_t *raw, void *data, size_t bufsize )
+/* -------------------------------------------------------------------------- */
+{
+	memset(raw, 0, sizeof(raw_t));
+
+	raw->limit = bufsize;
+	raw->data  = data;
+}
 
 /* -------------------------------------------------------------------------- */
 void raw_init( raw_t *raw, void *data, size_t bufsize )
@@ -43,10 +54,32 @@ void raw_init( raw_t *raw, void *data, size_t bufsize )
 
 	sys_lock();
 	{
-		memset(raw, 0, sizeof(raw_t));
+		priv_raw_init(raw, data, bufsize);
+	}
+	sys_unlock();
+}
 
-		raw->limit = bufsize;
-		raw->data  = data;
+/* -------------------------------------------------------------------------- */
+static
+void priv_raw_reset( raw_t *raw, int event )
+/* -------------------------------------------------------------------------- */
+{
+	raw->count = 0;
+	raw->head  = 0;
+	raw->tail  = 0;
+
+	core_all_wakeup(&raw->obj.queue, event);
+}
+
+/* -------------------------------------------------------------------------- */
+void raw_reset( raw_t *raw )
+/* -------------------------------------------------------------------------- */
+{
+	assert(raw);
+
+	sys_lock();
+	{
+		priv_raw_reset(raw, E_STOPPED);
 	}
 	sys_unlock();
 }
@@ -61,10 +94,21 @@ void priv_raw_get( raw_t *raw, char *data, size_t size )
 	raw->count -= size;
 	while (size--)
 	{
-		*data++ = raw->data[head++];
-		if (head == raw->limit) head = 0;
+		*data++ = raw->data[head];
+		if (++head >= raw->limit) head = 0;
 	}
 	raw->head = head;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_raw_skip( raw_t *raw, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	raw->count -= size;
+	raw->head  += size;
+	if (raw->head >= raw->limit)
+		raw->head -= raw->limit;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -85,36 +129,71 @@ void priv_raw_put( raw_t *raw, const char *data, size_t size )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_raw_skip( raw_t *raw, size_t size )
+size_t priv_raw_getUpdate( raw_t *raw, void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	raw->count -= size;
-	raw->head  += size;
-	if (raw->head >= raw->limit)
-		raw->head -= raw->limit;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-size_t priv_raw_take( raw_t *raw, void *data, size_t size )
-/* -------------------------------------------------------------------------- */
-{
-	if (raw->count == 0)
-		return 0;
-
 	if (size > raw->count)
 		size = raw->count;
 
 	priv_raw_get(raw, data, size);
 
+	while (raw->obj.queue != 0 && raw->count + raw->obj.queue->tmp.raw.size <= raw->limit)
+	{
+		priv_raw_put(raw, raw->obj.queue->tmp.raw.data.out, raw->obj.queue->tmp.raw.size);
+		core_one_wakeup(&raw->obj.queue, E_SUCCESS);
+	}
+
 	return size;
 }
 
 /* -------------------------------------------------------------------------- */
-size_t raw_take( raw_t *raw, void *data, size_t size )
+static
+void priv_raw_skipUpdate( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
-	size_t result;
+	if (raw->count + raw->obj.queue->tmp.raw.size > raw->limit)
+		priv_raw_skip(raw, raw->count + raw->obj.queue->tmp.raw.size - raw->limit);
+	priv_raw_put(raw, raw->obj.queue->tmp.raw.data.out, raw->obj.queue->tmp.raw.size);
+	core_one_wakeup(&raw->obj.queue, E_SUCCESS);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_raw_putUpdate( raw_t *raw, const void *data, size_t size )
+/* -------------------------------------------------------------------------- */
+{
+	priv_raw_put(raw, data, size);
+
+	while (raw->obj.queue != 0 && raw->count > 0)
+	{
+		size = raw->obj.queue->tmp.raw.size;
+		if (size > raw->count) size = raw->count;
+		raw->obj.queue->tmp.raw.size = size;
+		priv_raw_get(raw, raw->obj.queue->tmp.raw.data.in, size);
+		core_one_wakeup(&raw->obj.queue, E_SUCCESS);
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_raw_take( raw_t *raw, void *data, size_t size, size_t *read )
+/* -------------------------------------------------------------------------- */
+{
+	if (raw->count == 0)
+		return E_TIMEOUT;
+
+	size = priv_raw_getUpdate(raw, data, size);
+	if (read != NULL)
+		*read = size;
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int raw_take( raw_t *raw, void *data, size_t size, size_t *read )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
 
 	assert(raw);
 	assert(raw->data);
@@ -124,7 +203,7 @@ size_t raw_take( raw_t *raw, void *data, size_t size )
 
 	sys_lock();
 	{
-		result = priv_raw_take(raw, data, size);
+		result = priv_raw_take(raw, data, size, read);
 	}
 	sys_unlock();
 
@@ -132,35 +211,84 @@ size_t raw_take( raw_t *raw, void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t raw_wait( raw_t *raw, void *data, size_t size )
+int raw_waitFor( raw_t *raw, void *data, size_t size, size_t *read, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	size_t result;
+	int result;
 
-	while (result = raw_take(raw, data, size), result == 0)
-		tsk_yield();
+	assert(raw);
+	assert(raw->data);
+	assert(raw->limit);
+	assert(data);
+	assert(size);
+
+	sys_lock();
+	{
+		result = priv_raw_take(raw, data, size, read);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.raw.data.in = data;
+			System.cur->tmp.raw.size = size;
+			result = core_tsk_waitFor(&raw->obj.queue, delay);
+			if (result == E_SUCCESS && read != NULL)
+				*read = System.cur->tmp.raw.size;
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int raw_waitUntil( raw_t *raw, void *data, size_t size, size_t *read, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(raw);
+	assert(raw->data);
+	assert(raw->limit);
+	assert(data);
+	assert(size);
+
+	sys_lock();
+	{
+		result = priv_raw_take(raw, data, size, read);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.raw.data.in = data;
+			System.cur->tmp.raw.size = size;
+			result = core_tsk_waitUntil(&raw->obj.queue, time);
+			if (result == E_SUCCESS && read != NULL)
+				*read = System.cur->tmp.raw.size;
+		}
+	}
+	sys_unlock();
 
 	return result;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_raw_give( raw_t *raw, const void *data, size_t size )
+int priv_raw_give( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
+	if (size > raw->limit)
+		return E_FAILURE;
+
 	if (raw->count + size > raw->limit)
-		return FAILURE;
+		return E_TIMEOUT;
 
-	priv_raw_put(raw, data, size);
+	priv_raw_putUpdate(raw, data, size);
 
-	return SUCCESS;
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned raw_give( raw_t *raw, const void *data, size_t size )
+int raw_give( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result;
 
 	assert(raw);
 	assert(raw->data);
@@ -178,39 +306,81 @@ unsigned raw_give( raw_t *raw, const void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned raw_send( raw_t *raw, const void *data, size_t size )
+int raw_sendFor( raw_t *raw, const void *data, size_t size, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	if (size > raw->limit)
-		return FAILURE;
+	int result;
 
-	while (raw_give(raw, data, size) != SUCCESS)
-		tsk_yield();
+	assert(raw);
+	assert(raw->data);
+	assert(raw->limit);
+	assert(data);
+	assert(size);
 
-	return SUCCESS;
+	sys_lock();
+	{
+		result = priv_raw_give(raw, data, size);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.raw.data.out = data;
+			System.cur->tmp.raw.size = size;
+			result = core_tsk_waitFor(&raw->obj.queue, delay);
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int raw_sendUntil( raw_t *raw, const void *data, size_t size, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(raw);
+	assert(raw->data);
+	assert(raw->limit);
+	assert(data);
+	assert(size);
+
+	sys_lock();
+	{
+		result = priv_raw_give(raw, data, size);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.raw.data.out = data;
+			System.cur->tmp.raw.size = size;
+			result = core_tsk_waitUntil(&raw->obj.queue, time);
+		}
+	}
+	sys_unlock();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_raw_push( raw_t *raw, const void *data, size_t size )
+int priv_raw_push( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	if (size > raw->limit)
-		return FAILURE;
+		return E_FAILURE;
 
+	while (raw->obj.queue)
+		priv_raw_skipUpdate(raw);
 	if (raw->count + size > raw->limit)
 		priv_raw_skip(raw, raw->count + size - raw->limit);
+	priv_raw_putUpdate(raw, data, size);
 
-	priv_raw_put(raw, data, size);
-
-	return SUCCESS;
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned raw_push( raw_t *raw, const void *data, size_t size )
+int raw_push( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result;
 
 	assert(raw);
 	assert(raw->data);
@@ -228,7 +398,7 @@ unsigned raw_push( raw_t *raw, const void *data, size_t size )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t raw_getCount( raw_t *raw )
+size_t raw_count( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t count;
@@ -245,7 +415,7 @@ size_t raw_getCount( raw_t *raw )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t raw_getSpace( raw_t *raw )
+size_t raw_space( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t space;
@@ -262,7 +432,7 @@ size_t raw_getSpace( raw_t *raw )
 }
 
 /* -------------------------------------------------------------------------- */
-size_t raw_getLimit( raw_t *raw )
+size_t raw_limit( raw_t *raw )
 /* -------------------------------------------------------------------------- */
 {
 	size_t limit;

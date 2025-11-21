@@ -41,6 +41,8 @@ Features:
 - removed tsk_main function
 - added sys_suspend function
 - added sys_resume function
+- removed tsk_join function
+- rebuilt kernel
 ---------
 5.0
 - updated os version

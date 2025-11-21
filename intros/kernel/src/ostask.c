@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostask.c
     @author  Rajmund Szymanski
-    @date    01.04.2023
+    @date    19.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -35,7 +35,7 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_wrk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size )
+void priv_wrk_init( tsk_t *tsk, fun_t *proc, void *arg, stk_t *stack, size_t size )
 /* -------------------------------------------------------------------------- */
 {
 	memset(tsk, 0, sizeof(tsk_t));
@@ -43,6 +43,7 @@ void priv_wrk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size )
 	core_hdr_init(&tsk->hdr);
 
 	tsk->proc  = proc;
+	tsk->arg   = arg;
 	tsk->stack = stack;
 	tsk->size  = size;
 }
@@ -57,7 +58,7 @@ void wrk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size )
 
 	sys_lock();
 	{
-		priv_wrk_init(tsk, proc, stack, size);
+		priv_wrk_init(tsk, proc, NULL, stack, size);
 	}
 	sys_unlock();
 }
@@ -72,7 +73,7 @@ void tsk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size )
 
 	sys_lock();
 	{
-		priv_wrk_init(tsk, proc, stack, size);
+		priv_wrk_init(tsk, proc, NULL, stack, size);
 		if (proc)
 		{
 			core_ctx_init(tsk);
@@ -91,7 +92,7 @@ void tsk_start( tsk_t *tsk )
 
 	sys_lock();
 	{
-		if (tsk->hdr.id == ID_STOPPED)
+		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
@@ -143,12 +144,24 @@ void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_tsk_reset( tsk_t *tsk )
+void priv_sig_reset( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
-	tsk->delay = 0;
 	tsk->sig.sigset = 0;
 	tsk->sig.backup.pc = 0;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_tsk_stop( tsk_t *tsk )
+/* -------------------------------------------------------------------------- */
+{
+	if (tsk->hdr.id != ID_STOPPED)	// inactive task cannot be removed
+	{
+		priv_sig_reset(tsk);		// reset signal variables of current task
+		core_tsk_wakeup(tsk, 0);	// remove task from blocked queue; ignored event value
+		core_tsk_remove(tsk);		// remove task from ready queue
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -157,9 +170,10 @@ void tsk_stop( void )
 {
 	port_set_lock();
 
-	priv_tsk_reset(System.cur);
-	core_tsk_remove(System.cur);
-	core_tsk_switch();
+	priv_tsk_stop(System.cur);                     // remove current task from ready queue
+
+	assert(false);                                 // system cannot return here
+	for (;;);                                      // disable unnecessary warning
 }
 
 /* -------------------------------------------------------------------------- */
@@ -170,27 +184,7 @@ void tsk_reset( tsk_t *tsk )
 
 	sys_lock();
 	{
-		if (tsk->hdr.id != ID_STOPPED)  // only active tasks can be reseted
-		{
-			priv_tsk_reset(tsk);
-			core_tsk_remove(tsk);
-			if (tsk == System.cur)
-				core_ctx_switch();
-		}
-	}
-	sys_unlock();
-}
-
-/* -------------------------------------------------------------------------- */
-void tsk_join( tsk_t *tsk )
-/* -------------------------------------------------------------------------- */
-{
-	assert(tsk);
-
-	sys_lock();
-	{
-		while (tsk->hdr.id != ID_STOPPED)
-			core_ctx_switch();
+		priv_tsk_stop(tsk);
 	}
 	sys_unlock();
 }
@@ -204,7 +198,8 @@ void tsk_flip( fun_t *proc )
 	port_set_lock();
 
 	System.cur->proc = proc;
-	priv_tsk_reset(System.cur);
+
+	priv_sig_reset(System.cur); // reset signal variables of current task
 	core_ctx_init(System.cur);
 	core_tsk_switch();
 }
@@ -213,14 +208,9 @@ void tsk_flip( fun_t *proc )
 void tsk_sleepFor( cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *cur = System.cur;
-
 	sys_lock();
 	{
-		cur->start = core_sys_time();
-		cur->delay = delay;
-
-		core_ctx_switch();
+		core_tsk_waitFor(&System.cur->obj.queue, delay);
 	}
 	sys_unlock();
 }
@@ -229,13 +219,9 @@ void tsk_sleepFor( cnt_t delay )
 void tsk_sleepNext( cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *cur = System.cur;
-
 	sys_lock();
 	{
-		cur->delay = delay;
-
-		core_ctx_switch();
+		core_tsk_waitNext(&System.cur->obj.queue, delay);
 	}
 	sys_unlock();
 }
@@ -244,39 +230,29 @@ void tsk_sleepNext( cnt_t delay )
 void tsk_sleepUntil( cnt_t time )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *cur;
-
 	sys_lock();
 	{
-		cur = System.cur;
-		cur->start = core_sys_time();
-		cur->delay = time - cur->start;
-		if (cur->delay > CNT_LIMIT)
-			cur->delay = 0;
-
-		core_ctx_switch();
+		core_tsk_waitUntil(&System.cur->obj.queue, time);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned tsk_suspend( tsk_t *tsk )
+int tsk_suspend( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
-	
+	int result = E_FAILURE;
+
 	assert(tsk);
 
 	sys_lock();
 	{
-		if (tsk->hdr.id == ID_READY && tsk->delay == 0)
+		if (tsk->hdr.id == ID_READY && tsk->guard == 0)
 		{
 			tsk->delay = INFINITE;
-			if (tsk == System.cur)
-				core_ctx_switch();
-			result = SUCCESS;
+			core_tsk_wait(&tsk->obj.queue, tsk);
+			result = E_SUCCESS;
 		}
-		else result = FAILURE;
 	}
 	sys_unlock();
 
@@ -284,10 +260,10 @@ unsigned tsk_suspend( tsk_t *tsk )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned tsk_resume( tsk_t *tsk )
+int tsk_resume( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result = E_FAILURE;
 
 	assert(tsk);
 
@@ -295,10 +271,9 @@ unsigned tsk_resume( tsk_t *tsk )
 	{
 		if (tsk->hdr.id == ID_READY && tsk->delay == INFINITE)
 		{
-			tsk->delay = 0;
-			result = SUCCESS;
+			core_tsk_wakeup(tsk, 0); // ignored event value
+			result = E_SUCCESS;
 		}
-		else result = FAILURE;
 	}
 	sys_unlock();
 
@@ -337,17 +312,19 @@ static
 void priv_sig_deliver( void )
 /* -------------------------------------------------------------------------- */
 {
-	tsk_t *tsk = System.cur;
+	tsk_t *cur = System.cur;
 
 	port_set_lock();
 
-	priv_sig_handler(tsk);
+	priv_sig_handler(cur);
 
-	tsk->ctx.reg.pc = tsk->sig.backup.pc;
-	tsk->sig.backup.pc = 0;
-	tsk->delay = tsk->sig.backup.delay;
+	cur->ctx.reg.pc = cur->sig.backup.pc;
+	cur->sig.backup.pc = 0;
+	cur->delay = cur->sig.backup.delay;
 
 	core_tsk_switch();
+
+	assert(false); // system cannot return here
 }
 
 /* -------------------------------------------------------------------------- */
@@ -393,7 +370,7 @@ void tsk_give( tsk_t *tsk, unsigned signo )
 }
 
 /* -------------------------------------------------------------------------- */
-void tsk_setAction( tsk_t *tsk, act_t *action )
+void tsk_action( tsk_t *tsk, act_t *action )
 /* -------------------------------------------------------------------------- */
 {
 	assert(tsk);

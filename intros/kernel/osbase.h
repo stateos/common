@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbase.h
     @author  Rajmund Szymanski
-    @date    15.03.2023
+    @date    18.11.2025
     @brief   This file contains basic definitions for IntrOS.
 
  ******************************************************************************
@@ -136,12 +136,13 @@ typedef         void act_t(unsigned); // signal action
 
 // error codes
 
-#ifndef SUCCESS
-#define SUCCESS  (0U)   // process was released as a result of taking the supervising object
-#endif
-#ifndef FAILURE
-#define FAILURE  (0U-1) // process was released as a result of any failure
-#endif
+enum
+{
+	E_SUCCESS = 0,  // process was released as a result of taking the supervising object
+	E_FAILURE,      // process was released as a result of any failure
+	E_STOPPED,      // process was released as a result of reset the supervising object
+	E_TIMEOUT,      // process was released as a result of the end of the timer countdown
+};
 
 /* -------------------------------------------------------------------------- */
 
@@ -154,6 +155,18 @@ typedef enum __tid
 	ID_TIMER,       // active timer
 
 }	tid_t;
+
+/* -------------------------------------------------------------------------- */
+
+// object header
+
+typedef struct __obj
+{
+	tsk_t  * queue; // next process in the BLOCKED queue
+
+}	obj_t;
+
+#define               _OBJ_INIT() { NULL }
 
 /* -------------------------------------------------------------------------- */
 

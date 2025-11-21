@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmailboxqueue.c
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    19.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -30,8 +30,20 @@
  ******************************************************************************/
 
 #include "inc/osmailboxqueue.h"
-#include "inc/oscriticalsection.h"
 #include "inc/ostask.h"
+#include "inc/oscriticalsection.h"
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_init( box_t *box, size_t size, void *data, size_t bufsize )
+/* -------------------------------------------------------------------------- */
+{
+	memset(box, 0, sizeof(box_t));
+
+	box->data  = data;
+	box->size  = size;
+	box->limit = (bufsize / size) * size;
+}
 
 /* -------------------------------------------------------------------------- */
 void box_init( box_t *box, size_t size, void *data, size_t bufsize )
@@ -44,11 +56,32 @@ void box_init( box_t *box, size_t size, void *data, size_t bufsize )
 
 	sys_lock();
 	{
-		memset(box, 0, sizeof(box_t));
+		priv_box_init(box, size, data, bufsize);
+	}
+	sys_unlock();
+}
 
-		box->data  = data;
-		box->size  = size;
-		box->limit = (bufsize / size) * size;
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_reset( box_t *box, int event )
+/* -------------------------------------------------------------------------- */
+{
+	box->count = 0;
+	box->head  = 0;
+	box->tail  = 0;
+
+	core_all_wakeup(&box->obj.queue, event);
+}
+
+/* -------------------------------------------------------------------------- */
+void box_reset( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	assert(box);
+
+	sys_lock();
+	{
+		priv_box_reset(box, E_STOPPED);
 	}
 	sys_unlock();
 }
@@ -58,11 +91,7 @@ static
 bool priv_box_empty( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
-#if OS_ATOMICS
-	return atomic_load(&box->count) == 0;
-#else
 	return box->count == 0;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -70,11 +99,7 @@ static
 bool priv_box_full( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
-#if OS_ATOMICS
-	return atomic_load(&box->count) == box->limit;
-#else
 	return box->count == box->limit;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -83,11 +108,7 @@ void priv_box_dec( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	box->head = box->head + box->size < box->limit ? box->head + box->size : 0;
-#if OS_ATOMICS
-	atomic_fetch_sub(&box->count, box->size);
-#else
 	box->count -= box->size;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -96,11 +117,7 @@ void priv_box_inc( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	box->tail = box->tail + box->size < box->limit ? box->tail + box->size : 0;
-#if OS_ATOMICS
-	atomic_fetch_add(&box->count, box->size);
-#else
 	box->count += box->size;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -123,22 +140,58 @@ void priv_box_put( box_t *box, const char *data )
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_box_take( box_t *box, void *data )
+void priv_box_getUpdate( box_t *box, char *data )
 /* -------------------------------------------------------------------------- */
 {
-	if (priv_box_empty(box))
-		return FAILURE;
+	tsk_t *tsk;
 
 	priv_box_get(box, data);
-
-	return SUCCESS;
+	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
+	if (tsk) priv_box_put(box, tsk->tmp.box.data.out);
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned box_take( box_t *box, void *data )
+static
+void priv_box_skipUpdate( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	tsk_t *tsk;
+
+	priv_box_dec(box);
+	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
+	if (tsk) priv_box_put(box, tsk->tmp.box.data.out);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_putUpdate( box_t *box, const char *data )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk;
+
+	priv_box_put(box, data);
+	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
+	if (tsk) priv_box_get(box, tsk->tmp.box.data.in);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_box_take( box_t *box, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	if (priv_box_empty(box))
+		return E_TIMEOUT;
+
+	priv_box_getUpdate(box, data);
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int box_take( box_t *box, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
 
 	assert(box);
 	assert(box->data);
@@ -155,31 +208,73 @@ unsigned box_take( box_t *box, void *data )
 }
 
 /* -------------------------------------------------------------------------- */
-void box_wait( box_t *box, void *data )
+int box_waitFor( box_t *box, void *data, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	while (box_take(box, data) != SUCCESS)
-		tsk_yield();
+	int result;
+
+	assert(box);
+	assert(box->data);
+	assert(box->limit);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_box_take(box, data);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.box.data.in = data;
+			result = core_tsk_waitFor(&box->obj.queue, delay);
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int box_waitUntil( box_t *box, void *data, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(box);
+	assert(box->data);
+	assert(box->limit);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_box_take(box, data);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.box.data.in = data;
+			result = core_tsk_waitUntil(&box->obj.queue, time);
+		}
+	}
+	sys_unlock();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_box_give( box_t *box, const void *data )
+int priv_box_give( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
 	if (priv_box_full(box))
-		return FAILURE;
+		return E_TIMEOUT;
 
-	priv_box_put(box, data);
+	priv_box_putUpdate(box, data);
 
-	return SUCCESS;
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned box_give( box_t *box, const void *data )
+int box_give( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result;
 
 	assert(box);
 	assert(box->data);
@@ -196,11 +291,63 @@ unsigned box_give( box_t *box, const void *data )
 }
 
 /* -------------------------------------------------------------------------- */
-void box_send( box_t *box, const void *data )
+int box_sendFor( box_t *box, const void *data, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	while (box_give(box, data) != SUCCESS)
-		tsk_yield();
+	int result;
+
+	assert(box);
+	assert(box->data);
+	assert(box->limit);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_box_give(box, data);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.box.data.out = data;
+			result = core_tsk_waitFor(&box->obj.queue, delay);
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int box_sendUntil( box_t *box, const void *data, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(box);
+	assert(box->data);
+	assert(box->limit);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_box_give(box, data);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.box.data.out = data;
+			result = core_tsk_waitUntil(&box->obj.queue, time);
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_push( box_t *box, const void *data )
+/* -------------------------------------------------------------------------- */
+{
+	while (priv_box_full(box))
+		priv_box_skipUpdate(box);
+	priv_box_put(box, data);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -214,15 +361,13 @@ void box_push( box_t *box, const void *data )
 
 	sys_lock();
 	{
-		if (priv_box_full(box))
-			priv_box_dec(box);
-		priv_box_put(box, data);
+		priv_box_push(box, data);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned box_getCount( box_t *box )
+unsigned box_count( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned count;
@@ -239,7 +384,7 @@ unsigned box_getCount( box_t *box )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned box_getSpace( box_t *box )
+unsigned box_space( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned space;
@@ -256,7 +401,7 @@ unsigned box_getSpace( box_t *box )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned box_getLimit( box_t *box )
+unsigned box_limit( box_t *box )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned limit;
@@ -273,3 +418,147 @@ unsigned box_getLimit( box_t *box )
 }
 
 /* -------------------------------------------------------------------------- */
+
+#if OS_ATOMICS
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_box_emptyAsync( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load(&box->count) == 0;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_box_fullAsync( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load(&box->count) == box->limit;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_decAsync( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	box->head = box->head + box->size < box->limit ? box->head + box->size : 0;
+	atomic_fetch_sub(&box->count, box->size);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_incAsync( box_t *box )
+/* -------------------------------------------------------------------------- */
+{
+	box->tail = box->tail + box->size < box->limit ? box->tail + box->size : 0;
+	atomic_fetch_add(&box->count, box->size);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_getAsync( box_t *box, char *data )
+/* -------------------------------------------------------------------------- */
+{
+	memcpy(data, &box->data[box->head], box->size);
+	priv_box_decAsync(box);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_box_putAsync( box_t *box, const char *data )
+/* -------------------------------------------------------------------------- */
+{
+	memcpy(&box->data[box->tail], data, box->size);
+	priv_box_incAsync(box);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_box_takeAsync( box_t *box, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	if (priv_box_emptyAsync(box))
+		return E_TIMEOUT;
+
+	priv_box_getAsync(box, data);
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int box_takeAsync( box_t *box, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(box);
+	assert(box->data);
+	assert(box->limit);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_box_takeAsync(box, data);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int box_waitAsync( box_t *box, void *data )
+/* -------------------------------------------------------------------------- */
+{
+	while (box_takeAsync(box, data) != E_SUCCESS)
+		tsk_yield();
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_box_giveAsync( box_t *box, const void *data )
+/* -------------------------------------------------------------------------- */
+{
+	if (priv_box_fullAsync(box))
+		return E_TIMEOUT;
+
+	priv_box_putAsync(box, data);
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int box_giveAsync( box_t *box, const void *data )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(box);
+	assert(box->data);
+	assert(box->limit);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_box_giveAsync(box, data);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int box_sendAsync( box_t *box, const void *data )
+/* -------------------------------------------------------------------------- */
+{
+	while (box_giveAsync(box, data) != E_SUCCESS)
+		tsk_yield();
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+
+#endif//OS_ATOMICS

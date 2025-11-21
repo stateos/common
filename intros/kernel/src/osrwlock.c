@@ -1,9 +1,9 @@
 /******************************************************************************
 
-    @file    StateOS: osrwlock.c
+    @file    IntrOS: osrwlock.c
     @author  Rajmund Szymanski
-    @date    07.05.2021
-    @brief   This file provides set of functions for StateOS.
+    @date    19.11.2025
+    @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
 
@@ -30,8 +30,16 @@
  ******************************************************************************/
 
 #include "inc/osrwlock.h"
-#include "inc/oscriticalsection.h"
 #include "inc/ostask.h"
+#include "inc/oscriticalsection.h"
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_rwl_init( rwl_t *rwl )
+/* -------------------------------------------------------------------------- */
+{
+	memset(rwl, 0, sizeof(rwl_t));
+}
 
 /* -------------------------------------------------------------------------- */
 void rwl_init( rwl_t *rwl )
@@ -41,29 +49,50 @@ void rwl_init( rwl_t *rwl )
 
 	sys_lock();
 	{
-		memset(rwl, 0, sizeof(rwl_t));
+		priv_rwl_init(rwl);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_rwl_takeRead( rwl_t *rwl )
+void priv_rwl_reset( rwl_t *rwl, int event )
 /* -------------------------------------------------------------------------- */
 {
-	if (rwl->write || rwl->count == RDR_LIMIT)
-		return FAILURE;
-
-	rwl->count++;
-
-	return SUCCESS;
+	core_all_wakeup(&rwl->obj.queue, event);
+	core_all_wakeup(&rwl->queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned rwl_takeRead( rwl_t *rwl )
+void rwl_reset( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	assert(rwl);
+
+	sys_lock();
+	{
+		priv_rwl_reset(rwl, E_STOPPED);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_rwl_takeRead( rwl_t *rwl )
+/* -------------------------------------------------------------------------- */
+{
+	if (rwl->write || rwl->count == RDR_LIMIT )
+		return E_TIMEOUT;
+
+	rwl->count++;
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int rwl_takeRead( rwl_t *rwl )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
 
 	assert(rwl);
 
@@ -77,11 +106,52 @@ unsigned rwl_takeRead( rwl_t *rwl )
 }
 
 /* -------------------------------------------------------------------------- */
-void rwl_waitRead( rwl_t *rwl )
+int rwl_waitReadFor( rwl_t *rwl, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	while (rwl_takeRead(rwl) != SUCCESS)
-		tsk_yield();
+	int result;
+
+	assert(rwl);
+
+	sys_lock();
+	{
+		result = priv_rwl_takeRead(rwl);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitFor(&rwl->queue, delay);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int rwl_waitReadUntil( rwl_t *rwl, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(rwl);
+
+	sys_lock();
+	{
+		result = priv_rwl_takeRead(rwl);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitUntil(&rwl->queue, time);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_rwl_giveRead( rwl_t *rwl )
+/* -------------------------------------------------------------------------- */
+{
+	if (core_one_wakeup(&rwl->queue, E_SUCCESS) == NULL)
+		if (--rwl->count == 0)
+			if (core_one_wakeup(&rwl->obj.queue, E_SUCCESS) != NULL)
+				rwl->write = true;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -89,34 +159,33 @@ void rwl_giveRead( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
 	assert(rwl);
-	assert(rwl->write == false);
-	assert(rwl->count > 0);
+	assert(rwl->write==false);
+	assert(rwl->count>0);
 
 	sys_lock();
 	{
-		rwl->count--;
+		priv_rwl_giveRead(rwl);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_rwl_takeWrite( rwl_t *rwl )
+int priv_rwl_takeWrite( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
 	if (rwl->write || rwl->count > 0)
-		return FAILURE;
+		return E_TIMEOUT;
 
 	rwl->write = true;
-
-	return SUCCESS;
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned rwl_takeWrite( rwl_t *rwl )
+int rwl_takeWrite( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result;
 
 	assert(rwl);
 
@@ -130,11 +199,54 @@ unsigned rwl_takeWrite( rwl_t *rwl )
 }
 
 /* -------------------------------------------------------------------------- */
-void rwl_waitWrite( rwl_t *rwl )
+int rwl_waitWriteFor( rwl_t *rwl, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	while (rwl_takeWrite(rwl) != SUCCESS)
-		tsk_yield();
+	int result;
+
+	assert(rwl);
+
+	sys_lock();
+	{
+		result = priv_rwl_takeWrite(rwl);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitFor(&rwl->obj.queue, delay);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int rwl_waitWriteUntil( rwl_t *rwl, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(rwl);
+
+	sys_lock();
+	{
+		result = priv_rwl_takeWrite(rwl);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitUntil(&rwl->obj.queue, time);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_rwl_giveWrite( rwl_t *rwl )
+/* -------------------------------------------------------------------------- */
+{
+	if (core_one_wakeup(&rwl->obj.queue, E_SUCCESS) == NULL)
+	{
+		rwl->write = false;
+		rwl->count = core_tsk_count(&rwl->queue);
+		core_all_wakeup(&rwl->queue, E_SUCCESS);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -142,12 +254,12 @@ void rwl_giveWrite( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
 	assert(rwl);
-	assert(rwl->write == true);
-	assert(rwl->count == 0);
+	assert(rwl->write==true);
+	assert(rwl->count==0);
 
 	sys_lock();
 	{
-		rwl->write = false;
+		priv_rwl_giveWrite(rwl);
 	}
 	sys_unlock();
 }

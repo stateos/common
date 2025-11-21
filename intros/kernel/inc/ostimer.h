@@ -2,7 +2,7 @@
 
     @file    IntrOS: ostimer.h
     @author  Rajmund Szymanski
-    @date    10.04.2023
+    @date    18.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -43,6 +43,7 @@
 
 struct __tmr
 {
+	obj_t    obj;   // object header
 	hdr_t    hdr;   // timer / task header
 
 	fun_t *  proc;  // callback procedure
@@ -50,8 +51,6 @@ struct __tmr
 	cnt_t    start;
 	cnt_t    delay;
 	cnt_t    period;
-
-	unsigned signal;
 };
 
 typedef struct __tmr tmr_id [];
@@ -73,7 +72,7 @@ typedef struct __tmr tmr_id [];
  ******************************************************************************/
 
 #define               _TMR_INIT( _proc ) \
-                    { _HDR_INIT(), _proc, NULL, 0, 0, 0, 0 }
+                    { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0 }
 
 /******************************************************************************
  *
@@ -272,6 +271,27 @@ void tmr_init( tmr_t *tmr, fun_t *proc );
 
 /******************************************************************************
  *
+ * Name              : tmr_reset
+ * Alias             : tmr_kill
+ *
+ * Description       : reset the timer object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   tmr             : pointer to timer object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void tmr_reset( tmr_t *tmr );
+
+__STATIC_INLINE
+void tmr_kill( tmr_t *tmr ) { tmr_reset(tmr); }
+
+/******************************************************************************
+ *
  * Name              : tmr_start
  *
  * Description       : start/restart periodic timer for given duration of time
@@ -397,10 +417,9 @@ void tmr_startUntil( tmr_t *tmr, cnt_t time );
 
 /******************************************************************************
  *
- * Name              : tmr_reset
- * Alias             : tmr_kill
+ * Alias             : tmr_stop
  *
- * Description       : stop the given timer
+ * Description       : stop timer
  *
  * Parameters
  *   tmr             : pointer to timer object
@@ -409,10 +428,8 @@ void tmr_startUntil( tmr_t *tmr, cnt_t time );
  *
  ******************************************************************************/
 
-void tmr_reset( tmr_t *tmr );
-
 __STATIC_INLINE
-void tmr_kill( tmr_t *tmr ) { tmr_reset(tmr); }
+void tmr_stop( tmr_t *tmr ) { tmr_reset(tmr); }
 
 /******************************************************************************
  *
@@ -426,18 +443,88 @@ void tmr_kill( tmr_t *tmr ) { tmr_reset(tmr); }
  *   tmr             : pointer to timer object
  *
  * Return
- *   SUCCESS         : timer object successfully finished countdown
- *   FAILURE         : timer object has not yet completed counting
+ *   E_SUCCESS       : timer object successfully finished countdown
+ *   E_FAILURE       : timer has not yet been started
+ *   E_TIMEOUT       : timer object has not yet completed counting, try again
  *
  ******************************************************************************/
 
-unsigned tmr_take( tmr_t *tmr );
+int tmr_take( tmr_t *tmr );
 
 __STATIC_INLINE
-unsigned tmr_expired( tmr_t *tmr ) { return tmr_take(tmr); }
+int tmr_expired( tmr_t *tmr ) { return tmr_take(tmr); }
 
 __STATIC_INLINE
-unsigned tmr_tryWait( tmr_t *tmr ) { return tmr_take(tmr); }
+int tmr_tryWait( tmr_t *tmr ) { return tmr_take(tmr); }
+
+/******************************************************************************
+ *
+ * Name              : tmr_waitFor
+ *
+ * Description       : wait for given duration of time until the timer finishes countdown
+ *
+ * Parameters
+ *   tmr             : pointer to timer object
+ *   delay           : duration of time (maximum number of ticks to wait for the timer finishes countdown)
+ *                     IMMEDIATE: don't wait for the timer finishes countdown
+ *                     INFINITE:  wait indefinitely until the timer finishes countdown
+ *
+ * Return
+ *   E_SUCCESS       : timer object successfully finished countdown
+ *   E_FAILURE       : timer has not yet been started
+ *   E_STOPPED       : timer object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : timer object has not finished countdown before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int tmr_waitFor( tmr_t *tmr, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : tmr_waitNext
+ *
+ * Description       : wait for given duration of time from the end of the previous countdown
+ *                     until the timer finishes countdown
+ *
+ * Parameters
+ *   tmr             : pointer to timer object
+ *   delay           : duration of time (maximum number of ticks to wait for the timer finishes countdown)
+ *                     IMMEDIATE: don't wait for the timer finishes countdown
+ *                     INFINITE:  wait indefinitely until the timer finishes countdown
+ *
+ * Return
+ *   E_SUCCESS       : timer object successfully finished countdown
+ *   E_FAILURE       : timer has not yet been started
+ *   E_STOPPED       : timer object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : timer object has not finished countdown before the specified timeout expired
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+int tmr_waitNext( tmr_t *tmr, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : tmr_waitUntil
+ *
+ * Description       : wait until given timepoint until the timer finishes countdown
+ *
+ * Parameters
+ *   tmr             : pointer to timer object
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : timer object successfully finished countdown
+ *   E_FAILURE       : timer has not yet been started
+ *   E_STOPPED       : timer object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : timer object has not finished countdown before the specified timeout expired
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+int tmr_waitUntil( tmr_t *tmr, cnt_t time );
 
 /******************************************************************************
  *
@@ -448,11 +535,15 @@ unsigned tmr_tryWait( tmr_t *tmr ) { return tmr_take(tmr); }
  * Parameters
  *   tmr             : pointer to timer object
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : timer object successfully finished countdown
+ *   E_FAILURE       : timer has not yet been started
+ *   E_STOPPED       : timer object was reseted before the countdown ended
  *
  ******************************************************************************/
 
-void tmr_wait( tmr_t *tmr );
+__STATIC_INLINE
+int tmr_wait( tmr_t *tmr ) { return tmr_waitFor(tmr, INFINITE); }
 
 /******************************************************************************
  *
@@ -499,7 +590,7 @@ void tmr_delay( cnt_t delay ) { tmr_this()->delay = delay; }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -526,42 +617,49 @@ struct baseTimer : public __tmr
 	baseTimer( fun_t *_proc ): __tmr _TMR_INIT(_proc) {}
 #endif
 
+	void reset        ()                                                    {        tmr_reset        (this); }
+	void kill         ()                                                    {        tmr_kill         (this); }
 	template<typename T>
-	void     start        ( const T& _delay, const T& _period )                 {        tmr_start        (this, Clock::count(_delay), Clock::count(_period)); }
+	void start        ( const T& _delay, const T& _period )                 {        tmr_start        (this, Clock::count(_delay), Clock::count(_period)); }
 	template<typename T>
-	void     startFor     ( const T& _delay )                                   {        tmr_startFor     (this, Clock::count(_delay)); }
+	void startFor     ( const T& _delay )                                   {        tmr_startFor     (this, Clock::count(_delay)); }
 	template<typename T>
-	void     startPeriodic( const T& _period )                                  {        tmr_startPeriodic(this, Clock::count(_period)); }
+	void startPeriodic( const T& _period )                                  {        tmr_startPeriodic(this, Clock::count(_period)); }
 	template<typename T>
-	void     startNext    ( const T& _delay )                                   {        tmr_startNext    (this, Clock::count(_delay)); }
+	void startNext    ( const T& _delay )                                   {        tmr_startNext    (this, Clock::count(_delay)); }
 	template<typename T>
-	void     startUntil   ( const T& _time )                                    {        tmr_startUntil   (this, Clock::until(_time)); }
+	void startUntil   ( const T& _time )                                    {        tmr_startUntil   (this, Clock::until(_time)); }
 #if __cplusplus >= 201402L
 	template<typename T>
-	void     startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), nullptr); }
+	void startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), nullptr); }
 	template<typename T, class F>
-	void     startFrom    ( const T& _delay, const T& _period, F&&     _proc )  {        new (&fun) Fun_t(_proc);
-	                                                                                     tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), fun_); }
+	void startFrom    ( const T& _delay, const T& _period, F&&     _proc )  {        new (&fun) Fun_t(_proc);
+	                                                                                 tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), fun_); }
 #else
 	template<typename T>
-	void     startFrom    ( const T& _delay, const T& _period, fun_t * _proc )  {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _proc); }
+	void startFrom    ( const T& _delay, const T& _period, fun_t * _proc )  {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _proc); }
 #endif
-	void     reset        ()                                                    {        tmr_reset        (this); }
-	void     kill         ()                                                    {        tmr_kill         (this); }
-	unsigned take         ()                                                    { return tmr_take         (this); }
-	unsigned expired      ()                                                    { return tmr_expired      (this); }
-	unsigned tryWait      ()                                                    { return tmr_tryWait      (this); }
-	void     wait         ()                                                    {        tmr_wait         (this); }
+	void stop         ()                                                    {        tmr_stop         (this); }
+	int  take         ()                                                    { return tmr_take         (this); }
+	int  expired      ()                                                    { return tmr_expired      (this); }
+	int  tryWait      ()                                                    { return tmr_tryWait      (this); }
+	template<typename T>
+	int  waitFor      ( const T& _delay )                                   { return tmr_waitFor      (this, Clock::count(_delay)); }
+	template<typename T>
+	int  waitNext     ( const T& _delay )                                   { return tmr_waitNext     (this, Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil    ( const T& _time )                                    { return tmr_waitUntil    (this, Clock::until(_time)); }
+	int  wait         ()                                                    { return tmr_wait         (this); }
 	explicit
-	operator bool         () const                                              { return __tmr::hdr.id != ID_STOPPED; }
+	operator bool     () const                                              { return __tmr::hdr.id != ID_STOPPED; }
 
 	template<class T = baseTimer> static
-	T *      current      ()                                                    { return static_cast<T *>(tmr_this()); }
+	T *  current      ()                                                    { return static_cast<T *>(tmr_this()); }
 
 #if __cplusplus >= 201402L
 	static
-	void     fun_         ()                                                    {        current()->fun(); }
-	Fun_t    fun;
+	void fun_         ()                                                    {        current()->fun(); }
+	Fun_t fun;
 #endif
 
 /******************************************************************************
@@ -628,7 +726,7 @@ struct Timer : public baseTimer
  *
  * Name              : Timer::Make
  *
- * Description       : create and initialize timer object
+ * Description       : create and initialize static timer object
  *
  * Parameters
  *   proc            : callback procedure
@@ -669,7 +767,7 @@ struct Timer : public baseTimer
  *
  * Name              : Timer::Start
  *
- * Description       : create and initialize timer object
+ * Description       : create and initialize static timer object
  *                     and start periodic timer for given duration of time
  *                     when the timer has finished the countdown, the callback procedure is launched
  *                     do this periodically
@@ -723,7 +821,7 @@ struct Timer : public baseTimer
  *
  * Name              : Timer::StartFor
  *
- * Description       : create and initialize timer object
+ * Description       : create and initialize static timer object
  *                     and start one-shot timer for given duration of time
  *                     when the timer has finished the countdown, the callback procedure is launched
  *
@@ -773,7 +871,7 @@ struct Timer : public baseTimer
  *
  * Name              : Timer::StartPeriodic
  *
- * Description       : create and initialize timer object
+ * Description       : create and initialize static timer object
  *                     and start periodic timer for given duration of time
  *                     when the timer has finished the countdown, the callback procedure is launched
  *                     do this periodically
@@ -824,7 +922,7 @@ struct Timer : public baseTimer
  *
  * Name              : Timer::StartUntil
  *
- * Description       : create and initialize timer object
+ * Description       : create and initialize static timer object
  *                     and start one-shot timer until given timepoint
  *                     when the timer has finished the countdown, the callback procedure is launched
  *

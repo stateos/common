@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbarrier.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,7 @@
 #define __INTROS_BAR_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /******************************************************************************
  *
@@ -44,10 +45,9 @@ typedef struct __bar bar_t;
 
 struct __bar
 {
-	unsigned count; // barrier's current value
-	unsigned limit; // barrier's value limit
+	obj_t    obj;   // object header
 
-	unsigned signal;
+	unsigned limit; // limit of tasks blocked on the barrier object
 };
 
 typedef struct __bar bar_id [];
@@ -59,7 +59,7 @@ typedef struct __bar bar_id [];
  * Description       : create and initialize a barrier object
  *
  * Parameters
- *   limit           : number of tasks that must call bar_wait function to release the barrier object
+ *   limit           : number of tasks that must call bar_wait[Until|For] function to release the barrier object
  *
  * Return            : barrier object
  *
@@ -67,7 +67,7 @@ typedef struct __bar bar_id [];
  *
  ******************************************************************************/
 
-#define               _BAR_INIT( _limit ) { _limit, _limit, 0 }
+#define               _BAR_INIT( _limit ) { _OBJ_INIT(), _limit }
 
 /******************************************************************************
  *
@@ -78,7 +78,7 @@ typedef struct __bar bar_id [];
  *
  * Parameters
  *   bar             : name of a pointer to barrier object
- *   limit           : number of tasks that must call bar_wait function to release the barrier object
+ *   limit           : number of tasks that must call bar_wait[Until|For] function to release the barrier object
  *
  ******************************************************************************/
 
@@ -95,7 +95,7 @@ typedef struct __bar bar_id [];
  * Description       : create and initialize a barrier object
  *
  * Parameters
- *   limit           : number of tasks that must call bar_wait function to release the barrier object
+ *   limit           : number of tasks that must call bar_wait[Until|For] function to release the barrier object
  *
  * Return            : barrier object
  *
@@ -116,7 +116,7 @@ typedef struct __bar bar_id [];
  * Description       : create and initialize a barrier object
  *
  * Parameters
- *   limit           : number of tasks that must call bar_wait function to release the barrier object
+ *   limit           : number of tasks that must call bar_wait[Until|For] function to release the barrier object
  *
  * Return            : barrier object as array (id)
  *
@@ -143,13 +143,74 @@ extern "C" {
  *
  * Parameters
  *   bar             : pointer to barrier object
- *   limit           : number of tasks that must call bar_wait function to release the barrier object
+ *   limit           : number of tasks that must call bar_wait[Until|For] function to release the barrier object
  *
  * Return            : none
  *
  ******************************************************************************/
 
 void bar_init( bar_t *bar, unsigned limit );
+
+/******************************************************************************
+ *
+ * Name              : bar_reset
+ * Alias             : bar_kill
+ *
+ * Description       : reset the barrier object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   bar             : pointer to barrier object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void bar_reset( bar_t *bar );
+
+__STATIC_INLINE
+void bar_kill( bar_t *bar ) { bar_reset(bar); }
+
+/******************************************************************************
+ *
+ * Name              : bar_waitFor
+ *
+ * Description       : wait for release the barrier object for given duration of time
+ *
+ * Parameters
+ *   bar             : pointer to barrier object
+ *   delay           : duration of time (maximum number of ticks to wait for release the barrier object)
+ *                     IMMEDIATE: don't wait if the barrier object can't be released
+ *                     INFINITE:  wait indefinitely until the barrier object has been released
+ *
+ * Return
+ *   E_SUCCESS       : barrier object was successfully released
+ *   E_STOPPED       : barrier object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : barrier object was not released before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int bar_waitFor( bar_t *bar, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : bar_waitUntil
+ *
+ * Description       : wait for release the barrier object until given timepoint
+ *
+ * Parameters
+ *   bar             : pointer to barrier object
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : barrier object was successfully released
+ *   E_STOPPED       : barrier object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : barrier object was not released before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int bar_waitUntil( bar_t *bar, cnt_t time );
 
 /******************************************************************************
  *
@@ -160,11 +221,14 @@ void bar_init( bar_t *bar, unsigned limit );
  * Parameters
  *   bar             : pointer to barrier object
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : barrier object was successfully released
+ *   E_STOPPED       : barrier object was reseted
  *
  ******************************************************************************/
 
-void bar_wait( bar_t *bar );
+__STATIC_INLINE
+int bar_wait( bar_t *bar ) { return bar_waitFor(bar, INFINITE); }
 
 #ifdef __cplusplus
 }
@@ -172,7 +236,7 @@ void bar_wait( bar_t *bar );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -182,7 +246,7 @@ namespace intros {
  * Description       : create and initialize a barrier object
  *
  * Constructor parameters
- *   limit           : number of tasks that must call wait function to release the barrier object
+ *   limit           : number of tasks that must call wait[Until|For] function to release the barrier object
  *
  ******************************************************************************/
 
@@ -191,12 +255,20 @@ struct Barrier : public __bar
 	constexpr
 	Barrier( const unsigned _limit ): __bar _BAR_INIT(_limit) {}
 
+	~Barrier() { assert(__bar::obj.queue == nullptr); }
+
 	Barrier( Barrier&& ) = default;
 	Barrier( const Barrier& ) = delete;
 	Barrier& operator=( Barrier&& ) = delete;
 	Barrier& operator=( const Barrier& ) = delete;
 
-	void wait() { bar_wait(this); }
+	void reset    ()                  {        bar_reset    (this); }
+	void kill     ()                  {        bar_kill     (this); }
+	template<typename T>
+	int  waitFor  ( const T& _delay ) { return bar_waitFor  (this, Clock::count(_delay)); }
+	template<typename T>
+	int  waitUntil( const T& _time )  { return bar_waitUntil(this, Clock::until(_time)); }
+	int  wait     ()                  { return bar_wait     (this); }
 };
 
 }     //  namespace

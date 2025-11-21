@@ -2,7 +2,7 @@
 
     @file    IntrOS: osmutex.h
     @author  Rajmund Szymanski
-    @date    26.07.2022
+    @date    17.11.2025
     @brief   This file contains definitions for IntrOS.
 
  ******************************************************************************
@@ -33,10 +33,11 @@
 #define __INTROS_MTX_H
 
 #include "oskernel.h"
+#include "osclock.h"
 
 /******************************************************************************
  *
- * Name              : mutex
+ * Name              : mutex (error checking)
  *
  ******************************************************************************/
 
@@ -44,7 +45,9 @@ typedef struct __mtx mtx_t;
 
 struct __mtx
 {
-	tsk_t *  owner; // mutex owner
+	obj_t    obj;   // object header
+
+	tsk_t  * owner; // mutex owner
 };
 
 typedef struct __mtx mtx_id [];
@@ -63,7 +66,7 @@ typedef struct __mtx mtx_id [];
  *
  ******************************************************************************/
 
-#define               _MTX_INIT() { NULL }
+#define               _MTX_INIT() { _OBJ_INIT(), NULL }
 
 /******************************************************************************
  *
@@ -145,6 +148,27 @@ void mtx_init( mtx_t *mtx );
 
 /******************************************************************************
  *
+ * Name              : mtx_reset
+ * Alias             : mtx_kill
+ *
+ * Description       : reset the mutex object and wake up all waiting tasks with 'E_STOPPED' event value
+ *
+ * Parameters
+ *   mtx             : pointer to mutex object
+ *
+ * Return            : none
+ *
+ * Note              : use only in thread mode
+ *
+ ******************************************************************************/
+
+void mtx_reset( mtx_t *mtx );
+
+__STATIC_INLINE
+void mtx_kill( mtx_t *mtx ) { mtx_reset(mtx); }
+
+/******************************************************************************
+ *
  * Name              : mtx_take
  * Alias             : mtx_tryLock
  *
@@ -155,15 +179,60 @@ void mtx_init( mtx_t *mtx );
  *   mtx             : pointer to mutex object
  *
  * Return
- *   SUCCESS         : mutex object was successfully locked
- *   FAILURE         : mutex object can't be locked immediately
+ *   E_SUCCESS       : mutex object was successfully locked
+ *   E_FAILURE       : mutex object can't be locked
+ *   E_TIMEOUT       : mutex object can't be locked immediately, try again
  *
  ******************************************************************************/
 
-unsigned mtx_take( mtx_t *mtx );
+int mtx_take( mtx_t *mtx );
 
 __STATIC_INLINE
-unsigned mtx_tryLock( mtx_t *mtx ) { return mtx_take(mtx); }
+int mtx_tryLock( mtx_t *mtx ) { return mtx_take(mtx); }
+
+/******************************************************************************
+ *
+ * Name              : mtx_waitFor
+ *
+ * Description       : try to lock the mutex object,
+ *                     wait for given duration of time if the mutex object can't be locked immediately
+ *
+ * Parameters
+ *   mtx             : pointer to mutex object
+ *   delay           : duration of time (maximum number of ticks to wait for lock the mutex object)
+ *                     IMMEDIATE: don't wait if the mutex object can't be locked immediately
+ *                     INFINITE:  wait indefinitely until the mutex object has been locked
+ *
+ * Return
+ *   E_SUCCESS       : mutex object was successfully locked
+ *   E_FAILURE       : mutex object can't be locked
+ *   E_STOPPED       : mutex object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : mutex object was not locked before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int mtx_waitFor( mtx_t *mtx, cnt_t delay );
+
+/******************************************************************************
+ *
+ * Name              : mtx_waitUntil
+ *
+ * Description       : try to lock the mutex object,
+ *                     wait until given timepoint if the mutex object can't be locked immediately
+ *
+ * Parameters
+ *   mtx             : pointer to mutex object
+ *   time            : timepoint value
+ *
+ * Return
+ *   E_SUCCESS       : mutex object was successfully locked
+ *   E_FAILURE       : mutex object can't be locked
+ *   E_STOPPED       : mutex object was reseted before the specified timeout expired
+ *   E_TIMEOUT       : mutex object was not locked before the specified timeout expired
+ *
+ ******************************************************************************/
+
+int mtx_waitUntil( mtx_t *mtx, cnt_t time );
 
 /******************************************************************************
  *
@@ -176,14 +245,18 @@ unsigned mtx_tryLock( mtx_t *mtx ) { return mtx_take(mtx); }
  * Parameters
  *   mtx             : pointer to mutex object
  *
- * Return            : none
+ * Return
+ *   E_SUCCESS       : mutex object was successfully locked
+ *   E_FAILURE       : mutex object can't be locked
+ *   E_STOPPED       : mutex object was reseted
  *
  ******************************************************************************/
 
-void mtx_wait( mtx_t *mtx );
+__STATIC_INLINE
+int mtx_wait( mtx_t *mtx ) { return mtx_waitFor(mtx, INFINITE); }
 
 __STATIC_INLINE
-void mtx_lock( mtx_t *mtx ) { mtx_wait(mtx); }
+int mtx_lock( mtx_t *mtx ) { return mtx_wait(mtx); }
 
 /******************************************************************************
  *
@@ -197,15 +270,15 @@ void mtx_lock( mtx_t *mtx ) { mtx_wait(mtx); }
  *   mtx             : pointer to mutex object
  *
  * Return
- *   SUCCESS         : mutex object was successfully unlocked
- *   FAILURE         : mutex object can't be unlocked
+ *   E_SUCCESS       : mutex object was successfully unlocked
+ *   E_FAILURE       : mutex object can't be unlocked
  *
  ******************************************************************************/
 
-unsigned mtx_give( mtx_t *mtx );
+int mtx_give( mtx_t *mtx );
 
 __STATIC_INLINE
-unsigned mtx_unlock( mtx_t *mtx ) { return mtx_give(mtx); }
+int mtx_unlock( mtx_t *mtx ) { return mtx_give(mtx); }
 
 #ifdef __cplusplus
 }
@@ -213,7 +286,7 @@ unsigned mtx_unlock( mtx_t *mtx ) { return mtx_give(mtx); }
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 namespace intros {
 
 /******************************************************************************
@@ -232,19 +305,25 @@ struct Mutex : public __mtx
 	constexpr
 	Mutex(): __mtx _MTX_INIT() {}
 
+	~Mutex() { assert(__mtx::owner == nullptr); }
+
 	Mutex( Mutex&& ) = default;
 	Mutex( const Mutex& ) = delete;
 	Mutex& operator=( Mutex&& ) = delete;
 	Mutex& operator=( const Mutex& ) = delete;
 
-	~Mutex() { assert(__mtx::owner == nullptr); }
-
-	unsigned take   () { return mtx_take   (this); }
-	unsigned tryLock() { return mtx_tryLock(this); }
-	void     wait   () {        mtx_wait   (this); }
-	void     lock   () {        mtx_lock   (this); }
-	unsigned give   () { return mtx_give   (this); }
-	unsigned unlock () { return mtx_unlock (this); }
+	void     reset    ()                  {        mtx_reset    (this); }
+	void     kill     ()                  {        mtx_kill     (this); }
+	int      take     ()                  { return mtx_take     (this); }
+	int      tryLock  ()                  { return mtx_tryLock  (this); }
+	template<typename T>
+	int      waitFor  ( const T& _delay ) { return mtx_waitFor  (this, Clock::count(_delay)); }
+	template<typename T>
+	int      waitUntil( const T& _time )  { return mtx_waitUntil(this, Clock::until(_time)); }
+	int      wait     ()                  { return mtx_wait     (this); }
+	int      lock     ()                  { return mtx_lock     (this); }
+	int      give     ()                  { return mtx_give     (this); }
+	int      unlock   ()                  { return mtx_unlock   (this); }
 };
 
 /******************************************************************************
@@ -260,12 +339,16 @@ struct LockGuard
 	explicit
 	LockGuard( Mutex& _mtx ): mtx_(_mtx)
 	{
-		mtx_.lock();
+		int result = mtx_.lock();
+		assert(result == E_SUCCESS);
+		(void) result;
 	}
 
 	~LockGuard()
 	{
-		mtx_.unlock();
+		int result = mtx_.unlock();
+		assert(result == E_SUCCESS);
+		(void) result;
 	}
 
 	LockGuard( LockGuard&& ) = default;
@@ -291,6 +374,12 @@ struct UniqueLock
 	UniqueLock( Mutex& _mtx ): mtx_(&_mtx), locked_(false)
 	{
 		lock();
+	}
+
+	template<typename T>
+	UniqueLock( Mutex& _mtx, const T& _delay ): mtx_(&_mtx), locked_(false)
+	{
+		waitFor(_delay);
 	}
 
 	UniqueLock( UniqueLock&& _src ): mtx_(_src.mtx_), locked_(_src.locked_)
@@ -326,22 +415,56 @@ struct UniqueLock
 		if (mtx_ == nullptr || locked_)
 			return false;
 
-		unsigned result = mtx_->tryLock();
-		assert(result == SUCCESS);
-		locked_ = result == SUCCESS;
+		int result = mtx_->tryLock();
+		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		locked_ = result == E_SUCCESS;
 		return locked_;
 	}
 
-	void lock()
+	template<typename T>
+	bool waitFor( const T& _delay )
 	{
-		if (mtx_ != nullptr && !locked_)
-			mtx_->lock();
+		if (mtx_ == nullptr || locked_)
+			return false;
+
+		int result = mtx_->waitFor(_delay);
+		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		locked_ = result == E_SUCCESS;
+		return locked_;
 	}
 
-	void unlock()
+	template<typename T>
+	bool waitUntil( const T& _time )
 	{
-		if (mtx_ != nullptr && locked_)
-			mtx_->unlock();
+		if (mtx_ == nullptr || locked_)
+			return false;
+
+		int result = mtx_->waitUntil(_time);
+		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		locked_ = result == E_SUCCESS;
+		return locked_;
+	}
+
+	bool lock()
+	{
+		if (mtx_ == nullptr || locked_)
+			return false;
+
+		int result = mtx_->lock();
+		assert(result == E_SUCCESS);
+		locked_ = result == E_SUCCESS;
+		return locked_;
+	}
+
+	bool unlock()
+	{
+		if (mtx_ == nullptr || !locked_)
+			return false;
+
+		int result = mtx_->unlock();
+		assert(result == E_SUCCESS);
+		locked_ = false;
+		return result == E_SUCCESS;
 	}
 
 	bool ownsLock() const

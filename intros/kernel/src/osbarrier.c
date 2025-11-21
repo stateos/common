@@ -2,7 +2,7 @@
 
     @file    IntrOS: osbarrier.c
     @author  Rajmund Szymanski
-    @date    05.05.2021
+    @date    17.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -33,6 +33,16 @@
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
+static
+void priv_bar_init( bar_t *bar, unsigned limit )
+/* -------------------------------------------------------------------------- */
+{
+	memset(bar, 0, sizeof(bar_t));
+
+	bar->limit = limit;
+}
+
+/* -------------------------------------------------------------------------- */
 void bar_init( bar_t *bar, unsigned limit )
 /* -------------------------------------------------------------------------- */
 {
@@ -41,38 +51,84 @@ void bar_init( bar_t *bar, unsigned limit )
 
 	sys_lock();
 	{
-		memset(bar, 0, sizeof(bar_t));
-
-		bar->count = limit;
-		bar->limit = limit;
+		priv_bar_init(bar, limit);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-void bar_wait( bar_t *bar )
+static
+void priv_bar_reset( bar_t *bar, int event )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned signal;
+	core_all_wakeup(&bar->obj.queue, event);
+}
 
+/* -------------------------------------------------------------------------- */
+void bar_reset( bar_t *bar )
+/* -------------------------------------------------------------------------- */
+{
 	assert(bar);
-	assert(bar->count);
 
 	sys_lock();
 	{
-		if (--bar->count == 0)
-		{
-			bar->count = bar->limit;
-			bar->signal++;
-		}
-		else
-		{
-			signal = bar->signal;
-			while (bar->signal == signal)
-				core_ctx_switch();
-		}
+		priv_bar_reset(bar, E_STOPPED);
 	}
 	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_bar_take( bar_t *bar )
+/* -------------------------------------------------------------------------- */
+{
+	if (core_tsk_count(&bar->obj.queue) + 1 == bar->limit)
+	{
+		core_all_wakeup(&bar->obj.queue, E_SUCCESS);
+		return E_SUCCESS;
+	}
+
+	return E_TIMEOUT;
+}
+
+/* -------------------------------------------------------------------------- */
+int bar_waitFor( bar_t *bar, cnt_t delay )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(bar);
+	assert(bar->limit);
+
+	sys_lock();
+	{
+		result = priv_bar_take(bar);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitFor(&bar->obj.queue, delay);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int bar_waitUntil( bar_t *bar, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(bar);
+	assert(bar->limit);
+
+	sys_lock();
+	{
+		result = priv_bar_take(bar);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitUntil(&bar->obj.queue, time);
+	}
+	sys_unlock();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */

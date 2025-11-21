@@ -2,7 +2,7 @@
 
     @file    IntrOS: ossemaphore.c
     @author  Rajmund Szymanski
-    @date    19.05.2021
+    @date    19.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -30,54 +30,76 @@
  ******************************************************************************/
 
 #include "inc/ossemaphore.h"
-#include "inc/oscriticalsection.h"
 #include "inc/ostask.h"
+#include "inc/oscriticalsection.h"
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_sem_init( sem_t *sem, unsigned init, unsigned limit )
+/* -------------------------------------------------------------------------- */
+{
+	memset(sem, 0, sizeof(sem_t));
+
+	sem->count = init < limit ? init : limit;
+	sem->limit = limit;
+}
 
 /* -------------------------------------------------------------------------- */
 void sem_init( sem_t *sem, unsigned init, unsigned limit )
 /* -------------------------------------------------------------------------- */
 {
 	assert(sem);
-	assert(limit);
 	assert(init<=limit);
 
 	sys_lock();
 	{
-		memset(sem, 0, sizeof(sem_t));
-
-		sem->count = init < limit ? init : limit;
-		sem->limit = limit;
+		priv_sem_init(sem, init, limit);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_sem_take( sem_t *sem )
+void priv_sem_reset( sem_t *sem, int event )
 /* -------------------------------------------------------------------------- */
 {
-#if OS_ATOMICS
-	unsigned count = atomic_load(&sem->count);
-	while (count > 0)
-		if (atomic_compare_exchange_weak(&sem->count, &count, count - 1))
-			return SUCCESS;
-	return FAILURE;
-#else
-	if (sem->count == 0)
-		return FAILURE;
-	sem->count--;
-	return SUCCESS;
-#endif
+	sem->count = 0;
+
+	core_all_wakeup(&sem->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned sem_take( sem_t *sem )
+void sem_reset( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	assert(sem);
+
+	sys_lock();
+	{
+		priv_sem_reset(sem, E_STOPPED);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_sem_take( sem_t *sem )
+/* -------------------------------------------------------------------------- */
+{
+	if (sem->count == 0)
+		return E_TIMEOUT;
+
+	sem->count--;
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int sem_take( sem_t *sem )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
 
 	assert(sem);
-	assert(sem->limit);
 	assert(sem->count<=sem->limit);
 
 	sys_lock();
@@ -90,40 +112,67 @@ unsigned sem_take( sem_t *sem )
 }
 
 /* -------------------------------------------------------------------------- */
-void sem_wait( sem_t *sem )
+int sem_waitFor( sem_t *sem, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	while (sem_take(sem) != SUCCESS)
-		tsk_yield();
+	int result;
+
+	assert(sem);
+	assert(sem->count<=sem->limit);
+
+	sys_lock();
+	{
+		result = priv_sem_take(sem);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitFor(&sem->obj.queue, delay);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int sem_waitUntil( sem_t *sem, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(sem);
+	assert(sem->count<=sem->limit);
+
+	sys_lock();
+	{
+		result = priv_sem_take(sem);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitUntil(&sem->obj.queue, time);
+	}
+	sys_unlock();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_sem_give( sem_t *sem )
+int priv_sem_give( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
-#if OS_ATOMICS
-	unsigned count = atomic_load(&sem->count);
-	while (count < sem->limit)
-		if (atomic_compare_exchange_weak(&sem->count, &count, count + 1))
-			return SUCCESS;
-	return FAILURE;
-#else
+	if (core_one_wakeup(&sem->obj.queue, E_SUCCESS))
+		return E_SUCCESS;
+
 	if (sem->count >= sem->limit)
-		return FAILURE;
+		return E_TIMEOUT;
+
 	sem->count++;
-	return SUCCESS;
-#endif
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned sem_give( sem_t *sem )
+int sem_give( sem_t *sem )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result;
 
 	assert(sem);
-	assert(sem->limit);
 	assert(sem->count<=sem->limit);
 
 	sys_lock();
@@ -137,27 +186,28 @@ unsigned sem_give( sem_t *sem )
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_sem_release( sem_t *sem, unsigned num )
+int priv_sem_release( sem_t *sem, unsigned num )
 /* -------------------------------------------------------------------------- */
 {
+	num -= core_num_wakeup(&sem->obj.queue, E_SUCCESS, num);
+
 	if (num > sem->limit - sem->count)
 	{
 		sem->count = sem->limit;
-		return FAILURE;
+		return E_TIMEOUT;
 	}
 
 	sem->count += num;
-	return SUCCESS;
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned sem_release( sem_t *sem, unsigned num )
+int sem_release( sem_t *sem, unsigned num )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result;
 
 	assert(sem);
-	assert(sem->limit);
 	assert(sem->count<=sem->limit);
 
 	sys_lock();
@@ -187,3 +237,81 @@ unsigned sem_getValue( sem_t *sem )
 }
 
 /* -------------------------------------------------------------------------- */
+
+#if OS_ATOMICS
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_sem_takeAsync( sem_t *sem )
+/* -------------------------------------------------------------------------- */
+{
+	unsigned count = atomic_load(&sem->count);
+	while (count > 0)
+		if (atomic_compare_exchange_weak(&sem->count, &count, count - 1))
+			return E_SUCCESS;
+
+	return E_TIMEOUT;
+}
+
+/* -------------------------------------------------------------------------- */
+int sem_takeAsync( sem_t *sem )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(sem);
+	assert(sem->count<=sem->limit);
+
+	sys_lock();
+	{
+		result = priv_sem_takeAsync(sem);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int sem_waitAsync( sem_t *sem )
+/* -------------------------------------------------------------------------- */
+{
+	while (sem_takeAsync(sem) != E_SUCCESS)
+		tsk_yield();
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_sem_giveAsync( sem_t *sem )
+/* -------------------------------------------------------------------------- */
+{
+	unsigned count = atomic_load(&sem->count);
+	while (count < sem->limit)
+		if (atomic_compare_exchange_weak(&sem->count, &count, count + 1))
+			return E_SUCCESS;
+
+	return E_TIMEOUT;
+}
+
+/* -------------------------------------------------------------------------- */
+int sem_giveAsync( sem_t *sem )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(sem);
+	assert(sem->count<=sem->limit);
+
+	sys_lock();
+	{
+		result = priv_sem_giveAsync(sem);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+
+#endif//OS_ATOMICS

@@ -30,8 +30,16 @@
  ******************************************************************************/
 
 #include "inc/oslist.h"
-#include "inc/oscriticalsection.h"
 #include "inc/ostask.h"
+#include "inc/oscriticalsection.h"
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_lst_init( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	memset(lst, 0, sizeof(lst_t));
+}
 
 /* -------------------------------------------------------------------------- */
 void lst_init( lst_t *lst )
@@ -41,9 +49,38 @@ void lst_init( lst_t *lst )
 
 	sys_lock();
 	{
-		memset(lst, 0, sizeof(lst_t));
+		priv_lst_init(lst);
 	}
 	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_lst_reset( lst_t *lst, int event )
+/* -------------------------------------------------------------------------- */
+{
+	core_all_wakeup(&lst->obj.queue, event);
+}
+
+/* -------------------------------------------------------------------------- */
+void lst_reset( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	assert(lst);
+
+	sys_lock();
+	{
+		priv_lst_reset(lst, E_STOPPED);
+	}
+	sys_unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_lst_empty( lst_t *lst )
+/* -------------------------------------------------------------------------- */
+{
+	return lst->head.next == NULL;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -58,26 +95,29 @@ void *priv_lst_popFront( lst_t *lst )
 
 /* -------------------------------------------------------------------------- */
 static
-void *priv_lst_take( lst_t *lst )
+int priv_lst_take( lst_t *lst, void **data )
 /* -------------------------------------------------------------------------- */
 {
-	if (lst->head.next == NULL)
-		return NULL;
+	if (priv_lst_empty(lst))
+		return E_TIMEOUT;
 
-	return priv_lst_popFront(lst);
+	*data = priv_lst_popFront(lst);
+
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-void *lst_take( lst_t *lst )
+int lst_take( lst_t *lst, void **data )
 /* -------------------------------------------------------------------------- */
 {
-	void *result;
+	int result;
 
 	assert(lst);
+	assert(data);
 
 	sys_lock();
 	{
-		result = priv_lst_take(lst);
+		result = priv_lst_take(lst, data);
 	}
 	sys_unlock();
 
@@ -85,13 +125,49 @@ void *lst_take( lst_t *lst )
 }
 
 /* -------------------------------------------------------------------------- */
-void *lst_wait( lst_t *lst )
+int lst_waitFor( lst_t *lst, void **data, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	void *result;
+	int result;
 
-	while (result = lst_take(lst), result == NULL)
-		tsk_yield();
+	assert(lst);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_lst_take(lst, data);
+		if (result == E_TIMEOUT)
+		{
+			result = core_tsk_waitFor(&lst->obj.queue, delay);
+			if (result == E_SUCCESS)
+				*data = System.cur->tmp.lst.data;
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int lst_waitUntil( lst_t *lst, void **data, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(lst);
+	assert(data);
+
+	sys_lock();
+	{
+		result = priv_lst_take(lst, data);
+		if (result == E_TIMEOUT)
+		{
+			result = core_tsk_waitUntil(&lst->obj.queue, time);
+			if (result == E_SUCCESS)
+				*data = System.cur->tmp.lst.data;
+		}
+	}
+	sys_unlock();
 
 	return result;
 }
@@ -112,7 +188,16 @@ static
 void priv_lst_give( lst_t *lst, void *data )
 /* -------------------------------------------------------------------------- */
 {
-	priv_lst_pushBack(lst, data);
+	tsk_t *tsk = core_one_wakeup(&lst->obj.queue, E_SUCCESS);
+
+	if (tsk)
+	{
+		tsk->tmp.lst.data = data;
+	}
+	else
+	{
+		priv_lst_pushBack(lst, data);
+	}
 }
 
 /* -------------------------------------------------------------------------- */

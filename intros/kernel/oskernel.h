@@ -41,12 +41,12 @@
  * -------------------------------------------------------------------------- */
 
 #if OS_ATOMICS
-#ifndef __cplusplus
-#include <stdatomic.h>
-#define __STD
-#else
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
 #include <atomic>
 #define __STD std::
+#else
+#include <stdatomic.h>
+#define __STD
 #endif
 #endif
 
@@ -54,6 +54,7 @@
 
 #if defined(__cplusplus) && (__cplusplus >= 201402L)
 #include <functional>
+#include <memory>
 using Fun_t = std::function<void( void )>;
 using Act_t = std::function<void( unsigned )>;
 #endif
@@ -101,9 +102,9 @@ bool core_stk_integrity( void );
 #endif
 /* -------------------------------------------------------------------------- */
 
-#define assert_ctx_integrity(tsk) assert(core_ctx_integrity(tsk))
+#define assert_ctx_integrity(tsk)  assert(core_ctx_integrity(tsk))
 
-#define assert_stk_integrity()    assert(core_stk_integrity())
+#define assert_stk_integrity()     assert(core_stk_integrity())
 
 /* -------------------------------------------------------------------------- */
 
@@ -149,6 +150,53 @@ void core_tsk_insert( tsk_t *tsk );
 
 // remove task 'tsk' from tasks/timers queue
 void core_tsk_remove( tsk_t *tsk );
+
+// append task 'tsk' to the blocked queue 'que'
+void core_tsk_append( tsk_t **que, tsk_t *tsk );
+
+// remove task 'tsk' from the blocked queue with event value 'event'
+void core_tsk_wakeup( tsk_t *tsk, int event );
+
+// delay execution of given task 'tsk'
+// append the current task to the blocked queue 'que'
+// context switch if 'tsk' is the current task
+// return event value
+int core_tsk_wait( tsk_t **que, tsk_t *tsk );
+
+// delay execution of current task for given duration of time 'delay'
+// append the current task to the blocked queue 'que'
+// force context switch
+// return event value
+int core_tsk_waitFor( tsk_t **que, cnt_t delay );
+
+// delay execution of current task for given duration of time 'delay' from the end of the previous countdown
+// append the current task to the blocked queue 'que'
+// force context switch
+// return event value
+int core_tsk_waitNext( tsk_t **que, cnt_t delay );
+
+// delay execution of the current task until given time point 'time'
+// append the current task to the blocked queue 'que'
+// force context switch
+// return event value
+int core_tsk_waitUntil( tsk_t **que, cnt_t time );
+
+// resume execution of first task from blocked queue 'que' with event value 'event'
+// remove resumed task from guard object blocked queue
+// return 'tsk'
+tsk_t *core_one_wakeup( tsk_t **que, int event );
+
+// resume execution of no more than 'num' tasks from blocked queue 'que' with event value 'event'
+// remove resumed tasks from guard object blocked queue
+// return the number of resumed tasks
+unsigned core_num_wakeup( tsk_t **que, int event, unsigned num );
+
+// resume execution of all tasks from blocked queue 'que' with event value 'event'
+// remove resumed tasks from guard object blocked queue
+void core_all_wakeup( tsk_t **que, int event );
+
+// return count of tasks blocked on the queue 'que'
+unsigned core_tsk_count( tsk_t **que );
 
 /* -------------------------------------------------------------------------- */
 

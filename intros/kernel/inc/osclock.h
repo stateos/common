@@ -58,7 +58,7 @@ cnt_t sys_time( void );
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 
 #if __cplusplus >= 201402L
 #include <chrono>

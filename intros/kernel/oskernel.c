@@ -89,11 +89,137 @@ void core_tsk_remove( tsk_t *tsk )
 	tsk_t *nxt = tsk->hdr.next;
 
 	tsk->hdr.id = ID_STOPPED;
-	if (System.tsk == tsk)
-		System.tsk = NULL;
 
 	nxt->hdr.prev = prv;
 	prv->hdr.next = nxt;
+
+	if (tsk == System.tsk)
+		System.tsk = NULL;
+
+	if (tsk == System.cur)
+		core_ctx_switch();
+}
+
+/* -------------------------------------------------------------------------- */
+
+void core_tsk_append( tsk_t **que, tsk_t *tsk )
+{
+	tsk->guard = que;
+	tsk->obj.queue = NULL;
+	while (*que)
+		que = &(*que)->obj.queue;
+	*que = tsk;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void core_tsk_wakeup( tsk_t *tsk, int event )
+{
+	tsk_t **que = tsk->guard;
+	if (que)
+	{
+		tsk->guard = 0;
+		tsk->delay = 0;
+		tsk->event = event;
+		while (*que != tsk)
+			que = &(*que)->obj.queue;
+		*que = tsk->obj.queue;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+int core_tsk_wait( tsk_t **que, tsk_t *tsk )
+{
+	core_tsk_append(que, tsk);
+
+	if (tsk == System.cur)
+		core_ctx_switch();
+
+	return tsk->event;
+}
+
+/* -------------------------------------------------------------------------- */
+
+int core_tsk_waitFor( tsk_t **que, cnt_t delay )
+{
+	tsk_t *cur = System.cur;
+
+	cur->start = core_sys_time();
+	cur->delay = delay;
+
+	return core_tsk_wait(que, cur);
+}
+
+/* -------------------------------------------------------------------------- */
+
+int core_tsk_waitNext( tsk_t **que, cnt_t delay )
+{
+	tsk_t *cur = System.cur;
+
+	cur->delay = delay;
+
+	return core_tsk_wait(que, cur);
+}
+
+/* -------------------------------------------------------------------------- */
+
+int core_tsk_waitUntil( tsk_t **que, cnt_t time )
+{
+	tsk_t *cur = System.cur;
+
+	cur->start = core_sys_time();
+	cur->delay = time - cur->start;
+	if (cur->delay - 1U > CNT_LIMIT)
+		cur->delay = 0;
+
+	return core_tsk_wait(que, cur);
+}
+
+/* -------------------------------------------------------------------------- */
+
+tsk_t *core_one_wakeup( tsk_t **que, int event )
+{
+	tsk_t *tsk = *que;
+
+	if (tsk)
+	{
+		*que = tsk->obj.queue;
+		tsk->guard = 0;
+		tsk->delay = 0;
+		tsk->event = event;
+	}
+
+	return tsk;
+}
+
+/* -------------------------------------------------------------------------- */
+
+unsigned core_num_wakeup( tsk_t **que, int event, unsigned num )
+{
+	unsigned cnt = 0;
+
+	while (num > 0 && core_one_wakeup(que, event)) { cnt++; num--; }
+
+	return cnt;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void core_all_wakeup( tsk_t **que, int event )
+{
+	while (core_one_wakeup(que, event));
+}
+
+/* -------------------------------------------------------------------------- */
+
+unsigned core_tsk_count( tsk_t **que )
+{
+	unsigned cnt = 0;
+
+	while (*que) { que = &(*que)->obj.queue; cnt++; }
+
+	return cnt;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -224,18 +350,25 @@ void core_tsk_switch( void )
 
 		if (cur->hdr.id == ID_STOPPED)
 			continue;
-
+		else
 		if (cur->delay && priv_tmr_countdown((tmr_t *)cur))
 			continue;
-
+		else
 		if (cur->hdr.id == ID_READY)
 		{
-			if (System.tsk != NULL && System.tsk != cur)
-				continue;
+			port_set_lock();
+			{
+				core_tsk_wakeup(cur, E_FAILURE);
+
+				if (System.tsk != NULL && System.tsk != cur)
+					continue;
+			}
+			port_clr_lock();
+
 			break;
 		}
-
-//		if (cur->hdr.id == ID_TIMER)
+		else
+		if (cur->hdr.id == ID_TIMER)
 		{
 			port_set_lock();
 			{
@@ -247,9 +380,11 @@ void core_tsk_switch( void )
 				if (tmr->delay == 0)
 					core_tmr_remove(tmr);
 
-				tmr->signal++;
+				core_all_wakeup(&tmr->obj.queue, E_SUCCESS);
 			}
 			port_clr_lock();
+
+			break;
 		}
 	}
 

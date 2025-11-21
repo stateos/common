@@ -2,7 +2,7 @@
 
     @file    IntrOS: osjobqueue.c
     @author  Rajmund Szymanski
-    @date    22.07.2022
+    @date    18.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
@@ -30,8 +30,19 @@
  ******************************************************************************/
 
 #include "inc/osjobqueue.h"
-#include "inc/oscriticalsection.h"
 #include "inc/ostask.h"
+#include "inc/oscriticalsection.h"
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_init( job_t *job, fun_t **data, size_t bufsize )
+/* -------------------------------------------------------------------------- */
+{
+	memset(job, 0, sizeof(job_t));
+
+	job->limit = bufsize / sizeof(fun_t *);
+	job->data  = data;
+}
 
 /* -------------------------------------------------------------------------- */
 void job_init( job_t *job, fun_t **data, size_t bufsize )
@@ -43,10 +54,32 @@ void job_init( job_t *job, fun_t **data, size_t bufsize )
 
 	sys_lock();
 	{
-		memset(job, 0, sizeof(job_t));
+		priv_job_init(job, data, bufsize);
+	}
+	sys_unlock();
+}
 
-		job->limit = bufsize / sizeof(fun_t *);
-		job->data  = data;
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_reset( job_t *job, int event )
+/* -------------------------------------------------------------------------- */
+{
+	job->count = 0;
+	job->head  = 0;
+	job->tail  = 0;
+
+	core_all_wakeup(&job->obj.queue, event);
+}
+
+/* -------------------------------------------------------------------------- */
+void job_reset( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	assert(job);
+
+	sys_lock();
+	{
+		priv_job_reset(job, E_STOPPED);
 	}
 	sys_unlock();
 }
@@ -56,11 +89,7 @@ static
 bool priv_job_empty( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-#if OS_ATOMICS
-	return atomic_load(&job->count) == 0;
-#else
 	return job->count == 0;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -68,11 +97,7 @@ static
 bool priv_job_full( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-#if OS_ATOMICS
-	return atomic_load(&job->count) == job->limit;
-#else
 	return job->count == job->limit;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -81,11 +106,7 @@ void priv_job_dec( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	job->head = job->head + 1 < job->limit ? job->head + 1 : 0;
-#if OS_ATOMICS
-	atomic_fetch_sub(&job->count, 1);
-#else
 	job->count -= 1;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -94,11 +115,7 @@ void priv_job_inc( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	job->tail = job->tail + 1 < job->limit ? job->tail + 1 : 0;
-#if OS_ATOMICS
-	atomic_fetch_add(&job->count, 1);
-#else
 	job->count += 1;
-#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -125,22 +142,60 @@ void priv_job_put( job_t *job, fun_t *fun )
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_job_take( job_t *job, fun_t **fun )
+fun_t *priv_job_getUpdate( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	if (priv_job_empty(job))
-		return FAILURE;
+	tsk_t *tsk;
 
-	*fun = priv_job_get(job);
+	fun_t *fun = priv_job_get(job);
+	tsk = core_one_wakeup(&job->obj.queue, E_SUCCESS);
+	if (tsk) priv_job_put(job, tsk->tmp.job.fun);
 
-	return SUCCESS;
+	return fun;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned job_take( job_t *job )
+static
+void priv_job_skipUpdate( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	tsk_t *tsk;
+
+	priv_job_dec(job);
+	tsk = core_one_wakeup(&job->obj.queue, E_SUCCESS);
+	if (tsk) priv_job_put(job, tsk->tmp.job.fun);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_putUpdate( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	tsk_t *tsk;
+
+	priv_job_put(job, fun);
+	tsk = core_one_wakeup(&job->obj.queue, E_SUCCESS);
+	if (tsk) tsk->tmp.job.fun = priv_job_get(job);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_job_take( job_t *job, fun_t **fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (priv_job_empty(job))
+		return E_TIMEOUT;
+
+	*fun = priv_job_getUpdate(job);
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int job_take( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
 	fun_t *fun = NULL;
 
 	assert(job);
@@ -160,31 +215,71 @@ unsigned job_take( job_t *job )
 }
 
 /* -------------------------------------------------------------------------- */
-void job_wait( job_t *job )
+int job_waitFor( job_t *job, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	while (job_take(job) != SUCCESS)
-		tsk_yield();
+	int result;
+
+	assert(job);
+	assert(job->data);
+	assert(job->limit);
+
+	sys_lock();
+	{
+		result = priv_job_take(job, &System.cur->tmp.job.fun);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitFor(&job->obj.queue, delay);
+	}
+	sys_unlock();
+
+	if (result == E_SUCCESS)
+		System.cur->tmp.job.fun();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int job_waitUntil( job_t *job, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(job);
+	assert(job->data);
+	assert(job->limit);
+
+	sys_lock();
+	{
+		result = priv_job_take(job, &System.cur->tmp.job.fun);
+		if (result == E_TIMEOUT)
+			result = core_tsk_waitUntil(&job->obj.queue, time);
+	}
+	sys_unlock();
+
+	if (result == E_SUCCESS)
+		System.cur->tmp.job.fun();
+
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
 static
-unsigned priv_job_give( job_t *job, fun_t *fun )
+int priv_job_give( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
 	if (priv_job_full(job))
-		return FAILURE;
+		return E_TIMEOUT;
 
-	priv_job_put(job, fun);
+	priv_job_putUpdate(job, fun);
 
-	return SUCCESS;
+	return E_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned job_give( job_t *job, fun_t *fun )
+int job_give( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	unsigned result;
+	int result;
 
 	assert(job);
 	assert(job->data);
@@ -201,11 +296,63 @@ unsigned job_give( job_t *job, fun_t *fun )
 }
 
 /* -------------------------------------------------------------------------- */
-void job_send( job_t *job, fun_t *fun )
+int job_sendFor( job_t *job, fun_t *fun, cnt_t delay )
 /* -------------------------------------------------------------------------- */
 {
-	while (job_give(job, fun) != SUCCESS)
-		tsk_yield();
+	int result;
+
+	assert(job);
+	assert(job->data);
+	assert(job->limit);
+	assert(fun);
+
+	sys_lock();
+	{
+		result = priv_job_give(job, fun);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.job.fun = fun;
+			result = core_tsk_waitFor(&job->obj.queue, delay);
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int job_sendUntil( job_t *job, fun_t *fun, cnt_t time )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(job);
+	assert(job->data);
+	assert(job->limit);
+	assert(fun);
+
+	sys_lock();
+	{
+		result = priv_job_give(job, fun);
+		if (result == E_TIMEOUT)
+		{
+			System.cur->tmp.job.fun = fun;
+			result = core_tsk_waitUntil(&job->obj.queue, time);
+		}
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_push( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	while (priv_job_full(job))
+		priv_job_skipUpdate(job);
+	priv_job_put(job, fun);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -219,15 +366,13 @@ void job_push( job_t *job, fun_t *fun )
 
 	sys_lock();
 	{
-		if (priv_job_empty(job))
-			priv_job_dec(job);
-		priv_job_put(job, fun);
+		priv_job_push(job, fun);
 	}
 	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned job_getCount( job_t *job )
+unsigned job_count( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned count;
@@ -244,7 +389,7 @@ unsigned job_getCount( job_t *job )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned job_getSpace( job_t *job )
+unsigned job_space( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned space;
@@ -261,7 +406,7 @@ unsigned job_getSpace( job_t *job )
 }
 
 /* -------------------------------------------------------------------------- */
-unsigned job_getLimit( job_t *job )
+unsigned job_limit( job_t *job )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned limit;
@@ -278,3 +423,154 @@ unsigned job_getLimit( job_t *job )
 }
 
 /* -------------------------------------------------------------------------- */
+
+#if OS_ATOMICS
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_job_emptyAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load(&job->count) == 0;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+bool priv_job_fullAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	return atomic_load(&job->count) == job->limit;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_decAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	job->head = job->head + 1 < job->limit ? job->head + 1 : 0;
+	atomic_fetch_sub(&job->count, 1);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_incAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	job->tail = job->tail + 1 < job->limit ? job->tail + 1 : 0;
+	atomic_fetch_add(&job->count, 1);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+fun_t *priv_job_getAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	fun_t *fun = job->data[job->head];
+
+	priv_job_decAsync(job);
+
+	return fun;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+void priv_job_putAsync( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	job->data[job->tail] = fun;
+
+	priv_job_incAsync(job);
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_job_takeAsync( job_t *job, fun_t **fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (priv_job_emptyAsync(job))
+		return E_TIMEOUT;
+
+	*fun = priv_job_getAsync(job);
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int job_takeAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+	fun_t *fun = NULL;
+
+	assert(job);
+	assert(job->data);
+	assert(job->limit);
+
+	sys_lock();
+	{
+		result = priv_job_takeAsync(job, &fun);
+	}
+	sys_unlock();
+
+	if (fun != NULL)
+		fun();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int job_waitAsync( job_t *job )
+/* -------------------------------------------------------------------------- */
+{
+	while (job_takeAsync(job) != E_SUCCESS)
+		tsk_yield();
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+static
+int priv_job_giveAsync( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	if (priv_job_fullAsync(job))
+		return E_TIMEOUT;
+
+	priv_job_putAsync(job, fun);
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+int job_giveAsync( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	int result;
+
+	assert(job);
+	assert(job->data);
+	assert(job->limit);
+	assert(fun);
+
+	sys_lock();
+	{
+		result = priv_job_giveAsync(job, fun);
+	}
+	sys_unlock();
+
+	return result;
+}
+
+/* -------------------------------------------------------------------------- */
+int job_sendAsync( job_t *job, fun_t *fun )
+/* -------------------------------------------------------------------------- */
+{
+	while (job_giveAsync(job, fun) != E_SUCCESS)
+		tsk_yield();
+
+	return E_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+
+#endif//OS_ATOMICS

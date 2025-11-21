@@ -2,7 +2,7 @@
 
     @file    IntrOS: osclock.c
     @author  Rajmund Szymanski
-    @date    14.05.2020
+    @date    17.11.2025
     @brief   This file provides set of functions for IntrOS.
 
  ******************************************************************************
