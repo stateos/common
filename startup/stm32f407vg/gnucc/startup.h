@@ -31,9 +31,8 @@
  Additional definitions
 *******************************************************************************/
 
-#define __WEAK_ALIAS(function) __attribute__ ((weak, alias(#function)))
-#define __VECTORS              __attribute__ ((used, section(".vectors")))
-#define __CAST(sp)             (void(*)(void))(intptr_t)(sp)
+#define __VECTORS         __attribute__ ((used, section(".vectors")))
+#define __CAST(sp)        (void(*)(void))(intptr_t)(sp)
 
 /*******************************************************************************
  Prototypes of external functions
