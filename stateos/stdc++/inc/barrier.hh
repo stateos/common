@@ -82,7 +82,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
           _M_completion();
           ++_M_phase;
           _M_barrier = _M_expected;
-          core_all_wakeup(_M_wait, E_SUCCESS);
+          core_all_wakeup(&_M_wait, E_SUCCESS);
         }
       }
       return result;

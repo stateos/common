@@ -68,7 +68,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
         if (_M_latch <= 0)
         {
           _M_latch = 0;
-          core_all_wakeup(_M_wait, E_SUCCESS);
+          core_all_wakeup(&_M_wait, E_SUCCESS);
         }
       }
     }

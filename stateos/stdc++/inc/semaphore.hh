@@ -66,7 +66,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
     release() noexcept
     {
       critical_section cs;
-      if (core_one_wakeup(_M_wait, E_SUCCESS) == nullptr && _M_sem < max())
+      if (core_one_wakeup(&_M_wait, E_SUCCESS) == nullptr && _M_sem < max())
         ++_M_sem;
     }
 
