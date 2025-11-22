@@ -69,15 +69,6 @@ struct __tsk
 	tsk_t ** guard; // BLOCKED queue for the pending process
 	int      event; // wakeup event
 
-	struct {
-	unsigned sigset;// pending signals
-	act_t  * action;// signal handler
-	struct {
-	fun_t  * pc;
-	cnt_t    delay;
-	}        backup;
-	}        sig;
-
 	union  {
 
 	struct {
@@ -161,8 +152,8 @@ typedef struct __tsk tsk_id [];
  ******************************************************************************/
 
 #define               _TSK_INIT( _proc, _stack, _size ) \
-                    { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, NULL, 0, \
-                    { 0, NULL, { NULL, 0 } }, { { 0 } }, { _CTX_INIT() } }
+                    { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, \
+                      NULL, 0, { { 0 } }, { _CTX_INIT() } }
 
 /******************************************************************************
  *
@@ -750,42 +741,6 @@ int tsk_resume( tsk_t *tsk );
 
 /******************************************************************************
  *
- * Name              : tsk_give
- * Alias             : tsk_signal
- *
- * Description       : send given signal to the task
- *
- * Parameters
- *   tsk             : pointer to the task object
- *   signo           : signal number
- *
- * Return            : none
- *
- ******************************************************************************/
-
-void tsk_give( tsk_t *tsk, unsigned signo );
-
-__STATIC_INLINE
-void tsk_signal( tsk_t *tsk, unsigned signo ) { tsk_give(tsk, signo); }
-
-/******************************************************************************
- *
- * Name              : tsk_action
- *
- * Description       : set given function as a signal handler
- *
- * Parameters
- *   tsk             : pointer to the task object
- *   action          : signal handler
- *
- * Return            : none
- *
- ******************************************************************************/
-
-void tsk_action( tsk_t *tsk, act_t *action );
-
-/******************************************************************************
- *
  * Name              : tsk_stackSpace
  *
  * Description       : chack water mark of the stack of the current task
@@ -877,15 +832,6 @@ struct baseTask : public __tsk
 	void     kill     ()                   {        tsk_kill     (this); }
 	int      suspend  ()                   { return tsk_suspend  (this); }
 	int      resume   ()                   { return tsk_resume   (this); }
-	void     give     ( unsigned _signo )  {        tsk_give     (this, _signo); }
-	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
-#if __cplusplus >= 201402L
-	template<class F>
-	void     action   ( F&&      _action ) {        new (&act) Act_t(_action);
-	                                                tsk_action   (this, act_); }
-#else
-	void     action   ( act_t *  _action ) {        tsk_action   (this, _action); }
-#endif
 	explicit
 	operator bool     () const             { return __tsk::hdr.id != ID_STOPPED; }
 
@@ -896,9 +842,6 @@ struct baseTask : public __tsk
 	static
 	void     fun_     ()                   {        current()->fun(); }
 	Fun_t    fun;
-	static
-	void     act_     ( unsigned _signo )  {        current()->act(_signo); }
-	Act_t    act;
 #endif
 
 /******************************************************************************
@@ -943,18 +886,6 @@ struct baseTask : public __tsk
 		void     delay     ( const T& _delay )  {        tsk_delay     (Clock::count(_delay)); }
 		static
 		void     suspend   ()                   {        tsk_suspend   (current()); }
-		static
-		void     give      ( unsigned _signo )  {        tsk_give      (current(), _signo); }
-		static
-		void     signal    ( unsigned _signo )  {        tsk_signal    (current(), _signo); }
-#if __cplusplus >= 201402L
-		template<class F> static
-		void     action    ( F&&      _action ) {        new (&current()->act) Act_t(_action);
-		                                                 tsk_action    (current(), act_); }
-#else
-		static
-		void     action    ( act_t  * _action ) {        tsk_action    (current(), _action); }
-#endif
 	};
 };
 

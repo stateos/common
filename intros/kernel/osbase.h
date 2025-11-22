@@ -130,7 +130,6 @@ typedef struct __tmr tmr_t;           // timer
 typedef struct __tsk tsk_t;           // task
 typedef         void fun_t(void);     // timer/task procedure
 typedef         void fun_a(void*);    // timer/task procedure with argument
-typedef         void act_t(unsigned); // signal action
 
 /* -------------------------------------------------------------------------- */
 

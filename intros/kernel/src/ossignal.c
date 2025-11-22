@@ -35,23 +35,21 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_sig_init( sig_t *sig, unsigned mask )
+void priv_sig_init( sig_t *sig )
 /* -------------------------------------------------------------------------- */
 {
 	memset(sig, 0, sizeof(sig_t));
-
-	sig->mask = mask;
 }
 
 /* -------------------------------------------------------------------------- */
-void sig_init( sig_t *sig, unsigned mask )
+void sig_init( sig_t *sig )
 /* -------------------------------------------------------------------------- */
 {
 	assert(sig);
 
 	sys_lock();
 	{
-		priv_sig_init(sig, mask);
+		priv_sig_init(sig);
 	}
 	sys_unlock();
 }
@@ -81,17 +79,28 @@ void sig_reset( sig_t *sig )
 
 /* -------------------------------------------------------------------------- */
 static
+unsigned priv_sig_signo( unsigned sigset )
+{
+	unsigned signo;
+
+	for (signo = 0; sigset >>= 1; signo++);
+
+	return signo;
+}
+
+/* -------------------------------------------------------------------------- */
+static
 int priv_sig_take( sig_t *sig, unsigned sigset, unsigned *signo )
 /* -------------------------------------------------------------------------- */
 {
 	sigset &= sig->sigset;
-	sigset &= -sigset;
 
 	if (sigset)
 	{
-		sig->sigset &= ~sigset | sig->mask;
+		sigset &= -sigset;
+		sig->sigset &= ~sigset;
 		if (signo != NULL)
-			for (*signo = 0; sigset >>= 1; *signo += 1);
+			*signo = priv_sig_signo(sigset);
 		return E_SUCCESS;
 	}
 
@@ -168,8 +177,7 @@ void sig_give( sig_t *sig, unsigned signo )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned sigset = SIGSET(signo);
-	obj_t  * obj;
-	tsk_t  * tsk;
+	tsk_t ** que;
 
 	assert(sig);
 
@@ -177,18 +185,17 @@ void sig_give( sig_t *sig, unsigned signo )
 	{
 		sig->sigset |= sigset;
 
-		obj = &sig->obj;
-		while (obj->queue)
+		que = &sig->obj.queue;
+		while (*que)
 		{
-			tsk = obj->queue;
-			if ((tsk->tmp.sig.sigset & sigset) != 0 || tsk->tmp.sig.sigset == 0)
+			if (((*que)->tmp.sig.sigset & sigset) != 0 || (*que)->tmp.sig.sigset == 0)
 			{
-				sig->sigset &= ~sigset | sig->mask;
-				tsk->tmp.sig.signo = signo;
-				core_tsk_wakeup(tsk, E_SUCCESS);
+				sig->sigset &= ~sigset;
+				(*que)->tmp.sig.signo = signo;
+				core_one_wakeup(que, E_SUCCESS);
 				continue;
 			}
-			obj = &tsk->obj;
+			que = &(*que)->obj.queue;
 		}
 	}
 	sys_unlock();

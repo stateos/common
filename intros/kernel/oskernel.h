@@ -56,7 +56,6 @@
 #include <functional>
 #include <memory>
 using Fun_t = std::function<void( void )>;
-using Act_t = std::function<void( unsigned )>;
 #endif
 
 /* -------------------------------------------------------------------------- */

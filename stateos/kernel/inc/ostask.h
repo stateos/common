@@ -75,7 +75,6 @@ struct __tsk
 
 	tsk_t  * owner; // task owner (joinable / detached state)
 	tsk_t ** guard; // BLOCKED queue for the pending process
-
 	int      event; // wakeup event
 
 	struct {

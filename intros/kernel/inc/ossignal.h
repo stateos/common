@@ -56,7 +56,6 @@ struct __sig
 	obj_t    obj;   // object header
 
 	unsigned sigset;// pending signals
-	unsigned mask;  // protection mask
 };
 
 typedef struct __sig sig_id [];
@@ -67,8 +66,7 @@ typedef struct __sig sig_id [];
  *
  * Description       : create and initialize a signal object
  *
- * Parameters
- *   mask            : protection mask of signal object
+ * Parameters        : none
  *
  * Return            : signal object
  *
@@ -76,19 +74,7 @@ typedef struct __sig sig_id [];
  *
  ******************************************************************************/
 
-#define               _SIG_INIT( _mask ) { _OBJ_INIT(), 0, _mask }
-
-/******************************************************************************
- *
- * Name              : _VA_SIG
- *
- * Description       : calculate protection mask from optional parameter
- *
- * Note              : for internal use
- *
- ******************************************************************************/
-
-#define               _VA_SIG( _mask ) ( _mask + 0 )
+#define               _SIG_INIT() { _OBJ_INIT(), 0 }
 
 /******************************************************************************
  *
@@ -99,15 +85,14 @@ typedef struct __sig sig_id [];
  *
  * Parameters
  *   sig             : name of a pointer to signal object
- *   mask            : (optional) protection mask; default: 0
  *
  ******************************************************************************/
 
-#define             OS_SIG( sig, ... ) \
-                       sig_t sig[] = { _SIG_INIT( _VA_SIG(__VA_ARGS__) ) }
+#define             OS_SIG( sig ) \
+                       sig_t sig[] = { _SIG_INIT() }
 
-#define         static_SIG( sig, ... ) \
-                static sig_t sig[] = { _SIG_INIT( _VA_SIG(__VA_ARGS__) ) }
+#define         static_SIG( sig ) \
+                static sig_t sig[] = { _SIG_INIT() }
 
 /******************************************************************************
  *
@@ -115,8 +100,7 @@ typedef struct __sig sig_id [];
  *
  * Description       : create and initialize a signal object
  *
- * Parameters
- *   mask            : (optional) protection mask; default: 0
+ * Parameters        : none
  *
  * Return            : signal object
  *
@@ -125,8 +109,8 @@ typedef struct __sig sig_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                SIG_INIT( ... ) \
-                      _SIG_INIT( _VA_SIG(__VA_ARGS__) )
+#define                SIG_INIT() \
+                      _SIG_INIT()
 #endif
 
 /******************************************************************************
@@ -136,8 +120,7 @@ typedef struct __sig sig_id [];
  *
  * Description       : create and initialize a signal object
  *
- * Parameters
- *   mask            : (optional) protection mask; default: 0
+ * Parameters        : none
  *
  * Return            : signal object as array (id)
  *
@@ -146,8 +129,8 @@ typedef struct __sig sig_id [];
  ******************************************************************************/
 
 #ifndef __cplusplus
-#define                SIG_CREATE( ... ) \
-                     { SIG_INIT  ( _VA_SIG(__VA_ARGS__) ) }
+#define                SIG_CREATE() \
+                     { SIG_INIT  () }
 #define                SIG_NEW \
                        SIG_CREATE
 #endif
@@ -164,13 +147,12 @@ extern "C" {
  *
  * Parameters
  *   sig             : pointer to signal object
- *   mask            : protection mask of signal object
  *
  * Return            : none
  *
  ******************************************************************************/
 
-void sig_init( sig_t *sig, unsigned mask );
+void sig_init( sig_t *sig );
 
 /******************************************************************************
  *
@@ -336,14 +318,14 @@ namespace intros {
  * Description       : create and initialize a signal object
  *
  * Constructor parameters
- *   mask            : protection mask of signal object
+ *                   : none
  *
  ******************************************************************************/
 
 struct Signal : public __sig
 {
 	constexpr
-	Signal( const unsigned _mask = 0 ): __sig _SIG_INIT(_mask) {}
+	Signal(): __sig _SIG_INIT() {}
 
 	~Signal() { assert(__sig::obj.queue == nullptr); }
 

@@ -30,7 +30,6 @@
  ******************************************************************************/
 
 #include "inc/ostask.h"
-#include "inc/ossignal.h"
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
@@ -144,21 +143,11 @@ void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_sig_reset( tsk_t *tsk )
-/* -------------------------------------------------------------------------- */
-{
-	tsk->sig.sigset = 0;
-	tsk->sig.backup.pc = 0;
-}
-
-/* -------------------------------------------------------------------------- */
-static
 void priv_tsk_stop( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
 	if (tsk->hdr.id != ID_STOPPED)	// inactive task cannot be removed
 	{
-		priv_sig_reset(tsk);		// reset signal variables of current task
 		core_tsk_wakeup(tsk, 0);	// remove task from blocked queue; ignored event value
 		core_tsk_remove(tsk);		// remove task from ready queue
 	}
@@ -199,7 +188,6 @@ void tsk_flip( fun_t *proc )
 
 	System.cur->proc = proc;
 
-	priv_sig_reset(System.cur); // reset signal variables of current task
 	core_ctx_init(System.cur);
 	core_tsk_switch();
 }
@@ -278,113 +266,6 @@ int tsk_resume( tsk_t *tsk )
 	sys_unlock();
 
 	return result;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_sig_handler( tsk_t *tsk )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned signo;
-	unsigned sigset;
-	act_t  * action = tsk->sig.action;
-
-	while (tsk->sig.sigset)
-	{
-		sigset = tsk->sig.sigset;
-		sigset &= -sigset;
-		tsk->sig.sigset &= ~sigset;
-
-		port_clr_lock();
-		{
-			if (action)
-			{
-				for (signo = 0; sigset >>= 1; signo++);
-				action(signo);
-			}
-		}
-		port_set_lock();
-	}
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_sig_deliver( void )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *cur = System.cur;
-
-	port_set_lock();
-
-	priv_sig_handler(cur);
-
-	cur->ctx.reg.pc = cur->sig.backup.pc;
-	cur->sig.backup.pc = 0;
-	cur->delay = cur->sig.backup.delay;
-
-	core_tsk_switch();
-
-	assert(false); // system cannot return here
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_sig_dispatch( tsk_t *tsk )
-/* -------------------------------------------------------------------------- */
-{
-	if (tsk->sig.backup.pc)
-		return;
-
-	if (tsk == System.cur)
-	{
-		priv_sig_handler(tsk);
-		return;
-	}
-
-	tsk->sig.backup.pc = tsk->ctx.reg.pc;
-	tsk->sig.backup.delay = tsk->delay;
-
-	tsk->ctx.reg.pc = priv_sig_deliver;
-	tsk->delay = 0;
-}
-
-/* -------------------------------------------------------------------------- */
-void tsk_give( tsk_t *tsk, unsigned signo )
-/* -------------------------------------------------------------------------- */
-{
-	unsigned sigset = SIGSET(signo);
-
-	assert(tsk);
-	assert(sigset);
-
-	sys_lock();
-	{
-		if (tsk->hdr.id == ID_READY)
-		{
-			tsk->sig.sigset |= sigset;
-			if (tsk->sig.sigset && tsk->sig.action)
-				priv_sig_dispatch(tsk);
-		}
-	}
-	sys_unlock();
-}
-
-/* -------------------------------------------------------------------------- */
-void tsk_action( tsk_t *tsk, act_t *action )
-/* -------------------------------------------------------------------------- */
-{
-	assert(tsk);
-
-	sys_lock();
-	{
-		if (tsk->hdr.id == ID_READY)
-		{
-			tsk->sig.action = action;
-			if (tsk->sig.action && tsk->sig.sigset)
-				priv_sig_dispatch(tsk);
-		}
-	}
-	sys_unlock();
 }
 
 /* -------------------------------------------------------------------------- */

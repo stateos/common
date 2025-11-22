@@ -161,7 +161,7 @@ unsigned flg_give( flg_t *flg, unsigned flags )
 /* -------------------------------------------------------------------------- */
 {
 	unsigned result;
-	tsk_t  * tsk;
+	tsk_t ** que;
 
 	assert(flg);
 
@@ -170,19 +170,19 @@ unsigned flg_give( flg_t *flg, unsigned flags )
 		flg->flags |= flags;
 		result = flg->flags;
 
-		tsk = flg->obj.queue;
-		while (tsk)
+		que = &flg->obj.queue;
+		while (*que)
 		{
-			if (tsk->tmp.flg.flags & flags)
+			if ((*que)->tmp.flg.flags & flags)
 			{
-				tsk->tmp.flg.flags &= ~flags;
-				if (tsk->tmp.flg.flags == 0 || (tsk->tmp.flg.mode & flgAll) == 0)
+				(*que)->tmp.flg.flags &= ~flags;
+				if ((*que)->tmp.flg.flags == 0 || ((*que)->tmp.flg.mode & flgAll) == 0)
 				{
-					core_tsk_wakeup(tsk, E_SUCCESS);
+					core_one_wakeup(que, E_SUCCESS);
 					continue;
 				}
 			}
-			tsk = tsk->obj.queue;
+			que = &(*que)->obj.queue;
 		}
 	}
 	sys_unlock();
