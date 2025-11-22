@@ -345,21 +345,14 @@ void core_tsk_exec( void )
 #endif
 /* -------------------------------------------------------------------------- */
 
-void core_tsk_append( tsk_t *tsk, tsk_t **que )
+void core_tsk_append( tsk_t **que, tsk_t *tsk )
 {
-	tsk_t *nxt = *que;
-	tsk->guard  = que;
+	tsk->guard = que;
 
-	while (nxt && tsk->prio <= nxt->prio)
-	{
-		que = &nxt->obj.queue;
-		nxt = *que;
-	}
+	while (*que && tsk->prio <= (*que)->prio)
+		que = &(*que)->obj.queue;
 
-	if (nxt)
-		nxt->back = &tsk->obj.queue;
-	tsk->back = que;
-	tsk->obj.queue = nxt;
+	tsk->obj.queue = *que;
 	*que = tsk;
 }
 
@@ -367,27 +360,41 @@ void core_tsk_append( tsk_t *tsk, tsk_t **que )
 
 void core_tsk_unlink( tsk_t *tsk, int event )
 {
-	tsk_t**que = tsk->back;
-	tsk_t *nxt = tsk->obj.queue;
-	tsk->event = event;
-	tsk->guard = 0;
+	tsk_t **que = tsk->guard;
 
-	if (nxt)
-		nxt->back = que;
-	*que = nxt;
+	if (que)
+	{
+		tsk->guard = 0;
+		tsk->event = event;
+		while (*que != tsk)
+			que = &(*que)->obj.queue;
+		*que = tsk->obj.queue;
+	}
 }
 
 /* -------------------------------------------------------------------------- */
 
-void core_tsk_transfer( tsk_t *tsk, tsk_t **que )
+void core_tsk_wakeup( tsk_t *tsk, int event )
+{
+	if (tsk)
+	{
+		core_tsk_unlink(tsk, event);
+		priv_tmr_remove((tmr_t *)tsk);
+		core_tsk_insert(tsk);
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+void core_tsk_transfer( tsk_t **que, tsk_t *tsk )
 {
 	core_tsk_unlink(tsk, tsk->event);
-	core_tsk_append(tsk, que);
+	core_tsk_append(que, tsk);
 }
 
 /* -------------------------------------------------------------------------- */
 
-int core_tsk_wait( tsk_t *tsk, tsk_t **que )
+int core_tsk_wait( tsk_t **que, tsk_t *tsk )
 {
 	assert_tsk_context();
 
@@ -396,7 +403,7 @@ int core_tsk_wait( tsk_t *tsk, tsk_t **que )
 		priv_tsk_remove(tsk);          // sets ID_STOPPED
 		core_tmr_insert((tmr_t *)tsk); // sets ID_TIMER
 		tsk->hdr.id = ID_READY;        // sets ID_READY back
-		core_tsk_append(tsk, que);
+		core_tsk_append(que, tsk);
 	}
 
 	if (tsk == System.cur)
@@ -417,7 +424,7 @@ int core_tsk_waitFor( tsk_t **que, cnt_t delay )
 	if (cur->delay == IMMEDIATE)
 		return E_TIMEOUT;
 
-	return core_tsk_wait(cur, que);
+	return core_tsk_wait(que, cur);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -434,7 +441,7 @@ int core_tsk_waitNext( tsk_t **que, cnt_t delay )
 		return E_TIMEOUT;
 	}
 
-	return core_tsk_wait(cur, que);
+	return core_tsk_wait(que, cur);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -449,7 +456,7 @@ int core_tsk_waitUntil( tsk_t **que, cnt_t time )
 	if (cur->delay - 1U > CNT_LIMIT)
 		return E_TIMEOUT;
 
-	return core_tsk_wait(cur, que);
+	return core_tsk_wait(que, cur);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -458,16 +465,34 @@ void core_tsk_suspend( tsk_t *tsk )
 {
 	tsk->delay = INFINITE;
 
-	core_tsk_wait(tsk, &WAIT.obj.queue);
+	core_tsk_wait(&WAIT.obj.queue, tsk);
 }
 
 /* -------------------------------------------------------------------------- */
 
-tsk_t *core_tsk_wakeup( tsk_t *tsk, int event )
+static
+tsk_t *priv_one_wakeup( tsk_t **que, int event )
 {
+	tsk_t *tsk = *que;
+
 	if (tsk)
 	{
-		core_tsk_unlink(tsk, event);
+		tsk->guard = 0;
+		tsk->event = event;
+		*que = tsk->obj.queue;
+	}
+
+	return tsk;
+}
+
+/* -------------------------------------------------------------------------- */
+
+tsk_t *core_one_wakeup( tsk_t **que, int event )
+{
+	tsk_t *tsk = priv_one_wakeup(que, event);
+
+	if (tsk)
+	{
 		priv_tmr_remove((tmr_t *)tsk);
 		core_tsk_insert(tsk);
 	}
@@ -533,7 +558,7 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		else
 		if (tsk->guard != 0)         // blocked task
 		{
-			core_tsk_transfer(tsk, tsk->guard);
+			core_tsk_transfer(tsk->guard, tsk);
 			if (tsk->mtx.tree)
 				core_tsk_prio(tsk->mtx.tree->owner, prio);
 		}

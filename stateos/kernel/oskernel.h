@@ -174,13 +174,20 @@ void core_tsk_insert( tsk_t *tsk );
 void core_tsk_remove( tsk_t *tsk );
 
 // append task 'tsk' to the blocked queue 'que'
-void core_tsk_append( tsk_t *tsk, tsk_t **obj );
+void core_tsk_append( tsk_t **que, tsk_t *tsk );
 
 // remove task 'tsk' from the blocked queue with event value 'event'
 void core_tsk_unlink( tsk_t *tsk, int event );
 
+// resume execution of blocked task 'tsk' with event value 'event'
+// remove resumed task from guard object blocked queue
+// remove resumed task from timers READY queue
+// insert resumed task into tasks READY queue
+// force context switch if priority of resumed task is greater then priority of the current task and kernel works in preemptive mode
+void core_tsk_wakeup( tsk_t *tsk, int event );
+
 // transfer task 'tsk' to the blocked queue 'que'
-void core_tsk_transfer( tsk_t *tsk, tsk_t **que );
+void core_tsk_transfer( tsk_t **que, tsk_t *tsk );
 
 // delay execution of given task 'tsk'
 // append the current task to the blocked queue 'que'
@@ -188,7 +195,7 @@ void core_tsk_transfer( tsk_t *tsk, tsk_t **que );
 // insert the current task into timers READY queue
 // context switch if 'tsk' is the current task
 // return event value
-int core_tsk_wait( tsk_t *tsk, tsk_t **que );
+int core_tsk_wait( tsk_t **que , tsk_t *tsk );
 
 // delay execution of current task for given duration of time 'delay'
 // append the current task to the blocked queue 'que'
@@ -221,25 +228,13 @@ int core_tsk_waitUntil( tsk_t **que, cnt_t time );
 // force context switch if it is the current task
 void core_tsk_suspend( tsk_t *tsk );
 
-// resume execution of blocked task 'tsk' with event value 'event'
-// remove resumed task from guard object blocked queue
-// remove resumed task from timers READY queue
-// insert resumed task into tasks READY queue
-// force context switch if priority of resumed task is greater then priority of the current task and kernel works in preemptive mode
-// return 'tsk'
-tsk_t *core_tsk_wakeup( tsk_t *tsk, int event );
-
 // resume execution of first task from blocked queue 'que' with event value 'event'
 // remove resumed task from guard object blocked queue
 // remove resumed task from timers READY queue
 // insert resumed task into tasks READY queue
 // force context switch if priority of resumed task is greater then priority of the current task and kernel works in preemptive mode
 // return 'tsk'
-__STATIC_INLINE
-tsk_t *core_one_wakeup( tsk_t **que, int event )
-{
-	return core_tsk_wakeup(*que, event);
-}
+tsk_t *core_one_wakeup( tsk_t **que, int event );
 
 // resume execution of no more than 'num' tasks from blocked queue 'que' with event value 'event'
 // remove resumed tasks from guard object blocked queue

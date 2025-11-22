@@ -105,9 +105,11 @@ void core_tsk_remove( tsk_t *tsk )
 void core_tsk_append( tsk_t **que, tsk_t *tsk )
 {
 	tsk->guard = que;
-	tsk->obj.queue = NULL;
+
 	while (*que)
 		que = &(*que)->obj.queue;
+
+	tsk->obj.queue = NULL;
 	*que = tsk;
 }
 
@@ -116,10 +118,11 @@ void core_tsk_append( tsk_t **que, tsk_t *tsk )
 void core_tsk_wakeup( tsk_t *tsk, int event )
 {
 	tsk_t **que = tsk->guard;
+
 	if (que)
 	{
-		tsk->guard = 0;
 		tsk->delay = 0;
+		tsk->guard = 0;
 		tsk->event = event;
 		while (*que != tsk)
 			que = &(*que)->obj.queue;
@@ -131,7 +134,8 @@ void core_tsk_wakeup( tsk_t *tsk, int event )
 
 int core_tsk_wait( tsk_t **que, tsk_t *tsk )
 {
-	core_tsk_append(que, tsk);
+	if (que)
+		core_tsk_append(que, tsk);
 
 	if (tsk == System.cur)
 		core_ctx_switch();
@@ -184,10 +188,10 @@ tsk_t *core_one_wakeup( tsk_t **que, int event )
 
 	if (tsk)
 	{
-		*que = tsk->obj.queue;
 		tsk->guard = 0;
 		tsk->delay = 0;
 		tsk->event = event;
+		*que = tsk->obj.queue;
 	}
 
 	return tsk;

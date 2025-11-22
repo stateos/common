@@ -65,7 +65,6 @@ struct __tsk
 	cnt_t    delay; // inherited from timer
 	cnt_t    slice;	// time slice
 
-	tsk_t ** back;  // previous object in the BLOCKED queue
 	stk_t  * stack; // base of stack
 	size_t   size;  // size of stack (in bytes)
 	void   * sp;    // current stack pointer
@@ -175,8 +174,8 @@ typedef struct __tsk tsk_id [];
  *
  ******************************************************************************/
 
-#define               _TSK_INIT( _prio, _proc, _stack, _size )                                               \
-                       { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, NULL, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
+#define               _TSK_INIT( _prio, _proc, _stack, _size )                                                            \
+                       { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
                        { NULL, NULL }, { 0, NULL, { NULL, NULL } }, { { 0 } }, _PORT_DATA_INIT() }
 
 /******************************************************************************

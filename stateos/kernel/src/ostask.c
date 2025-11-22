@@ -625,7 +625,7 @@ void priv_sig_deliver( void )
 	cur->sp = cur->sig.backup.sp;
 	cur->sig.backup.sp = 0;
 
-	core_tsk_wait(cur, cur->sig.backup.guard);
+	core_tsk_wait(cur->sig.backup.guard, cur);
 
 	assert(false); // system cannot return here
 }
