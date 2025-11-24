@@ -105,11 +105,11 @@ void core_tsk_remove( tsk_t *tsk )
 void core_tsk_append( tsk_t **que, tsk_t *tsk )
 {
 	tsk->guard = que;
+	tsk->obj.queue = NULL; // must be before while loop
 
 	while (*que)
 		que = &(*que)->obj.queue;
 
-	tsk->obj.queue = NULL;
 	*que = tsk;
 }
 
