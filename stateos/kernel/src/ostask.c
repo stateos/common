@@ -99,6 +99,8 @@ void tsk_init( tsk_t *tsk, unsigned prio, fun_t *proc, stk_t *stack, size_t size
 		priv_wrk_init(tsk, prio, proc, NULL, stack, size, NULL, false);
 		if (proc)
 		{
+			tsk->start = core_sys_time();
+
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
 		}
@@ -121,6 +123,8 @@ tsk_t *wrk_create( unsigned prio, fun_t *proc, size_t size, bool detached, bool 
 		tsk = priv_wrk_create(prio, proc, NULL, size, detached);
 		if (tsk && autostart)
 		{
+			tsk->start = core_sys_time();
+
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
 		}
@@ -144,6 +148,8 @@ tsk_t *tsk_setup( unsigned prio, fun_a *proc, void *arg, size_t size )
 		tsk = priv_wrk_create(prio, (fun_t *)proc, arg, size, false);
 		if (tsk && proc)
 		{
+			tsk->start = core_sys_time();
+
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
 		}
@@ -166,6 +172,8 @@ void tsk_start( tsk_t *tsk )
 	{
 		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
+			tsk->start = core_sys_time();
+
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
 		}
@@ -187,6 +195,7 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc )
 		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
 			tsk->proc = proc;
+			tsk->start = core_sys_time();
 
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);
@@ -210,6 +219,7 @@ void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg )
 		{
 			tsk->proc = (fun_t *)proc;
 			tsk->arg  = arg;
+			tsk->start = core_sys_time();
 
 			core_ctx_init(tsk);
 			core_tsk_insert(tsk);

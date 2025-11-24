@@ -17,7 +17,7 @@ LIB_DIRS   ?=
 #----------------------------------------------------------#
 
 GCC        ?= # toolchain path
-OPTF       ?= # opimization level (0..3, s, fast, g)
+OPTF       ?= # optimization level (0..3, s, fast, g)
 STDC       ?= 23 # c dialect
 STDCXX     ?= 23 # c++ dialect
 
