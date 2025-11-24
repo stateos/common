@@ -453,7 +453,7 @@ int core_tsk_waitUntil( tsk_t **que, cnt_t time )
 	cur->start = core_sys_time();
 	cur->delay = time - cur->start;
 
-	if (cur->delay - 1U > CNT_LIMIT)
+	if (cur->delay - 1U > CNT_LIMIT) // include 0
 		return E_TIMEOUT;
 
 	return core_tsk_wait(que, cur);

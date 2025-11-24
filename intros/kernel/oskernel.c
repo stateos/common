@@ -174,7 +174,7 @@ int core_tsk_waitUntil( tsk_t **que, cnt_t time )
 
 	cur->start = core_sys_time();
 	cur->delay = time - cur->start;
-	if (cur->delay - 1U > CNT_LIMIT)
+	if (cur->delay > CNT_LIMIT)
 		cur->delay = 0;
 
 	return core_tsk_wait(que, cur);
