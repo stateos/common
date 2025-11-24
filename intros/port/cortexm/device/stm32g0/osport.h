@@ -2,8 +2,8 @@
 
     @file    IntrOS: osport.h
     @author  Rajmund Szymanski
-    @date    29.03.2020
-    @brief   IntrOS port definitions for STM32L1 uC.
+    @date    14.10.2022
+    @brief   IntrOS port definitions for STM32G0 uC.
 
  ******************************************************************************
 
@@ -32,7 +32,7 @@
 #ifndef __INTROSPORT_H
 #define __INTROSPORT_H
 
-#include <stm32l1xx.h>
+#include "stm32g0xx.h"
 #ifndef   NOCONFIG
 #include "osconfig.h"
 #endif
@@ -46,7 +46,7 @@ extern "C" {
 /* -------------------------------------------------------------------------- */
 
 #ifndef CPU_FREQUENCY
-#define CPU_FREQUENCY  32000000 /* Hz */
+#define CPU_FREQUENCY  64000000 /* Hz */
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -88,9 +88,9 @@ extern "C" {
 #if HW_TIMER_SIZE >= OS_TIMER_SIZE
 
 __STATIC_INLINE
-uint16_t port_sys_time( void )
+uint32_t port_sys_time( void )
 {
-	return TIM2->CNT;
+	return TIM7->CNT;
 }
 
 #endif

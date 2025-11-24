@@ -37,6 +37,7 @@
 #include "osconfig.h"
 #endif
 #include "osdefs.h"
+#include "osmpu.h"
 
 #ifdef __cplusplus
 extern "C" {
