@@ -2,7 +2,7 @@
 
     @file    IntrOS: oscore.c
     @author  Rajmund Szymanski
-    @date    29.03.2020
+    @date    24.11.2025
     @brief   IntrOS port file for ARM Cotrex-M uC.
 
  ******************************************************************************
@@ -31,6 +31,7 @@
 
 #include "oskernel.h"
 
+#if __GNUC__ < 12
 /* -------------------------------------------------------------------------- */
 
 #if __FPU_USED
@@ -42,7 +43,7 @@ int setjmp( jmp_buf buf )
 	(
 "	mov    ip,    sp             \n"
 "	stmia  r0!, { r4-r11,ip,lr } \n"
-"	vstmia r0!, { s16-s31 }      \n"
+"	vstmia r0,  { d8-d15 }       \n"
 "	movs   r0,  # 0              \n"
 "	bx     lr                    \n"
 ::	"r" (buf)
@@ -61,8 +62,8 @@ void longjmp( jmp_buf buf, int val )
 	__asm volatile
 	(
 "	ldmia  r0!, { r4-r11,ip,lr } \n"
-"	vldmia r0!, { s16-s31 }      \n"
 "	mov    sp,    ip             \n"
+"	vldmia r0,  { d8-d15 }       \n"
 "	movs   r0,    r1             \n"
 "	it     eq                    \n"
 "	moveq  r0,  # 1              \n"
@@ -74,3 +75,4 @@ void longjmp( jmp_buf buf, int val )
 #endif
 
 /* -------------------------------------------------------------------------- */
+#endif
