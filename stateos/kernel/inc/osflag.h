@@ -461,24 +461,24 @@ struct Flag : public __flg
 	Flag& operator=( Flag&& ) = delete;
 	Flag& operator=( const Flag& ) = delete;
 
-	void     reset    ()                                               {        flg_reset    (this); }
-	void     kill     ()                                               {        flg_kill     (this); }
-	void     destroy  ()                                               {        flg_destroy  (this); }
-	unsigned take     ( unsigned _flags, char _mode = flgAll )         { return flg_take     (this, _flags, _mode); }
-	unsigned tryWait  ( unsigned _flags, char _mode = flgAll )         { return flg_tryWait  (this, _flags, _mode); }
-	unsigned takeISR  ( unsigned _flags, char _mode = flgAll )         { return flg_takeISR  (this, _flags, _mode); }
+	void     reset    ()                                                   {        flg_reset    (this); }
+	void     kill     ()                                                   {        flg_kill     (this); }
+	void     destroy  ()                                                   {        flg_destroy  (this); }
+	unsigned take     ( unsigned _flags, unsigned _mode = flgAll )         { return flg_take     (this, _flags, _mode); }
+	unsigned tryWait  ( unsigned _flags, unsigned _mode = flgAll )         { return flg_tryWait  (this, _flags, _mode); }
+	unsigned takeISR  ( unsigned _flags, unsigned _mode = flgAll )         { return flg_takeISR  (this, _flags, _mode); }
 	template<typename T>
-	int      waitFor  ( unsigned _flags, char _mode, const T& _delay ) { return flg_waitFor  (this, _flags, _mode, Clock::count(_delay)); }
+	int      waitFor  ( unsigned _flags, unsigned _mode, const T& _delay ) { return flg_waitFor  (this, _flags, _mode, Clock::count(_delay)); }
 	template<typename T>
-	int      waitUntil( unsigned _flags, char _mode, const T& _time )  { return flg_waitUntil(this, _flags, _mode, Clock::until(_time)); }
-	int      wait     ( unsigned _flags, char _mode = flgAll )         { return flg_wait     (this, _flags, _mode); }
-	unsigned give     ( unsigned _flags )                              { return flg_give     (this, _flags); }
-	unsigned set      ( unsigned _flags )                              { return flg_set      (this, _flags); }
-	unsigned giveISR  ( unsigned _flags )                              { return flg_giveISR  (this, _flags); }
-	unsigned clear    ( unsigned _flags )                              { return flg_clear    (this, _flags); }
-	unsigned clearISR ( unsigned _flags )                              { return flg_clearISR (this, _flags); }
-	unsigned get      ()                                               { return flg_get      (this); }
-	unsigned getISR   ()                                               { return flg_getISR   (this); }
+	int      waitUntil( unsigned _flags, unsigned _mode, const T& _time )  { return flg_waitUntil(this, _flags, _mode, Clock::until(_time)); }
+	int      wait     ( unsigned _flags, unsigned _mode = flgAll )         { return flg_wait     (this, _flags, _mode); }
+	unsigned give     ( unsigned _flags )                                  { return flg_give     (this, _flags); }
+	unsigned set      ( unsigned _flags )                                  { return flg_set      (this, _flags); }
+	unsigned giveISR  ( unsigned _flags )                                  { return flg_giveISR  (this, _flags); }
+	unsigned clear    ( unsigned _flags )                                  { return flg_clear    (this, _flags); }
+	unsigned clearISR ( unsigned _flags )                                  { return flg_clearISR (this, _flags); }
+	unsigned get      ()                                                   { return flg_get      (this); }
+	unsigned getISR   ()                                                   { return flg_getISR   (this); }
 
 #if __cplusplus >= 201402L
 	using Ptr = std::unique_ptr<Flag>;
