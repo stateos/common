@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.c
     @author  Rajmund Szymanski
-    @date    10.03.2020
+    @date    26.11.2025
     @brief   DemOS port file for STM32F7 uC.
 
  ******************************************************************************
@@ -32,26 +32,30 @@
 #include "os.h"
 
 /* --------------------------------------------------------------------------------------------- */
-
 #ifndef USE_HAL_DRIVER
 
 volatile
 cnt_t sys_counter = 0;
 
 #endif
-
 /* --------------------------------------------------------------------------------------------- */
+#ifndef USE_HAL_DRIVER
 
+__attribute__((weak))
+void sys_hook( void ); // user function - called from counter interrupt
+
+#endif
+/* --------------------------------------------------------------------------------------------- */
 #ifndef USE_HAL_DRIVER
 
 void SysTick_Handler( void )
 {
 	SysTick->CTRL;
 	sys_counter++;
+	sys_hook();
 }
 
 #endif
-
 /* --------------------------------------------------------------------------------------------- */
 
 void sys_init( void )

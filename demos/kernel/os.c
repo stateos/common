@@ -77,8 +77,6 @@ void tsk_start( tsk_t *tsk )
 	static
 	tsk_t *tail = &MAIN;
 
-	sys_init();
-	
 	if (tsk->id == ID_RIP && tsk->function != NULL)
 	{
 		tsk->state = 0;
@@ -91,6 +89,14 @@ void tsk_start( tsk_t *tsk )
 			tail = tsk;
 		}
 	}
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void sys_delay( cnt_t delay )
+{
+	cnt_t start = sys_time();
+	while (sys_time() - start + 1 <= delay);
 }
 
 /* --------------------------------------------------------------------------------------------- */

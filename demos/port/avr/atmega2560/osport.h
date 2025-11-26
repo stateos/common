@@ -3,7 +3,7 @@
     @file    DemOS: osport.h
     @author  Rajmund Szymanski
     @date    22.03.2023
-    @brief   DemOS port definitions for ATtiny817 uC.
+    @brief   DemOS port definitions for ATmega2560 uC.
 
  ******************************************************************************
 

@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.c
     @author  Rajmund Szymanski
-    @date    22.03.2023
+    @date    26.11.2025
     @brief   DemOS port file for ATtiny817 uC.
 
  ******************************************************************************
@@ -41,7 +41,7 @@ cnt_t sys_counter = 0;
 /* --------------------------------------------------------------------------------------------- */
 
 __attribute__((weak))
-void sys_hook( void ) {}  // user function - called from counter interrupt
+void sys_hook( void ); // user function - called from counter interrupt
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -54,33 +54,19 @@ ISR( TCA0_OVF_vect )
 
 /* --------------------------------------------------------------------------------------------- */
 
-#define PRESCALER 16
-
-static_assert(((F_CPU) / (PRESCALER) / 1000UL) * (PRESCALER) * 1000UL == (F_CPU), "prescaler too large");
-
-#define TCA_SINGLE_CLKSEL_DIV_cc(prescaler) TCA_SINGLE_CLKSEL_DIV##prescaler##_gc
-#define TCA_SINGLE_CLKSEL_DIV_gc(prescaler) TCA_SINGLE_CLKSEL_DIV_cc(prescaler)
-
-/* --------------------------------------------------------------------------------------------- */
-
-static void port_init( void )
+void sys_init( void )
 {
+	#define PRESCALER 16
+	static_assert(((F_CPU) / (PRESCALER) / 1000UL) * (PRESCALER) * 1000UL == (F_CPU), "prescaler too large");
+	#define TCA_SINGLE_CLKSEL_DIV_cc(prescaler) TCA_SINGLE_CLKSEL_DIV##prescaler##_gc
+	#define TCA_SINGLE_CLKSEL_DIV_gc(prescaler) TCA_SINGLE_CLKSEL_DIV_cc(prescaler)
+
 	TCA0.SINGLE.PER     = F_CPU / (PRESCALER) / 1000 - 1;
 	TCA0.SINGLE.CTRLB   = TCA_SINGLE_WGMODE_NORMAL_gc;
-	TCA0.SINGLE.CTRLA   = TCA_SINGLE_CLKSEL_DIV_gc(PRESCALER) |
-	                      TCA_SINGLE_ENABLE_bm;
+	TCA0.SINGLE.CTRLA   = TCA_SINGLE_CLKSEL_DIV_gc(PRESCALER) | TCA_SINGLE_ENABLE_bm;
 	TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;
 
 	sei();
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-void sys_init( void )
-{
-	static OS_ONE(init);
-
-	one_call(init, port_init);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -92,23 +78,6 @@ cnt_t sys_time( void )
 	cnt = sys_counter;
 	sei();
 	return cnt;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-static cnt_t get_counter( void )
-{
-	cnt_t result;
-	do result = sys_counter; while (result != sys_counter);
-	return result;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-void sys_delay( cnt_t delay )
-{
-	cnt_t start = get_counter();
-	while (get_counter() - start + 1 <= delay);
 }
 
 /* --------------------------------------------------------------------------------------------- */

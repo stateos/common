@@ -2,7 +2,7 @@
 
     @file    DemOS: osport.c
     @author  Rajmund Szymanski
-    @date    10.03.2020
+    @date    26.11.2025
     @brief   DemOS port file for ST7 uC.
 
  ******************************************************************************
