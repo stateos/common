@@ -33,18 +33,14 @@
 
 /* --------------------------------------------------------------------------------------------- */
 
-volatile
-cnt_t sys_counter = 0;
-
-/* --------------------------------------------------------------------------------------------- */
-
 @interrupt
 void TIMERA_IRQHandler(void)
 {
 	TASR;     // clear OCF1, step 1
 	TAOC1R;   // clear OCF1, step 2
 	TACR = 0; // reset free running counter
-	sys_counter++;
+
+	sys.counter++;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -64,9 +60,8 @@ void sys_init( void )
 cnt_t sys_time( void )
 {
 	cnt_t cnt;
-	disableInterrupts();
-	cnt = sys_counter;
-	enableInterrupts();
+	do cnt = sys.counter;
+	while (cnt != sys.counter);
 	return cnt;
 }
 

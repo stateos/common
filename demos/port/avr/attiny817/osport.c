@@ -35,11 +35,6 @@
 
 /* --------------------------------------------------------------------------------------------- */
 
-volatile
-cnt_t sys_counter = 0;
-
-/* --------------------------------------------------------------------------------------------- */
-
 __attribute__((weak))
 void sys_hook( void ); // user function - called from counter interrupt
 
@@ -48,7 +43,8 @@ void sys_hook( void ); // user function - called from counter interrupt
 ISR( TCA0_OVF_vect )
 {
 	TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
-	sys_counter++;
+
+	sys.counter++;
 	sys_hook();
 }
 
@@ -74,9 +70,8 @@ void sys_init( void )
 cnt_t sys_time( void )
 {
 	cnt_t cnt;
-	cli();
-	cnt = sys_counter;
-	sei();
+	do cnt = sys.counter;
+	while (cnt != sys.counter);
 	return cnt;
 }
 

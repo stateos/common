@@ -43,6 +43,19 @@ extern "C" {
 typedef uint32_t cnt_t;
 
 /* --------------------------------------------------------------------------------------------- */
+#ifdef USE_HAL_DRIVER
+
+static_assert(sizeof(cnt_t)==sizeof(uint32_t));
+
+#endif
+/* --------------------------------------------------------------------------------------------- */
+#ifdef USE_HAL_DRIVER
+
+static inline
+cnt_t sys_time( void ) { return HAL_GetTick(); }
+
+#endif
+/* --------------------------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
 }

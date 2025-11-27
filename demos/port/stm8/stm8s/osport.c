@@ -33,15 +33,11 @@
 
 /* --------------------------------------------------------------------------------------------- */
 
-volatile
-cnt_t sys_counter = 0;
-
-/* --------------------------------------------------------------------------------------------- */
-
 INTERRUPT_HANDLER(TIM4_UPD_OVF_IRQHandler, 23)
 {
 	TIM4->SR1 = (uint8_t) ~TIM4_SR1_UIF; // clear timer's status register
-	sys_counter++;
+
+	sys.counter++;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -66,9 +62,8 @@ void sys_init( void )
 cnt_t sys_time( void )
 {
 	cnt_t cnt;
-	disableInterrupts();
-	cnt = sys_counter;
-	enableInterrupts();
+	do cnt = sys.counter;
+	while (cnt != sys.counter);
 	return cnt;
 }
 

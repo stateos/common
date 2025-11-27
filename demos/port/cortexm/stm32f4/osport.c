@@ -34,13 +34,6 @@
 /* --------------------------------------------------------------------------------------------- */
 #ifndef USE_HAL_DRIVER
 
-volatile
-cnt_t sys_counter = 0;
-
-#endif
-/* --------------------------------------------------------------------------------------------- */
-#ifndef USE_HAL_DRIVER
-
 __attribute__((weak))
 void sys_hook( void ); // user function - called from counter interrupt
 
@@ -51,7 +44,8 @@ void sys_hook( void ); // user function - called from counter interrupt
 void SysTick_Handler( void )
 {
 	SysTick->CTRL;
-	sys_counter++;
+
+	sys.counter++;
 	sys_hook();
 }
 
@@ -66,16 +60,24 @@ void sys_init( void )
 }
 
 /* --------------------------------------------------------------------------------------------- */
+#ifndef USE_HAL_DRIVER
 
 cnt_t sys_time( void )
 {
 	cnt_t cnt;
-#ifndef USE_HAL_DRIVER
-	cnt = sys_counter;
-#else
-	cnt = HAL_GetTick();
-#endif
+
+	if (sizeof(cnt_t) > sizeof(uint32_t))
+	{
+		do cnt = sys.counter;
+		while (cnt != sys.counter);
+	}
+	else
+	{
+		cnt = sys.counter;
+	}
+
 	return cnt;
 }
 
+#endif
 /* --------------------------------------------------------------------------------------------- */

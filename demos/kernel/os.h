@@ -111,7 +111,7 @@ typedef enum   __tid { ID_RIP = 0, ID_RDY, ID_DLY } tid_t;
 // definition of task structure
 typedef struct __tsk { tmr_t tmr; tid_t id; tag_t state; fun_t *function; struct __tsk *next; } tsk_t;
 // definition of system
-typedef struct __sys { tsk_t *current; bool suspended; } sys_t;
+typedef struct __sys { tsk_t *current; volatile cnt_t counter; bool suspended; } sys_t;
 
 // timer initializer
 #define TMR_INIT()                      { 0, 0 }

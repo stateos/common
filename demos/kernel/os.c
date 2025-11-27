@@ -36,7 +36,7 @@
 static
 tsk_t MAIN = { { 0, 0 }, ID_RIP, 0, NULL, &MAIN };
 
-sys_t sys = { &MAIN, false };
+sys_t sys = { &MAIN, 0, false };
 
 /* -------------------------------------------------------------------------- */
 
@@ -79,6 +79,7 @@ void tsk_start( tsk_t *tsk )
 
 	if (tsk->id == ID_RIP && tsk->function != NULL)
 	{
+		tsk->tmr.start = sys_time();
 		tsk->state = 0;
 		tsk->id = ID_RDY;
 
