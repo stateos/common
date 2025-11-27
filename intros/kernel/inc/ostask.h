@@ -911,10 +911,18 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<class F>
 	TaskT( F&& _proc ):
 	baseTask{_proc, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
+
+#if __cplusplus >= 202002L
+	template<typename F, typename... A>
+	TaskT( F&& _proc, A&&... _args ):
+	TaskT<size_>{[proc = std::forward<F>(_proc), ...args = std::forward<A>(_args)]() mutable
+		{ std::invoke(std::move(proc), std::unwrap_reference_t<A>(std::move(args))...); }} {}
+#else
 #if __cplusplus >= 201402L
 	template<typename F, typename... A>
 	TaskT( F&& _proc, A&&... _args ):
 	TaskT<size_>{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)} {}
+#endif
 #endif
 
 	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
@@ -950,7 +958,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<typename F, typename... A> static
 	TaskT<size_> Make( F&& _proc, A&&... _args )
 	{
-		return Make(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
+		return { std::forward<F>(_proc), std::forward<A>(_args)... };
 	}
 #endif
 
@@ -982,7 +990,9 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<typename F, typename... A> static
 	TaskT<size_> Start( F&& _proc, A&&... _args )
 	{
-		return Start(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...));
+		TaskT<size_> tsk { std::forward<F>(_proc), std::forward<A>(_args)... };
+		tsk.start();
+		return tsk;
 	}
 #endif
 };
