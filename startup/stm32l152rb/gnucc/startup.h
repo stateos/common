@@ -31,9 +31,8 @@
  Additional definitions
 *******************************************************************************/
 
-#define __WEAK_ALIAS(function) __attribute__ ((weak, alias(#function)))
-#define __VECTORS              __attribute__ ((used, section(".vectors")))
-#define __CAST(sp)             (void(*)(void))(intptr_t)(sp)
+#define __VECTORS         __attribute__ ((used, section(".vectors")))
+#define __CAST(sp)        (void(*)(void))(intptr_t)(sp)
 
 /*******************************************************************************
  Prototypes of external functions
@@ -56,32 +55,6 @@ extern char __data_start [];
 extern char __data_end   [];
 extern char __bss_start  [];
 extern char __bss_end    [];
-
-/*******************************************************************************
- Default ctors and dtors procedures
-*******************************************************************************/
-
-typedef void ctor(void);
-extern ctor *__init_array_start[];
-extern ctor *__init_array_end[];
-
-__WEAK
-void __libc_init_array(void)
-{
-	ctor **init = __init_array_start;
-	while (init < __init_array_end) { (**init)(); init++; }
-}
-
-typedef void dtor(void);
-extern dtor *__fini_array_start[];
-extern dtor *__fini_array_end[];
-
-__WEAK
-void __libc_fini_array(void)
-{
-	dtor **fini = __fini_array_start;
-	while (fini < __fini_array_end) { (**fini)(); fini++; }
-}
 
 /*******************************************************************************
  Default reset procedures

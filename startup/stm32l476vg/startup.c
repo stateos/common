@@ -70,29 +70,6 @@ void _exit( int code )
 }
 
 /*******************************************************************************
- Default memset, memcpy procedures
-*******************************************************************************/
-
-__WEAK
-void* memcpy(void *dst, const void *src, size_t len)
-{
-	char *mem = dst;
-	const char *ptr = src;
-	while ((int)--len >= 0)
-		mem[len] = ptr[len];
-	return dst;
-}
-
-__WEAK
-void* memset(void *dst, int val, size_t len)
-{
-	char *mem = dst;
-	while ((int)--len >= 0)
-		mem[len] = (char)val;
-	return dst;
-}
-
-/*******************************************************************************
  Specific definitions for the compiler
 *******************************************************************************/
 

@@ -51,10 +51,9 @@ void SystemInit( void )
 	RCC->PLLCFGR = (PLL_M<<0) | (PLL_N<<6) | (((PLL_P>>1)-1)<<16) | RCC_PLLCFGR_PLLSRC_HSI | (PLL_Q<<24);
 #else
 #ifdef  PLL_SOURCE_HSE_BYPASS
-	RCC->CR |= RCC_CR_HSEON | RCC_CR_HSEBYP;
-#else
-	RCC->CR |= RCC_CR_HSEON;
+	RCC->CR |= RCC_CR_HSEBYP;
 #endif//PLL_SOURCE_HSE_BYPASS
+	RCC->CR |= RCC_CR_HSEON;
 	while ((RCC->CR & RCC_CR_HSERDY) != RCC_CR_HSERDY);
 
 	RCC->PLLCFGR = (PLL_M<<0) | (PLL_N<<6) | (((PLL_P>>1)-1)<<16) | RCC_PLLCFGR_PLLSRC_HSE | (PLL_Q<<24);
