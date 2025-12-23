@@ -107,4 +107,15 @@ void __emutls_register_common(void *ptr, size_t size, size_t align, void *init)
 		obj->align = align;
 }
 
+#if __GNUC__ >= 15
+
+extern"C"
+void *__aeabi_read_tp()
+{
+	static char tls[OS_STACK_SIZE] __attribute__((aligned(8)));
+	return tls;
+}
+
+#endif
+
 #endif // _GLIBCXX_HAS_GTHREADS

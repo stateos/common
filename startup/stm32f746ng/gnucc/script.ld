@@ -138,6 +138,16 @@ SECTIONS
 
 	__bss_size = SIZEOF(.bss);
 
+	.tbss (NOLOAD) : ALIGN(8)
+	{
+	    __tbss_start = .;
+    	*(.tbss .tbss.* .gnu.linkonce.tb.*)
+	    *(.tcommon)
+    	__tbss_end = .;
+	} > RAM
+
+	__tbss_size = SIZEOF(.tbss);
+
 	.noinit (NOLOAD) : ALIGN(4)
 	{
 		__noinit_start = .;

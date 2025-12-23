@@ -47,16 +47,6 @@ __WEAK __USED void __libc_fini_array         ( void );
                int main                      ( void );
 
 /*******************************************************************************
- Symbols defined in linker script
-*******************************************************************************/
-
-extern char __data_source[];
-extern char __data_start [];
-extern char __data_end   [];
-extern char __bss_start  [];
-extern char __bss_end    [];
-
-/*******************************************************************************
  Default reset procedures
 *******************************************************************************/
 
@@ -67,9 +57,19 @@ void __main( void )
 	/* Early hardware init hook */
 	hardware_init_hook();
 	/* Initialize the data segment */
+	extern char __data_source[];
+	extern char __data_start [];
+	extern char __data_end   [];
 	memcpy(__data_start, __data_source, (size_t)(__data_end - __data_start));
 	/* Zero fill the bss segment */
+	extern char __bss_start  [];
+	extern char __bss_end    [];
 	memset(__bss_start, 0, (size_t)(__bss_end - __bss_start));
+#if __GNUC__ >= 15
+	extern char __tbss_start [];
+	extern char __tbss_end   [];
+	memset(__tbss_start, 0, (size_t)(__tbss_end - __tbss_start));
+#endif
 	/* Early software init hook */
 	software_init_hook();
 	/* Call global & static constructors */
