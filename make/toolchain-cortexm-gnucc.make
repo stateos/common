@@ -12,9 +12,9 @@ STLINK     := st-link_cli
 FLASH      := st-flash
 CUBE       := stm32_programmer_cli
 QEMU       := qemu-system-gnuarmeclipse
-OPTF       ?=
-STDC       ?= 20
-STDCXX     ?= 20
+OPTF       ?= # optimization level (0..3, s, fast, g)
+STDC       ?= # c dialect
+STDCXX     ?= # c++ dialect
 
 #----------------------------------------------------------#
 
@@ -57,7 +57,7 @@ COMMON_F   += -mthumb -mcpu=$(TARGET_CORE)
 COMMON_F   += -ffunction-sections -fdata-sections
 COMMON_F   += -MD -MP
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
-AS_FLAGS   += -xassembler-with-cpp
+AS_FLAGS   += -x assembler-with-cpp
 C_FLAGS    += -Wlogical-op
 CXX_FLAGS  += -Wlogical-op -fno-use-cxa-atexit
 F_FLAGS    += -cpp
@@ -65,11 +65,19 @@ LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)
+ifneq ($(STDC),)
 C_FLAGS    += -std=c$(STDC:20=2x)
+endif
+ifneq ($(STDCXX),)
 CXX_FLAGS  += -std=c++$(STDCXX:20=2a)
+endif
 else
+ifneq ($(STDC),)
 C_FLAGS    += -std=gnu$(STDC:20=2x)
+endif
+ifneq ($(STDCXX),)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
+endif
 endif
 ifneq ($(filter main_stack_size%,$(DEFS)),)
 LD_FLAGS   += -Wl,--defsym=$(filter main_stack_size%,$(DEFS))

@@ -8,9 +8,9 @@ PROJECT    ?= # project name
 BUILD      ?= # build folder name
 GCC        ?= # toolchain path
 PROGRAM    := atprogram
-OPTF       ?=
-STDC       ?= 11
-STDCXX     ?= 11
+OPTF       ?= # optimization level (0..3, s, fast, g)
+STDC       ?= # c dialect
+STDCXX     ?= # c++ dialect
 
 #----------------------------------------------------------#
 
@@ -59,11 +59,19 @@ LD_FLAGS   += -Wl,-Map=$(MAP),--gc-sections
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)
+ifneq ($(STDC),)
 C_FLAGS    += -std=c$(STDC:20=2x)
+endif
+ifneq ($(STDCXX),)
 CXX_FLAGS  += -std=c++$(STDCXX:20=2a)
+endif
 else
+ifneq ($(STDC),)
 C_FLAGS    += -std=gnu$(STDC:20=2x)
+endif
+ifneq ($(STDCXX),)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
+endif
 endif
 ifneq ($(filter EXCEPTIONS,$(DEFS)),)
 $(info Using exceptions)

@@ -17,9 +17,9 @@ LIB_DIRS   ?=
 #----------------------------------------------------------#
 
 GCC        ?= # toolchain path
-OPTF       ?= # optimization level (0..3, s, fast, g)
-STDC       ?= 23 # c dialect
-STDCXX     ?= 23 # c++ dialect
+OPTF       ?= # opimization level (0..3, s, fast, g)
+STDC       ?= # c dialect
+STDCXX     ?= # c++ dialect
 
 ############################################################
 
@@ -80,7 +80,7 @@ COMMON_F   += -MD -MP
 ifeq  ($(filter CLANG,$(DEFS)),)
 COMMON_F   +=#-Wa,-amhls=$(@:.o=.lst)
 endif # clang
-ASFLAGS    += -Xassembler-with-cpp
+ASFLAGS    += -x assembler-with-cpp
 CFLAGS     += -Wlogical-op
 CXXFLAGS   += -Wlogical-op -fconcepts -fmodules-ts
 ifneq ($(filter ISO,$(DEFS)),)
