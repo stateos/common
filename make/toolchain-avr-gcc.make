@@ -9,8 +9,8 @@ BUILD      ?= # build folder name
 GCC        ?= # toolchain path
 PROGRAM    := atprogram
 OPTF       ?= # optimization level (0..3, s, fast, g)
-STDC       ?= # c dialect
-STDCXX     ?= # c++ dialect
+STDC       ?= 23 # c dialect
+STDCXX     ?= 23 # c++ dialect
 
 #----------------------------------------------------------#
 
