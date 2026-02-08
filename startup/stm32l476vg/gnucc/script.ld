@@ -7,7 +7,7 @@
 
  ******************************************************************************
 
-   Copyright (c) 2018-2023 Rajmund Szymanski. All rights reserved.
+   Copyright (c) 2018-2025 Rajmund Szymanski. All rights reserved.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -175,15 +175,17 @@ SECTIONS
 
 	__initial_msp = __main_stack_size ? __main_stack_end : __heap_end;
 	__initial_sp  = __proc_stack_size ? __proc_stack_end : __initial_msp;
+
+	.ARM.attributes 0 : { *(.ARM.attributes) }
 }
 
 PROVIDE(__data_start__ = __data_start);
 PROVIDE(__data_end__   = __data_end);
 PROVIDE(__bss_start__  = __bss_start);
 PROVIDE(__bss_end__    = __bss_end);
-PROVIDE(__end__        = __heap_start);
 PROVIDE(__heap_base__  = __heap_start);
 PROVIDE(__heap_end__   = __heap_end);
 PROVIDE(__heap_base    = __heap_start);
 PROVIDE(__heap_limit   = __heap_end);
+PROVIDE(__end__        = __heap_start);
 PROVIDE(__stack        = __initial_sp);

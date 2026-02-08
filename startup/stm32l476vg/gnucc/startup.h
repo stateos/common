@@ -47,6 +47,42 @@ __WEAK __USED void __libc_fini_array         ( void );
                int main                      ( void );
 
 /*******************************************************************************
+ Symbols defined in linker script
+*******************************************************************************/
+
+extern void (*__preinit_array_start[])(void) __WEAK;
+extern void (*__preinit_array_end  [])(void) __WEAK;
+extern void (*__init_array_start   [])(void) __WEAK;
+extern void (*__init_array_end     [])(void) __WEAK;
+extern void (*__fini_array_start   [])(void) __WEAK;
+extern void (*__fini_array_end     [])(void) __WEAK;
+
+extern char __data_source[];
+extern char __data_start [];
+extern char __data_end   [];
+extern char __bss_start  [];
+extern char __bss_end    [];
+
+/*******************************************************************************
+ Default ctors and dtors procedures
+*******************************************************************************/
+/*
+__WEAK
+void __libc_init_array(void)
+{
+	void (**init)(void);
+	for (init = __preinit_array_start; init < __preinit_array_end; init++) (**init)();
+	for (init = __init_array_start; init < __init_array_end; init++) (**init)();
+}
+
+__WEAK
+void __libc_fini_array(void)
+{
+	void (**fini)(void);
+	for (fini = __fini_array_start; fini < __fini_array_end; fini++) (**fini)();
+}
+*/
+/*******************************************************************************
  Default reset procedures
 *******************************************************************************/
 
@@ -57,19 +93,9 @@ void __main( void )
 	/* Early hardware init hook */
 	hardware_init_hook();
 	/* Initialize the data segment */
-	extern char __data_source[];
-	extern char __data_start [];
-	extern char __data_end   [];
 	memcpy(__data_start, __data_source, (size_t)(__data_end - __data_start));
 	/* Zero fill the bss segment */
-	extern char __bss_start  [];
-	extern char __bss_end    [];
 	memset(__bss_start, 0, (size_t)(__bss_end - __bss_start));
-#if __GNUC__ >= 15
-	extern char __tbss_start [];
-	extern char __tbss_end   [];
-	memset(__tbss_start, 0, (size_t)(__tbss_end - __tbss_start));
-#endif
 	/* Early software init hook */
 	software_init_hook();
 	/* Call global & static constructors */
