@@ -117,33 +117,33 @@ void Reset_Handler( void )
 *******************************************************************************/
 
 /* Core exception handlers */
-__WEAK_ALIAS(Fault_Handler) void NMI_Handler                   (void);
-__WEAK_ALIAS(Fault_Handler) void HardFault_Handler             (void);
-__WEAK_ALIAS(Fault_Handler) void SVC_Handler                   (void);
-__WEAK_ALIAS(Fault_Handler) void PendSV_Handler                (void);
-__WEAK_ALIAS(Fault_Handler) void SysTick_Handler               (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void NMI_Handler                   (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void HardFault_Handler             (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void SVC_Handler                   (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void PendSV_Handler                (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void SysTick_Handler               (void);
 
 /* External interrupt handlers */
-__WEAK_ALIAS(Fault_Handler) void WWDG_IRQHandler               (void);
-__WEAK_ALIAS(Fault_Handler) void RTC_IRQHandler                (void);
-__WEAK_ALIAS(Fault_Handler) void FLASH_IRQHandler              (void);
-__WEAK_ALIAS(Fault_Handler) void RCC_IRQHandler                (void);
-__WEAK_ALIAS(Fault_Handler) void EXTI0_1_IRQHandler            (void);
-__WEAK_ALIAS(Fault_Handler) void EXTI2_3_IRQHandler            (void);
-__WEAK_ALIAS(Fault_Handler) void EXTI4_15_IRQHandler           (void);
-__WEAK_ALIAS(Fault_Handler) void DMA1_Channel1_IRQHandler      (void);
-__WEAK_ALIAS(Fault_Handler) void DMA1_Channel2_3_IRQHandler    (void);
-__WEAK_ALIAS(Fault_Handler) void DMA1_Channel4_5_IRQHandler    (void);
-__WEAK_ALIAS(Fault_Handler) void ADC1_IRQHandler               (void);
-__WEAK_ALIAS(Fault_Handler) void TIM1_BRK_UP_TRG_COM_IRQHandler(void);
-__WEAK_ALIAS(Fault_Handler) void TIM1_CC_IRQHandler            (void);
-__WEAK_ALIAS(Fault_Handler) void TIM3_IRQHandler               (void);
-__WEAK_ALIAS(Fault_Handler) void TIM14_IRQHandler              (void);
-__WEAK_ALIAS(Fault_Handler) void TIM16_IRQHandler              (void);
-__WEAK_ALIAS(Fault_Handler) void TIM17_IRQHandler              (void);
-__WEAK_ALIAS(Fault_Handler) void I2C1_IRQHandler               (void);
-__WEAK_ALIAS(Fault_Handler) void SPI1_IRQHandler               (void);
-__WEAK_ALIAS(Fault_Handler) void USART1_IRQHandler             (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void WWDG_IRQHandler               (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void RTC_IRQHandler                (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void FLASH_IRQHandler              (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void RCC_IRQHandler                (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void EXTI0_1_IRQHandler            (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void EXTI2_3_IRQHandler            (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void EXTI4_15_IRQHandler           (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void DMA1_Channel1_IRQHandler      (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void DMA1_Channel2_3_IRQHandler    (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void DMA1_Channel4_5_IRQHandler    (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void ADC1_IRQHandler               (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void TIM1_BRK_UP_TRG_COM_IRQHandler(void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void TIM1_CC_IRQHandler            (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void TIM3_IRQHandler               (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void TIM14_IRQHandler              (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void TIM16_IRQHandler              (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void TIM17_IRQHandler              (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void I2C1_IRQHandler               (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void SPI1_IRQHandler               (void);
+__WEAK __ALIAS("Fault_Handler")(Fault_Handler) void USART1_IRQHandler             (void);
 
 /*******************************************************************************
  Vector table

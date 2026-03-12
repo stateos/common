@@ -11,7 +11,6 @@
  Additional definitions
 *******************************************************************************/
 
-#define __WEAK_ALIAS(function) __attribute__ ((weak, alias(#function)))
 #define __VECTORS              __attribute__ ((used, section(".intvec")))
 #define __CAST(sp)             (void(*)(void))(intptr_t)(sp)
 

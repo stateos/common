@@ -11,7 +11,6 @@
  Additional definitions
 *******************************************************************************/
 
-#define __WEAK_ALIAS(function)   __WEAK
 #define __CAST(sp)                (void(*)(void))(sp)
 
 #ifndef __VECTOR_TABLE
