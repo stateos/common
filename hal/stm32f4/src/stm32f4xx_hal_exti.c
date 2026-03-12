@@ -64,7 +64,7 @@
         (++) Provide exiting handle as parameter.
         (++) Provide pointer on EXTI_ConfigTypeDef structure as second parameter.
 
-    (#) Clear Exti configuration of a dedicated line using HAL_EXTI_GetConfigLine().
+    (#) Clear Exti configuration of a dedicated line using HAL_EXTI_ClearConfigLine().
         (++) Provide exiting handle as parameter.
 
     (#) Register callback to treat Exti interrupts using HAL_EXTI_RegisterCallback().
@@ -75,7 +75,7 @@
 
     (#) Get interrupt pending bit using HAL_EXTI_GetPending().
 
-    (#) Clear interrupt pending bit using HAL_EXTI_GetPending().
+    (#) Clear interrupt pending bit using HAL_EXTI_ClearPending().
 
     (#) Generate software interrupt using HAL_EXTI_GenerateSWI().
 
@@ -469,6 +469,9 @@ uint32_t HAL_EXTI_GetPending(EXTI_HandleTypeDef *hexti, uint32_t Edge)
   uint32_t linepos;
   uint32_t maskline;
 
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(Edge);
+
   /* Check parameters */
   assert_param(IS_EXTI_LINE(hexti->Line));
   assert_param(IS_EXTI_CONFIG_LINE(hexti->Line));
@@ -495,6 +498,9 @@ uint32_t HAL_EXTI_GetPending(EXTI_HandleTypeDef *hexti, uint32_t Edge)
 void HAL_EXTI_ClearPending(EXTI_HandleTypeDef *hexti, uint32_t Edge)
 {
   uint32_t maskline;
+
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(Edge);
 
   /* Check parameters */
   assert_param(IS_EXTI_LINE(hexti->Line));
