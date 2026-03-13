@@ -36,7 +36,7 @@
 /* --------------------------------------------------------------------------------------------- */
 
 __attribute__((weak))
-void sys_hook( void ); // user function - called from counter interrupt
+void sys_hook( void ) {} // user function - called from counter interrupt
 
 /* --------------------------------------------------------------------------------------------- */
 
