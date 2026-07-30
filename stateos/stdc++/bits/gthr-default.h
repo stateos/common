@@ -270,12 +270,10 @@ int   __gthread_setspecific(__gthread_key_t key, const void *ptr);
 } // extern "C"
 //-----------------------------------------------------------------------------
 
-#if !__cpp_lib_atomic_wait
 #include "inc/barrier.hh"
 #include "inc/latch.hh"
 #if !_GLIBCXX_HAVE_POSIX_SEMAPHORE
 #include "inc/semaphore.hh"
-#endif
 #endif
 
 //-----------------------------------------------------------------------------
