@@ -69,32 +69,62 @@ typedef uint32_t              stk_t;
 
 typedef struct __ctx ctx_t;
 
+#if defined(__linux__) || defined(__x86_64__)
+
+// the context does not depend on the internal layout of jmp_buf
+// (glibc mangles the stack pointer and the program counter stored in jmp_buf)
+// buf is filled with a copy of the trampoline context, see osport.c
+
+#if defined(_WIN64)
+// longjmp must not unwind the SEH frames, the task stacks are not the thread stack
+#undef  setjmp
+#define setjmp(BUF) _setjmp((BUF), NULL)
+#endif
+
+#if (defined(__USE_FORTIFY_LEVEL) && (__USE_FORTIFY_LEVEL > 0)) || defined(_WIN64)
+// glibc: __longjmp_chk (_FORTIFY_SOURCE) does not allow to jump to another stack
+// win64: the stack limits of the thread must be updated for the next task
+__NO_RETURN
+void port_longjmp( jmp_buf buf, int val );
+#undef  longjmp
+#define longjmp(BUF, VAL) port_longjmp((BUF), (VAL))
+#endif
+
 struct __ctx
 {
-#ifdef __x86_64
-#error Unsupported cpu architecture!
-#else
-#ifdef __linux__
-	unsigned long Ebx;
-	unsigned long Esi;
-	unsigned long Edi;
-	unsigned long Ebp;
+	jmp_buf       buf;
 	void        * sp;
 	fun_t       * pc;
+#ifdef __cplusplus
+#define _CTX_INIT() { }
 #else
-	unsigned long Ebp;
-	unsigned long Ebx;
-	unsigned long Edi;
-	unsigned long Esi;
-	void        * sp;
-	fun_t       * pc;
-#endif
-#define _CTX_INIT() { 0, 0, 0, 0, NULL, NULL }
+#define _CTX_INIT() { 0 }
 #endif
 };
 
+#else
+
+struct __ctx
+{
+	unsigned long Ebp;
+	unsigned long Ebx;
+	unsigned long Edi;
+	unsigned long Esi;
+	void        * sp;
+	fun_t       * pc;
+#define _CTX_INIT() { 0, 0, 0, 0, NULL, NULL }
+};
+
+#endif
+
 /* -------------------------------------------------------------------------- */
 // init task context
+
+#if defined(__linux__) || defined(__x86_64__)
+
+void port_ctx_init( ctx_t *ctx, stk_t *sp, fun_t *pc );
+
+#else
 
 __STATIC_INLINE
 void port_ctx_init( ctx_t *ctx, stk_t *sp, fun_t *pc )
@@ -104,6 +134,8 @@ void port_ctx_init( ctx_t *ctx, stk_t *sp, fun_t *pc )
 	ctx->sp = sp;
 	ctx->pc = pc;
 }
+
+#endif
 
 /* -------------------------------------------------------------------------- */
 // get current stack pointer

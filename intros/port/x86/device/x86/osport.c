@@ -29,13 +29,98 @@
 
  ******************************************************************************/
 
+#undef  _FORTIFY_SOURCE // __longjmp_chk does not allow to jump to another stack
+
 #include "oskernel.h"
+#include "inc/ostask.h"
 
 /* -------------------------------------------------------------------------- */
 
 void port_sys_init( void )
 {
 }
+
+/* -------------------------------------------------------------------------- */
+
+#if defined(__linux__) || defined(__x86_64__)
+
+#undef  longjmp
+
+/******************************************************************************
+ Task context: the context of every new task is a copy of the trampoline
+ context; the trampoline runs on its own small stack, switches to the stack
+ of the current task and starts the task function
+*******************************************************************************/
+
+static jmp_buf priv_ctx_ret;
+static jmp_buf priv_ctx_tmp;
+static stk_t   priv_ctx_stk[1024];
+
+#ifdef __x86_64__
+#define priv_ctx_call(sp, fun) /* 16-byte stack alignment and 32-byte shadow space for win64 */ \
+	__ASM volatile ("mov %0, %%rsp; and $-16, %%rsp; sub $32, %%rsp; call *%1" :: "r" (sp), "r" (fun) : "memory")
+#else
+#define priv_ctx_call(sp, fun) /* 16-byte stack alignment */ \
+	__ASM volatile ("mov %0, %%esp; and $-16, %%esp; call *%1" :: "r" (sp), "r" (fun) : "memory")
+#endif
+
+static __NO_RETURN __attribute__((noinline, used))
+void priv_ctx_start( void )
+{
+	if (setjmp(priv_ctx_tmp) == 0)
+		longjmp(priv_ctx_ret, 1);
+
+	// executed after longjmp to the context of the new task
+	priv_ctx_call(System.cur->ctx.reg.sp, System.cur->ctx.reg.pc);
+	__builtin_unreachable();
+}
+
+void port_ctx_init( ctx_t *ctx, stk_t *sp, fun_t *pc )
+{
+	static
+	bool init = false;
+
+	if (!init)
+	{
+		init = true;
+
+		if (setjmp(priv_ctx_ret) == 0)
+		{
+			priv_ctx_call(priv_ctx_stk + sizeof(priv_ctx_stk) / sizeof(*priv_ctx_stk), priv_ctx_start);
+			__builtin_unreachable();
+		}
+	}
+
+	memcpy(ctx->buf, priv_ctx_tmp, sizeof(jmp_buf));
+	ctx->sp = sp;
+	ctx->pc = pc;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void port_longjmp( jmp_buf buf, int val )
+{
+#if defined(_WIN64)
+	// update StackBase (gs:0x08) and StackLimit (gs:0x10) in the thread information block
+	// the first longjmp is always called from the main thread stack
+	static
+	void * base = NULL;
+	static
+	void * limit = NULL;
+	tsk_t *tsk = System.cur;
+
+	if (base == NULL)
+		__ASM volatile ("mov %%gs:0x08, %0; mov %%gs:0x10, %1" : "=r" (base), "=r" (limit));
+
+	if (tsk == &MAIN)
+		__ASM volatile ("mov %0, %%gs:0x08; mov %1, %%gs:0x10" :: "r" (base), "r" (limit) : "memory");
+	else
+		__ASM volatile ("mov %0, %%gs:0x08; mov %1, %%gs:0x10" :: "r" ((uint8_t *)tsk->stack + tsk->size), "r" (tsk->stack) : "memory");
+#endif
+	longjmp(buf, val);
+}
+
+#endif
 
 /* -------------------------------------------------------------------------- */
 
