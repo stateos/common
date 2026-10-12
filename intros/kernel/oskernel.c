@@ -388,7 +388,7 @@ void core_tsk_switch( void )
 			}
 			port_clr_lock();
 
-			break;
+			continue;
 		}
 	}
 
