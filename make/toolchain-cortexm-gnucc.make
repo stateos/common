@@ -96,6 +96,8 @@ $(info Using nostartfiles)
 DEFS       := $(DEFS:NOSTARTFILES=)
 LD_FLAGS   += -nostartfiles
 endif
+# c++ exceptions also need STDLIB: libstdc++ linked with nano.specs (nanolib)
+# is built without exceptions and every 'throw' calls std::terminate
 ifneq ($(filter EXCEPTIONS,$(DEFS)),)
 $(info Using exceptions)
 DEFS       := $(DEFS:EXCEPTIONS=)

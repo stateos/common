@@ -61,6 +61,8 @@ function(setup_target_compiler target)
 		target_link_options(${target} PRIVATE -nostartfiles)
 	endif()
 
+	# c++ exceptions also need 'stdlib': libstdc++ linked with nano.specs (nanolib)
+	# is built without exceptions and every 'throw' calls std::terminate
 	if (exceptions IN_LIST ARGN)
 		message(STATUS "${STARTMSG} Using exceptions")
 	else()
