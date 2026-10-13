@@ -283,7 +283,19 @@ struct OnceFlag
 	{
 		if (one_enter(&flg_))
 		{
+	#if __cpp_exceptions
+			try
+			{
+				_fun(std::forward<Args>(_args)...);
+			}
+			catch (...)
+			{
+				one_leave(&flg_, _ONE_INIT()); // the once function can be executed again
+				throw;
+			}
+	#else
 			_fun(std::forward<Args>(_args)...);
+	#endif
 			one_leave(&flg_, _ONE_DONE());
 		}
 	}
