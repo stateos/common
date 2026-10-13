@@ -62,6 +62,22 @@ typedef uint_fast8_t one_id [];
 
 /******************************************************************************
  *
+ * Name              : _ONE_BUSY
+ *
+ * Description       : once flag state during execution of the once function
+ *
+ * Parameters        : none
+ *
+ * Return            : once flag object
+ *
+ * Note              : for internal use
+ *
+ ******************************************************************************/
+
+#define               _ONE_BUSY()   1
+
+/******************************************************************************
+ *
  * Name              : _ONE_DONE
  *
  * Description       : once flag state after use
@@ -74,7 +90,7 @@ typedef uint_fast8_t one_id [];
  *
  ******************************************************************************/
 
-#define               _ONE_DONE()   1
+#define               _ONE_DONE()   2
 
 /******************************************************************************
  *
@@ -159,10 +175,52 @@ void one_init( one_t *one ) { *one = 0; }
 
 /******************************************************************************
  *
+ * Name              : one_enter
+ *
+ * Description       : start the execution of the once function
+ *                     if the once function is being executed by another task, wait for its completion
+ *
+ * Parameters
+ *   one             : pointer to once flag object
+ *
+ * Return
+ *   true            : the caller must execute the once function and then call one_leave
+ *   false           : the once function has already been executed
+ *                     (or is being executed and the caller is an interrupt handler)
+ *
+ * Note              : for internal use
+ *
+ ******************************************************************************/
+
+bool one_enter( one_t *one );
+
+/******************************************************************************
+ *
+ * Name              : one_leave
+ *
+ * Description       : end the execution of the once function and wake up waiting tasks
+ *
+ * Parameters
+ *   one             : pointer to once flag object
+ *   state           : new state of the once flag object
+ *                     _ONE_DONE(): the once function has been executed
+ *                     _ONE_INIT(): the once function has failed (exception) and can be executed again
+ *
+ * Return            : none
+ *
+ * Note              : for internal use
+ *
+ ******************************************************************************/
+
+void one_leave( one_t *one, one_t state );
+
+/******************************************************************************
+ *
  * Name              : one_call
  *
  * Description       : try to execute given function
  *                     if the once flag has been previously set, the function is not executed
+ *                     if the function is being executed by another task, wait for its completion
  *
  * Parameters
  *   one             : pointer to once flag object
@@ -171,21 +229,22 @@ void one_init( one_t *one ) { *one = 0; }
  * Return            : none
  *
  * Note              : can be used in both thread and handler mode (for blockable interrupts)
+ *                     in handler mode the function does not wait for completion of the once function
+ *                     calling one_call with the same once flag from the once function causes a deadlock
  *
  ******************************************************************************/
 
 __STATIC_INLINE
 void one_call( one_t *one, fun_t *fun )
 {
-	one_t flag;
 	assert(one);
 	assert(fun);
-#if OS_ATOMICS
-	flag = __STD atomic_exchange((__STD atomic_uint_fast8_t *)one, _ONE_DONE());
-#else
-	sys_lock(); flag = *one; *one = _ONE_DONE(); sys_unlock();
-#endif
-	if (flag == _ONE_INIT()) fun();
+
+	if (one_enter(one))
+	{
+		fun();
+		one_leave(one, _ONE_DONE());
+	}
 }
 
 #ifdef __cplusplus
@@ -222,13 +281,11 @@ struct OnceFlag
 	template<typename Callable, typename... Args>
 	void call( Callable&& _fun, Args&&... _args )
 	{
-		one_t flag;
-	#if OS_ATOMICS
-		flag = std::atomic_exchange(&flg_, _ONE_DONE());
-	#else
-		{ CriticalSection cri; flag = flg_; flg_ = _ONE_DONE(); }
-	#endif
-		if (flag == _ONE_INIT()) _fun(std::forward<Args>(_args)...);
+		if (one_enter(&flg_))
+		{
+			_fun(std::forward<Args>(_args)...);
+			one_leave(&flg_, _ONE_DONE());
+		}
 	}
 #else
 	void call( fun_t *_fun )
@@ -238,11 +295,7 @@ struct OnceFlag
 #endif
 
 	private:
-#if OS_ATOMICS && __cplusplus >= 201402L
-	std::atomic<one_t> flg_;
-#else
 	one_t flg_;
-#endif
 };
 
 }     //  namespace

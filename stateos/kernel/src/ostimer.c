@@ -146,6 +146,8 @@ static
 void priv_tmr_start( tmr_t *tmr )
 /* -------------------------------------------------------------------------- */
 {
+	tmr->overrun = 0;
+
 	if (tmr->hdr.id != ID_STOPPED)
 		core_tmr_remove(tmr);
 	core_tmr_insert(tmr);

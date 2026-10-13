@@ -300,8 +300,6 @@ void priv_mtx_remove( tsk_t *tsk )
 	mtx_t *mtx;
 	mtx_t *nxt;
 
-	tsk->mtx.tree = 0;
-
 	for (mtx = tsk->mtx.list; mtx; mtx = nxt)
 	{
 		nxt = mtx->list;
@@ -331,6 +329,7 @@ void priv_tsk_stop( tsk_t *tsk )
 	{
 		core_tsk_unlink(tsk, 0);         // remove task from blocked queue; ignored event value
 		core_tmr_remove((tmr_t *)tsk);   // remove task from timers queue
+		tsk->mtx.tree = 0;
 	}
 	else
 //	if (tsk->hdr.id == ID_READY)         // ready task
@@ -630,14 +629,37 @@ void priv_sig_deliver( void )
 
 	port_set_lock();
 
+	cur->sig.backup.event = cur->event; // the handler can call blocking functions
+	cur->sig.backup.start = cur->start;
+	cur->sig.backup.delay = cur->delay;
+	cur->sig.backup.tmp   = cur->tmp;
+
 	priv_sig_handler(cur);
 
-	cur->sp = cur->sig.backup.sp;
+	cur->event = cur->sig.backup.event;
+	cur->start = cur->sig.backup.start;
+	cur->delay = cur->sig.backup.delay;
+	cur->tmp   = cur->sig.backup.tmp;
+	cur->sp    = cur->sig.backup.sp;
 	cur->sig.backup.sp = 0;
 
-	core_tsk_wait(cur->sig.backup.guard, cur);
+	core_tsk_wait(NULL, cur);           // return to the interrupted context
 
 	assert(false); // system cannot return here
+}
+
+/* -------------------------------------------------------------------------- */
+void core_sig_push( tsk_t *tsk )
+/* -------------------------------------------------------------------------- */
+{
+	if (tsk->sig.backup.sp)          // signals are being delivered
+		return;
+
+	tsk->sig.backup.sp = tsk->sp;
+
+	tsk->sp = (ctx_t *)tsk->sp - 1;
+	assert_ctx_integrity(tsk, tsk->sp);
+	port_ctx_init(tsk->sp, priv_sig_deliver);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -645,24 +667,19 @@ static
 void priv_sig_dispatch( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
-	if (tsk->sig.backup.sp)
+	if (tsk->sig.backup.sp)          // signals are being delivered
 		return;
 
-	if (tsk == System.cur)
+	if (tsk == System.cur)           // current task: handle signals immediately
 	{
 		priv_sig_handler(tsk);
 		return;
 	}
 
-	tsk->sig.backup.sp = tsk->sp;
-	tsk->sig.backup.guard = tsk->guard;
+	if (tsk->guard != 0)             // blocked task: signals will be delivered after wakeup
+		return;
 
-	tsk->sp = (ctx_t *)tsk->sp - 1;
-	assert_ctx_integrity(tsk, tsk->sp);
-	port_ctx_init(tsk->sp, priv_sig_deliver);
-
-	if (tsk->guard != 0)
-		core_tsk_wakeup(tsk, 0);
+	core_sig_push(tsk);              // ready task: deliver signals before the task continues
 }
 
 /* -------------------------------------------------------------------------- */

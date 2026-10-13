@@ -132,14 +132,37 @@ void core_tmr_remove( tmr_t *tmr )
 /* -------------------------------------------------------------------------- */
 
 static
+void priv_tmr_skip( tmr_t *tmr )
+{
+	cnt_t elapsed = core_sys_time() - tmr->start;
+	cnt_t missed;
+
+	if (tmr->delay != 0 && tmr->delay <= elapsed) // the periodic timer is late by at least one period:
+	{
+		missed = elapsed / tmr->delay;            // skip the missed periods
+		tmr->start   += missed * tmr->delay;
+		tmr->overrun += missed;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+static
 void priv_tmr_wakeup( tmr_t *tmr, int event )
 {
+	priv_tmr_skip(tmr);                           // periods missed before the callback
+
 	if (tmr->proc)
 		((fun_a *)tmr->proc)(tmr->arg);
 
+	tmr->overrun = 0;
 	priv_tmr_remove(tmr);
-	if (tmr->delay >= core_sys_time() - tmr->start + 1)
+
+	if (tmr->delay != 0)                          // periodic timer
+	{
+		priv_tmr_skip(tmr);                       // periods missed during the callback (reported next time)
 		priv_tmr_insert(tmr);
+	}
 
 	core_all_wakeup(&tmr->obj.queue, event);
 }
@@ -216,6 +239,8 @@ void priv_tsk_remove( tsk_t *tsk )
 void core_tsk_insert( tsk_t *tsk )
 {
 	priv_tsk_insert(tsk);
+	if (tsk->sig.sigset && tsk->sig.action && tsk != System.cur)
+		core_sig_push(tsk);          // deliver pending signals before the task continues
 	#if OS_ROBIN
 	if (tsk == IDLE.hdr.next && System.tsk == NULL)
 		port_ctx_switch();
@@ -358,7 +383,8 @@ void core_tsk_append( tsk_t **que, tsk_t *tsk )
 
 /* -------------------------------------------------------------------------- */
 
-void core_tsk_unlink( tsk_t *tsk, int event )
+static
+void priv_tsk_unlink( tsk_t *tsk, int event )
 {
 	tsk_t **que = tsk->guard;
 
@@ -370,6 +396,18 @@ void core_tsk_unlink( tsk_t *tsk, int event )
 			que = &(*que)->obj.queue;
 		*que = tsk->obj.queue;
 	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+void core_tsk_unlink( tsk_t *tsk, int event )
+{
+	mtx_t *mtx = tsk->guard ? tsk->mtx.tree : NULL;
+
+	priv_tsk_unlink(tsk, event);
+
+	if (mtx && mtx->owner)                            // the task has stopped waiting for the mutex
+		core_tsk_prio(mtx->owner, mtx->owner->basic); // the mutex owner can lose the inherited priority
 }
 
 /* -------------------------------------------------------------------------- */
@@ -388,7 +426,7 @@ void core_tsk_wakeup( tsk_t *tsk, int event )
 
 void core_tsk_transfer( tsk_t **que, tsk_t *tsk )
 {
-	core_tsk_unlink(tsk, tsk->event);
+	priv_tsk_unlink(tsk, tsk->event);
 	core_tsk_append(que, tsk);
 }
 

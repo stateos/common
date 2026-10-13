@@ -200,18 +200,6 @@ unsigned priv_evq_getUpdate( evq_t *evq )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_evq_skipUpdate( evq_t *evq )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	priv_evq_dec(evq);
-	tsk = core_one_wakeup(&evq->obj.queue, E_SUCCESS);
-	if (tsk) priv_evq_put(evq, tsk->tmp.evq.event);
-}
-
-/* -------------------------------------------------------------------------- */
-static
 void priv_evq_putUpdate( evq_t *evq, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
@@ -403,9 +391,13 @@ static
 void priv_evq_push( evq_t *evq, unsigned event )
 /* -------------------------------------------------------------------------- */
 {
-	while (priv_evq_full(evq))
-		priv_evq_skipUpdate(evq);
-	priv_evq_put(evq, event);
+	if (!priv_evq_empty(evq))
+	{
+		if (priv_evq_full(evq))
+			priv_evq_dec(evq);
+		priv_evq_put(evq, event);
+	}
+	else priv_evq_putUpdate(evq, event);
 }
 
 /* -------------------------------------------------------------------------- */

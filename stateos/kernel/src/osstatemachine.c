@@ -309,13 +309,19 @@ hsm_t *hsm_create( unsigned limit )
 void hsm_link( hsm_action_t *action )
 /* -------------------------------------------------------------------------- */
 {
+	hsm_action_t *ptr;
+
 	assert_tsk_context();
 	assert(action);
 	assert(action->owner);
 
 	sys_lock();
 	{
-		if (action->next == NULL)
+		ptr = action->owner->queue;
+		while (ptr != NULL && ptr != action) // action cannot be linked twice
+			ptr = ptr->next;
+
+		if (ptr == NULL)
 		{
 			action->next = action->owner->queue;
 			action->owner->queue = action;

@@ -39,6 +39,11 @@
  *
  * Name              : timer
  *
+ * Note              : if a periodic timer is late by at least one period
+ *                     (e.g. because of a long callback procedure), the missed periods are skipped
+ *                     and the timer keeps its phase; the number of skipped periods is available
+ *                     in the next callback procedure (tmr_overrunISR)
+ *
  ******************************************************************************/
 
 struct __tmr
@@ -51,6 +56,7 @@ struct __tmr
 	cnt_t    start;
 	cnt_t    delay;
 	cnt_t    period;
+	cnt_t    overrun; // number of periods skipped by a late periodic timer
 };
 
 typedef struct __tmr tmr_id [];
@@ -72,7 +78,7 @@ typedef struct __tmr tmr_id [];
  ******************************************************************************/
 
 #define               _TMR_INIT( _proc ) \
-                    { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0 }
+                    { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, 0 }
 
 /******************************************************************************
  *
@@ -678,6 +684,24 @@ void tmr_flipISR( fun_t *proc ) { tmr_thisISR()->proc = proc; }
 __STATIC_INLINE
 void tmr_delayISR( cnt_t delay ) { tmr_thisISR()->delay = delay; }
 
+/******************************************************************************
+ *
+ * Name              : tmr_overrunISR
+ *
+ * Description       : return the number of periods skipped by the current periodic timer
+ *                     since the previous callback procedure (the timer was late by at least one period)
+ *
+ * Parameters        : none
+ *
+ * Return            : number of skipped periods (0: the timer was not late)
+ *
+ * Note              : use only in timer's callback procedure
+ *
+ ******************************************************************************/
+
+__STATIC_INLINE
+cnt_t tmr_overrunISR( void ) { return tmr_thisISR()->overrun; }
+
 #ifdef __cplusplus
 }
 #endif
@@ -782,6 +806,8 @@ struct baseTimer : public __tmr
 #endif
 		template<typename T> static
 		void delayISR( const T& _delay )           { tmr_delayISR(Clock::count(_delay)); }
+		static
+		cnt_t overrunISR()                         { return tmr_overrunISR(); }
 	};
 };
 

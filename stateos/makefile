@@ -34,6 +34,7 @@ SRCS += $(COMMON)/stateos/kernel/src/osmailboxqueue.c
 SRCS += $(COMMON)/stateos/kernel/src/osmemorypool.c
 SRCS += $(COMMON)/stateos/kernel/src/osmessagequeue.c
 SRCS += $(COMMON)/stateos/kernel/src/osmutex.c
+SRCS += $(COMMON)/stateos/kernel/src/osonceflag.c
 SRCS += $(COMMON)/stateos/kernel/src/osrwlock.c
 SRCS += $(COMMON)/stateos/kernel/src/osrawbuffer.c
 SRCS += $(COMMON)/stateos/kernel/src/ossemaphore.c

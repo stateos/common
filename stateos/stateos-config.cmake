@@ -36,6 +36,7 @@ target_sources(stateos
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osmemorypool.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osmessagequeue.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osmutex.c
+	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osonceflag.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osrwlock.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/osrawbuffer.c
 	${CMAKE_CURRENT_LIST_DIR}/kernel/src/ossemaphore.c

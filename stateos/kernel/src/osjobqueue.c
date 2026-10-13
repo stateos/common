@@ -200,18 +200,6 @@ fun_t *priv_job_getUpdate( job_t *job )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_job_skipUpdate( job_t *job )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	priv_job_dec(job);
-	tsk = core_one_wakeup(&job->obj.queue, E_SUCCESS);
-	if (tsk) priv_job_put(job, tsk->tmp.job.fun);
-}
-
-/* -------------------------------------------------------------------------- */
-static
 void priv_job_putUpdate( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
@@ -404,9 +392,13 @@ static
 void priv_job_push( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	while (priv_job_full(job))
-		priv_job_skipUpdate(job);
-	priv_job_put(job, fun);
+	if (!priv_job_empty(job))
+	{
+		if (priv_job_full(job))
+			priv_job_dec(job);
+		priv_job_put(job, fun);
+	}
+	else priv_job_putUpdate(job, fun);
 }
 
 /* -------------------------------------------------------------------------- */

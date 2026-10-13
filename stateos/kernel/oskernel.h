@@ -170,6 +170,9 @@ void core_tsk_flip( void *sp );
 // force context switch if priority of task 'tsk' is greater then priority of the current task and kernel works in preemptive mode
 void core_tsk_insert( tsk_t *tsk );
 
+// prepare the delivery of pending signals of task 'tsk' before the task continues
+void core_sig_push( tsk_t *tsk );
+
 // remove task 'tsk' from tasks READY queue
 void core_tsk_remove( tsk_t *tsk );
 

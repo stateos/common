@@ -88,6 +88,10 @@ void *priv_alloc( size_t alignment, size_t size )
 	seg_t *mem;
 	seg_t *nxt;
 
+	if (size >= (OS_HEAP_SIZE))
+	//	memory segment cannot be allocated
+		return NULL;
+
 	size = SEG_SIZE(size + sizeof(seg_t));
 
 	for (mem = priv_init(); mem != NULL; mem = mem->next)
@@ -172,6 +176,10 @@ void *priv_realloc( void *ptr, size_t size )
 	seg_t *nxt;
 	seg_t *seg = (seg_t *)ptr - 1;
 	size_t len = SEG_SIZE(size + sizeof(seg_t));
+
+	if (size >= (OS_HEAP_SIZE))
+	//	memory segment cannot be allocated
+		return NULL;
 
 	for (mem = priv_init(); mem != NULL; mem = mem->next)
 	{
@@ -279,6 +287,12 @@ void *malloc( size_t size )
 void *calloc( size_t num, size_t size )
 {
 	void *mem;
+
+	assert(size==0||num<=SIZE_MAX/size);
+
+	if (size != 0 && num > SIZE_MAX / size)
+	//	memory segment cannot be allocated
+		return NULL;
 
 	mem = malloc(size *= num);
 

@@ -52,9 +52,9 @@ void mtx_init( mtx_t *mtx, unsigned mode, unsigned prio )
 {
 	assert_tsk_context();
 	assert(mtx);
-	assert((mtx->mode & ~mtxMASK) == 0);
-	assert((mtx->mode &  mtxTypeMASK) != mtxTypeMASK);
-	assert((mtx->mode &  mtxPrioMASK) != mtxPrioMASK);
+	assert((mode & ~mtxMASK) == 0);
+	assert((mode &  mtxTypeMASK) != mtxTypeMASK);
+	assert((mode &  mtxPrioMASK) != mtxPrioMASK);
 
 	sys_lock();
 	{
@@ -70,6 +70,9 @@ mtx_t *mtx_create( unsigned mode, unsigned prio )
 	mtx_t *mtx;
 
 	assert_tsk_context();
+	assert((mode & ~mtxMASK) == 0);
+	assert((mode &  mtxTypeMASK) != mtxTypeMASK);
+	assert((mode &  mtxPrioMASK) != mtxPrioMASK);
 
 	sys_lock();
 	{

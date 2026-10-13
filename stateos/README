@@ -48,6 +48,24 @@ Features:
 - all documentation is contained within source files, in particular header files
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
+7.2
+- updated os version
+- signals of a blocked task are delivered after its wakeup (no lost wakeups)
+- signal handler does not change the result of the interrupted function
+- mutex owner loses the inherited priority when the waiting task stops waiting
+- one_call (and std::call_once) waits for the once function executed by another task
+- late periodic timer skips the missed periods (was stopped)
+- added tmr_overrunISR function (number of periods skipped by a late periodic timer)
+- *_push removes only the oldest data and wakes the waiting receiver
+- read/write lock without writer or reader starvation
+- fixed buffer overflow in msg_push (message larger than the slot)
+- fixed raw_push with a receiver waiting on the empty buffer
+- fixed sig_take / sig_wait with sigAny (pending signals were not seen)
+- fixed hsm_link (action linked twice created a loop)
+- fixed mode assertions in mtx_init and mtx_create
+- fixed assertion in ReadLock / WriteLock
+- heap functions check the size for overflow
+---------
 7.1
 - updated os version
 - added sys_suspend function

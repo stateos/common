@@ -133,7 +133,7 @@ static
 int priv_sig_take( sig_t *sig, unsigned sigset, unsigned *signo )
 /* -------------------------------------------------------------------------- */
 {
-	sigset &= sig->sigset;
+	sigset = sigset == sigAny ? sig->sigset : sigset & sig->sigset;
 
 	if (sigset)
 	{

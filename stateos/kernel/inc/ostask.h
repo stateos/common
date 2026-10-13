@@ -54,43 +54,8 @@
  *
  ******************************************************************************/
 
-struct __tsk
+union __tmp
 {
-	obj_t    obj;   // object header
-	hdr_t    hdr;   // timer / task header
-
-	fun_t  * proc;  // task proc (initial task function, doesn't have to be noreturn-type)
-	void   * arg;   // reserved for internal use
-	cnt_t    start; // inherited from timer
-	cnt_t    delay; // inherited from timer
-	cnt_t    slice;	// time slice
-
-	stk_t  * stack; // base of stack
-	size_t   size;  // size of stack (in bytes)
-	void   * sp;    // current stack pointer
-
-	unsigned basic; // basic priority
-	unsigned prio;  // current priority
-
-	tsk_t  * owner; // task owner (joinable / detached state)
-	tsk_t ** guard; // BLOCKED queue for the pending process
-	int      event; // wakeup event
-
-	struct {
-	mtx_t  * list;  // list of mutexes held
-	mtx_t  * tree;  // tree of tasks waiting for mutexes
-	}        mtx;
-
-	struct {
-	unsigned sigset;// pending signals
-	act_t  * action;// signal handler
-	struct {
-	void   * sp;
-	tsk_t ** guard;
-	}        backup;
-	}        sig;
-
-	union  {
 
 	struct {
 	unsigned event;
@@ -144,7 +109,48 @@ struct __tsk
 	fun_t  * fun;
 	}        job;   // temporary data used by job queue object
 
-	}        tmp;
+};
+
+struct __tsk
+{
+	obj_t    obj;   // object header
+	hdr_t    hdr;   // timer / task header
+
+	fun_t  * proc;  // task proc (initial task function, doesn't have to be noreturn-type)
+	void   * arg;   // reserved for internal use
+	cnt_t    start; // inherited from timer
+	cnt_t    delay; // inherited from timer
+	cnt_t    slice;	// time slice
+
+	stk_t  * stack; // base of stack
+	size_t   size;  // size of stack (in bytes)
+	void   * sp;    // current stack pointer
+
+	unsigned basic; // basic priority
+	unsigned prio;  // current priority
+
+	tsk_t  * owner; // task owner (joinable / detached state)
+	tsk_t ** guard; // BLOCKED queue for the pending process
+	int      event; // wakeup event
+
+	struct {
+	mtx_t  * list;  // list of mutexes held
+	mtx_t  * tree;  // tree of tasks waiting for mutexes
+	}        mtx;
+
+	struct {
+	unsigned sigset;// pending signals
+	act_t  * action;// signal handler
+	struct {
+	void   * sp;    // stack pointer of the interrupted context
+	int      event; // wakeup event of the interrupted context
+	cnt_t    start; // timer data of the interrupted context
+	cnt_t    delay; //
+	union __tmp tmp;// temporary data of the interrupted context
+	}        backup;
+	}        sig;
+
+	union __tmp tmp; // temporary data used by blocking functions
 
 #ifndef _PORT_DATA_INIT
 #define _PORT_DATA_INIT()
@@ -176,7 +182,7 @@ typedef struct __tsk tsk_id [];
 
 #define               _TSK_INIT( _prio, _proc, _stack, _size )                                                            \
                        { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
-                       { NULL, NULL }, { 0, NULL, { NULL, NULL } }, { { 0 } }, _PORT_DATA_INIT() }
+                       { NULL, NULL }, { 0, NULL, { NULL, 0, 0, 0, { { 0 } } } }, { { 0 } }, _PORT_DATA_INIT() }
 
 /******************************************************************************
  *
@@ -1039,6 +1045,15 @@ int tsk_resumeISR( tsk_t *tsk ) { return tsk_resume(tsk); }
  * Return            : none
  *
  * Note              : use only in thread mode
+ *                     the signal handler of a blocked task is called after the task is woken up
+ *                     (the task does not leave the blocked queue, so no wakeup can be lost)
+ *                     the signal handler is called on the stack of the task; the stack must have
+ *                     room for an additional task context (and another one, if the handler
+ *                     calls blocking functions)
+ *                     signals sent by the task to itself are handled immediately, also inside
+ *                     a critical section of the caller (the handler is called with unlocked
+ *                     interrupts); if such a handler is preempted and the task receives another
+ *                     signal, the handler is called again (nested), so it should be reentrant
  *
  ******************************************************************************/
 
@@ -1060,6 +1075,15 @@ void tsk_signal( tsk_t *tsk, unsigned signo ) { tsk_give(tsk, signo); }
  * Return            : none
  *
  * Note              : use only in thread mode
+ *                     the signal handler of a blocked task is called after the task is woken up
+ *                     (the task does not leave the blocked queue, so no wakeup can be lost)
+ *                     the signal handler is called on the stack of the task; the stack must have
+ *                     room for an additional task context (and another one, if the handler
+ *                     calls blocking functions)
+ *                     signals sent by the task to itself are handled immediately, also inside
+ *                     a critical section of the caller (the handler is called with unlocked
+ *                     interrupts); if such a handler is preempted and the task receives another
+ *                     signal, the handler is called again (nested), so it should be reentrant
  *
  ******************************************************************************/
 
