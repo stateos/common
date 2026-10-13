@@ -41,13 +41,12 @@
  *
  ******************************************************************************/
 
-typedef struct __mtx mtx_t;
-
 struct __mtx
 {
 	obj_t    obj;   // object header
 
 	tsk_t  * owner; // mutex owner
+	mtx_t  * list;  // list of mutexes held by owner
 };
 
 typedef struct __mtx mtx_id [];
@@ -66,7 +65,7 @@ typedef struct __mtx mtx_id [];
  *
  ******************************************************************************/
 
-#define               _MTX_INIT() { _OBJ_INIT(), NULL }
+#define               _MTX_INIT() { _OBJ_INIT(), NULL, NULL }
 
 /******************************************************************************
  *

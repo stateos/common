@@ -69,6 +69,10 @@ struct __tsk
 	tsk_t ** guard; // BLOCKED queue for the pending process
 	int      event; // wakeup event
 
+	struct {
+	mtx_t  * list;  // list of mutexes held
+	}        mtx;
+
 	union  {
 
 	struct {
@@ -153,7 +157,7 @@ typedef struct __tsk tsk_id [];
 
 #define               _TSK_INIT( _proc, _stack, _size ) \
                     { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, \
-                      NULL, 0, { { 0 } }, { _CTX_INIT() } }
+                      NULL, 0, { NULL }, { { 0 } }, { _CTX_INIT() } }
 
 /******************************************************************************
  *
@@ -566,6 +570,7 @@ void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg );
  * Alias             : tsk_exit
  *
  * Description       : stop execution of current task
+ *                     all mutexes held by the task are released (waiting tasks get E_STOPPED)
  *
  * Parameters        : none
  *
@@ -585,6 +590,7 @@ void tsk_exit( void ) { tsk_stop(); }
  * Alias             : tsk_kill
  *
  * Description       : stop execution of given task
+ *                     all mutexes held by the task are released (waiting tasks get E_STOPPED)
  *
  * Parameters
  *   tsk             : pointer to task object
@@ -622,6 +628,7 @@ void tsk_pass ( void ) { core_ctx_switch(); }
  * Name              : tsk_flip
  *
  * Description       : restart current task with the new proc (task function)
+ *                     all mutexes held by the task are released (waiting tasks get E_STOPPED)
  *
  * Parameters
  *   proc            : new task proc (task function)

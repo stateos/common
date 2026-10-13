@@ -52,7 +52,7 @@ __PACKED_STRUCT __msh
 };
 
 #define MSG_SIZE( size ) \
-                ( size + sizeof(msh_t) )
+                ( (size_t)( size ) + sizeof(msh_t) )
 
 /******************************************************************************
  *

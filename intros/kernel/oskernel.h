@@ -199,6 +199,21 @@ unsigned core_tsk_count( tsk_t **que );
 
 /* -------------------------------------------------------------------------- */
 
+// set task 'tsk' as the owner of mutex 'mtx' and add mutex 'mtx' to the list of mutexes held by task 'tsk'
+void core_mtx_link( mtx_t *mtx, tsk_t *tsk );
+
+// remove mutex 'mtx' from the list of mutexes held by its owner and clear the owner
+void core_mtx_unlink( mtx_t *mtx );
+
+// transfer mutex 'mtx' to the first task from its blocked queue with event value 'event'
+// return new owner of the mutex
+tsk_t *core_mtx_transfer( mtx_t *mtx, int event );
+
+// release mutex 'mtx' and resume execution of all tasks from its blocked queue with event value 'event'
+void core_mtx_reset( mtx_t *mtx, int event );
+
+/* -------------------------------------------------------------------------- */
+
 // return current system time in tick-less mode
 #if HW_TIMER_SIZE < OS_TIMER_SIZE // because of CSMCC
 cnt_t port_sys_time( void );

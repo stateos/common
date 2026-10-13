@@ -149,11 +149,21 @@ void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg )
 
 /* -------------------------------------------------------------------------- */
 static
+void priv_mtx_release( tsk_t *tsk )
+/* -------------------------------------------------------------------------- */
+{
+	while (tsk->mtx.list)		// release all mutexes held by the task
+		core_mtx_reset(tsk->mtx.list, E_STOPPED);
+}
+
+/* -------------------------------------------------------------------------- */
+static
 void priv_tsk_stop( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
 	if (tsk->hdr.id != ID_STOPPED)	// inactive task cannot be removed
 	{
+		priv_mtx_release(tsk);		// release all mutexes held by the task
 		core_tsk_wakeup(tsk, 0);	// remove task from blocked queue; ignored event value
 		core_tsk_remove(tsk);		// remove task from ready queue
 	}
@@ -194,6 +204,7 @@ void tsk_flip( fun_t *proc )
 
 	System.cur->proc = proc;
 
+	priv_mtx_release(System.cur);  // the new procedure cannot release mutexes held by the previous one
 	core_ctx_init(System.cur);
 	core_tsk_switch();
 }
@@ -265,7 +276,7 @@ int tsk_resume( tsk_t *tsk )
 	{
 		if (tsk->hdr.id == ID_READY && tsk->delay == INFINITE)
 		{
-			core_tsk_wakeup(tsk, 0); // ignored event value
+			core_tsk_wakeup(tsk, E_FAILURE); // the blocking function must not report success
 			result = E_SUCCESS;
 		}
 	}

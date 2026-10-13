@@ -126,6 +126,7 @@ typedef uint64_t     cnt_t;
 
 /* -------------------------------------------------------------------------- */
 
+typedef struct __mtx mtx_t;           // mutex
 typedef struct __tmr tmr_t;           // timer
 typedef struct __tsk tsk_t;           // task
 typedef         void fun_t(void);     // timer/task procedure

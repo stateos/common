@@ -92,14 +92,10 @@ void port_longjmp( jmp_buf buf, int val );
 
 struct __ctx
 {
-	jmp_buf       buf;
+	char          buf[sizeof(jmp_buf)]; // place for jmp_buf (aliased by the task context union)
 	void        * sp;
 	fun_t       * pc;
-#ifdef __cplusplus
-#define _CTX_INIT() { }
-#else
-#define _CTX_INIT() { 0 }
-#endif
+#define _CTX_INIT() { { 0 }, NULL, NULL }
 };
 
 #else

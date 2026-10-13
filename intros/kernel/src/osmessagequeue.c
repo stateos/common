@@ -166,18 +166,6 @@ size_t priv_msg_getUpdate( msg_t *msg, char *data )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_msg_skipUpdate( msg_t *msg )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	priv_msg_dec(msg);
-	tsk = core_one_wakeup(&msg->obj.queue, E_SUCCESS);
-	if (tsk) priv_msg_put(msg, tsk->tmp.msg.data.out, tsk->tmp.msg.size);
-}
-
-/* -------------------------------------------------------------------------- */
-static
 void priv_msg_putUpdate( msg_t *msg, const char *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
@@ -381,12 +369,16 @@ static
 int priv_msg_push( msg_t *msg, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
-	if (MSG_SIZE(size) > msg->limit)
+	if (MSG_SIZE(size) > msg->size)
 		return E_FAILURE;
 
-	while (priv_msg_full(msg))
-		priv_msg_skipUpdate(msg);
-	priv_msg_put(msg, data, size);
+	if (!priv_msg_empty(msg))
+	{
+		if (priv_msg_full(msg))
+			priv_msg_dec(msg);
+		priv_msg_put(msg, data, size);
+	}
+	else priv_msg_putUpdate(msg, data, size);
 
 	return E_SUCCESS;
 }

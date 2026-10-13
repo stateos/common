@@ -148,17 +148,6 @@ size_t priv_raw_getUpdate( raw_t *raw, void *data, size_t size )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_raw_skipUpdate( raw_t *raw )
-/* -------------------------------------------------------------------------- */
-{
-	if (raw->count + raw->obj.queue->tmp.raw.size > raw->limit)
-		priv_raw_skip(raw, raw->count + raw->obj.queue->tmp.raw.size - raw->limit);
-	priv_raw_put(raw, raw->obj.queue->tmp.raw.data.out, raw->obj.queue->tmp.raw.size);
-	core_one_wakeup(&raw->obj.queue, E_SUCCESS);
-}
-
-/* -------------------------------------------------------------------------- */
-static
 void priv_raw_putUpdate( raw_t *raw, const void *data, size_t size )
 /* -------------------------------------------------------------------------- */
 {
@@ -367,11 +356,13 @@ int priv_raw_push( raw_t *raw, const void *data, size_t size )
 	if (size > raw->limit)
 		return E_FAILURE;
 
-	while (raw->obj.queue)
-		priv_raw_skipUpdate(raw);
-	if (raw->count + size > raw->limit)
-		priv_raw_skip(raw, raw->count + size - raw->limit);
-	priv_raw_putUpdate(raw, data, size);
+	if (raw->count != 0)
+	{
+		if (raw->count + size > raw->limit)
+			priv_raw_skip(raw, raw->count + size - raw->limit);
+		priv_raw_put(raw, data, size);
+	}
+	else priv_raw_putUpdate(raw, data, size);
 
 	return E_SUCCESS;
 }

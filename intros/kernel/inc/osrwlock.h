@@ -43,6 +43,8 @@
  *
  * Name              : read/write lock (one write, many read)
  *
+ * Note              : waiting writers have priority over new readers
+ *
  ******************************************************************************/
 
 typedef struct __rwl rwl_t;
@@ -458,7 +460,7 @@ struct ReadLock
 	ReadLock( RWLock& _rwl ): lck_(_rwl)
 	{
 		int result = lck_.lockRead();
-		assert(result = E_SUCCESS);
+		assert(result == E_SUCCESS);
 		(void) result;
 	}
 
@@ -493,7 +495,7 @@ struct WriteLock
 	WriteLock( RWLock& _rwl ): lck_(_rwl)
 	{
 		int result = lck_.lockWrite();
-		assert(result = E_SUCCESS);
+		assert(result == E_SUCCESS);
 		(void) result;
 	}
 

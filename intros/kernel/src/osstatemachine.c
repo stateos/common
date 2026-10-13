@@ -257,7 +257,7 @@ void priv_hsm_init( hsm_t *hsm, unsigned *data, size_t bufsize )
 {
 	memset(hsm, 0, sizeof(hsm_t));
 
-	hsm->evq.limit = bufsize / sizeof(unsigned);
+	hsm->evq.limit = (unsigned)(bufsize / sizeof(unsigned));
 	hsm->evq.data  = data;
 }
 
@@ -280,12 +280,18 @@ void hsm_init( hsm_t *hsm, void *data, size_t bufsize )
 void hsm_link( hsm_action_t *action )
 /* -------------------------------------------------------------------------- */
 {
+	hsm_action_t *ptr;
+
 	assert(action);
 	assert(action->owner);
 
 	sys_lock();
 	{
-		if (action->next == NULL)
+		ptr = action->owner->queue;
+		while (ptr != NULL && ptr != action) // action cannot be linked twice
+			ptr = ptr->next;
+
+		if (ptr == NULL)
 		{
 			action->next = action->owner->queue;
 			action->owner->queue = action;

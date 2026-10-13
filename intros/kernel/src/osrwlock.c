@@ -81,7 +81,7 @@ static
 int priv_rwl_takeRead( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	if (rwl->write || rwl->count == RDR_LIMIT )
+	if (rwl->write || rwl->obj.queue != NULL || rwl->count == RDR_LIMIT)
 		return E_TIMEOUT;
 
 	rwl->count++;
@@ -148,10 +148,16 @@ static
 void priv_rwl_giveRead( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	if (core_one_wakeup(&rwl->queue, E_SUCCESS) == NULL)
-		if (--rwl->count == 0)
-			if (core_one_wakeup(&rwl->obj.queue, E_SUCCESS) != NULL)
-				rwl->write = true;
+	rwl->count--;
+
+	if (rwl->obj.queue == NULL)
+		rwl->count += core_num_wakeup(&rwl->queue, E_SUCCESS, RDR_LIMIT - rwl->count);
+	else
+	if (rwl->count == 0)
+	{
+		core_one_wakeup(&rwl->obj.queue, E_SUCCESS);
+		rwl->write = true;
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -241,12 +247,8 @@ static
 void priv_rwl_giveWrite( rwl_t *rwl )
 /* -------------------------------------------------------------------------- */
 {
-	if (core_one_wakeup(&rwl->obj.queue, E_SUCCESS) == NULL)
-	{
-		rwl->write = false;
-		rwl->count = core_tsk_count(&rwl->queue);
-		core_all_wakeup(&rwl->queue, E_SUCCESS);
-	}
+	rwl->count = core_num_wakeup(&rwl->queue, E_SUCCESS, RDR_LIMIT);
+	rwl->write = rwl->count == 0 && core_one_wakeup(&rwl->obj.queue, E_SUCCESS) != NULL;
 }
 
 /* -------------------------------------------------------------------------- */

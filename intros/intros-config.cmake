@@ -58,10 +58,10 @@ target_sources(intros
 )
 endif()
 
-if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/port/${INTROS_ARCH}/compiler/${INTROS_COMPILER}/oslib.c)
+if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/port/${INTROS_ARCH}/compiler/${INTROS_COMPILER}/oslibc.c)
 target_sources(intros
 	INTERFACE
-	${CMAKE_CURRENT_LIST_DIR}/port/${INTROS_ARCH}/compiler/${INTROS_COMPILER}/oslib.c
+	${CMAKE_CURRENT_LIST_DIR}/port/${INTROS_ARCH}/compiler/${INTROS_COMPILER}/oslibc.c
 )
 endif()
 

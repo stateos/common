@@ -32,6 +32,7 @@
 #include "oskernel.h"
 #include "inc/ostimer.h"
 #include "inc/ostask.h"
+#include "inc/osmutex.h"
 #include "inc/oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
@@ -62,6 +63,65 @@ void core_tmr_remove( tmr_t *tmr )
 
 	nxt->hdr.prev = prv;
 	prv->hdr.next = nxt;
+}
+
+/* -------------------------------------------------------------------------- */
+// SYSTEM MUTEX SERVICES
+/* -------------------------------------------------------------------------- */
+
+void core_mtx_link( mtx_t *mtx, tsk_t *tsk )
+{
+	mtx->owner = tsk;
+
+	if (tsk)
+	{
+		mtx->list = tsk->mtx.list;
+		tsk->mtx.list = mtx;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+void core_mtx_unlink( mtx_t *mtx )
+{
+	tsk_t *tsk = mtx->owner;
+	mtx_t **lst;
+
+	if (tsk)
+	{
+		for (lst = &tsk->mtx.list; *lst != NULL; lst = &(*lst)->list)
+		{
+			if (*lst == mtx)
+			{
+				*lst = mtx->list;
+				break;
+			}
+		}
+
+		mtx->list  = NULL;
+		mtx->owner = NULL;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+tsk_t *core_mtx_transfer( mtx_t *mtx, int event )
+{
+	tsk_t *tsk;
+
+	core_mtx_unlink(mtx);
+	tsk = core_one_wakeup(&mtx->obj.queue, event);
+	core_mtx_link(mtx, tsk);
+
+	return tsk;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void core_mtx_reset( mtx_t *mtx, int event )
+{
+	core_mtx_unlink(mtx);
+	core_all_wakeup(&mtx->obj.queue, event);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -362,12 +422,12 @@ void core_tsk_switch( void )
 		{
 			port_set_lock();
 			{
-				core_tsk_wakeup(cur, E_FAILURE);
-
-				if (System.tsk != NULL && System.tsk != cur)
-					continue;
+				core_tsk_wakeup(cur, E_TIMEOUT);
 			}
 			port_clr_lock();
+
+			if (System.tsk != NULL && System.tsk != cur)
+				continue;
 
 			break;
 		}
@@ -377,6 +437,9 @@ void core_tsk_switch( void )
 			port_set_lock();
 			{
 				tmr = (tmr_t *)cur;
+
+				if (tmr->delay == 0)          // timer started with IMMEDIATE delay
+					tmr->delay = tmr->period; // has not been counted down
 
 				if (tmr->proc)
 					((fun_a *)tmr->proc)(tmr->arg);

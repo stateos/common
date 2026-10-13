@@ -40,7 +40,7 @@ void priv_job_init( job_t *job, fun_t **data, size_t bufsize )
 {
 	memset(job, 0, sizeof(job_t));
 
-	job->limit = bufsize / sizeof(fun_t *);
+	job->limit = (unsigned)(bufsize / sizeof(fun_t *));
 	job->data  = data;
 }
 
@@ -152,18 +152,6 @@ fun_t *priv_job_getUpdate( job_t *job )
 	if (tsk) priv_job_put(job, tsk->tmp.job.fun);
 
 	return fun;
-}
-
-/* -------------------------------------------------------------------------- */
-static
-void priv_job_skipUpdate( job_t *job )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	priv_job_dec(job);
-	tsk = core_one_wakeup(&job->obj.queue, E_SUCCESS);
-	if (tsk) priv_job_put(job, tsk->tmp.job.fun);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -350,9 +338,13 @@ static
 void priv_job_push( job_t *job, fun_t *fun )
 /* -------------------------------------------------------------------------- */
 {
-	while (priv_job_full(job))
-		priv_job_skipUpdate(job);
-	priv_job_put(job, fun);
+	if (!priv_job_empty(job))
+	{
+		if (priv_job_full(job))
+			priv_job_dec(job);
+		priv_job_put(job, fun);
+	}
+	else priv_job_putUpdate(job, fun);
 }
 
 /* -------------------------------------------------------------------------- */

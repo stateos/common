@@ -55,14 +55,6 @@ void mtx_init( mtx_t *mtx )
 }
 
 /* -------------------------------------------------------------------------- */
-static
-void priv_mtx_reset( mtx_t *mtx, int event )
-/* -------------------------------------------------------------------------- */
-{
-	core_all_wakeup(&mtx->obj.queue, event);
-}
-
-/* -------------------------------------------------------------------------- */
 void mtx_reset( mtx_t *mtx )
 /* -------------------------------------------------------------------------- */
 {
@@ -70,7 +62,7 @@ void mtx_reset( mtx_t *mtx )
 
 	sys_lock();
 	{
-		priv_mtx_reset(mtx, E_STOPPED);
+		core_mtx_reset(mtx, E_STOPPED);
 	}
 	sys_unlock();
 }
@@ -82,7 +74,7 @@ int priv_mtx_take( mtx_t *mtx )
 {
 	if (mtx->owner == NULL)
 	{
-		mtx->owner = System.cur;
+		core_mtx_link(mtx, System.cur);
 		return E_SUCCESS;
 	}
 
@@ -158,7 +150,7 @@ int priv_mtx_give( mtx_t *mtx )
 {
 	if (mtx->owner == System.cur)
 	{
-		mtx->owner = core_one_wakeup(&mtx->obj.queue, E_SUCCESS);
+		core_mtx_transfer(mtx, E_SUCCESS);
 		return E_SUCCESS;
 	}
 

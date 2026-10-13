@@ -62,8 +62,8 @@ void priv_mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize )
 	memset(mem, 0, sizeof(mem_t));
 
 	mem->data  = data;
-	mem->size  = MEM_SIZE(size);
-	mem->limit = bufsize / (1 + mem->size) / sizeof(que_t);
+	mem->size  = (unsigned)MEM_SIZE(size);
+	mem->limit = (unsigned)(bufsize / (1 + mem->size) / sizeof(que_t));
 }
 
 /* -------------------------------------------------------------------------- */

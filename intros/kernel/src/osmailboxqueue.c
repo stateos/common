@@ -152,18 +152,6 @@ void priv_box_getUpdate( box_t *box, char *data )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_box_skipUpdate( box_t *box )
-/* -------------------------------------------------------------------------- */
-{
-	tsk_t *tsk;
-
-	priv_box_dec(box);
-	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
-	if (tsk) priv_box_put(box, tsk->tmp.box.data.out);
-}
-
-/* -------------------------------------------------------------------------- */
-static
 void priv_box_putUpdate( box_t *box, const char *data )
 /* -------------------------------------------------------------------------- */
 {
@@ -345,9 +333,13 @@ static
 void priv_box_push( box_t *box, const void *data )
 /* -------------------------------------------------------------------------- */
 {
-	while (priv_box_full(box))
-		priv_box_skipUpdate(box);
-	priv_box_put(box, data);
+	if (!priv_box_empty(box))
+	{
+		if (priv_box_full(box))
+			priv_box_dec(box);
+		priv_box_put(box, data);
+	}
+	else priv_box_putUpdate(box, data);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -376,7 +368,7 @@ unsigned box_count( box_t *box )
 
 	sys_lock();
 	{
-		count = box->count / box->size;
+		count = (unsigned)(box->count / box->size);
 	}
 	sys_unlock();
 
@@ -393,7 +385,7 @@ unsigned box_space( box_t *box )
 
 	sys_lock();
 	{
-		space = (box->limit - box->count) / box->size;
+		space = (unsigned)((box->limit - box->count) / box->size);
 	}
 	sys_unlock();
 
@@ -410,7 +402,7 @@ unsigned box_limit( box_t *box )
 
 	sys_lock();
 	{
-		limit = box->limit / box->size;
+		limit = (unsigned)(box->limit / box->size);
 	}
 	sys_unlock();
 
