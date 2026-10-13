@@ -64,10 +64,10 @@ LD_FLAGS   += --strict
 LD_FLAGS   += --map --list=$(MAP) --symbols --list_mapping_symbols --info common,sizes,totals,veneers,unused
 ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
-C_FLAGS    += -std=c$(STDC:20=2x)
+C_FLAGS    += -std=c$(patsubst 23,2x,$(STDC:20=2x))
 CXX_FLAGS  += -std=c++$(STDCXX:20=2a)
 else
-C_FLAGS    += -std=gnu$(STDC:20=2x)
+C_FLAGS    += -std=gnu$(patsubst 23,2x,$(STDC:20=2x))
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
 endif
 ifneq ($(filter EXCEPTIONS,$(DEFS)),)

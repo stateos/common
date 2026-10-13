@@ -60,14 +60,14 @@ ifneq ($(filter ISO,$(DEFS)),)
 $(info Using iso)
 DEFS       := $(DEFS:ISO=)
 ifneq ($(STDC),)
-C_FLAGS    += -std=c$(STDC:20=2x)
+C_FLAGS    += -std=c$(patsubst 23,2x,$(STDC:20=2x))
 endif
 ifneq ($(STDCXX),)
 CXX_FLAGS  += -std=c++$(STDCXX:20=2a)
 endif
 else
 ifneq ($(STDC),)
-C_FLAGS    += -std=gnu$(STDC:20=2x)
+C_FLAGS    += -std=gnu$(patsubst 23,2x,$(STDC:20=2x))
 endif
 ifneq ($(STDCXX),)
 CXX_FLAGS  += -std=gnu++$(STDCXX:20=2a)
