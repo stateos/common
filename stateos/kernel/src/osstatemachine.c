@@ -262,7 +262,7 @@ void priv_hsm_init( hsm_t *hsm, unsigned *data, size_t bufsize, void *res )
 
 	core_obj_init(&hsm->evq.obj, res);
 
-	hsm->evq.limit = bufsize / sizeof(unsigned);
+	hsm->evq.limit = (unsigned)(bufsize / sizeof(unsigned));
 	hsm->evq.data  = data;
 }
 

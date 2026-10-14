@@ -42,7 +42,7 @@ void priv_evq_init( evq_t *evq, unsigned *data, size_t bufsize, void *res )
 
 	core_obj_init(&evq->obj, res);
 
-	evq->limit = bufsize / sizeof(unsigned);
+	evq->limit = (unsigned)(bufsize / sizeof(unsigned));
 	evq->data  = data;
 }
 

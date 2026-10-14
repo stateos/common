@@ -41,8 +41,6 @@
 /* -------------------------------------------------------------------------- */
 // switch the context of the current task: called by port_ctx_swap
 
-void *port_tsk_switch( void *sp );
-
 void *port_tsk_switch( void *sp )
 {
 	port_isr = true;

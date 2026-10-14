@@ -425,7 +425,7 @@ unsigned box_count( box_t *box )
 
 	sys_lock();
 	{
-		count = box->count / box->size;
+		count = (unsigned)(box->count / box->size);
 	}
 	sys_unlock();
 
@@ -443,7 +443,7 @@ unsigned box_space( box_t *box )
 
 	sys_lock();
 	{
-		space = (box->limit - box->count) / box->size;
+		space = (unsigned)((box->limit - box->count) / box->size);
 	}
 	sys_unlock();
 
@@ -461,7 +461,7 @@ unsigned box_limit( box_t *box )
 
 	sys_lock();
 	{
-		limit = box->limit / box->size;
+		limit = (unsigned)(box->limit / box->size);
 	}
 	sys_unlock();
 

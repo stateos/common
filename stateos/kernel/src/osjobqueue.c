@@ -42,7 +42,7 @@ void priv_job_init( job_t *job, fun_t **data, size_t bufsize, void *res )
 
 	core_obj_init(&job->obj, res);
 
-	job->limit = bufsize / sizeof(fun_t *);
+	job->limit = (unsigned)(bufsize / sizeof(fun_t *));
 	job->data  = data;
 }
 
