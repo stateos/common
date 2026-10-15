@@ -173,6 +173,8 @@ void priv_tsk_stop( tsk_t *tsk )
 void tsk_stop( void )
 /* -------------------------------------------------------------------------- */
 {
+	assert_tsk_context();
+
 	port_set_lock();
 
 	priv_tsk_stop(System.cur);                     // remove current task from ready queue
@@ -199,6 +201,7 @@ void tsk_flip( fun_t *proc )
 /* -------------------------------------------------------------------------- */
 {
 	assert(proc);
+	assert_tsk_context();
 
 	port_set_lock();
 

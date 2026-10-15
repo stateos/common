@@ -72,6 +72,8 @@ static
 int priv_mtx_take( mtx_t *mtx )
 /* -------------------------------------------------------------------------- */
 {
+	assert_tsk_context();
+
 	if (mtx->owner == NULL)
 	{
 		core_mtx_link(mtx, System.cur);

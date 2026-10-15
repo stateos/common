@@ -209,6 +209,8 @@ int core_tsk_waitFor( tsk_t **que, cnt_t delay )
 {
 	tsk_t *cur = System.cur;
 
+	assert_tsk_context();
+
 	cur->start = core_sys_time();
 	cur->delay = delay;
 
@@ -221,6 +223,8 @@ int core_tsk_waitNext( tsk_t **que, cnt_t delay )
 {
 	tsk_t *cur = System.cur;
 
+	assert_tsk_context();
+
 	cur->delay = delay;
 
 	return core_tsk_wait(que, cur);
@@ -231,6 +235,8 @@ int core_tsk_waitNext( tsk_t **que, cnt_t delay )
 int core_tsk_waitUntil( tsk_t **que, cnt_t time )
 {
 	tsk_t *cur = System.cur;
+
+	assert_tsk_context();
 
 	cur->start = core_sys_time();
 	cur->delay = time - cur->start;
@@ -343,6 +349,8 @@ bool core_stk_integrity( void )
 
 void core_ctx_switch( void )
 {
+	assert_tsk_context();
+
 	sys_lock();
 	{
 		if (setjmp(System.cur->ctx.buf) == 0)

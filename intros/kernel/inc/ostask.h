@@ -763,6 +763,7 @@ __STATIC_INLINE
 size_t tsk_stackSpace( void )
 {
 #ifdef DEBUG
+	assert_tsk_context();
 	return core_stk_space(System.cur);
 #else
 	return 0;

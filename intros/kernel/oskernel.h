@@ -105,6 +105,8 @@ bool core_stk_integrity( void );
 
 #define assert_stk_integrity()     assert(core_stk_integrity())
 
+#define assert_tsk_context()       assert(System.cur->hdr.id != ID_TIMER) // timer callback is not a task
+
 /* -------------------------------------------------------------------------- */
 
 // initiate and run the system timer
