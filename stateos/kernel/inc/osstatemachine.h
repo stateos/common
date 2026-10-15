@@ -247,6 +247,7 @@ typedef struct __hsm hsm_id [];
  * Description       : define and initialize an hsm action object
  *
  * Parameters
+ *   action          : name of a pointer to hsm action object
  *   owner           : action owner
  *   event           : event value
  *   target          : pointer to transition target state (NULL, if no transition)
@@ -254,10 +255,10 @@ typedef struct __hsm hsm_id [];
  *
  ******************************************************************************/
 
-#define             OS_HSM_ACTION( owner, event, target, handler ) \
+#define             OS_HSM_ACTION( action, owner, event, target, handler ) \
                        hsm_action_t action[] = { _HSM_ACTION_INIT( owner, event, target, handler ) }
 
-#define         static_HSM_ACTION( owner, event, target, handler ) \
+#define         static_HSM_ACTION( action, owner, event, target, handler ) \
                 static hsm_action_t action[] = { _HSM_ACTION_INIT( owner, event, target, handler ) }
 
 /******************************************************************************
