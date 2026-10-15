@@ -335,8 +335,9 @@ size_t core_stk_space( tsk_t *tsk )
 static
 bool priv_stk_integrity( tsk_t *tsk, void *sp )
 {
-	void *tp = tsk->stack + STK_SIZE(0);
+	void *tp;
 	if (tsk == &MAIN) return true;
+	tp = tsk->stack + STK_SIZE(0);
 	if (sp < tp) return false;
 #if (__MPU_USED == 0) && ((OS_GUARD_SIZE) > 0)
 	if (core_stk_space(tsk) < STK_OVER(0)) return false;

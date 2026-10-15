@@ -36,8 +36,7 @@
 /* -------------------------------------------------------------------------- */
 
 #ifndef MAIN_TOP
-static  stk_t     MAIN_STK[STK_SIZE(OS_STACK_SIZE)] __STKALIGN;
-#define MAIN_TOP (MAIN_STK+STK_SIZE(OS_STACK_SIZE))
+#define MAIN_TOP  NULL // the stack of the main task is provided by the startup code
 #endif
 
 /* -------------------------------------------------------------------------- */
