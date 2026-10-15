@@ -514,7 +514,7 @@ void tmr_startUntil( tmr_t *tmr, cnt_t time );
  ******************************************************************************/
 
 __STATIC_INLINE
-void tmr_stop( tmr_t *tmr ) { tmr_start(tmr, 0, 0); }
+void tmr_stop( tmr_t *tmr ) { tmr_reset(tmr); }
 
 /******************************************************************************
  *
