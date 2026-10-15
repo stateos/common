@@ -615,7 +615,12 @@ struct RawBufferT : public __raw
 
 	~RawBufferT() { assert(__raw::obj.queue == nullptr); }
 
-	RawBufferT( RawBufferT&& ) = default;
+	RawBufferT( RawBufferT&& _src ): __raw _RAW_INIT(limit_, data_)
+	{
+		assert(_src.__raw::count == 0 && _src.obj.queue == nullptr);
+		(void) _src;
+	}
+
 	RawBufferT( const RawBufferT& ) = delete;
 	RawBufferT& operator=( RawBufferT&& ) = delete;
 	RawBufferT& operator=( const RawBufferT& ) = delete;

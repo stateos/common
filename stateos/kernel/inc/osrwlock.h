@@ -484,7 +484,11 @@ struct RWLock : public __rwl
 
 	~RWLock() { assert(__rwl::write == false && __rwl::count == 0); }
 
-	RWLock( RWLock&& ) = default;
+	RWLock( RWLock&& _src ): __rwl(_src)
+	{
+		assert(_src.write == false && _src.count == 0 && _src.obj.queue == nullptr && _src.queue == nullptr);
+	}
+
 	RWLock( const RWLock& ) = delete;
 	RWLock& operator=( RWLock&& ) = delete;
 	RWLock& operator=( const RWLock& ) = delete;

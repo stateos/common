@@ -464,7 +464,11 @@ struct Mutex : public __mtx
 
 	~Mutex() { assert(__mtx::owner == nullptr); }
 
-	Mutex( Mutex&& ) = default;
+	Mutex( Mutex&& _src ): __mtx(_src)
+	{
+		assert(_src.owner == nullptr && _src.obj.queue == nullptr);
+	}
+
 	Mutex( const Mutex& ) = delete;
 	Mutex& operator=( Mutex&& ) = delete;
 	Mutex& operator=( const Mutex& ) = delete;

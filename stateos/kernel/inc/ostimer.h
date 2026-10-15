@@ -839,7 +839,11 @@ struct Timer : public baseTimer
 
 	~Timer() { assert(__tmr::hdr.id == ID_STOPPED); }
 
-	Timer( Timer&& ) = default;
+	Timer( Timer&& _src ): baseTimer(static_cast<baseTimer&&>(_src))
+	{
+		assert(_src.hdr.id == ID_STOPPED && _src.obj.queue == nullptr);
+	}
+
 	Timer( const Timer& ) = delete;
 	Timer& operator=( Timer&& ) = delete;
 	Timer& operator=( const Timer& ) = delete;

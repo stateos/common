@@ -487,7 +487,11 @@ struct Semaphore : public __sem
 
 	~Semaphore() { assert(__sem::obj.queue == nullptr); }
 
-	Semaphore( Semaphore&& ) = default;
+	Semaphore( Semaphore&& _src ): __sem(_src)
+	{
+		assert(_src.obj.queue == nullptr);
+	}
+
 	Semaphore( const Semaphore& ) = delete;
 	Semaphore& operator=( Semaphore&& ) = delete;
 	Semaphore& operator=( const Semaphore& ) = delete;

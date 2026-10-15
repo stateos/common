@@ -311,7 +311,11 @@ struct Barrier : public __bar
 
 	~Barrier() { assert(__bar::obj.queue == nullptr); }
 
-	Barrier( Barrier&& ) = default;
+	Barrier( Barrier&& _src ): __bar(_src)
+	{
+		assert(_src.obj.queue == nullptr);
+	}
+
 	Barrier( const Barrier& ) = delete;
 	Barrier& operator=( Barrier&& ) = delete;
 	Barrier& operator=( const Barrier& ) = delete;

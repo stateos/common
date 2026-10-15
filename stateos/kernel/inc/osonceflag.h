@@ -272,7 +272,11 @@ struct OnceFlag
 	constexpr
 	OnceFlag(): flg_{_ONE_INIT()} {}
 
-	OnceFlag( OnceFlag&& ) = default;
+	OnceFlag( OnceFlag&& _src ): flg_{_src.flg_}
+	{
+		assert(_src.flg_ != _ONE_BUSY()); // the once function is not being executed
+	}
+
 	OnceFlag( const OnceFlag& ) = delete;
 	OnceFlag& operator=( OnceFlag&& ) = delete;
 	OnceFlag& operator=( const OnceFlag& ) = delete;

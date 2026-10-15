@@ -392,7 +392,11 @@ struct ListTT : public __lst
 
 	~ListTT() { assert(__lst::obj.queue == nullptr); }
 
-	ListTT( ListTT&& ) = default;
+	ListTT( ListTT&& _src ): __lst(_src)
+	{
+		assert(_src.obj.queue == nullptr && _src.head.next == nullptr);
+	}
+
 	ListTT( const ListTT& ) = delete;
 	ListTT& operator=( ListTT&& ) = delete;
 	ListTT& operator=( const ListTT& ) = delete;

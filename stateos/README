@@ -76,6 +76,7 @@ Features:
 - fixed assertion in cnd_waitFor / cnd_waitUntil: the mutex can be locked again with OWNERDEAD, reseted or deleted (as described)
 - fixed OS_HSM_ACTION / static_HSM_ACTION: the name of the object is the first parameter (all the objects were named 'action')
 - fixed LockGuard, ReadLock and WriteLock: a moved guard released the lock twice
+- move constructors of the C++ objects assert (DEBUG) that the moved object is idle, queues, memory pool, task and state machine use their own buffers after the move
 ---------
 7.1
 - updated os version

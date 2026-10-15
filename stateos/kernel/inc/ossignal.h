@@ -403,7 +403,11 @@ struct Signal : public __sig
 
 	~Signal() { assert(__sig::obj.queue == nullptr); }
 
-	Signal( Signal&& ) = default;
+	Signal( Signal&& _src ): __sig(_src)
+	{
+		assert(_src.obj.queue == nullptr);
+	}
+
 	Signal( const Signal& ) = delete;
 	Signal& operator=( Signal&& ) = delete;
 	Signal& operator=( const Signal& ) = delete;

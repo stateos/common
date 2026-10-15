@@ -1328,7 +1328,23 @@ struct TaskT : public baseTask, public baseStack<size_>
 
 	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
 
-	TaskT( TaskT<size_>&& ) = default;
+#if __cplusplus >= 201402L
+	TaskT( TaskT<size_>&& _src ):
+	baseTask{_src.basic, _src.fun, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)}
+	{
+		assert(_src.hdr.id == ID_STOPPED);
+		act = _src.act;                      // the signal action set before the task was stopped
+		__tsk::sig.action = _src.sig.action;
+	}
+#else
+	TaskT( TaskT<size_>&& _src ):
+	baseTask{_src.basic, _src.proc, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)}
+	{
+		assert(_src.hdr.id == ID_STOPPED);
+		__tsk::sig.action = _src.sig.action; // the signal action set before the task was stopped
+	}
+#endif
+
 	TaskT( const TaskT<size_>& ) = delete;
 	TaskT<size_>& operator=( TaskT<size_>&& ) = delete;
 	TaskT<size_>& operator=( const TaskT<size_>& ) = delete;

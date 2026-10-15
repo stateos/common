@@ -382,7 +382,11 @@ struct ConditionVariable : public __cnd
 
 	~ConditionVariable() { assert(__cnd::obj.queue == nullptr); }
 
-	ConditionVariable( ConditionVariable&& ) = default;
+	ConditionVariable( ConditionVariable&& _src ): __cnd(_src)
+	{
+		assert(_src.obj.queue == nullptr);
+	}
+
 	ConditionVariable( const ConditionVariable& ) = delete;
 	ConditionVariable& operator=( ConditionVariable&& ) = delete;
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;

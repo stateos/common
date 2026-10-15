@@ -329,7 +329,11 @@ struct Event : public __evt
 
 	~Event() { assert(__evt::obj.queue == nullptr); }
 
-	Event( Event&& ) = default;
+	Event( Event&& _src ): __evt(_src)
+	{
+		assert(_src.obj.queue == nullptr);
+	}
+
 	Event( const Event& ) = delete;
 	Event& operator=( Event&& ) = delete;
 	Event& operator=( const Event& ) = delete;

@@ -425,7 +425,12 @@ struct MemoryPoolT : public __mem
 
 	~MemoryPoolT() { assert(__mem::lst.obj.queue == nullptr); }
 
-	MemoryPoolT( MemoryPoolT&& ) = default;
+	MemoryPoolT( MemoryPoolT&& _src ): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_)
+	{
+		assert(_src.limit == limit_ && _src.lst.obj.queue == nullptr); // the pool has not been used (the buffer is bound at the first use)
+		(void) _src;
+	}
+
 	MemoryPoolT( const MemoryPoolT& ) = delete;
 	MemoryPoolT& operator=( MemoryPoolT&& ) = delete;
 	MemoryPoolT& operator=( const MemoryPoolT& ) = delete;
