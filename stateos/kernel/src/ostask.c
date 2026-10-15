@@ -366,12 +366,11 @@ void tsk_stop( void )
 /* -------------------------------------------------------------------------- */
 {
 	assert_tsk_context();
-	assert(System.cur->mtx.list == 0);
 
 	port_set_lock();
 
 	priv_sig_reset(System.cur);                    // reset signal variables of current task
-//	priv_mtx_remove(tsk);                          // release all owned robust mutexes
+	priv_mtx_remove(System.cur);                   // release all owned mutexes
 
 	if (System.cur->owner == System.cur)           // current task is detached
 		priv_tsk_destroy();                        // wait for destruction
@@ -403,7 +402,7 @@ int tsk_reset( tsk_t *tsk )
 
 			if (tsk->hdr.id != ID_STOPPED)              // inactive task cannot be removed
 			{
-				priv_mtx_remove(tsk);                   // release all owned robust mutexes
+				priv_mtx_remove(tsk);                   // release all owned mutexes
 				core_tsk_wakeup(tsk->owner, E_STOPPED); // notify waiting task
 				priv_tsk_stop(tsk);                     // remove task from all queues
 			}
@@ -436,7 +435,7 @@ int tsk_destroy( tsk_t *tsk )
 
 			if (tsk->hdr.id != ID_STOPPED)              // only active task can be removed
 			{
-				priv_mtx_remove(tsk);                   // release all owned robust mutexes
+				priv_mtx_remove(tsk);                   // release all owned mutexes
 				core_tsk_wakeup(tsk->owner, E_DELETED); // notify waiting task
 
 				if (tsk == System.cur)                  // current task will be destroyed by destructor
@@ -478,11 +477,12 @@ void tsk_flip( fun_t *proc )
 
 	System.cur->proc = proc;
 
-	priv_sig_reset(System.cur); // reset signal variables of current task
+	priv_sig_reset(System.cur);  // reset signal variables of current task
+	priv_mtx_remove(System.cur); // the new procedure cannot release mutexes held by the previous one
 	core_ctx_switchNow();
 	core_tsk_flip((void *)STK_CROP(System.cur->stack, System.cur->size));
 
-	assert(false);              // system cannot return here
+	assert(false);               // system cannot return here
 }
 
 /* -------------------------------------------------------------------------- */

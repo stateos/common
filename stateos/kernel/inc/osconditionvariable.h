@@ -231,7 +231,7 @@ void cnd_delete( cnd_t *cnd ) { cnd_destroy(cnd); }
  *
  * Return
  *   E_SUCCESS       : condition variable object was successfully signalled; owned mutex was locked again
- *   OWNERDEAD       : owned mutex was locked again but previous owner of the mutex was reseted
+ *   OWNERDEAD       : owned mutex was locked again but previous owner of the mutex has stopped
  *   E_FAILURE       : mutex object can't be unlocked
  *   E_STOPPED       : condition variable or mutex object was reseted
  *   E_DELETED       : condition variable or mutex object was deleted
@@ -257,7 +257,7 @@ int cnd_waitFor( cnd_t *cnd, mtx_t *mtx, cnt_t delay );
  *
  * Return
  *   E_SUCCESS       : condition variable object was successfully signalled; owned mutex was locked again
- *   OWNERDEAD       : owned mutex was locked again but previous owner of the mutex was reseted
+ *   OWNERDEAD       : owned mutex was locked again but previous owner of the mutex has stopped
  *   E_FAILURE       : mutex object can't be unlocked
  *   E_STOPPED       : condition variable or mutex object was reseted
  *   E_DELETED       : condition variable or mutex object was deleted
@@ -282,7 +282,7 @@ int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time );
  *
  * Return
  *   E_SUCCESS       : condition variable object was successfully signalled; owned mutex was locked again
- *   OWNERDEAD       : owned mutex was locked again but previous owner of the mutex was reseted
+ *   OWNERDEAD       : owned mutex was locked again but previous owner of the mutex has stopped
  *   E_FAILURE       : mutex object can't be unlocked
  *   E_STOPPED       : condition variable or mutex object was reseted
  *   E_DELETED       : condition variable or mutex object was deleted

@@ -314,7 +314,7 @@ unsigned mtx_prio( mtx_t *mtx );
  *
  * Return
  *   E_SUCCESS       : mutex object was successfully locked
- *   OWNERDEAD       : mutex object was successfully locked, previous owner was reseted
+ *   OWNERDEAD       : mutex object was successfully locked, previous owner has stopped
  *   E_FAILURE       : mutex object can't be locked
  *   E_TIMEOUT       : mutex object can't be locked immediately, try again
  *
@@ -342,7 +342,7 @@ int mtx_tryLock( mtx_t *mtx ) { return mtx_take(mtx); }
  *
  * Return
  *   E_SUCCESS       : mutex object was successfully locked
- *   OWNERDEAD       : mutex object was successfully locked, previous owner was reseted
+ *   OWNERDEAD       : mutex object was successfully locked, previous owner has stopped
  *   E_FAILURE       : mutex object can't be locked
  *   E_STOPPED       : mutex object was reseted before the specified timeout expired
  *   E_DELETED       : mutex object was deleted before the specified timeout expired
@@ -367,7 +367,7 @@ int mtx_waitFor( mtx_t *mtx, cnt_t delay );
  *
  * Return
  *   E_SUCCESS       : mutex object was successfully locked
- *   OWNERDEAD       : mutex object was successfully locked, previous owner was reseted
+ *   OWNERDEAD       : mutex object was successfully locked, previous owner has stopped
  *   E_FAILURE       : mutex object can't be locked
  *   E_STOPPED       : mutex object was reseted before the specified timeout expired
  *   E_DELETED       : mutex object was deleted before the specified timeout expired
@@ -392,7 +392,7 @@ int mtx_waitUntil( mtx_t *mtx, cnt_t time );
  *
  * Return
  *   E_SUCCESS       : mutex object was successfully locked
- *   OWNERDEAD       : mutex object was successfully locked, previous owner was reseted
+ *   OWNERDEAD       : mutex object was successfully locked, previous owner has stopped
  *   E_FAILURE       : mutex object can't be locked
  *   E_STOPPED       : mutex object was reseted
  *   E_DELETED       : mutex object was deleted

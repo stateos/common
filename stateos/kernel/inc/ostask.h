@@ -768,6 +768,7 @@ int tsk_join( tsk_t *tsk );
  * Alias             : tsk_exit
  *
  * Description       : stop the current task and remove it from READY queue
+ *                     all mutexes held by the task are released (waiting tasks get E_STOPPED, robust mutex: next owner gets OWNERDEAD)
  *                     detached task is destroyed, otherwise
  *                     function doesn't destroy the stack storage,
  *                     and all allocated resources will remain intact until
@@ -793,6 +794,7 @@ void tsk_exit( void ) { tsk_stop(); }
  * Alias             : tsk_kill
  *
  * Description       : reset the task object and remove it from READY/BLOCKED queue
+ *                     all mutexes held by the task are released (waiting tasks get E_STOPPED, robust mutex: next owner gets OWNERDEAD)
  *
  * Parameters
  *   tsk             : pointer to task object
@@ -816,6 +818,7 @@ int tsk_kill( tsk_t *tsk ) { return tsk_reset(tsk); }
  * Alias             : tsk_delete
  *
  * Description       : reset the task object and free allocated resources
+ *                     all mutexes held by the task are released (waiting tasks get E_STOPPED, robust mutex: next owner gets OWNERDEAD)
  *
  * Parameters
  *   tsk             : pointer to task object
@@ -858,6 +861,7 @@ void tsk_pass ( void ) { tsk_yield(); }
  * Name              : tsk_flip
  *
  * Description       : restart current task with the new proc (task function)
+ *                     all mutexes held by the task are released (waiting tasks get E_STOPPED, robust mutex: next owner gets OWNERDEAD)
  *
  * Parameters
  *   proc            : new task proc (task function)

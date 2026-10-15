@@ -143,7 +143,7 @@ enum
 	E_STOPPED,      // process was released as a result of reset the supervising object
 	E_DELETED,      // process was released as a result of deleting the supervising object
 	E_TIMEOUT,      // process was released as a result of the end of the timer countdown
-	OWNERDEAD,      // previous owner has been killed
+	OWNERDEAD,      // previous owner has stopped
 };
 
 /* -------------------------------------------------------------------------- */
