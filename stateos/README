@@ -80,6 +80,7 @@ Features:
 - fixed ConditionVariable wait functions with predicate (result was not initialized when the predicate was satisfied at once)
 - ConditionVariable wait functions with predicate check the predicate once more after the timeout (as std::condition_variable does)
 - fixed RawBufferT / RawBufferTT: waitFor, waitUntil, sendFor and sendUntil did not accept std::chrono arguments
+- fixed StateMachineT::giveAsync / sendAsync: wrong result type, the result of sendAsync was lost
 ---------
 7.1
 - updated os version
