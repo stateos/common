@@ -36,6 +36,7 @@
 #include "osclock.h"
 #include "osmutex.h"
 #include "ostimer.h"
+#include "oscriticalsection.h"
 
 /* -------------------------------------------------------------------------- */
 
@@ -1178,8 +1179,18 @@ struct baseTask : public __tsk
 	void     start    ()                   {        tsk_start    (this); }
 #if __cplusplus >= 201402L
 	template<class F>
-	void     startFrom( F&&      _proc )   {        new (&fun) Fun_t(_proc);
-	                                                tsk_startFrom(this, fun_); }
+	void     startFrom( F&&      _proc )
+	{
+		Fun_t tmp(_proc);
+		{
+			CriticalSection cs;
+			if (__tsk::hdr.id == ID_STOPPED)  // active tasks cannot be started
+			{
+				fun.swap(tmp);
+				tsk_startFrom(this, fun_);
+			}
+		}                                     // the replaced function is destroyed outside the critical section
+	}
 #else
 	void     startFrom( fun_t  * _proc )   {        tsk_startFrom(this, _proc); }
 #endif
@@ -1197,8 +1208,15 @@ struct baseTask : public __tsk
 	void     signal   ( unsigned _signo )  {        tsk_signal   (this, _signo); }
 #if __cplusplus >= 201402L
 	template<class F>
-	void     action   ( F&&      _action ) {        new (&act) Act_t(_action);
-	                                                tsk_action   (this, act_); }
+	void     action   ( F&&      _action )
+	{
+		Act_t tmp(_action);
+		{
+			CriticalSection cs;
+			act.swap(tmp);
+			tsk_action(this, act_);
+		}                                     // the replaced action is destroyed outside the critical section
+	}
 #else
 	void     action   ( act_t *  _action ) {        tsk_action   (this, _action); }
 #endif
@@ -1245,7 +1263,7 @@ struct baseTask : public __tsk
 		void     pass      ()                   {        tsk_pass      (); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void     flip      ( F&&      _proc )   {        new (&current()->fun) Fun_t(_proc);
+		void     flip      ( F&&      _proc )   {        current()->fun = Fun_t(_proc);
 		                                                 tsk_flip      (fun_); }
 #else
 		static
@@ -1277,8 +1295,7 @@ struct baseTask : public __tsk
 		void     signal    ( unsigned _signo )  {        tsk_signal    (current(), _signo); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void     action    ( F&&      _action ) {        new (&current()->act) Act_t(_action);
-		                                                 tsk_action    (current(), act_); }
+		void     action    ( F&&      _action ) {        current()->action(std::forward<F>(_action)); }
 #else
 		static
 		void     action    ( act_t  * _action ) {        tsk_action    (current(), _action); }

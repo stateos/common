@@ -34,6 +34,7 @@
 
 #include "oskernel.h"
 #include "osclock.h"
+#include "oscriticalsection.h"
 
 /******************************************************************************
  *
@@ -752,8 +753,15 @@ struct baseTimer : public __tmr
 	template<typename T>
 	void startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), nullptr); }
 	template<typename T, class F>
-	void startFrom    ( const T& _delay, const T& _period, F&&     _proc )  {        new (&fun) Fun_t(_proc);
-	                                                                                 tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), fun_); }
+	void startFrom    ( const T& _delay, const T& _period, F&&     _proc )
+	{
+		Fun_t tmp(_proc);
+		{
+			CriticalSection cs;       // the callback (handler mode) cannot run while the function is replaced
+			fun.swap(tmp);
+			tmr_startFrom(this, Clock::count(_delay), Clock::count(_period), fun_);
+		}                             // the replaced function is destroyed outside the critical section
+	}
 #else
 	template<typename T>
 	void startFrom    ( const T& _delay, const T& _period, fun_t * _proc )  {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), _proc); }
@@ -778,7 +786,15 @@ struct baseTimer : public __tmr
 
 #if __cplusplus >= 201402L
 	static
-	void fun_         ()                                                    {        current()->fun(); }
+	void fun_         ()
+	{
+		auto  tmr = current();
+		Fun_t run;
+		run.swap(tmr->fun);       // the running function must live until the callback returns,
+		run();                    // the callback can replace it (flipISR)
+		if (!tmr->fun)
+			tmr->fun.swap(run);
+	}
 	Fun_t fun;
 #endif
 
@@ -796,7 +812,7 @@ struct baseTimer : public __tmr
 		static
 		void flipISR ( std::nullptr_t )            { tmr_flipISR (nullptr); }
 		template<class F> static
-		void flipISR ( F&& _proc )                 { new (&current()->fun) Fun_t(_proc);
+		void flipISR ( F&& _proc )                 { current()->fun = Fun_t(_proc);
 		                                             tmr_flipISR (fun_); }
 		template<typename F, typename... A> static
 		void flipISR ( F&& _proc, A&&... _args )   { flipISR(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)); }
