@@ -133,6 +133,7 @@ struct __hsm
 	evq_t           evq;     // event queue
 	hsm_state_t *   state;   // current hsm state
 	hsm_action_t *  action;  // current hsm state action
+	tsk_t *         tsk;     // hsm event dispatcher task
 };
 
 typedef struct __hsm hsm_id [];
@@ -325,7 +326,7 @@ typedef struct __hsm hsm_id [];
  ******************************************************************************/
 
 #define               _HSM_INIT( _limit, _data ) \
-                    { _EVQ_INIT( _limit, _data ), NULL, NULL }
+                    { _EVQ_INIT( _limit, _data ), NULL, NULL, NULL }
 
 /******************************************************************************
  *
@@ -489,7 +490,8 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
  * Name              : hsm_reset
  * Alias             : hsm_kill
  *
- * Description       : reset the hsm object and wake up all waiting tasks with 'E_STOPPED' event value
+ * Description       : reset the hsm object, stop the hsm event dispatcher
+ *                     and wake up all waiting tasks with 'E_STOPPED' event value
  *
  * Parameters
  *   hsm             : pointer to hsm object

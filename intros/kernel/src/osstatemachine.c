@@ -209,6 +209,7 @@ void priv_eventDispatcher( hsm_t *hsm )
 	sys_lock();
 	{
 		priv_transition(hsm, NULL);
+		hsm->tsk = NULL;
 	}
 	sys_unlock();
 #if OS_TASK_EXIT == 0
@@ -318,6 +319,7 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 			hsm->evq.head  = 0; //
 			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
+			hsm->tsk = tsk;
 			tsk_startWith(tsk, (fun_a *)priv_eventDispatcher, hsm);
 		}
 	}
@@ -329,13 +331,19 @@ static
 void priv_hsm_reset( hsm_t *hsm, int event )
 /* -------------------------------------------------------------------------- */
 {
+	tsk_t *tsk = hsm->tsk;
+
 	hsm->state = NULL;
+	hsm->tsk   = NULL;
 
 	hsm->evq.count = 0;
 	hsm->evq.head  = 0;
 	hsm->evq.tail  = 0;
 
 	core_all_wakeup(&hsm->evq.obj.queue, event);
+
+	if (tsk != NULL && tsk->arg == hsm) // the task still works as the event dispatcher of this hsm
+		tsk_reset(tsk);                 // stop it now, the hsm can be started again immediately
 }
 
 /* -------------------------------------------------------------------------- */
@@ -440,6 +448,7 @@ void priv_eventDispatcherAsync( hsm_t *hsm )
 	sys_lock();
 	{
 		priv_transition(hsm, NULL);
+		hsm->tsk = NULL;
 	}
 	sys_unlock();
 #if OS_TASK_EXIT == 0
@@ -465,6 +474,7 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 			hsm->evq.head  = 0; //
 			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
+			hsm->tsk = tsk;
 			tsk_startWith(tsk, (fun_a *)priv_eventDispatcherAsync, hsm);
 		}
 	}
