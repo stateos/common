@@ -317,6 +317,7 @@ void priv_sig_reset( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
 	tsk->sig.sigset = 0;
+	tsk->sig.run = 0;
 	tsk->sig.backup.sp = 0;
 }
 
@@ -607,6 +608,7 @@ void priv_sig_handler( tsk_t *tsk )
 		sigset = tsk->sig.sigset;
 		sigset &= -sigset;
 		tsk->sig.sigset &= ~sigset;
+		tsk->sig.run++;                  // the signal handler is being executed
 
 		port_clr_lock();
 		{
@@ -617,6 +619,8 @@ void priv_sig_handler( tsk_t *tsk )
 			}
 		}
 		port_set_lock();
+
+		tsk->sig.run--;
 	}
 }
 

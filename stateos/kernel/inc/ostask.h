@@ -142,6 +142,7 @@ struct __tsk
 	struct {
 	unsigned sigset;// pending signals
 	act_t  * action;// signal handler
+	unsigned run;   // number of signal handlers being executed (nested)
 	struct {
 	void   * sp;    // stack pointer of the interrupted context
 	int      event; // wakeup event of the interrupted context
@@ -183,7 +184,7 @@ typedef struct __tsk tsk_id [];
 
 #define               _TSK_INIT( _prio, _proc, _stack, _size )                                                            \
                        { _OBJ_INIT(), _HDR_INIT(), _proc, NULL, 0, 0, 0, _stack, _size, NULL, _prio, _prio, NULL, NULL, 0, \
-                       { NULL, NULL }, { 0, NULL, { NULL, 0, 0, 0, { { 0 } } } }, { { 0 } }, _PORT_DATA_INIT() }
+                       { NULL, NULL }, { 0, NULL, 0, { NULL, 0, 0, 0, { { 0 } } } }, { { 0 } }, _PORT_DATA_INIT() }
 
 /******************************************************************************
  *
@@ -1211,11 +1212,18 @@ struct baseTask : public __tsk
 	void     action   ( F&&      _action )
 	{
 		Act_t tmp(_action);
+		Act_t old;
 		{
 			CriticalSection cs;
-			act.swap(tmp);
+			if (__tsk::sig.run == 0)          // the action is not being executed:
+			{
+				act.swap(tmp);                // replace it now
+				nxt.swap(old);                // and drop the pending one
+			}
+			else                              // the action is being executed (it can replace itself):
+				nxt.swap(tmp);                // replace it after the execution
 			tsk_action(this, act_);
-		}                                     // the replaced action is destroyed outside the critical section
+		}                                     // the replaced actions are destroyed outside the critical section
 	}
 #else
 	void     action   ( act_t *  _action ) {        tsk_action   (this, _action); }
@@ -1231,8 +1239,28 @@ struct baseTask : public __tsk
 	void     fun_     ()                   {        current()->fun(); }
 	Fun_t    fun;
 	static
-	void     act_     ( unsigned _signo )  {        current()->act(_signo); }
+	void     act_     ( unsigned _signo )
+	{
+		auto tsk  = current();
+		auto next = [tsk]                     // use the pending action
+		{
+			Act_t old;
+			{
+				CriticalSection cs;
+				if (tsk->nxt && tsk->sig.run == 1) // no execution of the action is in progress (except the caller, outside of the action)
+				{
+					old.swap(tsk->act);
+					tsk->act.swap(tsk->nxt);
+				}
+			}                                 // the replaced action is destroyed outside the critical section
+		};
+		next();                               // replaced during the previous execution (ended by tsk_flip, tsk_stop or tsk_reset)
+		if (tsk->act)
+			tsk->act(_signo);
+		next();                               // replaced during this execution
+	}
 	Act_t    act;
+	Act_t    nxt;                             // the action replaced during its execution
 #endif
 
 /******************************************************************************
@@ -1351,6 +1379,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	{
 		assert(_src.hdr.id == ID_STOPPED);
 		act = _src.act;                      // the signal action set before the task was stopped
+		nxt = _src.nxt;
 		__tsk::sig.action = _src.sig.action;
 	}
 #else
