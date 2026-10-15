@@ -520,15 +520,15 @@ struct RawBufferT : public __raw
 	int    take     (       void *_data, size_t _size, size_t *_read = nullptr )         { return raw_take     (this, _data, _size, _read); }
 	int    tryWait  (       void *_data, size_t _size, size_t *_read = nullptr )         { return raw_tryWait  (this, _data, _size, _read); }
 	template<typename T>
-	int    waitFor  (       void *_data, size_t _size, size_t *_read,  const T& _delay ) { return raw_waitFor  (this, _data, _size, _read, _delay); }
+	int    waitFor  (       void *_data, size_t _size, size_t *_read,  const T& _delay ) { return raw_waitFor  (this, _data, _size, _read, Clock::count(_delay)); }
 	template<typename T>
-	int    waitUntil(       void *_data, size_t _size, size_t *_read,  const T& _time )  { return raw_waitUntil(this, _data, _size, _read, _time); }
+	int    waitUntil(       void *_data, size_t _size, size_t *_read,  const T& _time )  { return raw_waitUntil(this, _data, _size, _read, Clock::until(_time)); }
 	int    wait     (       void *_data, size_t _size, size_t *_read = nullptr )         { return raw_wait     (this, _data, _size, _read); }
 	int    give     ( const void *_data, size_t _size )                                  { return raw_give     (this, _data, _size); }
 	template<typename T>
-	int    sendFor  ( const void *_data, size_t _size, const T& _delay )                 { return raw_sendFor  (this, _data, _size, _delay); }
+	int    sendFor  ( const void *_data, size_t _size, const T& _delay )                 { return raw_sendFor  (this, _data, _size, Clock::count(_delay)); }
 	template<typename T>
-	int    sendUntil( const void *_data, size_t _size, const T& _time )                  { return raw_sendUntil(this, _data, _size, _time); }
+	int    sendUntil( const void *_data, size_t _size, const T& _time )                  { return raw_sendUntil(this, _data, _size, Clock::until(_time)); }
 	int    send     ( const void *_data, size_t _size )                                  { return raw_send     (this, _data, _size); }
 	int    push     ( const void *_data, size_t _size )                                  { return raw_push     (this, _data, _size); }
 	size_t count    ()                                                                   { return raw_count    (this); }
@@ -560,15 +560,15 @@ struct RawBufferTT : public RawBufferT<limit_*sizeof(C)>
 	int take     (       C *_data )                  { return raw_take     (this, _data, sizeof(C), nullptr); }
 	int tryWait  (       C *_data )                  { return raw_tryWait  (this, _data, sizeof(C), nullptr); }
 	template<typename T>                               
-	int waitFor  (       C *_data, const T& _delay ) { return raw_waitFor  (this, _data, sizeof(C), nullptr, _delay); }
+	int waitFor  (       C *_data, const T& _delay ) { return raw_waitFor  (this, _data, sizeof(C), nullptr, Clock::count(_delay)); }
 	template<typename T>                               
-	int waitUntil(       C *_data, const T& _time )  { return raw_waitUntil(this, _data, sizeof(C), nullptr, _time); }
+	int waitUntil(       C *_data, const T& _time )  { return raw_waitUntil(this, _data, sizeof(C), nullptr, Clock::until(_time)); }
 	int wait     (       C *_data )                  { return raw_wait     (this, _data, sizeof(C), nullptr); }
 	int give     ( const C *_data )                  { return raw_give     (this, _data, sizeof(C)); }
 	template<typename T>                               
-	int sendFor  ( const C *_data, const T& _delay ) { return raw_sendFor  (this, _data, sizeof(C), _delay); }
+	int sendFor  ( const C *_data, const T& _delay ) { return raw_sendFor  (this, _data, sizeof(C), Clock::count(_delay)); }
 	template<typename T>                               
-	int sendUntil( const C *_data, const T& _time )  { return raw_sendUntil(this, _data, sizeof(C), _time); }
+	int sendUntil( const C *_data, const T& _time )  { return raw_sendUntil(this, _data, sizeof(C), Clock::until(_time)); }
 	int send     ( const C *_data )                  { return raw_send     (this, _data, sizeof(C)); }
 	int push     ( const C *_data )                  { return raw_push     (this, _data, sizeof(C)); }
 };
