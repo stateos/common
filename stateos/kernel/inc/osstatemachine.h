@@ -831,7 +831,8 @@ struct StateMachineT : public __hsm
 	void          pushISR   ( unsigned _event )                   {        hsm_pushISR   (this,  _event); }
 	hsm_state_t * getState  ()                                    { return hsm_getState  (this); }
 #if OS_ATOMICS
-	void          startAsync( tsk_t& _task, hsm_state_t& _init )  {        hsm_startAsync(this, &_task, &_init); }
+	void          startAsync( tsk_t& _task, hsm_state_t& _init )  {        for (auto& _action: tab_) _action.link();
+	                                                                       hsm_startAsync(this, &_task, &_init); }
 	int           giveAsync ( unsigned _event )                   { return hsm_giveAsync (this,  _event); }
 	int           sendAsync ( unsigned _event )                   { return hsm_sendAsync (this,  _event); }
 #endif
