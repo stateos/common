@@ -757,8 +757,8 @@ struct StateMachineT : public __hsm
 	hsm_state_t * getState  ()                                    { return hsm_getState  (this); }
 #if OS_ATOMICS
 	void          startAsync( tsk_t& _task, hsm_state_t& _init )  {        hsm_startAsync(this, &_task, &_init); }
-	unsigned      giveAsync ( unsigned _event )                   { return hsm_giveAsync (this,  _event); }
-	void          sendAsync ( unsigned _event )                   {        hsm_sendAsync (this,  _event); }
+	int           giveAsync ( unsigned _event )                   { return hsm_giveAsync (this,  _event); }
+	int           sendAsync ( unsigned _event )                   { return hsm_sendAsync (this,  _event); }
 #endif
 
 	private:
