@@ -336,27 +336,34 @@ struct Mutex : public __mtx
 struct LockGuard
 {
 	explicit
-	LockGuard( Mutex& _mtx ): mtx_(_mtx)
+	LockGuard( Mutex& _mtx ): mtx_(&_mtx)
 	{
-		int result = mtx_.lock();
+		int result = mtx_->lock();
 		assert(result == E_SUCCESS);
 		(void) result;
 	}
 
 	~LockGuard()
 	{
-		int result = mtx_.unlock();
+		if (mtx_ == nullptr)
+			return;
+
+		int result = mtx_->unlock();
 		assert(result == E_SUCCESS);
 		(void) result;
 	}
 
-	LockGuard( LockGuard&& ) = default;
+	LockGuard( LockGuard&& _src ): mtx_(_src.mtx_)
+	{
+		_src.mtx_ = nullptr;
+	}
+
 	LockGuard( const LockGuard& ) = delete;
 	LockGuard& operator=( LockGuard&& ) = delete;
 	LockGuard& operator=( const LockGuard& ) = delete;
 
 	private:
-	Mutex& mtx_;
+	Mutex *mtx_;
 };
 
 /******************************************************************************

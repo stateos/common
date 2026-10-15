@@ -59,6 +59,7 @@ Features:
 - fixed RawBufferT / RawBufferTT: waitFor, waitUntil, sendFor and sendUntil did not accept std::chrono arguments
 - fixed Task::startFrom: the function of the running task was replaced, although the start of an active task is ignored
 - fixed memory leak in Task / Timer startFrom and flip (the replaced std::function was not destroyed)
+- fixed LockGuard, ReadLock and WriteLock: a moved guard released the lock twice
 - fixed compiler warnings on 64-bit targets
 - fixed name of oslibc.c in cmake config
 ---------
