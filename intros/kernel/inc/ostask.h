@@ -956,7 +956,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	baseTask{_src.proc, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)}
 #endif
 	{
-		assert(_src.hdr.id == ID_STOPPED && _src.obj.queue == nullptr);
+		assert(_src.hdr.id == ID_STOPPED); // obj.queue of a task is only the link in the queue it waited in
 		(void) _src;
 	}
 
