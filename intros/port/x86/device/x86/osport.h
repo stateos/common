@@ -63,24 +63,23 @@ extern "C" {
 // !! WARNING! OS_TIMER_SIZE < HW_TIMER_SIZE may cause unexpected problems !!
 
 #ifndef OS_TIMER_SIZE
-#define OS_TIMER_SIZE        32 /* bit size of system timer counter           */
+#define OS_TIMER_SIZE        64 /* bit size of system timer counter           */
 #endif
 
 /* -------------------------------------------------------------------------- */
-// !! WARNING! OS_TIMER_SIZE < HW_TIMER_SIZE may cause unexpected problems !!
 
 #ifdef  HW_TIMER_SIZE
 #error  HW_TIMER_SIZE is an internal definition!
 #else
-#define HW_TIMER_SIZE        32
+#define HW_TIMER_SIZE OS_TIMER_SIZE // the hardware time has 64 bits, it is cut to the size of the system timer
 #endif
 
 /* -------------------------------------------------------------------------- */
 // return current hardware time (in OS_FREQUENCY units)
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(_WIN32)
 
-// clock() counts the processor time of the process on linux, see osport.c
+// 64-bit monotonic time, see osport.c
 uint64_t port_hw_time( void );
 
 #else
@@ -96,15 +95,11 @@ uint64_t port_hw_time( void )
 /* -------------------------------------------------------------------------- */
 // return current system time
 
-#if HW_TIMER_SIZE >= OS_TIMER_SIZE
-
 __STATIC_INLINE
-uint32_t port_sys_time( void )
+uint64_t port_sys_time( void )
 {
-	return (uint32_t)port_hw_time();
+	return port_hw_time();
 }
-
-#endif
 
 /* -------------------------------------------------------------------------- */
 

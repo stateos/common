@@ -34,6 +34,11 @@
 #define _DEFAULT_SOURCE // clock_gettime is not declared with -std=c11
 #endif
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #include "oskernel.h"
 #include "inc/ostask.h"
 
@@ -53,6 +58,24 @@ uint64_t port_hw_time( void )
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return (uint64_t)ts.tv_sec * 1000000U + (uint64_t)ts.tv_nsec / 1000U;
+}
+
+#elif defined(_WIN32)
+
+// clock_t has 32 bits on windows, clock() stops after 2^31 milliseconds
+uint64_t port_hw_time( void )
+{
+	static
+	LARGE_INTEGER frq = { .QuadPart = 0 };
+	LARGE_INTEGER cnt;
+
+	if (frq.QuadPart == 0)
+		QueryPerformanceFrequency(&frq);
+
+	QueryPerformanceCounter(&cnt);
+
+	return (uint64_t)(cnt.QuadPart / frq.QuadPart) * 1000U
+	     + (uint64_t)(cnt.QuadPart % frq.QuadPart) * 1000U / (uint64_t)frq.QuadPart;
 }
 
 #endif
@@ -138,40 +161,5 @@ void port_longjmp( jmp_buf buf, int val )
 }
 
 #endif
-
-/* -------------------------------------------------------------------------- */
-
-/******************************************************************************
- Tick-less mode: return current system time
-*******************************************************************************/
-
-#if HW_TIMER_SIZE < OS_TIMER_SIZE
-
-cnt_t port_sys_time( void )
-{
-	static
-	uint32_t clk = 0;
-	uint32_t tck;
-	cnt_t    cnt;
-
-	cnt = System.cnt;
-	tck = (uint32_t)port_hw_time();
-
-	if (tck < clk)
-	{
-		core_sys_tick();
-		cnt = System.cnt;
-	}
-
-	clk = tck;
-
-	return cnt + tck;
-}
-
-#endif
-
-/******************************************************************************
- End of the function
-*******************************************************************************/
 
 /* -------------------------------------------------------------------------- */
