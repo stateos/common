@@ -352,6 +352,8 @@ struct ConditionVariable : public __cnd
 	{
 		int result = E_SUCCESS;
 		while (!_stopWaiting() && (result = waitUntil(_mtx, _time)) == E_SUCCESS);
+		if (result == E_TIMEOUT && _stopWaiting())  // the mutex is held again, the condition may have been satisfied during the timeout
+			result = E_SUCCESS;
 		return result;
 	}
 	template<typename F>
