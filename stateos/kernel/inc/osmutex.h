@@ -538,7 +538,7 @@ struct LockGuard
 	LockGuard( Mutex& _mtx ): mtx_(&_mtx)
 	{
 		int result = mtx_->lock();
-		assert(result == E_SUCCESS);
+		assert(result == E_SUCCESS || result == OWNERDEAD); // OWNERDEAD: the robust mutex is locked, its previous owner has stopped
 		(void) result;
 	}
 
@@ -621,8 +621,8 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->tryLock();
-		assert(result == E_SUCCESS || result == E_TIMEOUT);
-		locked_ = result == E_SUCCESS;
+		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_TIMEOUT);
+		locked_ = result == E_SUCCESS || result == OWNERDEAD;
 		return locked_;
 	}
 
@@ -633,8 +633,8 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->waitFor(_delay);
-		assert(result == E_SUCCESS || result == E_TIMEOUT);
-		locked_ = result == E_SUCCESS;
+		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_TIMEOUT);
+		locked_ = result == E_SUCCESS || result == OWNERDEAD;
 		return locked_;
 	}
 
@@ -645,8 +645,8 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->waitUntil(_time);
-		assert(result == E_SUCCESS || result == E_TIMEOUT);
-		locked_ = result == E_SUCCESS;
+		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_TIMEOUT);
+		locked_ = result == E_SUCCESS || result == OWNERDEAD;
 		return locked_;
 	}
 
@@ -656,8 +656,8 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->lock();
-		assert(result == E_SUCCESS);
-		locked_ = result == E_SUCCESS;
+		assert(result == E_SUCCESS || result == OWNERDEAD);
+		locked_ = result == E_SUCCESS || result == OWNERDEAD; // OWNERDEAD: the robust mutex is locked, its previous owner has stopped
 		return locked_;
 	}
 

@@ -85,6 +85,7 @@ Features:
 - fixed Task::startFrom: the function of the running task was replaced, although the start of an active task is ignored
 - fixed memory leak in Task / Timer startFrom, flip, flipISR and Task action (the replaced std::function was not destroyed)
 - Timer::startFrom replaces the function with the timer interrupt masked, the callback replaced by flipISR runs to its end
+- fixed UniqueLock / LockGuard with a robust mutex: OWNERDEAD means the mutex is locked (UniqueLock did not release it, LockGuard asserted)
 ---------
 7.1
 - updated os version
