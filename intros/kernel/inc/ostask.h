@@ -831,8 +831,14 @@ struct baseTask : public __tsk
 	void     start    ()                   {        tsk_start    (this); }
 #if __cplusplus >= 201402L
 	template<class F>
-	void     startFrom( F&&      _proc )   {        new (&fun) Fun_t(_proc);
-	                                                tsk_startFrom(this, fun_); }
+	void     startFrom( F&&      _proc )
+	{
+		if (__tsk::hdr.id == ID_STOPPED)  // active tasks cannot be started
+		{
+			new (&fun) Fun_t(_proc);
+			tsk_startFrom(this, fun_);
+		}
+	}
 #else
 	void     startFrom( fun_t  * _proc )   {        tsk_startFrom(this, _proc); }
 #endif
