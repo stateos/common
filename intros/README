@@ -58,6 +58,7 @@ Features:
 - OS_ATOMICS is rejected at compile time on cores without atomic instructions (Cortex-M0/M0+, AVR, STM8)
 - fixed tsk_stackSpace in the main task (DEBUG): returns 0 instead of scanning the memory behind the stack
 - the unused stack buffer of the main task is no longer reserved on ports without a stack symbol (x86, STM8/SDCC)
+- x86 port on linux: the system time is the monotonic time (clock() counts the processor time there)
 - fixed assertion in ReadLock / WriteLock
 - fixed ConditionVariable wait functions with predicate (result was not initialized when the predicate was satisfied at once)
 - ConditionVariable wait functions with predicate check the predicate once more after the timeout (as std::condition_variable does)

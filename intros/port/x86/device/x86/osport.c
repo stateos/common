@@ -30,6 +30,9 @@
  ******************************************************************************/
 
 #undef  _FORTIFY_SOURCE // __longjmp_chk does not allow to jump to another stack
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE // clock_gettime is not declared with -std=c11
+#endif
 
 #include "oskernel.h"
 #include "inc/ostask.h"
@@ -39,6 +42,20 @@
 void port_sys_init( void )
 {
 }
+
+/* -------------------------------------------------------------------------- */
+
+#if defined(__linux__)
+
+// clock() counts the processor time of the process on linux, the system time must not stop
+uint64_t port_hw_time( void )
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (uint64_t)ts.tv_sec * 1000000U + (uint64_t)ts.tv_nsec / 1000U;
+}
+
+#endif
 
 /* -------------------------------------------------------------------------- */
 
@@ -138,7 +155,7 @@ cnt_t port_sys_time( void )
 	cnt_t    cnt;
 
 	cnt = System.cnt;
-	tck = clock();
+	tck = (uint32_t)port_hw_time();
 
 	if (tck < clk)
 	{

@@ -76,14 +76,32 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------------- */
+// return current hardware time (in OS_FREQUENCY units)
+
+#if defined(__linux__)
+
+// clock() counts the processor time of the process on linux, see osport.c
+uint64_t port_hw_time( void );
+
+#else
+
+__STATIC_INLINE
+uint64_t port_hw_time( void )
+{
+	return (uint64_t)clock();
+}
+
+#endif
+
+/* -------------------------------------------------------------------------- */
 // return current system time
 
 #if HW_TIMER_SIZE >= OS_TIMER_SIZE
 
 __STATIC_INLINE
-clock_t port_sys_time( void )
+uint32_t port_sys_time( void )
 {
-	return clock();
+	return (uint32_t)port_hw_time();
 }
 
 #endif
