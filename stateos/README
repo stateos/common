@@ -75,6 +75,7 @@ Features:
 - hsm_reset and hsm_destroy stop the event dispatcher at once (the old dispatcher destroyed the hsm started again, after hsm_destroy it used the released memory)
 - fixed assertion in cnd_waitFor / cnd_waitUntil: the mutex can be locked again with OWNERDEAD, reseted or deleted (as described)
 - fixed OS_HSM_ACTION / static_HSM_ACTION: the name of the object is the first parameter (all the objects were named 'action')
+- fixed LockGuard, ReadLock and WriteLock: a moved guard released the lock twice
 ---------
 7.1
 - updated os version

@@ -558,25 +558,30 @@ struct RWLock : public __rwl
 struct ReadLock
 {
 	explicit
-	ReadLock( RWLock& _rwl ): lck_(_rwl)
+	ReadLock( RWLock& _rwl ): lck_(&_rwl)
 	{
-		int result = lck_.lockRead();
+		int result = lck_->lockRead();
 		assert(result == E_SUCCESS);
 		(void) result;
 	}
 
 	~ReadLock()
 	{
-		lck_.unlockRead();
+		if (lck_ != nullptr)
+			lck_->unlockRead();
 	}
 
-	ReadLock( ReadLock&& ) = default;
+	ReadLock( ReadLock&& _src ): lck_(_src.lck_)
+	{
+		_src.lck_ = nullptr;
+	}
+
 	ReadLock( const ReadLock& ) = delete;
 	ReadLock& operator=( ReadLock&& ) = delete;
 	ReadLock& operator=( const ReadLock& ) = delete;
 
 	private:
-	RWLock& lck_;
+	RWLock *lck_;
 };
 
 /******************************************************************************
@@ -593,25 +598,30 @@ struct ReadLock
 struct WriteLock
 {
 	explicit
-	WriteLock( RWLock& _rwl ): lck_(_rwl)
+	WriteLock( RWLock& _rwl ): lck_(&_rwl)
 	{
-		int result = lck_.lockWrite();
+		int result = lck_->lockWrite();
 		assert(result == E_SUCCESS);
 		(void) result;
 	}
 
 	~WriteLock()
 	{
-		lck_.unlockWrite();
+		if (lck_ != nullptr)
+			lck_->unlockWrite();
 	}
 
-	WriteLock( WriteLock&& ) = default;
+	WriteLock( WriteLock&& _src ): lck_(_src.lck_)
+	{
+		_src.lck_ = nullptr;
+	}
+
 	WriteLock( const WriteLock& ) = delete;
 	WriteLock& operator=( WriteLock&& ) = delete;
 	WriteLock& operator=( const WriteLock& ) = delete;
 
 	private:
-	RWLock& lck_;
+	RWLock *lck_;
 };
 
 }     //  namespace
