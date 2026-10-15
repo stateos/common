@@ -54,6 +54,7 @@ Features:
 - fixed read/write lock: readers waiting behind a writer that gave up waiting were not released
 - fixed hsm_link (action linked twice created a loop)
 - hsm_reset stops the event dispatcher at once (the old dispatcher destroyed the hsm started again)
+- fixed OS_HSM_ACTION / static_HSM_ACTION: the name of the object is the first parameter (all the objects were named 'action')
 - added assert (DEBUG) for functions that need a task context, e.g. blocking functions called from the timer callback
 - OS_ATOMICS is rejected at compile time on cores without atomic instructions (Cortex-M0/M0+, AVR, STM8)
 - fixed tsk_stackSpace in the main task (DEBUG): returns 0 instead of scanning the memory behind the stack
