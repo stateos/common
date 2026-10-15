@@ -210,6 +210,7 @@ void priv_eventDispatcher( hsm_t *hsm )
 	sys_lock();
 	{
 		priv_transition(hsm, NULL);
+		hsm->tsk = NULL;
 	}
 	sys_unlock();
 #if OS_TASK_EXIT == 0
@@ -349,6 +350,7 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 			hsm->evq.head  = 0; //
 			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
+			hsm->tsk = tsk;
 			tsk_startWith(tsk, (fun_a *)priv_eventDispatcher, hsm);
 		}
 	}
@@ -357,29 +359,41 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_hsm_reset( hsm_t *hsm, int event )
+tsk_t *priv_hsm_reset( hsm_t *hsm, int event )
 /* -------------------------------------------------------------------------- */
 {
+	tsk_t *tsk = hsm->tsk;
+
 	hsm->state = NULL;
+	hsm->tsk   = NULL;
 
 	hsm->evq.count = 0;
 	hsm->evq.head  = 0;
 	hsm->evq.tail  = 0;
 
 	core_all_wakeup(&hsm->evq.obj.queue, event);
+
+	if (tsk != NULL && tsk->arg == hsm) // the task still works as the event dispatcher of this hsm:
+		return tsk;                     // it must be stopped now, the hsm can be started again immediately
+
+	return NULL;
 }
 
 /* -------------------------------------------------------------------------- */
 void hsm_reset( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
+	tsk_t *tsk;
+
 	assert_tsk_context();
 	assert(hsm);
 	assert(hsm->evq.obj.res!=RELEASED);
 
 	sys_lock();
 	{
-		priv_hsm_reset(hsm, E_STOPPED);
+		tsk = priv_hsm_reset(hsm, E_STOPPED);
+		if (tsk != NULL)
+			tsk_reset(tsk);
 	}
 	sys_unlock();
 }
@@ -388,14 +402,18 @@ void hsm_reset( hsm_t *hsm )
 void hsm_destroy( hsm_t *hsm )
 /* -------------------------------------------------------------------------- */
 {
+	tsk_t *tsk;
+
 	assert_tsk_context();
 	assert(hsm);
 	assert(hsm->evq.obj.res!=RELEASED);
 
 	sys_lock();
 	{
-		priv_hsm_reset(hsm, hsm->evq.obj.res ? E_DELETED : E_STOPPED);
+		tsk = priv_hsm_reset(hsm, hsm->evq.obj.res ? E_DELETED : E_STOPPED);
 		core_res_free(&hsm->evq.obj);
+		if (tsk != NULL)
+			tsk_reset(tsk);             // after the release, the dispatcher can be the current task
 	}
 	sys_unlock();
 }
@@ -489,6 +507,7 @@ void priv_eventDispatcherAsync( hsm_t *hsm )
 	sys_lock();
 	{
 		priv_transition(hsm, NULL);
+		hsm->tsk = NULL;
 	}
 	sys_unlock();
 #if OS_TASK_EXIT == 0
@@ -515,6 +534,7 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 			hsm->evq.head  = 0; //
 			hsm->evq.tail  = 0; //
 			priv_transition(hsm, initState);
+			hsm->tsk = tsk;
 			tsk_startWith(tsk, (fun_a *)priv_eventDispatcherAsync, hsm);
 		}
 	}

@@ -72,6 +72,7 @@ Features:
 - tmr_stop stops the timer like tmr_reset (it restarted the timer with zero delay: the callback was launched once more, the waiting tasks got E_SUCCESS)
 - mutexes held by the task are released by tsk_stop and tsk_flip, as by tsk_reset (robust mutex: the next owner gets OWNERDEAD)
 - fixed read/write lock: readers waiting behind a writer that gave up waiting were not released
+- hsm_reset and hsm_destroy stop the event dispatcher at once (the old dispatcher destroyed the hsm started again, after hsm_destroy it used the released memory)
 ---------
 7.1
 - updated os version
