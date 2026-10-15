@@ -405,7 +405,7 @@ bool priv_tmr_countdown( tmr_t *tmr )
 
 	port_set_lock();
 	{
-		if (core_sys_time() - tmr->start + 1 > tmr->delay)
+		if ((cnt_t)(core_sys_time() - tmr->start + 1) > tmr->delay) // cnt_t may be promoted to int
 		{
 			tmr->start += tmr->delay;
 			tmr->delay = tmr->period;
