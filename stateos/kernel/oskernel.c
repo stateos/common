@@ -48,12 +48,12 @@ bool priv_tmr_expired( tmr_t *tmr )
 	if (tmr->delay == INFINITE)
 	return false; // return if timer counting indefinitely
 
-	if (tmr->delay < core_sys_time() - tmr->start + 1)
+	if (tmr->delay < (cnt_t)(core_sys_time() - tmr->start + 1)) // cnt_t may be promoted to int
 	return true;  // return if timer finished counting
 
 	port_tmr_start((hwt_t)(tmr->start + tmr->delay));
 
-	if (tmr->delay >= core_sys_time() - tmr->start + 1)
+	if (tmr->delay >= (cnt_t)(core_sys_time() - tmr->start + 1)) // cnt_t may be promoted to int
 	return false; // return if timer still counts
 
 	port_tmr_stop();
@@ -68,7 +68,7 @@ bool priv_tmr_expired( tmr_t *tmr )
 static
 bool priv_tmr_expired( tmr_t *tmr )
 {
-	if (tmr->delay < core_sys_time() - tmr->start + 1)
+	if (tmr->delay < (cnt_t)(core_sys_time() - tmr->start + 1)) // cnt_t may be promoted to int
 	return true;  // return if timer finished counting
 
 	return false; // return if timer still counts or counting indefinitely
@@ -86,7 +86,7 @@ void priv_tmr_insert( tmr_t *tmr )
 
 	if (tmr->delay != INFINITE)
 		do nxt = nxt->hdr.next;
-		while (nxt->delay < tmr->start + tmr->delay - nxt->start);
+		while (nxt->delay < (cnt_t)(tmr->start + tmr->delay - nxt->start)); // cnt_t may be promoted to int
 
 	tmr->hdr.id = ID_TIMER;
 
@@ -473,7 +473,7 @@ int core_tsk_waitNext( tsk_t **que, cnt_t delay )
 
 	cur->delay = delay;
 
-	if (core_sys_time() - cur->start >= cur->delay)
+	if ((cnt_t)(core_sys_time() - cur->start) >= cur->delay) // cnt_t may be promoted to int
 	{
 		cur->start += cur->delay;
 		return E_TIMEOUT;

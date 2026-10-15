@@ -68,6 +68,7 @@ Features:
 - fixed assertion in ReadLock / WriteLock
 - heap functions check the size for overflow
 - fixed tsk_resume: a task woken up and then suspended before it ran lost the result of its blocking function (got E_SUCCESS)
+- fixed timers / delays crossing the overflow of a 16-bit system timer on cores with 32-bit int (system hang in the timer queue, timers never expired)
 ---------
 7.1
 - updated os version
