@@ -310,7 +310,9 @@ void core_ctx_init( tsk_t *tsk )
 {
 	assert(tsk->size>STK_OVER(0));
 #ifdef DEBUG
-	if (tsk != System.cur)
+	// do not fill the stack in use: by the task itself or by a timer callback (it runs on the stack of the last task)
+	uintptr_t sp = (uintptr_t)port_get_sp();
+	if (sp < (uintptr_t)tsk->stack || sp >= (uintptr_t)tsk->stack + tsk->size)
 		memset(tsk->stack, 0xFF, tsk->size);
 #endif
 #if OS_TASK_EXIT == 0

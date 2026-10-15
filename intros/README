@@ -61,6 +61,7 @@ Features:
 - x86 port on linux: the system time is the monotonic time (clock() counts the processor time there)
 - x86 port: 64-bit hardware time (QueryPerformanceCounter on windows, clock() stopped after 24.8 days), the hardware timer has the size of the system timer, default OS_TIMER_SIZE is 64
 - fixed timers / delays crossing the overflow of a 16-bit system timer on cores with 32-bit int (they never expired)
+- fixed task started from a timer callback in DEBUG: the stack in use by the callback was filled
 - fixed assertion in ReadLock / WriteLock
 - fixed ConditionVariable wait functions with predicate (result was not initialized when the predicate was satisfied at once)
 - ConditionVariable wait functions with predicate check the predicate once more after the timeout (as std::condition_variable does)
