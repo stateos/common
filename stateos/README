@@ -51,6 +51,7 @@ Features:
 7.2
 - updated os version
 - added x86 / x86_64 port (PC: Windows, Linux; cooperative mode only, for testing purposes)
+- idle task checks the ready tasks with masked interrupts before waiting for an interrupt (port_sys_wait)
 - signals of a blocked task are delivered after its wakeup (no lost wakeups)
 - signal handler does not change the result of the interrupted function
 - mutex owner loses the inherited priority when the waiting task stops waiting

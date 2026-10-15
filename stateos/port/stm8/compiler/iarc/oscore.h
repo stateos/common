@@ -225,6 +225,18 @@ void port_ctx_switchNow( void )
     )
 
 /* -------------------------------------------------------------------------- */
+// wait for an interrupt in the idle task
+// called with the interrupts masked by port_set_lock
+// the interrupt pending since port_set_lock must not be missed
+// (wfi instruction unmasks the interrupts)
+
+__STATIC_INLINE
+void port_sys_wait( void )
+{
+	__WFI();
+}
+
+/* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
 }

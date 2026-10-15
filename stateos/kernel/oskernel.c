@@ -782,7 +782,22 @@ void core_sys_tick( void )
 
 void core_tsk_idle( void )
 {
-	__WFI();
+	tsk_t *nxt;
+
+	// the ready tasks are checked with the interrupts masked,
+	// otherwise a task woken up by an interrupt just before the check
+	// would wait for the next interrupt
+	port_set_lock();
+	{
+		nxt = IDLE.hdr.next;
+
+		if (System.tsk != NULL)
+			nxt = System.tsk->guard ? &IDLE : System.tsk;
+
+		if (nxt == &IDLE) // no task is ready to run
+			port_sys_wait();
+	}
+	port_clr_lock();
 }
 
 /* -------------------------------------------------------------------------- */

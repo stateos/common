@@ -119,7 +119,10 @@ uint64_t port_sys_time( void )
 #endif
 
 /* -------------------------------------------------------------------------- */
-// wait for the next virtual interrupt (idle task)
+// wait for an interrupt in the idle task
+// called with the interrupts masked by port_set_lock
+// the interrupt pending since port_set_lock must not be missed
+// (the virtual interrupts are handled after port_clr_lock)
 
 void port_sys_wait( void );
 

@@ -176,6 +176,18 @@ void port_clr_lock( void )
 void port_ctx_switchNow( void );
 
 /* -------------------------------------------------------------------------- */
+// wait for an interrupt in the idle task
+// called with the interrupts masked by port_set_lock
+// the interrupt pending since port_set_lock must not be missed
+// (the instruction following sei is executed before any interrupt)
+
+__STATIC_INLINE
+void port_sys_wait( void )
+{
+	asm volatile ("sei" "\n\t" "sleep" ::: "memory");
+}
+
+/* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
 }

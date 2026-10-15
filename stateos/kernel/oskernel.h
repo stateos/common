@@ -321,6 +321,7 @@ void core_sys_tick( void )
 /* -------------------------------------------------------------------------- */
 
 // default idle procedure
+// waits for an interrupt (port_sys_wait) if no task is ready to run
 void core_tsk_idle( void );
 
 // frees resources of given object

@@ -35,7 +35,6 @@
 
 #include "oskernel.h"
 #include "inc/ostimer.h"
-#include "inc/ostask.h"
 
 #if defined(_WIN32)
 // <windows.h> is not included because of conflicting definitions (INFINITE)
@@ -181,6 +180,7 @@ void port_sys_poll( void )
  Idle task: wait for the nearest time breakpoint (no longer than 100 ms)
  The host sleeps until the breakpoint minus the wake-up latency margin,
  the rest of the time is spent on polling the clock
+ Called with the virtual interrupts masked, they are handled after port_clr_lock
 *******************************************************************************/
 
 void port_sys_wait( void )
@@ -189,9 +189,6 @@ void port_sys_wait( void )
 	uint64_t now = priv_sys_nsec();
 	uint64_t end = now + NSEC / 10;
 
-	if (IDLE.hdr.next != &IDLE) // a task has been woken up before the idle task called __WFI
-		end = now;
-	else
 	if (tmr->delay != INFINITE)
 	{
 	#if HW_TIMER_SIZE == 0
@@ -219,8 +216,6 @@ void port_sys_wait( void )
 
 	if (end > now + WAKE)
 		priv_sys_sleep(end - now - WAKE);
-
-	port_sys_poll();
 }
 
 /******************************************************************************

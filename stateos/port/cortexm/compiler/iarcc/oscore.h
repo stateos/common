@@ -229,6 +229,26 @@ void port_ctx_switchNow( void )
 }
 
 /* -------------------------------------------------------------------------- */
+// wait for an interrupt in the idle task
+// called with the interrupts masked by port_set_lock
+// the interrupt pending since port_set_lock must not be missed
+// (the pending interrupt wakes up the processor and is handled after port_clr_lock)
+
+__STATIC_INLINE
+void port_sys_wait( void )
+{
+#if OS_LOCK_LEVEL && (__CORTEX_M >= 3)
+	__disable_irq();       // interrupts masked by BASEPRI do not wake up the processor
+	__set_BASEPRI(0);
+	__WFI();
+	port_set_lock();
+	__enable_irq();
+#else
+	__WFI();
+#endif
+}
+
+/* -------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
 }
