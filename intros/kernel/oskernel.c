@@ -46,10 +46,13 @@ void core_tmr_insert( tmr_t *tmr )
 
 	tmr->hdr.id = ID_TIMER;
 
-	tmr->hdr.prev = prv;
-	tmr->hdr.next = nxt;
-	nxt->hdr.prev = tmr;
-	prv->hdr.next = tmr;
+	if (tmr != (tmr_t *)nxt) // the current object stays in the queue (see core_tsk_switch)
+	{
+		tmr->hdr.prev = prv;
+		tmr->hdr.next = nxt;
+		nxt->hdr.prev = tmr;
+		prv->hdr.next = tmr;
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -61,8 +64,11 @@ void core_tmr_remove( tmr_t *tmr )
 
 	tmr->hdr.id = ID_STOPPED;
 
-	nxt->hdr.prev = prv;
-	prv->hdr.next = nxt;
+	if (tmr != (tmr_t *)System.cur) // the current object is removed from the queue by core_tsk_switch
+	{
+		nxt->hdr.prev = prv;
+		prv->hdr.next = nxt;
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -135,10 +141,13 @@ void core_tsk_insert( tsk_t *tsk )
 
 	tsk->hdr.id = ID_READY;
 
-	tsk->hdr.prev = prv;
-	tsk->hdr.next = nxt;
-	nxt->hdr.prev = tsk;
-	prv->hdr.next = tsk;
+	if (tsk != nxt) // the current object stays in the queue (see core_tsk_switch)
+	{
+		tsk->hdr.prev = prv;
+		tsk->hdr.next = nxt;
+		nxt->hdr.prev = tsk;
+		prv->hdr.next = tsk;
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -150,8 +159,11 @@ void core_tsk_remove( tsk_t *tsk )
 
 	tsk->hdr.id = ID_STOPPED;
 
-	nxt->hdr.prev = prv;
-	prv->hdr.next = nxt;
+	if (tsk != System.cur) // the current object is removed from the queue by core_tsk_switch
+	{
+		nxt->hdr.prev = prv;
+		prv->hdr.next = nxt;
+	}
 
 	if (tsk == System.tsk)
 		System.tsk = NULL;
@@ -417,7 +429,14 @@ void core_tsk_switch( void )
 	{
 		port_set_lock();
 		{
-			cur = System.cur = System.cur->hdr.next;
+			tsk_t *old = System.cur;
+			cur = System.cur = old->hdr.next;
+			if (old->hdr.id == ID_STOPPED) // stopped while it was the current object: remove it from the queue now
+			{
+				tsk_t *prv = old->hdr.prev;
+				cur->hdr.prev = prv;
+				prv->hdr.next = cur;
+			}
 		}
 		port_clr_lock();
 

@@ -41,6 +41,7 @@ Features:
 - waiting functions return E_TIMEOUT after the end of the timer countdown (was E_FAILURE)
 - fixed timers: system jumped into the timer object after the timer callback
 - fixed timers: stopping the timer from its own callback damaged the queue of ready tasks
+- fixed timers / tasks stopped or started by an interrupt handler while the system was handling the current object (lost stop, damaged queue or hang)
 - fixed periodic timer started with IMMEDIATE delay (fired only once)
 - fixed sig_take / sig_wait with sigAny (pending signals were not seen)
 - fixed buffer overflow in msg_push (message larger than the slot)

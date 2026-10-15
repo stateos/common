@@ -66,10 +66,7 @@ void priv_tmr_reset( tmr_t *tmr, int event )
 	if (tmr->hdr.id != ID_STOPPED)
 	{
 		core_all_wakeup(&tmr->obj.queue, event);
-		if (tmr == tmr_this())
-			tmr->delay = 0;   // own callback: the timer is removed by the system after the callback
-		else
-			core_tmr_remove(tmr);
+		core_tmr_remove(tmr);
 	}
 }
 
