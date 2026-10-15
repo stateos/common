@@ -835,7 +835,7 @@ struct baseTask : public __tsk
 	{
 		if (__tsk::hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
-			new (&fun) Fun_t(_proc);
+			fun = Fun_t(_proc);
 			tsk_startFrom(this, fun_);
 		}
 	}
@@ -882,7 +882,7 @@ struct baseTask : public __tsk
 		void     pass      ()                   {        tsk_pass      (); }
 #if __cplusplus >= 201402L
 		template<class F> static
-		void     flip      ( F&&      _proc )   {        new (&current()->fun) Fun_t(_proc);
+		void     flip      ( F&&      _proc )   {        current()->fun = Fun_t(_proc);
 		                                                 tsk_flip      (fun_); }
 #else
 		static

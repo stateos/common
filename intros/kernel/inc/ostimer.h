@@ -633,7 +633,7 @@ struct baseTimer : public __tmr
 	template<typename T>
 	void startFrom    ( const T& _delay, const T& _period, std::nullptr_t ) {        tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), nullptr); }
 	template<typename T, class F>
-	void startFrom    ( const T& _delay, const T& _period, F&&     _proc )  {        new (&fun) Fun_t(_proc);
+	void startFrom    ( const T& _delay, const T& _period, F&&     _proc )  {        fun = Fun_t(_proc);
 	                                                                                 tmr_startFrom    (this, Clock::count(_delay), Clock::count(_period), fun_); }
 #else
 	template<typename T>
@@ -658,7 +658,15 @@ struct baseTimer : public __tmr
 
 #if __cplusplus >= 201402L
 	static
-	void fun_         ()                                                    {        current()->fun(); }
+	void fun_         ()
+	{
+		auto  tmr = current();
+		Fun_t run;
+		run.swap(tmr->fun);       // the running function must live until the callback returns,
+		run();                    // the callback can replace it (flip, startFrom)
+		if (!tmr->fun)
+			tmr->fun.swap(run);
+	}
 	Fun_t fun;
 #endif
 
@@ -676,7 +684,7 @@ struct baseTimer : public __tmr
 		static
 		void flip ( std::nullptr_t )            { tmr_flip (nullptr); }
 		template<class F> static
-		void flip ( F&& _proc )                 { new (&current()->fun) Fun_t(_proc);
+		void flip ( F&& _proc )                 { current()->fun = Fun_t(_proc);
 		                                          tmr_flip (fun_); }
 		template<typename F, typename... A> static
 		void flip ( F&& _proc, A&&... _args )   { flip(std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)); }
