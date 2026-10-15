@@ -54,6 +54,7 @@ Features:
 - fixed hsm_link (action linked twice created a loop)
 - hsm_reset stops the event dispatcher at once (the old dispatcher destroyed the hsm started again)
 - added assert (DEBUG) for functions that need a task context, e.g. blocking functions called from the timer callback
+- fixed tsk_stackSpace in the main task (DEBUG): returns 0 instead of scanning the memory behind the stack
 - fixed assertion in ReadLock / WriteLock
 - fixed ConditionVariable wait functions with predicate (result was not initialized when the predicate was satisfied at once)
 - ConditionVariable wait functions with predicate check the predicate once more after the timeout (as std::condition_variable does)

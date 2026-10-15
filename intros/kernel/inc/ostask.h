@@ -755,7 +755,7 @@ int tsk_resume( tsk_t *tsk );
  * Parameters        : none
  *
  * Return            : high water mark of the stack of the current task
- *   0               : DEBUG not defined
+ *   0               : DEBUG not defined or the current task is the main task (its stack size is unknown)
  *
  ******************************************************************************/
 
