@@ -374,7 +374,11 @@ struct Flag : public __flg
 
 	~Flag() { assert(__flg::obj.queue == nullptr); }
 
-	Flag( Flag&& ) = default;
+	Flag( Flag&& _src ): __flg(_src)
+	{
+		assert(_src.obj.queue == nullptr);
+	}
+
 	Flag( const Flag& ) = delete;
 	Flag& operator=( Flag&& ) = delete;
 	Flag& operator=( const Flag& ) = delete;

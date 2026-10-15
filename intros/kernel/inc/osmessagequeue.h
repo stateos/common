@@ -571,7 +571,12 @@ struct MessageQueueT : public __msg
 
 	~MessageQueueT() { assert(__msg::obj.queue == nullptr); }
 
-	MessageQueueT( MessageQueueT&& ) = default;
+	MessageQueueT( MessageQueueT&& _src ): __msg _MSG_INIT(limit_, size_, data_)
+	{
+		assert(_src.__msg::count == 0 && _src.obj.queue == nullptr);
+		(void) _src;
+	}
+
 	MessageQueueT( const MessageQueueT& ) = delete;
 	MessageQueueT& operator=( MessageQueueT&& ) = delete;
 	MessageQueueT& operator=( const MessageQueueT& ) = delete;

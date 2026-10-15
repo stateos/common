@@ -499,7 +499,12 @@ struct JobQueueT : public __job
 
 	~JobQueueT() { assert(__job::obj.queue == nullptr); }
 
-	JobQueueT( JobQueueT&& ) = default;
+	JobQueueT( JobQueueT&& _src ): __job _JOB_INIT(limit_, data_)
+	{
+		assert(_src.__job::count == 0 && _src.obj.queue == nullptr);
+		(void) _src;
+	}
+
 	JobQueueT( const JobQueueT& ) = delete;
 	JobQueueT& operator=( JobQueueT&& ) = delete;
 	JobQueueT& operator=( const JobQueueT& ) = delete;

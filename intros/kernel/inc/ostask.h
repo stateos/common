@@ -941,7 +941,18 @@ struct TaskT : public baseTask, public baseStack<size_>
 
 	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
 
-	TaskT( TaskT<size_>&& ) = default;
+#if __cplusplus >= 201402L
+	TaskT( TaskT<size_>&& _src ):
+	baseTask{_src.fun, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)}
+#else
+	TaskT( TaskT<size_>&& _src ):
+	baseTask{_src.proc, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)}
+#endif
+	{
+		assert(_src.hdr.id == ID_STOPPED && _src.obj.queue == nullptr);
+		(void) _src;
+	}
+
 	TaskT( const TaskT<size_>& ) = delete;
 	TaskT<size_>& operator=( TaskT<size_>&& ) = delete;
 	TaskT<size_>& operator=( const TaskT<size_>& ) = delete;

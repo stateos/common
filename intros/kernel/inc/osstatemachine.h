@@ -667,7 +667,11 @@ struct State : public __hsm_state
 	template<class S> constexpr
 	State( S& _parent ): __hsm_state _HSM_STATE_INIT(&_parent) {}
 
-	State( State&& ) = default;
+	State( State&& _src ): __hsm_state(_src)
+	{
+		assert(_src.queue == nullptr);
+	}
+
 	State( const State& ) = delete;
 	State& operator=( State&& ) = delete;
 	State& operator=( const State& ) = delete;
@@ -735,7 +739,12 @@ struct StateMachineT : public __hsm
 	StateMachineT():                                  __hsm _HSM_INIT(limit_, data_), tab_{}     {}
 	StateMachineT( const std::vector<Action>& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{_tab} {}
 
-	StateMachineT( StateMachineT&& ) = default;
+	StateMachineT( StateMachineT&& _src ): __hsm _HSM_INIT(limit_, data_), tab_(std::move(_src.tab_))
+	{
+		assert(_src.state == nullptr && _src.evq.count == 0 && _src.evq.obj.queue == nullptr);
+		(void) _src;
+	}
+
 	StateMachineT( const StateMachineT& ) = delete;
 	StateMachineT& operator=( StateMachineT&& ) = delete;
 	StateMachineT& operator=( const StateMachineT& ) = delete;

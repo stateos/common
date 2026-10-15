@@ -62,6 +62,7 @@ Features:
 - fixed LockGuard, ReadLock and WriteLock: a moved guard released the lock twice
 - fixed StateMachineT::giveAsync / sendAsync: wrong result type, the result of sendAsync was lost
 - fixed StateMachineT::startAsync: the actions added with add() were not linked
+- move constructors of the C++ objects assert (DEBUG) that the moved object is idle, queues, memory pool, task and state machine use their own buffers after the move
 - fixed compiler warnings on 64-bit targets
 - fixed name of oslibc.c in cmake config
 ---------

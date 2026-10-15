@@ -503,7 +503,12 @@ struct EventQueueT : public __evq
 
 	~EventQueueT() { assert(__evq::obj.queue == nullptr); }
 
-	EventQueueT( EventQueueT&& ) = default;
+	EventQueueT( EventQueueT&& _src ): __evq _EVQ_INIT(limit_, data_)
+	{
+		assert(_src.__evq::count == 0 && _src.obj.queue == nullptr);
+		(void) _src;
+	}
+
 	EventQueueT( const EventQueueT& ) = delete;
 	EventQueueT& operator=( EventQueueT&& ) = delete;
 	EventQueueT& operator=( const EventQueueT& ) = delete;
