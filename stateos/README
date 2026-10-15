@@ -67,6 +67,7 @@ Features:
 - fixed mode assertions in mtx_init and mtx_create
 - fixed assertion in ReadLock / WriteLock
 - heap functions check the size for overflow
+- fixed tsk_resume: a task woken up and then suspended before it ran lost the result of its blocking function (got E_SUCCESS)
 ---------
 7.1
 - updated os version

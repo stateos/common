@@ -584,7 +584,7 @@ int tsk_resume( tsk_t *tsk )
 	{
 		if (tsk->guard == &WAIT.obj.queue && tsk->delay == INFINITE)
 		{
-			core_tsk_wakeup(tsk, 0); // ignored event value
+			core_tsk_wakeup(tsk, tsk->event); // the task may have been woken up before the suspension: keep its event value
 			result = E_SUCCESS;
 		}
 	}
