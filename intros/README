@@ -55,6 +55,7 @@ Features:
 - hsm_reset stops the event dispatcher at once (the old dispatcher destroyed the hsm started again)
 - added assert (DEBUG) for functions that need a task context, e.g. blocking functions called from the timer callback
 - fixed assertion in ReadLock / WriteLock
+- fixed ConditionVariable wait functions with predicate (result was not initialized when the predicate was satisfied at once)
 - fixed compiler warnings on 64-bit targets
 - fixed name of oslibc.c in cmake config
 ---------

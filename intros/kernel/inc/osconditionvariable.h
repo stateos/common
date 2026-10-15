@@ -346,14 +346,14 @@ struct ConditionVariable : public __cnd
 	template<typename T, typename F>
 	int  waitUntil( mtx_t& _mtx, const T& _time, F _stopWaiting )
 	{
-		int result;
+		int result = E_SUCCESS;
 		while (!_stopWaiting() && (result = waitUntil(_mtx, _time)) == E_SUCCESS);
 		return result;
 	}
 	template<typename F>
 	int  wait     ( mtx_t& _mtx, F _stopWaiting )
 	{
-		int result;
+		int result = E_SUCCESS;
 		while (!_stopWaiting() && (result = wait(_mtx)) == E_SUCCESS);
 		return result;
 	}
