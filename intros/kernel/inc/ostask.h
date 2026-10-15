@@ -597,6 +597,8 @@ void tsk_exit( void ) { tsk_stop(); }
  *
  * Return            : none
  *
+ * Note              : use only in thread mode
+ *
  ******************************************************************************/
 
 void tsk_reset( tsk_t *tsk );
@@ -723,6 +725,8 @@ void tsk_sleep( void ) { tsk_sleepFor(INFINITE); }
  * Return
  *   E_SUCCESS       : task was successfully suspended
  *   E_FAILURE       : task cannot be suspended
+ *
+ * Note              : use only in thread mode
  *
  ******************************************************************************/
 
