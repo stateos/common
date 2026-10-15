@@ -61,6 +61,7 @@ Features:
 - fixed memory leak in Task / Timer startFrom and flip (the replaced std::function was not destroyed)
 - fixed LockGuard, ReadLock and WriteLock: a moved guard released the lock twice
 - fixed StateMachineT::giveAsync / sendAsync: wrong result type, the result of sendAsync was lost
+- fixed StateMachineT::startAsync: the actions added with add() were not linked
 - fixed compiler warnings on 64-bit targets
 - fixed name of oslibc.c in cmake config
 ---------
