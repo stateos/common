@@ -591,6 +591,7 @@ void tsk_exit( void ) { tsk_stop(); }
  *
  * Description       : stop execution of given task
  *                     all mutexes held by the task are released (waiting tasks get E_STOPPED)
+ *                     other objects held by the task (e.g. semaphores, read/write locks) are not released
  *
  * Parameters
  *   tsk             : pointer to task object
@@ -598,6 +599,8 @@ void tsk_exit( void ) { tsk_stop(); }
  * Return            : none
  *
  * Note              : use only in thread mode
+ *                     readers waiting behind a writer stopped while waiting for a read/write lock
+ *                     are not released until the lock is given
  *
  ******************************************************************************/
 
