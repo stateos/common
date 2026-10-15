@@ -65,7 +65,7 @@ cnt_t sys_timeISR( void ) { return sys_time(); }
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
 
 #if __cplusplus >= 201402L
 #include <chrono>

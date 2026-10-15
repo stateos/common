@@ -9,6 +9,7 @@ target_link_libraries(stateos-stdc++ INTERFACE stateos::kernel)
 target_compile_definitions(stateos-stdc++
 	INTERFACE
 	_GLIBCXX_HAS_GTHREADS
+	__STATEOS_STDCXX
 )
 
 target_sources(stateos-stdc++

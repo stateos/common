@@ -52,7 +52,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201402L) && !defined(_GLIBCXX_HAS_GTHREADS)
+#if defined(__cplusplus) && (__cplusplus >= 201402L) && !defined(__STATEOS_STDCXX)
 #include <functional>
 #include <memory>
 using Fun_t = std::function<void( void )>;

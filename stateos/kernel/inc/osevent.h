@@ -308,7 +308,7 @@ void evt_giveISR( evt_t *evt, unsigned event ) { evt_give(evt, event); }
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
 namespace stateos {
 
 /******************************************************************************

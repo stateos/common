@@ -6,6 +6,7 @@ $(error Please define COMMON path before including any common package)
 endif
 
 DEFS += _GLIBCXX_HAS_GTHREADS
+DEFS += __STATEOS_STDCXX
 
 INCS += $(COMMON)/stateos/stdc++
 

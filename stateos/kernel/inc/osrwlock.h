@@ -463,7 +463,7 @@ void rwl_unlockWrite( rwl_t *rwl ) { rwl_giveWrite(rwl); }
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(_GLIBCXX_HAS_GTHREADS)
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
 namespace stateos {
 
 /******************************************************************************

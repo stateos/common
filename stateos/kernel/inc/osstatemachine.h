@@ -701,7 +701,7 @@ hsm_state_t *hsm_getState( hsm_t *hsm );
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__cplusplus) && (__cplusplus >= 201402L) && !defined(_GLIBCXX_HAS_GTHREADS)
+#if defined(__cplusplus) && (__cplusplus >= 201402L) && !defined(__STATEOS_STDCXX)
 
 #include <iterator>
 #include <vector>

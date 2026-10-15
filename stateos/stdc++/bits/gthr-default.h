@@ -59,6 +59,14 @@
 #error  Required C++11 or above.
 #endif
 
+#ifndef _GLIBCXX_HAS_GTHREADS
+#error  Required _GLIBCXX_HAS_GTHREADS definition (use stateos/stdc++ makefile or config.cmake).
+#endif
+
+#ifndef __STATEOS_STDCXX
+#error  Required __STATEOS_STDCXX definition (use stateos/stdc++ makefile or config.cmake).
+#endif
+
 #if     OS_TASK_EXIT == 0
 #error  osconfig.h: Invalid OS_TASK_EXIT value! It must not be 0.
 #endif
@@ -74,7 +82,6 @@
 #define __GTHREAD_HAS_COND 1
 #define  _GLIBCXX_HAVE_TLS 1
 #define  _GLIBCXX_THREAD_IMPL 1
-#define  _GLIBCXX_HAS_GTHREADS 1
 #define  _GLIBCXX_USE_SCHED_YIELD 1
 #define  _GTHREAD_USE_MUTEX_TIMEDLOCK 1
 
