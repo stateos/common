@@ -56,6 +56,12 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
+#if     OS_ATOMICS
+#error  osconfig.h: Incorrect OS_ATOMICS value! Must be 0. This core does not support atomic operations.
+#endif
+
+/* -------------------------------------------------------------------------- */
+
 typedef uint8_t               lck_t;
 typedef uint8_t               stk_t;
 

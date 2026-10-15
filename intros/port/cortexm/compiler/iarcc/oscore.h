@@ -56,6 +56,12 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
+#if     OS_ATOMICS && (__CORTEX_M < 3)
+#error  osconfig.h: Incorrect OS_ATOMICS value! Must be 0. This core does not support atomic operations.
+#endif
+
+/* -------------------------------------------------------------------------- */
+
 typedef uint32_t              lck_t;
 typedef uint64_t              stk_t;
 
