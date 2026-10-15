@@ -79,6 +79,7 @@ Features:
 - move constructors of the C++ objects assert (DEBUG) that the moved object is idle, queues, memory pool, task and state machine use their own buffers after the move
 - fixed ConditionVariable wait functions with predicate (result was not initialized when the predicate was satisfied at once)
 - ConditionVariable wait functions with predicate check the predicate once more after the timeout (as std::condition_variable does)
+- fixed RawBufferT / RawBufferTT: waitFor, waitUntil, sendFor and sendUntil did not accept std::chrono arguments
 ---------
 7.1
 - updated os version
