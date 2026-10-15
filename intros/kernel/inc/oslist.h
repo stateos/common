@@ -292,6 +292,7 @@ int lst_wait( lst_t *lst, void **data ) { return lst_waitFor(lst, data, INFINITE
  * Parameters
  *   lst             : pointer to list object
  *   data            : pointer to memory object
+ *                     (taken from a memory pool: the list uses the header preceding the memory object)
  *
  * Return            : none
  *
