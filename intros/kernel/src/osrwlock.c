@@ -216,7 +216,11 @@ int rwl_waitWriteFor( rwl_t *rwl, cnt_t delay )
 	{
 		result = priv_rwl_takeWrite(rwl);
 		if (result == E_TIMEOUT)
+		{
 			result = core_tsk_waitFor(&rwl->obj.queue, delay);
+			if (result != E_SUCCESS && rwl->obj.queue == NULL && !rwl->write) // the writer gave up waiting:
+				rwl->count += core_num_wakeup(&rwl->queue, E_SUCCESS, RDR_LIMIT - rwl->count); // readers behind it can enter
+		}
 	}
 	sys_unlock();
 
@@ -235,7 +239,11 @@ int rwl_waitWriteUntil( rwl_t *rwl, cnt_t time )
 	{
 		result = priv_rwl_takeWrite(rwl);
 		if (result == E_TIMEOUT)
+		{
 			result = core_tsk_waitUntil(&rwl->obj.queue, time);
+			if (result != E_SUCCESS && rwl->obj.queue == NULL && !rwl->write) // the writer gave up waiting:
+				rwl->count += core_num_wakeup(&rwl->queue, E_SUCCESS, RDR_LIMIT - rwl->count); // readers behind it can enter
+		}
 	}
 	sys_unlock();
 

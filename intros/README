@@ -50,6 +50,7 @@ Features:
 - mutexes held by the task are released by tsk_stop, tsk_reset and tsk_flip
 - mtx_reset clears the mutex owner
 - read/write lock without writer or reader starvation
+- fixed read/write lock: readers waiting behind a writer that gave up waiting were not released
 - fixed hsm_link (action linked twice created a loop)
 - fixed assertion in ReadLock / WriteLock
 - fixed compiler warnings on 64-bit targets
