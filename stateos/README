@@ -77,6 +77,8 @@ Features:
 - fixed OS_HSM_ACTION / static_HSM_ACTION: the name of the object is the first parameter (all the objects were named 'action')
 - fixed LockGuard, ReadLock and WriteLock: a moved guard released the lock twice
 - move constructors of the C++ objects assert (DEBUG) that the moved object is idle, queues, memory pool, task and state machine use their own buffers after the move
+- fixed ConditionVariable wait functions with predicate (result was not initialized when the predicate was satisfied at once)
+- ConditionVariable wait functions with predicate check the predicate once more after the timeout (as std::condition_variable does)
 ---------
 7.1
 - updated os version
