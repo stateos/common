@@ -40,6 +40,7 @@ Features:
 - added x86_64 port and linux support for the x86 port
 - waiting functions return E_TIMEOUT after the end of the timer countdown (was E_FAILURE)
 - fixed timers: system jumped into the timer object after the timer callback
+- fixed timers: stopping the timer from its own callback damaged the queue of ready tasks
 - fixed periodic timer started with IMMEDIATE delay (fired only once)
 - fixed sig_take / sig_wait with sigAny (pending signals were not seen)
 - fixed buffer overflow in msg_push (message larger than the slot)
