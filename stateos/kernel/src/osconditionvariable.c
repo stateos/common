@@ -135,8 +135,7 @@ int cnd_waitFor( cnd_t *cnd, mtx_t *mtx, cnt_t delay )
 		if (result == E_SUCCESS)
 		{
 			wait_result = core_tsk_waitFor(&cnd->obj.queue, delay);
-			result = mtx_wait(mtx);
-			assert(result == E_SUCCESS);
+			result = mtx_wait(mtx); // OWNERDEAD, E_STOPPED and E_DELETED are also possible (see the description)
 			if (result == E_SUCCESS)
 				result = wait_result;
 		}
@@ -167,8 +166,7 @@ int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time )
 		if (result == E_SUCCESS)
 		{
 			wait_result = core_tsk_waitUntil(&cnd->obj.queue, time);
-			result = mtx_wait(mtx);
-			assert(result == E_SUCCESS);
+			result = mtx_wait(mtx); // OWNERDEAD, E_STOPPED and E_DELETED are also possible (see the description)
 			if (result == E_SUCCESS)
 				result = wait_result;
 		}
