@@ -87,6 +87,7 @@ Features:
 - Timer::startFrom replaces the function with the timer interrupt masked, the callback replaced by flipISR runs to its end
 - fixed UniqueLock / LockGuard with a robust mutex: OWNERDEAD means the mutex is locked (UniqueLock did not release it, LockGuard asserted)
 - Task action replaced during its execution (also by the action itself) is used after the execution (the running action was destroyed)
+- OS_ATOMICS is rejected at compile time on cores without atomic instructions (Cortex-M0/M0+, AVR, STM8)
 ---------
 7.1
 - updated os version

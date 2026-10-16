@@ -66,6 +66,12 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
+#if     OS_ATOMICS
+#error  osconfig.h: Incorrect OS_ATOMICS value! Must be 0. This core does not support atomic operations.
+#endif
+
+/* -------------------------------------------------------------------------- */
+
 #ifndef OS_MAIN_PRIO
 #define OS_MAIN_PRIO          0 /* priority of main process                   */
 #endif
