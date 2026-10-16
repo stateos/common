@@ -88,6 +88,7 @@ Features:
 - fixed UniqueLock / LockGuard with a robust mutex: OWNERDEAD means the mutex is locked (UniqueLock did not release it, LockGuard asserted)
 - Task action replaced during its execution (also by the action itself) is used after the execution (the running action was destroyed)
 - OS_ATOMICS is rejected at compile time on cores without atomic instructions (Cortex-M0/M0+, AVR, STM8)
+- fixed tsk_stackSpace in the main task (DEBUG): returns 0 instead of scanning the memory behind the stack
 ---------
 7.1
 - updated os version

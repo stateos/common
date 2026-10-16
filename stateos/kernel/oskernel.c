@@ -284,6 +284,7 @@ size_t core_stk_space( tsk_t *tsk )
 {
 	void *stk = tsk->stack;
 	uint8_t *ptr = stk;
+	if (tsk == &MAIN) return 0; // the stack of the main task grows down from stack, its size is unknown
 	while (*ptr == 0xFF) ptr++;
 	return (uintptr_t)ptr - (uintptr_t)stk;
 }
