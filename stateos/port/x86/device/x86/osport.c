@@ -41,6 +41,11 @@
 __declspec(dllimport) int  __stdcall QueryPerformanceFrequency( int64_t *frq );
 __declspec(dllimport) int  __stdcall QueryPerformanceCounter( int64_t *cnt );
 __declspec(dllimport) void __stdcall Sleep( unsigned long ms );
+__declspec(dllimport) void*__stdcall CreateWaitableTimerExW( void *attr, const void *name, unsigned long flags, unsigned long access );
+__declspec(dllimport) int  __stdcall SetWaitableTimer( void *timer, const int64_t *due, long period, void *proc, void *arg, int resume );
+__declspec(dllimport) unsigned long __stdcall WaitForSingleObject( void *handle, unsigned long ms );
+#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002UL
+#define TIMER_ALL_ACCESS                      0x001F0003UL
 #else
 #include <time.h>
 #endif
@@ -50,7 +55,7 @@ __declspec(dllimport) void __stdcall Sleep( unsigned long ms );
 #define NSEC 1000000000ULL
 
 #if defined(_WIN32)
-#define WAKE 2000000ULL // margin for the wake-up latency of the host (ns)
+#define WAKE  500000ULL // margin for the wake-up latency of the host (ns)
 #else
 #define WAKE  100000ULL // margin for the wake-up latency of the host (ns)
 #endif
@@ -86,10 +91,28 @@ uint64_t priv_sys_nsec( void )
 	return t / (uint64_t)frq * NSEC + t % (uint64_t)frq * NSEC / (uint64_t)frq;
 }
 
+// Sleep has the resolution of the system timer (15.6 ms by default),
+// the high resolution waitable timer is available since Windows 10 1803
+
 static
 void priv_sys_sleep( uint64_t nsec )
 {
-	Sleep((unsigned long)(nsec / 1000000));
+	static
+	void * timer = NULL;
+	static
+	bool   init = false;
+	int64_t due = -(int64_t)(nsec / 100); // relative time in 100 ns units
+
+	if (!init)
+	{
+		init = true;
+		timer = CreateWaitableTimerExW(NULL, NULL, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+	}
+
+	if (timer != NULL && SetWaitableTimer(timer, &due, 0, NULL, NULL, 0))
+		WaitForSingleObject(timer, 0xFFFFFFFFUL);
+	else
+		Sleep((unsigned long)(nsec / 1000000));
 }
 
 #else

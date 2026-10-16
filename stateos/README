@@ -89,6 +89,7 @@ Features:
 - Task action replaced during its execution (also by the action itself) is used after the execution (the running action was destroyed)
 - OS_ATOMICS is rejected at compile time on cores without atomic instructions (Cortex-M0/M0+, AVR, STM8)
 - fixed tsk_stackSpace in the main task (DEBUG): returns 0 instead of scanning the memory behind the stack
+- x86 port on Windows: the idle task sleeps on the high resolution waitable timer (Sleep has the resolution of the system timer, the timers were late up to 15 ms)
 ---------
 7.1
 - updated os version
