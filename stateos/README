@@ -90,6 +90,7 @@ Features:
 - OS_ATOMICS is rejected at compile time on cores without atomic instructions (Cortex-M0/M0+, AVR, STM8)
 - fixed tsk_stackSpace in the main task (DEBUG): returns 0 instead of scanning the memory behind the stack
 - x86 port on Windows: the idle task sleeps on the high resolution waitable timer (Sleep has the resolution of the system timer, the timers were late up to 15 ms)
+- fixed mutex owner priority: mtx_waitFor(IMMEDIATE) and mtx_waitUntil with a past time point raised the priority of the owner without waiting
 ---------
 7.1
 - updated os version

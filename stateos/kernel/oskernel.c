@@ -443,6 +443,8 @@ int core_tsk_wait( tsk_t **que, tsk_t *tsk )
 		core_tmr_insert((tmr_t *)tsk); // sets ID_TIMER
 		tsk->hdr.id = ID_READY;        // sets ID_READY back
 		core_tsk_append(que, tsk);
+		if (tsk->mtx.tree && tsk->mtx.tree->owner)  // the task waits for a mutex:
+			core_tsk_prio(tsk->mtx.tree->owner, tsk->mtx.tree->owner->basic); // the owner inherits the priority of the first waiter
 	}
 
 	if (tsk == System.cur)

@@ -210,9 +210,6 @@ int mtx_waitFor( mtx_t *mtx, cnt_t delay )
 		result = priv_mtx_take(mtx);
 		if (result == E_TIMEOUT)
 		{
-			if ((mtx->mode & mtxPrioMASK) != mtxPrioNone && mtx->owner->prio < System.cur->prio)
-				core_tsk_prio(mtx->owner, System.cur->prio);
-
 			System.cur->mtx.tree = mtx;
 			result = core_tsk_waitFor(&mtx->obj.queue, delay);
 			System.cur->mtx.tree = NULL;
@@ -241,9 +238,6 @@ int mtx_waitUntil( mtx_t *mtx, cnt_t time )
 		result = priv_mtx_take(mtx);
 		if (result == E_TIMEOUT)
 		{
-			if ((mtx->mode & mtxPrioMASK) != mtxPrioNone && mtx->owner->prio < System.cur->prio)
-				core_tsk_prio(mtx->owner, System.cur->prio);
-
 			System.cur->mtx.tree = mtx;
 			result = core_tsk_waitUntil(&mtx->obj.queue, time);
 			System.cur->mtx.tree = NULL;
