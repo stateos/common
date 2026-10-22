@@ -36,7 +36,7 @@
 #if __FPU_USED
 
 __attribute__((naked))
-int setjmp( jmp_buf buf )
+int setjmp( jmp_buf buf __attribute__((unused)) ) // buf is passed in r0
 {
 	__asm volatile
 	(
@@ -45,7 +45,6 @@ int setjmp( jmp_buf buf )
 "	vstmia r0,  { d8-d15 }       \n"
 "	movs   r0,  # 0              \n"
 "	bx     lr                    \n"
-::	"r" (buf)
 	);
 }
 
@@ -56,7 +55,7 @@ int setjmp( jmp_buf buf )
 #if __FPU_USED
 
 __attribute__((naked))
-void longjmp( jmp_buf buf, int val )
+void longjmp( jmp_buf buf __attribute__((unused)), int val __attribute__((unused)) ) // buf and val are passed in r0 and r1
 {
 	__asm volatile
 	(
@@ -67,7 +66,6 @@ void longjmp( jmp_buf buf, int val )
 "	it     eq                    \n"
 "	moveq  r0,  # 1              \n"
 "	bx     lr                    \n"
-::	"r" (buf), "r" (val)
 	);
 }
 
