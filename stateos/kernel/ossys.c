@@ -37,6 +37,7 @@
 /* -------------------------------------------------------------------------- */
 
 #ifndef MAIN_TOP
+// ports without the stack symbol: tsk_flip in the main task needs a stack to run on
 static  stk_t     MAIN_STK[STK_SIZE(OS_STACK_SIZE)] __STKALIGN;
 #define MAIN_TOP (MAIN_STK+STK_SIZE(OS_STACK_SIZE))
 #endif

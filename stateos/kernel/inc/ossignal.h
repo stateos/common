@@ -337,6 +337,8 @@ int sig_wait( sig_t *sig, unsigned sigset, unsigned *signo ) { return sig_waitFo
  * Parameters
  *   sig             : pointer to signal object
  *   signo           : signal number to set
+ *                     signo >= SIG_LIMIT: no signal is set, but the tasks waiting for any signal (sigAny)
+ *                     are woken up and get this number in the 'signo' variable
  *
  * Return            : none
  *
