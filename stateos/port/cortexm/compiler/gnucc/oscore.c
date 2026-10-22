@@ -134,20 +134,19 @@ void PendSV_Handler( void )
 /* -------------------------------------------------------------------------- */
 
 __attribute__((naked))
-void core_tsk_flip( void *sp )
+void core_tsk_flip( void *sp __attribute__((unused)) ) // sp is passed in r0
 {
 	__ASM volatile
 	(
 "	.syntax	unified                \n"
 
-"	mov   sp,  %[sp]               \n"
+"	mov   sp,  r0                  \n"
 "	bl  %[core_tsk_start]          \n"
 
-::	[sp] "r" (sp),
 #if OS_TASK_EXIT == 0
-	[core_tsk_start] "i" (core_tsk_loop)
+::	[core_tsk_start] "i" (core_tsk_loop)
 #else
-	[core_tsk_start] "i" (core_tsk_exec)
+::	[core_tsk_start] "i" (core_tsk_exec)
 #endif
 :	"memory"
 	);
