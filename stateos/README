@@ -91,6 +91,8 @@ Features:
 - fixed tsk_stackSpace in the main task (DEBUG): returns 0 instead of scanning the memory behind the stack
 - x86 port on Windows: the idle task sleeps on the high resolution waitable timer (Sleep has the resolution of the system timer, the timers were late up to 15 ms)
 - fixed mutex owner priority: mtx_waitFor(IMMEDIATE) and mtx_waitUntil with a past time point raised the priority of the owner without waiting
+- tsk_suspend asserts (DEBUG) that it is called in thread mode
+- fixed calloc with zero size (the assertion failed in DEBUG, now it returns a minimal block)
 ---------
 7.1
 - updated os version

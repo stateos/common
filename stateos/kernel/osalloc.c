@@ -294,7 +294,9 @@ void *calloc( size_t num, size_t size )
 	//	memory segment cannot be allocated
 		return NULL;
 
-	mem = malloc(size *= num);
+	size *= num;
+
+	mem = malloc(size > 0 ? size : 1); // zero size: return a minimal block, as malloc does not accept zero size
 
 	if (mem != NULL)
 		memset(mem, 0, size);
