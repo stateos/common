@@ -251,6 +251,7 @@ int tsk_suspend( tsk_t *tsk )
 {
 	int result = E_FAILURE;
 
+	assert_tsk_context();
 	assert(tsk);
 
 	sys_lock();
