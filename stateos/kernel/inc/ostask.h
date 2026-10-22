@@ -797,6 +797,7 @@ void tsk_exit( void ) { tsk_stop(); }
  *
  * Description       : reset the task object and remove it from READY/BLOCKED queue
  *                     all mutexes held by the task are released (waiting tasks get E_STOPPED, robust mutex: next owner gets OWNERDEAD)
+ *                     other objects held by the task (e.g. semaphores, read/write locks) are not released
  *
  * Parameters
  *   tsk             : pointer to task object
@@ -806,6 +807,8 @@ void tsk_exit( void ) { tsk_stop(); }
  *   E_FAILURE       : given task cannot be reseted
  *
  * Note              : use only in thread mode
+ *                     readers waiting behind a writer stopped while waiting for a read/write lock
+ *                     are not released until the lock is given
  *
  ******************************************************************************/
 
