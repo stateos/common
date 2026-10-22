@@ -47,7 +47,7 @@ void PendSV_Handler( void )
 "	lsrs  r3,    r3, # 3           \n"
 "	bcs   1f                       \n"
 "	mov   r0,    sp                \n"
-"	sub   sp,  # 36                \n"
+"	sub   sp,  # 40                \n"
 "1:	subs  r0,  # 36                \n"
 "	stm   r0!, { r4  - r7 }        \n"
 "	mov   r3,    r8                \n"
@@ -101,12 +101,12 @@ void PendSV_Handler( void )
 "	mrsne r0,    PSP               \n"
 "	moveq r0,    sp                \n"
 #if __FPU_USED
-"	subeq sp,  # 100               \n"
+"	subeq sp,  # 104               \n"
 "	tst   lr,  # 16                \n"
 "	it    eq                       \n"
 "vstmdbeq r0!, { s16 - s31 }       \n"
 #else
-"	subeq sp,  # 36                \n"
+"	subeq sp,  # 40                \n"
 #endif
 "	stmdb r0!, { r4  - r11, lr }   \n"
 

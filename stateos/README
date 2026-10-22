@@ -93,6 +93,7 @@ Features:
 - fixed mutex owner priority: mtx_waitFor(IMMEDIATE) and mtx_waitUntil with a past time point raised the priority of the owner without waiting
 - tsk_suspend asserts (DEBUG) that it is called in thread mode
 - fixed calloc with zero size (the assertion failed in DEBUG, now it returns a minimal block)
+- fixed PendSV (Cortex-M): the main stack stays 8-byte aligned after the first context switch from the main task (AAPCS)
 ---------
 7.1
 - updated os version
