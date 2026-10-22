@@ -187,6 +187,7 @@ void tsk_stop( void )
 void tsk_reset( tsk_t *tsk )
 /* -------------------------------------------------------------------------- */
 {
+	assert_tsk_context();
 	assert(tsk);
 
 	sys_lock();
