@@ -46,6 +46,7 @@ Features:
 - fixed periodic timer started with IMMEDIATE delay (fired only once)
 - fixed sig_take / sig_wait with sigAny (pending signals were not seen)
 - fixed buffer overflow in msg_push (message larger than the slot)
+- fixed msg_sendAsync: it returned E_SUCCESS also for a message larger than the slot (E_FAILURE)
 - fixed raw_push with a receiver waiting on the empty buffer
 - fixed raw_give with a sender waiting for free space: the data went to the buffer of the sender (its source was overwritten, its data lost)
 - *_push removes only the oldest data and wakes the waiting receiver
