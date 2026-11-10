@@ -464,8 +464,9 @@ struct ReadLock
 	ReadLock( RWLock& _rwl ): lck_(&_rwl)
 	{
 		int result = lck_->lockRead();
-		assert(result == E_SUCCESS);
-		(void) result;
+		assert(result == E_SUCCESS || result == E_STOPPED);
+		if (result != E_SUCCESS)
+			lck_ = nullptr; // nothing to release
 	}
 
 	~ReadLock()
@@ -478,6 +479,12 @@ struct ReadLock
 	{
 		_src.lck_ = nullptr;
 	}
+
+	// false: the lock was reset while waiting (or the guard was moved)
+	bool ownsLock() const { return lck_ != nullptr; }
+
+	explicit
+	operator bool() const { return ownsLock(); }
 
 	ReadLock( const ReadLock& ) = delete;
 	ReadLock& operator=( ReadLock&& ) = delete;
@@ -504,8 +511,9 @@ struct WriteLock
 	WriteLock( RWLock& _rwl ): lck_(&_rwl)
 	{
 		int result = lck_->lockWrite();
-		assert(result == E_SUCCESS);
-		(void) result;
+		assert(result == E_SUCCESS || result == E_STOPPED);
+		if (result != E_SUCCESS)
+			lck_ = nullptr; // nothing to release
 	}
 
 	~WriteLock()
@@ -518,6 +526,12 @@ struct WriteLock
 	{
 		_src.lck_ = nullptr;
 	}
+
+	// false: the lock was reset while waiting (or the guard was moved)
+	bool ownsLock() const { return lck_ != nullptr; }
+
+	explicit
+	operator bool() const { return ownsLock(); }
 
 	WriteLock( const WriteLock& ) = delete;
 	WriteLock& operator=( WriteLock&& ) = delete;

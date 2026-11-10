@@ -343,8 +343,9 @@ struct LockGuard
 	LockGuard( Mutex& _mtx ): mtx_(&_mtx)
 	{
 		int result = mtx_->lock();
-		assert(result == E_SUCCESS);
-		(void) result;
+		assert(result == E_SUCCESS || result == E_STOPPED);
+		if (result != E_SUCCESS)
+			mtx_ = nullptr; // nothing to release
 	}
 
 	~LockGuard()
@@ -361,6 +362,12 @@ struct LockGuard
 	{
 		_src.mtx_ = nullptr;
 	}
+
+	// false: the mutex was reset while waiting (or the guard was moved)
+	bool ownsLock() const { return mtx_ != nullptr; }
+
+	explicit
+	operator bool() const { return ownsLock(); }
 
 	LockGuard( const LockGuard& ) = delete;
 	LockGuard& operator=( LockGuard&& ) = delete;
@@ -438,7 +445,7 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->waitFor(_delay);
-		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		assert(result == E_SUCCESS || result == E_TIMEOUT || result == E_STOPPED);
 		locked_ = result == E_SUCCESS;
 		return locked_;
 	}
@@ -450,7 +457,7 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->waitUntil(_time);
-		assert(result == E_SUCCESS || result == E_TIMEOUT);
+		assert(result == E_SUCCESS || result == E_TIMEOUT || result == E_STOPPED);
 		locked_ = result == E_SUCCESS;
 		return locked_;
 	}
@@ -461,7 +468,7 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->lock();
-		assert(result == E_SUCCESS);
+		assert(result == E_SUCCESS || result == E_STOPPED);
 		locked_ = result == E_SUCCESS;
 		return locked_;
 	}

@@ -82,6 +82,7 @@ Features:
 - move constructors of the C++ objects assert (DEBUG) that the moved object is idle, queues, memory pool, task and state machine use their own buffers after the move
 - Timer::Start* and Task::Start return the object started in place (a started object was moved when the compiler did not apply NRVO, which is not guaranteed)
 - Clock::count rounds up to whole ticks (a delay shorter than a tick was IMMEDIATE), a negative delay is IMMEDIATE and a delay out of range INFINITE (it wrapped around); Clock::until accepts only time points of Clock
+- LockGuard, ReadLock and WriteLock release only a lock they hold (after a reset of the lock during the wait the read/write lock got a wrong reader count), ownsLock() tells whether the lock is held; no assert for a lock reset during the wait
 - fixed compiler warnings on 64-bit targets
 - fixed name of oslibc.c in cmake config
 ---------
