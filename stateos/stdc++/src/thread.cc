@@ -223,8 +223,9 @@ namespace this_thread
   void
   __sleep_for(chrono::seconds __s, chrono::nanoseconds __ns)
   {
-    tsk_sleepFor(chrono::systick::count(__s) +
-                 chrono::systick::count(__ns));
+    cnt_t __t = chrono::systick::count(__s);
+    cnt_t __n = chrono::systick::count(__ns);
+    tsk_sleepFor(__t > INFINITE - __n ? INFINITE : __t + __n); // out of range: INFINITE
   }
 }
 _GLIBCXX_END_NAMESPACE_VERSION

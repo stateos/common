@@ -110,6 +110,7 @@ Features:
 - Clock::count rounds up to whole ticks (a delay shorter than a tick was IMMEDIATE), a negative delay is IMMEDIATE and a delay out of range INFINITE (it wrapped around); Clock::until accepts only time points of Clock
 - LockGuard, ReadLock and WriteLock release only a lock they hold (after a reset of the lock during the wait the read/write lock got a wrong reader count), ownsLock() tells whether the lock is held; no assert for a lock reset during the wait
 - StateOS compiles again with C++11 (std::nothrow was used without <new>)
+- std::chrono::systick (stdc++) rounds up to whole ticks like Clock::count, a negative delay is IMMEDIATE and a delay out of range INFINITE; until converts other clocks through now() (waits and sleeps were shorter than requested)
 ---------
 7.1
 - updated os version

@@ -54,16 +54,28 @@ namespace std
 				return time_point(duration(::sys_time()));
 			}
 
+		private:
+			// rounded up to whole ticks: a delay is never shorter than requested
+			template<class Rep, class Period> static constexpr
+			intmax_t ticks( const chrono::duration<Rep, Period>& _time )
+			{
+				return duration_cast<chrono::duration<intmax_t, period>>(_time).count() +
+				      (duration_cast<chrono::duration<intmax_t, period>>(_time) < _time ? 1 : 0);
+			}
+		public:
+			// negative delay: IMMEDIATE, delay out of range: INFINITE
 			template<class Rep, class Period> static constexpr
 			rep count( const chrono::duration<Rep, Period>& _delay )
 			{
-				return duration_cast<duration>(_delay).count();
+				return ticks(_delay) <= 0 ? IMMEDIATE : static_cast<uintmax_t>(ticks(_delay)) >= INFINITE ? INFINITE : static_cast<rep>(ticks(_delay));
 			}
 
-			template<class Clock, class Duration> static constexpr
+			// steady_clock and system_clock count from the system start (chrono.cc), other clocks through now()
+			template<class Clock, class Duration> static
 			rep until( const chrono::time_point<Clock, Duration>& _time )
 			{
-				return duration_cast<duration>(_time.time_since_epoch()).count();
+				return is_same<Clock, systick>::value || is_same<Clock, steady_clock>::value || is_same<Clock, system_clock>::value ?
+				       static_cast<rep>(ticks(_time.time_since_epoch())) : static_cast<rep>(::sys_time() + count(_time - Clock::now()));
 			}
 
 			static constexpr
@@ -83,7 +95,8 @@ struct ostime_t : public ::timespec
 	{
 		auto sec  = std::chrono::seconds(tv_sec);
 		auto nsec = std::chrono::nanoseconds(tv_nsec);
-		return std::chrono::systick::count(sec) + std::chrono::systick::count(nsec);
+		// an absolute time of system_clock (the same epoch as systick)
+		return std::chrono::systick::until(std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>(sec + nsec));
 	}
 };
 
