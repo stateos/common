@@ -51,7 +51,7 @@ bool priv_tmr_expired( tmr_t *tmr )
 	if (tmr->delay < (cnt_t)(core_sys_time() - tmr->start + 1)) // cnt_t may be promoted to int
 	return true;  // return if timer finished counting
 
-	port_tmr_start((hwt_t)(tmr->start + tmr->delay));
+	port_tmr_start((hwt_t)(cnt_t)(tmr->start + tmr->delay)); // HW_TIMER_SIZE > OS_TIMER_SIZE: wrap like cnt_t
 
 	if (tmr->delay >= (cnt_t)(core_sys_time() - tmr->start + 1)) // cnt_t may be promoted to int
 	return false; // return if timer still counts
