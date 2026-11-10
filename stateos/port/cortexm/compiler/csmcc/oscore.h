@@ -261,10 +261,12 @@ void port_sys_wait( void )
 	__disable_irq();       // interrupts masked by BASEPRI do not wake up the processor
 	__set_BASEPRI(0);
 	__WFI();
+	__NOP(); __NOP(); __NOP(); // STM32F4 erratum (ES0182 2.1.3): wake-up from WFI with prefetch off while debugging
 	port_set_lock();
 	__enable_irq();
 #else
 	__WFI();
+	__NOP(); __NOP(); __NOP(); // STM32F4 erratum (ES0182 2.1.3): wake-up from WFI with prefetch off while debugging
 #endif
 }
 
