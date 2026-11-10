@@ -401,18 +401,26 @@ void core_tsk_exec( void )
 /* -------------------------------------------------------------------------- */
 
 static
+bool priv_tmr_expired( tmr_t *tmr )
+{
+	if ((cnt_t)(core_sys_time() - tmr->start + 1) > tmr->delay) // cnt_t may be promoted to int
+	{
+		tmr->start += tmr->delay;
+		tmr->delay = tmr->period;
+		return true;
+	}
+
+	return false;
+}
+
+static
 bool priv_tmr_countdown( tmr_t *tmr )
 {
-	bool countdown = true;
+	bool countdown;
 
 	port_set_lock();
 	{
-		if ((cnt_t)(core_sys_time() - tmr->start + 1) > tmr->delay) // cnt_t may be promoted to int
-		{
-			tmr->start += tmr->delay;
-			tmr->delay = tmr->period;
-			countdown = false;
-		}
+		countdown = !priv_tmr_expired(tmr);
 	}
 	port_clr_lock();
 
@@ -446,6 +454,32 @@ void core_tsk_switch( void )
 		if (cur->hdr.id == ID_STOPPED)
 			continue;
 		else
+		if (cur->hdr.id == ID_TIMER)
+		{
+			port_set_lock();
+			{
+				tmr = (tmr_t *)cur;
+
+				// expiry and callback in one critical section: an interrupt may stop or restart the timer
+				if (tmr->hdr.id == ID_TIMER && (tmr->delay == 0 || priv_tmr_expired(tmr)))
+				{
+					if (tmr->delay == 0)          // timer started with IMMEDIATE delay
+						tmr->delay = tmr->period; // has not been counted down
+
+					if (tmr->proc)
+						((fun_a *)tmr->proc)(tmr->arg);
+
+					if (tmr->delay == 0)
+						core_tmr_remove(tmr);
+
+					core_all_wakeup(&tmr->obj.queue, E_SUCCESS);
+				}
+			}
+			port_clr_lock();
+
+			continue;
+		}
+		else
 		if (cur->delay && priv_tmr_countdown((tmr_t *)cur))
 			continue;
 		else
@@ -461,28 +495,6 @@ void core_tsk_switch( void )
 				continue;
 
 			break;
-		}
-		else
-		if (cur->hdr.id == ID_TIMER)
-		{
-			port_set_lock();
-			{
-				tmr = (tmr_t *)cur;
-
-				if (tmr->delay == 0)          // timer started with IMMEDIATE delay
-					tmr->delay = tmr->period; // has not been counted down
-
-				if (tmr->proc)
-					((fun_a *)tmr->proc)(tmr->arg);
-
-				if (tmr->delay == 0)
-					core_tmr_remove(tmr);
-
-				core_all_wakeup(&tmr->obj.queue, E_SUCCESS);
-			}
-			port_clr_lock();
-
-			continue;
 		}
 	}
 
