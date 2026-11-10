@@ -926,7 +926,7 @@ unsigned tsk_getPrio( void );
  *
  * Parameters
  *   delay           : duration of time (maximum number of ticks to delay execution of current task)
- *                     IMMEDIATE: don't delay execution of current task
+ *                     IMMEDIATE: don't delay execution of current task (cooperative mode: only give up the processor once)
  *                     INFINITE:  delay indefinitely execution of current task
  *
  * Return            : none
@@ -949,7 +949,7 @@ void tsk_delay( cnt_t delay ) { tsk_sleepFor(delay); }
  *
  * Parameters
  *   delay           : duration of time (maximum number of ticks to delay execution of current task)
- *                     IMMEDIATE: don't delay execution of current task
+ *                     IMMEDIATE: don't delay execution of current task (cooperative mode: only give up the processor once)
  *                     INFINITE:  delay indefinitely execution of current task
  *
  * Return            : none
@@ -968,6 +968,7 @@ void tsk_sleepNext( cnt_t delay );
  *
  * Parameters
  *   time            : timepoint value
+ *                     past timepoint: don't delay execution of current task (cooperative mode: only give up the processor once)
  *
  * Return            : none
  *

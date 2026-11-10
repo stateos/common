@@ -486,6 +486,22 @@ int core_tsk_wait( tsk_t **que, tsk_t *tsk )
 
 /* -------------------------------------------------------------------------- */
 
+// cooperative mode: tsk_sleep* gives up the processor once also when it does not wait,
+// otherwise a late periodic task would starve the other tasks
+static
+int priv_tsk_timeout( tsk_t **que )
+{
+	#if OS_ROBIN == 0
+	if (que == &WAIT.obj.queue)
+		core_ctx_switchNow();
+	#else
+	(void) que;
+	#endif
+	return E_TIMEOUT;
+}
+
+/* -------------------------------------------------------------------------- */
+
 int core_tsk_waitFor( tsk_t **que, cnt_t delay )
 {
 	tsk_t *cur = System.cur;
@@ -494,7 +510,7 @@ int core_tsk_waitFor( tsk_t **que, cnt_t delay )
 	cur->delay = delay;
 
 	if (cur->delay == IMMEDIATE)
-		return E_TIMEOUT;
+		return priv_tsk_timeout(que);
 
 	return core_tsk_wait(que, cur);
 }
@@ -510,7 +526,7 @@ int core_tsk_waitNext( tsk_t **que, cnt_t delay )
 	if ((cnt_t)(core_sys_time() - cur->start) >= cur->delay) // cnt_t may be promoted to int
 	{
 		cur->start += cur->delay;
-		return E_TIMEOUT;
+		return priv_tsk_timeout(que);
 	}
 
 	return core_tsk_wait(que, cur);
@@ -526,7 +542,7 @@ int core_tsk_waitUntil( tsk_t **que, cnt_t time )
 	cur->delay = time - cur->start;
 
 	if (cur->delay - 1U > CNT_LIMIT) // include 0
-		return E_TIMEOUT;
+		return priv_tsk_timeout(que);
 
 	return core_tsk_wait(que, cur);
 }
