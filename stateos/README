@@ -95,6 +95,7 @@ Features:
 - fixed calloc with zero size (the assertion failed in DEBUG, now it returns a minimal block)
 - fixed PendSV (Cortex-M): the main stack stays 8-byte aligned after the first context switch from the main task (AAPCS)
 - fixed priority change of the current task: it goes to the head of its new priority group and keeps its time slice (it stayed at its old place in the ready list, a ready task of higher priority waited until it blocked)
+- signal delivery does not end the time slice of the task (the task was rotated as after tsk_yield, a task signalled in every round did not run its own code)
 ---------
 7.1
 - updated os version

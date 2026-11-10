@@ -706,6 +706,8 @@ void *core_tsk_switch( void *sp )
 		cur = System.cur;
 		if (cur->sp == 0)
 			cur->sp = sp;
+		else                         // return from the signal handler (priv_sig_deliver):
+			cur = NULL;              // the task continues its turn, it is not rotated
 
 		cur = priv_tsk_switch(cur);
 
