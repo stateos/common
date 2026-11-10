@@ -90,16 +90,28 @@ struct Clock
 		return time_point{duration{::sys_time()}};
 	}
 
+private:
+	// rounded up to whole ticks: a delay is never shorter than requested
+	template<class _Rep, class _Period> static constexpr
+	intmax_t ticks( const std::chrono::duration<_Rep, _Period>& _time )
+	{
+		return std::chrono::duration_cast<std::chrono::duration<intmax_t, period>>(_time).count() +
+		      (std::chrono::duration_cast<std::chrono::duration<intmax_t, period>>(_time) < _time ? 1 : 0);
+	}
+
+public:
+	// negative delay: IMMEDIATE, delay out of range: INFINITE
 	template<class _Rep, class _Period> static constexpr
 	rep count( const std::chrono::duration<_Rep, _Period>& _delay )
 	{
-		return std::chrono::duration_cast<duration>(_delay).count();
+		return ticks(_delay) <= 0 ? IMMEDIATE : static_cast<uintmax_t>(ticks(_delay)) >= INFINITE ? INFINITE : static_cast<rep>(ticks(_delay));
 	}
 
-	template<class _Clock, class _Duration> static constexpr
-	rep until( const std::chrono::time_point<_Clock, _Duration>& _time )
+	// only a time point of this clock
+	template<class _Duration> static constexpr
+	rep until( const std::chrono::time_point<Clock, _Duration>& _time )
 	{
-		return std::chrono::duration_cast<duration>(_time.time_since_epoch()).count();
+		return static_cast<rep>(ticks(_time.time_since_epoch()));
 	}
 #endif
 	static constexpr
