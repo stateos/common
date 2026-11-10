@@ -734,6 +734,12 @@ struct Timer : public baseTimer
 	Timer& operator=( Timer&& ) = delete;
 	Timer& operator=( const Timer& ) = delete;
 
+private:
+	struct Starter {}; // Start* functions return the timer started in place: a started timer must not be moved
+	template<class S, typename... A>
+	Timer( Starter, S&& _start, A&&... _args ): Timer{static_cast<A&&>(_args)...} { _start(*this); }
+public:
+
 /******************************************************************************
  *
  * Name              : Timer::Make
@@ -802,17 +808,13 @@ struct Timer : public baseTimer
 	template<typename T> static
 	Timer Start( const T& _delay, const T& _period )
 	{
-		Timer tmr {};
-		tmr.start(_delay, _period);
-		return tmr;
+		return { Starter{}, [&]( Timer& _tmr ){ _tmr.start(_delay, _period); } };
 	}
 
 	template<typename T, class F> static
 	Timer Start( const T& _delay, const T& _period, F&& _proc )
 	{
-		Timer tmr { _proc };
-		tmr.start(_delay, _period);
-		return tmr;
+		return { Starter{}, [&]( Timer& _tmr ){ _tmr.start(_delay, _period); }, _proc };
 	}
 
 #if __cplusplus >= 201402L
@@ -852,17 +854,13 @@ struct Timer : public baseTimer
 	template<typename T> static
 	Timer StartFor( const T& _delay )
 	{
-		Timer tmr {};
-		tmr.startFor(_delay);
-		return tmr;
+		return { Starter{}, [&]( Timer& _tmr ){ _tmr.startFor(_delay); } };
 	}
 
 	template<typename T, class F> static
 	Timer StartFor( const T& _delay, F&& _proc )
 	{
-		Timer tmr { _proc };
-		tmr.startFor(_delay);
-		return tmr;
+		return { Starter{}, [&]( Timer& _tmr ){ _tmr.startFor(_delay); }, _proc };
 	}
 
 #if __cplusplus >= 201402L
@@ -903,17 +901,13 @@ struct Timer : public baseTimer
 	template<typename T> static
 	Timer StartPeriodic( const T& _period )
 	{
-		Timer tmr {};
-		tmr.startPeriodic(_period);
-		return tmr;
+		return { Starter{}, [&]( Timer& _tmr ){ _tmr.startPeriodic(_period); } };
 	}
 
 	template<typename T, class F> static
 	Timer StartPeriodic( const T& _period, F&& _proc )
 	{
-		Timer tmr { _proc };
-		tmr.startPeriodic(_period);
-		return tmr;
+		return { Starter{}, [&]( Timer& _tmr ){ _tmr.startPeriodic(_period); }, _proc };
 	}
 
 #if __cplusplus >= 201402L
@@ -951,17 +945,13 @@ struct Timer : public baseTimer
 	template<typename T> static
 	Timer StartUntil( const T& _time )
 	{
-		Timer tmr {};
-		tmr.startUntil(_time);
-		return tmr;
+		return { Starter{}, [&]( Timer& _tmr ){ _tmr.startUntil(_time); } };
 	}
 
 	template<typename T, class F> static
 	Timer StartUntil( const T& _time, F&& _proc )
 	{
-		Timer tmr { _proc };
-		tmr.startUntil(_time);
-		return tmr;
+		return { Starter{}, [&]( Timer& _tmr ){ _tmr.startUntil(_time); }, _proc };
 	}
 
 #if __cplusplus >= 201402L
