@@ -683,7 +683,7 @@ int msg_sendAsync( msg_t *msg, const void *data, size_t size )
 	while (result = msg_giveAsync(msg, data, size), result == E_TIMEOUT)
 		tsk_yield();
 
-	return E_SUCCESS;
+	return result;
 }
 
 /* -------------------------------------------------------------------------- */
