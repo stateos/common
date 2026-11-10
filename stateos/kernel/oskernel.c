@@ -236,6 +236,31 @@ void priv_tsk_remove( tsk_t *tsk )
 
 /* -------------------------------------------------------------------------- */
 
+// the current task after a priority change goes to the head of its new priority group
+// (as after preemption) and keeps its time slice
+static
+void priv_cur_move( tsk_t *cur )
+{
+	tsk_t *prv;
+	tsk_t *nxt = &IDLE;
+
+	priv_tsk_remove(cur);
+
+	do nxt = nxt->hdr.next;
+	while (cur->prio < nxt->prio);
+
+	cur->hdr.id = ID_READY;
+
+	prv = nxt->hdr.prev;
+
+	cur->hdr.prev = prv;
+	cur->hdr.next = nxt;
+	nxt->hdr.prev = cur;
+	prv->hdr.next = cur;
+}
+
+/* -------------------------------------------------------------------------- */
+
 void core_tsk_insert( tsk_t *tsk )
 {
 	priv_tsk_insert(tsk);
@@ -592,9 +617,9 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 
 		if (tsk == System.cur)       // current task
 		{
-			tsk = tsk->hdr.next;
+			priv_cur_move(tsk);
 			#if OS_ROBIN
-			if (tsk->prio > prio && System.tsk == NULL)
+			if (tsk != IDLE.hdr.next && System.tsk == NULL)
 				port_ctx_switch();
 			#endif
 		}
@@ -632,9 +657,9 @@ void core_cur_prio( unsigned prio )
 	if (tsk->prio != prio)
 	{
 		tsk->prio = prio;
-		tsk = tsk->hdr.next;
+		priv_cur_move(tsk);
 		#if OS_ROBIN
-		if (tsk->prio > prio && System.tsk == NULL)
+		if (tsk != IDLE.hdr.next && System.tsk == NULL)
 			port_ctx_switch();
 		#endif
 	}
