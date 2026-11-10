@@ -308,12 +308,13 @@ void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 	assert(hsm);
 	assert(hsm->state == NULL);
 	assert(tsk);
+	assert(tsk->hdr.id == ID_STOPPED);
 	assert(initState);
 	assert(initState->parent == NULL);
 
 	sys_lock();
 	{
-		if (hsm->state == NULL)
+		if (hsm->state == NULL && tsk->hdr.id == ID_STOPPED) // the dispatcher task must be stopped
 		{
 			hsm->evq.count = 0; // reset hsm event queue
 			hsm->evq.head  = 0; //
@@ -463,12 +464,13 @@ void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState )
 	assert(hsm);
 	assert(hsm->state == NULL);
 	assert(tsk);
+	assert(tsk->hdr.id == ID_STOPPED);
 	assert(initState);
 	assert(initState->parent == NULL);
 
 	sys_lock();
 	{
-		if (hsm->state == NULL)
+		if (hsm->state == NULL && tsk->hdr.id == ID_STOPPED) // the dispatcher task must be stopped
 		{
 			hsm->evq.count = 0; // reset hsm event queue
 			hsm->evq.head  = 0; //
