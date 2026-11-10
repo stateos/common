@@ -52,6 +52,10 @@
 
 /* -------------------------------------------------------------------------- */
 
+#if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
+#include <new>      // std::nothrow (Create, Make)
+#endif
+
 #if defined(__cplusplus) && (__cplusplus >= 201402L) && !defined(__STATEOS_STDCXX)
 #include <functional>
 #include <memory>
