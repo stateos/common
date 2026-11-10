@@ -317,7 +317,10 @@ int priv_raw_give( raw_t *raw, const void *data, size_t size )
 	if (raw->count + size > raw->limit)
 		return E_TIMEOUT;
 
-	priv_raw_putUpdate(raw, data, size);
+	if (raw->count == 0)
+		priv_raw_putUpdate(raw, data, size);
+	else
+		priv_raw_put(raw, data, size);
 
 	return E_SUCCESS;
 }
