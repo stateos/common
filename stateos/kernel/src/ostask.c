@@ -558,11 +558,12 @@ int tsk_suspend( tsk_t *tsk )
 
 	assert_tsk_context();
 	assert(tsk);
+	assert(tsk != &IDLE);
 	assert(tsk->obj.res!=RELEASED);
 
 	sys_lock();
 	{
-		if (tsk->hdr.id == ID_READY && tsk->guard == 0)
+		if (tsk->hdr.id == ID_READY && tsk->guard == 0 && tsk != &IDLE) // IDLE is the guard of the ready list
 		{
 			core_tsk_suspend(tsk);
 			result = E_SUCCESS;

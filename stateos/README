@@ -104,6 +104,7 @@ Features:
 - fixed priority inheritance through a mutex without a priority protocol (mtxPrioNone): the owner of such a mutex got the priority of a task waiting for another mutex
 - fixed msg_sendAsync: it returned E_SUCCESS also for a message larger than the slot (E_FAILURE)
 - hsm_start / hsm_startAsync with a dispatcher task that is not stopped do not start the state machine (it looked started, the events were not handled), assert in DEBUG
+- tsk_suspend(&IDLE) fails (it removed the guard of the ready list), assert in DEBUG
 ---------
 7.1
 - updated os version
