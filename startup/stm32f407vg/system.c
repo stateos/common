@@ -46,7 +46,9 @@
 __WEAK
 void SystemInit( void )
 {
-	FLASH->ACR = LATENCY | FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN;
+	FLASH->ACR = LATENCY | FLASH_ACR_ICEN | FLASH_ACR_DCEN;
+	if ((DBGMCU->IDCODE & DBGMCU_IDCODE_DEV_ID) == 0x413) // revision A reports 0x411: prefetch is not supported (ES0182 2.1.1)
+		FLASH->ACR |= FLASH_ACR_PRFTEN;
 #ifdef  PLL_SOURCE_HSI
 	RCC->PLLCFGR = (PLL_M<<0) | (PLL_N<<6) | (((PLL_P>>1)-1)<<16) | RCC_PLLCFGR_PLLSRC_HSI | (PLL_Q<<24);
 #else
