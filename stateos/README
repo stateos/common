@@ -20,6 +20,7 @@ This project is licensed under the terms of the MIT License (https://opensource.
 Features:
 - kernel can operate in preemptive or cooperative mode
 - in cooperative mode (OS_ROBIN == 0) a task gives up the processor only when it waits, in tsk_sleep* and in tsk_yield; a waiting function with IMMEDIATE delay (e.g. sem_waitFor(sem, IMMEDIATE)) does not give it up, so a polling loop needs tsk_yield
+- Async functions are intended for systems with tasks of equal priority: the waiting ones (e.g. sem_waitAsync) poll in a loop with tsk_yield, so lower priority tasks do not run while they wait
 - kernel can operate with 16, 32 or 64-bit timer counter
 - kernel can operate in tick-less mode
 - implemented basic protection using MPU (use nullptr, stack overflow)

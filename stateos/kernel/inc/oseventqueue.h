@@ -365,6 +365,8 @@ int evq_waitUntil( evq_t *evq, unsigned *event, cnt_t time );
  *
  * Note              : use only in thread mode
  *                     use Async alias for communication with unmasked interrupt handlers
+ *                     the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
+ *                     lower priority tasks do not run meanwhile
  *
  ******************************************************************************/
 
@@ -476,6 +478,8 @@ int evq_sendUntil( evq_t *evq, unsigned event, cnt_t time );
  *
  * Note              : use only in thread mode
  *                     use Async alias for communication with unmasked interrupt handlers
+ *                     the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
+ *                     lower priority tasks do not run meanwhile
  *
  ******************************************************************************/
 

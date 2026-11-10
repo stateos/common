@@ -406,6 +406,8 @@ int msg_waitUntil( msg_t *msg, void *data, size_t size, size_t *read, cnt_t time
  *
  * Note              : use only in thread mode
  *                     use Async alias for communication with unmasked interrupt handlers
+ *                     the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
+ *                     lower priority tasks do not run meanwhile
  *
  ******************************************************************************/
 
@@ -525,6 +527,8 @@ int msg_sendUntil( msg_t *msg, const void *data, size_t size, cnt_t time );
  *
  * Note              : use only in thread mode
  *                     use Async alias for communication with unmasked interrupt handlers
+ *                     the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
+ *                     lower priority tasks do not run meanwhile
  *
  ******************************************************************************/
 
