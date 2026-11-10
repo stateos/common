@@ -213,6 +213,9 @@ typedef struct __sys
 	volatile
 	cnt_t    cnt;   // system timer counter
 #endif
+#if OS_ROBIN && HW_TIMER_SIZE
+	bool     robin; // tick-less mode: the time slice has expired, the turn ends at the next context switch
+#endif
 
 }	sys_t;
 

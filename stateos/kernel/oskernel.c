@@ -203,8 +203,8 @@ void priv_tsk_insert( tsk_t *tsk )
 {
 	tsk_t *prv;
 	tsk_t *nxt = &IDLE;
-	#if OS_ROBIN && HW_TIMER_SIZE == 0
-	tsk->slice = 0;
+	#if OS_ROBIN
+	tsk->slice = 0;                  // the next turn of the task starts with a new time slice
 	#endif
 	if (tsk->prio)
 		do nxt = nxt->hdr.next;
@@ -356,6 +356,10 @@ void core_ctx_switch( void )
 {
 	tsk_t *cur = IDLE.hdr.next;
 	tsk_t *nxt = cur->hdr.next;
+	#if OS_ROBIN && HW_TIMER_SIZE
+	System.robin = true;             // also when a higher priority task is running (no rotation now)
+	core_ctx_reset();                // next period (the AVR compare channel is not reloaded by itself)
+	#endif
 	if (nxt->prio == cur->prio && System.tsk == NULL)
 		port_ctx_switch();
 }
@@ -676,6 +680,8 @@ tsk_t *priv_tsk_switch( tsk_t *cur )
 
 	#if OS_ROBIN && HW_TIMER_SIZE == 0
 	if (cur == nxt || (nxt->slice >= (OS_FREQUENCY)/(OS_ROBIN) && (nxt->slice = 0) == 0))
+	#elif OS_ROBIN
+	if (cur == nxt || (System.robin && nxt->slice && ((tsk_t *)nxt->hdr.next)->prio == nxt->prio))
 	#else
 	if (cur == nxt)
 	#endif
@@ -683,10 +689,25 @@ tsk_t *priv_tsk_switch( tsk_t *cur )
 		priv_tsk_remove(nxt);
 		priv_tsk_insert(nxt);
 		nxt = IDLE.hdr.next;
+		#if OS_ROBIN && HW_TIMER_SIZE
+		nxt->slice = 0;
+		#endif
 	}
 
 	if (System.tsk != NULL)
 		nxt = System.tsk->guard ? &IDLE : System.tsk;
+
+	#if OS_ROBIN && HW_TIMER_SIZE
+	if (nxt->slice == 0)             // new turn: a new time slice, but a task preempting the current one
+	{                                // uses its time slice (it does not restart after preemption)
+		nxt->slice = 1;
+		if (nxt->prio <= System.cur->prio || System.cur == &IDLE)
+		{
+			System.robin = false;
+			core_ctx_reset();
+		}
+	}
+	#endif
 
 	return nxt;
 }
@@ -701,7 +722,9 @@ void *core_tsk_switch( void *sp )
 
 	port_set_lock();
 	{
-		core_ctx_reset();
+		#if OS_ROBIN == 0
+		core_ctx_reset();            // cooperative mode: at every switch (STM8 keeps its context switch compare away)
+		#endif
 
 		cur = System.cur;
 		if (cur->sp == 0)
