@@ -58,6 +58,7 @@ Features:
 - fixed hsm_link (action linked twice created a loop)
 - hsm_reset stops the event dispatcher at once (the old dispatcher destroyed the hsm started again)
 - hsm_start / hsm_startAsync with a dispatcher task that is not stopped do not start the state machine (it looked started, the events were not handled), assert in DEBUG
+- tsk_startFrom / tsk_flip clear the task argument (hsm_reset stopped a task that had been its event dispatcher)
 - fixed OS_HSM_ACTION / static_HSM_ACTION: the name of the object is the first parameter (all the objects were named 'action')
 - added assert (DEBUG) for functions that need a task context, e.g. blocking functions called from the timer callback
 - OS_ATOMICS is rejected at compile time on cores without atomic instructions (Cortex-M0/M0+, AVR, STM8)
