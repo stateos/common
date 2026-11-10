@@ -85,6 +85,7 @@ Features:
 - Clock::count rounds up to whole ticks (a delay shorter than a tick was IMMEDIATE), a negative delay is IMMEDIATE and a delay out of range INFINITE (it wrapped around); Clock::until accepts only time points of Clock
 - LockGuard, ReadLock and WriteLock release only a lock they hold (after a reset of the lock during the wait the read/write lock got a wrong reader count), ownsLock() tells whether the lock is held; no assert for a lock reset during the wait
 - one_call / OnceFlag::call: described that another caller does not wait for the completion of the once function (the flag is set before the call)
+- tick-less mode works with the hardware timer wider than the system timer (HW_TIMER_SIZE > OS_TIMER_SIZE, e.g. OS_TIMER_SIZE 16 with a 32-bit timer)
 - fixed compiler warnings on 64-bit targets
 - fixed name of oslibc.c in cmake config
 ---------

@@ -57,14 +57,12 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------------- */
-// !! WARNING! OS_TIMER_SIZE < HW_TIMER_SIZE may cause unexpected problems !!
 
 #ifndef OS_TIMER_SIZE
 #define OS_TIMER_SIZE        32 /* bit size of system timer counter           */
 #endif
 
 /* -------------------------------------------------------------------------- */
-// !! WARNING! OS_TIMER_SIZE < HW_TIMER_SIZE may cause unexpected problems !!
 
 #ifdef  HW_TIMER_SIZE
 #error  HW_TIMER_SIZE is an internal os definition!

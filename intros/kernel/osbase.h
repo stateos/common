@@ -120,12 +120,6 @@ typedef uint64_t     cnt_t;
 
 /* -------------------------------------------------------------------------- */
 
-#if     HW_TIMER_SIZE > OS_TIMER_SIZE
-#error  HW_TIMER_SIZE > OS_TIMER_SIZE causes unexpected problems!
-#endif
-
-/* -------------------------------------------------------------------------- */
-
 typedef struct __mtx mtx_t;           // mutex
 typedef struct __tmr tmr_t;           // timer
 typedef struct __tsk tsk_t;           // task

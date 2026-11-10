@@ -60,7 +60,6 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------------- */
-// !! WARNING! OS_TIMER_SIZE < HW_TIMER_SIZE may cause unexpected problems !!
 
 #ifndef OS_TIMER_SIZE
 #define OS_TIMER_SIZE        64 /* bit size of system timer counter           */
