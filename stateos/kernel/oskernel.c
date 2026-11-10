@@ -632,7 +632,7 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		{
 			core_tsk_transfer(tsk->guard, tsk);
 			if (tsk->mtx.tree)
-				core_tsk_prio(tsk->mtx.tree->owner, prio);
+				core_tsk_prio(tsk->mtx.tree->owner, tsk->mtx.tree->owner->basic);
 		}
 		else
 		if (tsk->hdr.id == ID_READY) // ready task

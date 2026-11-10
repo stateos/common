@@ -101,6 +101,7 @@ Features:
 - fixed tick-less ports with the hardware timer narrower than the system timer: at the timer overflow an interrupt handler of higher priority could get the system time one timer period back
 - idle task (Cortex-M): three NOPs after WFI, workaround of the STM32F4 erratum (ES0182 2.1.3: instructions after WFI could run on wake-up with the flash prefetch off while debugging)
 - fixed raw_give with a sender waiting for free space: the data went to the buffer of the sender (its source was overwritten, its data lost)
+- fixed priority inheritance through a mutex without a priority protocol (mtxPrioNone): the owner of such a mutex got the priority of a task waiting for another mutex
 ---------
 7.1
 - updated os version
