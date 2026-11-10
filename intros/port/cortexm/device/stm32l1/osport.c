@@ -128,9 +128,12 @@ void TIM2_IRQHandler( void )
 {
 //	if (TIM2->SR & TIM_SR_UIF)
 	{
+		lck_t lck = port_get_lock(); // port_sys_time must not see the flag cleared and the counter not yet updated
+		port_set_lock();
 		TIM2->SR = ~TIM_SR_UIF;
 		core_sys_tick();
 		__ISB(); // delay because of GNUCC
+		port_put_lock(lck);
 	}
 }
 

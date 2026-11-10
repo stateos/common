@@ -129,9 +129,12 @@ void WTIMER0A_Handler( void )
 {
 //	if (WTIMER0->MIS & TIMER_MIS_TATOMIS)
 	{
+		lck_t lck = port_get_lock(); // port_sys_time must not see the flag cleared and the counter not yet updated
+		port_set_lock();
 		WTIMER0->ICR = TIMER_ICR_TATOCINT;
 		core_sys_tick();
 		__ISB(); // delay because of GNUCC
+		port_put_lock(lck);
 	}
 }
 
