@@ -195,6 +195,7 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc )
 		if (tsk->hdr.id == ID_STOPPED)  // active tasks cannot be started
 		{
 			tsk->proc = proc;
+			tsk->arg  = NULL;
 			tsk->start = core_sys_time();
 
 			core_ctx_init(tsk);
@@ -477,6 +478,7 @@ void tsk_flip( fun_t *proc )
 	port_set_lock();
 
 	System.cur->proc = proc;
+	System.cur->arg  = NULL;
 
 	priv_sig_reset(System.cur);  // reset signal variables of current task
 	priv_mtx_remove(System.cur); // the new procedure cannot release mutexes held by the previous one
