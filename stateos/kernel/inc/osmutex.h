@@ -47,7 +47,8 @@
 /////// mutex protocol
 #define mtxPrioNone      0U // none
 #define mtxPrioInherit   4U // priority inheritance mutex
-#define mtxPrioProtect   8U // priority protected mutex (OCPP)
+#define mtxPrioProtect   8U // priority protected mutex (ICPP, POSIX PTHREAD_PRIO_PROTECT): the owner runs at least
+                            // at the mutex priority (ceiling), a task with a higher priority cannot lock it
 #define mtxPrioMASK    ( mtxPrioNone | mtxPrioInherit | mtxPrioProtect )
 
 /////// mutex robustness
@@ -76,7 +77,7 @@ struct __mtx
 	tsk_t  * owner; // mutex owner
 	unsigned mode;  // mutex mode: mutex type + mutex protocol + mutex robustness
 	unsigned count; // current value of the mutex counter
-	unsigned prio;  // mutex priority; used only with mtxPrioProtect protocol
+	unsigned prio;  // mutex priority ceiling; used only with mtxPrioProtect protocol
 	mtx_t  * list;  // list of mutexes held by owner
 };
 
@@ -93,7 +94,7 @@ typedef struct __mtx mtx_id [];
  *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
  *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
  *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
+ *   prio            : mutex priority ceiling; used only with mtxPrioProtect protocol
  *
  * Return            : mutex object
  *
@@ -129,7 +130,7 @@ typedef struct __mtx mtx_id [];
  *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
  *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
  *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
+ *   prio            : mutex priority ceiling; used only with mtxPrioProtect protocol
  *
  ******************************************************************************/
 
@@ -150,7 +151,7 @@ typedef struct __mtx mtx_id [];
  *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
  *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
  *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
+ *   prio            : mutex priority ceiling; used only with mtxPrioProtect protocol
  *
  * Return            : mutex object
  *
@@ -175,7 +176,7 @@ typedef struct __mtx mtx_id [];
  *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
  *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
  *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
+ *   prio            : mutex priority ceiling; used only with mtxPrioProtect protocol
  *
  * Return            : mutex object as array (id)
  *
@@ -206,7 +207,7 @@ extern "C" {
  *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
  *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
  *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
+ *   prio            : mutex priority ceiling; used only with mtxPrioProtect protocol
  *
  * Return            : none
  *
@@ -228,7 +229,7 @@ void mtx_init( mtx_t *mtx, unsigned mode, unsigned prio );
  *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
  *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
  *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
+ *   prio            : mutex priority ceiling; used only with mtxPrioProtect protocol
  *
  * Return            : pointer to mutex object
  *   NULL            : object not created (not enough free memory)
@@ -315,7 +316,8 @@ unsigned mtx_prio( mtx_t *mtx );
  * Return
  *   E_SUCCESS       : mutex object was successfully locked
  *   OWNERDEAD       : mutex object was successfully locked, previous owner has stopped
- *   E_FAILURE       : mutex object can't be locked
+ *   E_FAILURE       : mutex object can't be locked (also: the task priority is above
+ *                     the priority ceiling of a mtxPrioProtect mutex)
  *   E_TIMEOUT       : mutex object can't be locked immediately, try again
  *
  * Note              : use only in thread mode
@@ -343,7 +345,8 @@ int mtx_tryLock( mtx_t *mtx ) { return mtx_take(mtx); }
  * Return
  *   E_SUCCESS       : mutex object was successfully locked
  *   OWNERDEAD       : mutex object was successfully locked, previous owner has stopped
- *   E_FAILURE       : mutex object can't be locked
+ *   E_FAILURE       : mutex object can't be locked (also: the task priority is above
+ *                     the priority ceiling of a mtxPrioProtect mutex)
  *   E_STOPPED       : mutex object was reseted before the specified timeout expired
  *   E_DELETED       : mutex object was deleted before the specified timeout expired
  *   E_TIMEOUT       : mutex object was not locked before the specified timeout expired
@@ -368,7 +371,8 @@ int mtx_waitFor( mtx_t *mtx, cnt_t delay );
  * Return
  *   E_SUCCESS       : mutex object was successfully locked
  *   OWNERDEAD       : mutex object was successfully locked, previous owner has stopped
- *   E_FAILURE       : mutex object can't be locked
+ *   E_FAILURE       : mutex object can't be locked (also: the task priority is above
+ *                     the priority ceiling of a mtxPrioProtect mutex)
  *   E_STOPPED       : mutex object was reseted before the specified timeout expired
  *   E_DELETED       : mutex object was deleted before the specified timeout expired
  *   E_TIMEOUT       : mutex object was not locked before the specified timeout expired
@@ -393,7 +397,8 @@ int mtx_waitUntil( mtx_t *mtx, cnt_t time );
  * Return
  *   E_SUCCESS       : mutex object was successfully locked
  *   OWNERDEAD       : mutex object was successfully locked, previous owner has stopped
- *   E_FAILURE       : mutex object can't be locked
+ *   E_FAILURE       : mutex object can't be locked (also: the task priority is above
+ *                     the priority ceiling of a mtxPrioProtect mutex)
  *   E_STOPPED       : mutex object was reseted
  *   E_DELETED       : mutex object was deleted
  *
@@ -451,7 +456,7 @@ namespace stateos {
  *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
  *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
  *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
+ *   prio            : mutex priority ceiling; used only with mtxPrioProtect protocol
  *
  ******************************************************************************/
 
@@ -505,7 +510,7 @@ struct Mutex : public __mtx
  *                           type: mtxNormal or mtxErrorCheck or mtxRecursive
  *                       protocol: mtxPrioNone or mtxPrioInherit or mtxPrioProtect
  *                     robustness: mtxStalled or mtxRobust
- *   prio            : mutex priority; used only with mtxPrioProtect protocol
+ *   prio            : mutex priority ceiling; used only with mtxPrioProtect protocol
  *
  * Return            : std::unique_pointer / pointer to Mutex object
  *

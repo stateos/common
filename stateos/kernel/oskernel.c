@@ -642,9 +642,12 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		prio = tsk->basic;
 
 	for (mtx = tsk->mtx.list; mtx; mtx = mtx->list)
-		if ((mtx->mode & mtxPrioMASK) != mtxPrioNone && mtx->obj.queue)
-			if (prio < mtx->obj.queue->prio)
-				prio = mtx->obj.queue->prio;
+	{
+		if ((mtx->mode & mtxPrioMASK) == mtxPrioProtect && prio < mtx->prio)
+			prio = mtx->prio;        // ICPP: the owner runs at least at the priority ceiling
+		if ((mtx->mode & mtxPrioMASK) != mtxPrioNone && mtx->obj.queue && prio < mtx->obj.queue->prio)
+			prio = mtx->obj.queue->prio;
+	}
 
 	if (tsk->prio != prio)
 	{
@@ -685,9 +688,12 @@ void core_cur_prio( unsigned prio )
 		prio = tsk->basic;
 
 	for (mtx = tsk->mtx.list; mtx; mtx = mtx->list)
-		if ((mtx->mode & mtxPrioMASK) != mtxPrioNone && mtx->obj.queue)
-			if (prio < mtx->obj.queue->prio)
-				prio = mtx->obj.queue->prio;
+	{
+		if ((mtx->mode & mtxPrioMASK) == mtxPrioProtect && prio < mtx->prio)
+			prio = mtx->prio;        // ICPP: the owner runs at least at the priority ceiling
+		if ((mtx->mode & mtxPrioMASK) != mtxPrioNone && mtx->obj.queue && prio < mtx->obj.queue->prio)
+			prio = mtx->obj.queue->prio;
+	}
 
 	if (tsk->prio != prio)
 	{
@@ -796,6 +802,8 @@ void core_mtx_link( mtx_t *mtx, tsk_t *tsk )
 	{
 		mtx->list = tsk->mtx.list;
 		tsk->mtx.list = mtx;
+		if ((mtx->mode & mtxPrioMASK) == mtxPrioProtect)
+			core_tsk_prio(tsk, tsk->basic); // ICPP: raise the new owner to the priority ceiling
 	}
 }
 
