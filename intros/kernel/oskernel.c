@@ -226,6 +226,9 @@ int core_tsk_waitFor( tsk_t **que, cnt_t delay )
 	cur->start = core_sys_time();
 	cur->delay = delay;
 
+	if (cur->delay == IMMEDIATE && que != &cur->obj.queue) // tsk_sleep* gives up the processor anyway
+		return E_TIMEOUT;
+
 	return core_tsk_wait(que, cur);
 }
 
@@ -254,6 +257,9 @@ int core_tsk_waitUntil( tsk_t **que, cnt_t time )
 	cur->delay = time - cur->start;
 	if (cur->delay > CNT_LIMIT)
 		cur->delay = 0;
+
+	if (cur->delay == IMMEDIATE && que != &cur->obj.queue) // tsk_sleep* gives up the processor anyway
+		return E_TIMEOUT;
 
 	return core_tsk_wait(que, cur);
 }

@@ -39,6 +39,7 @@ Features:
 - updated os version
 - added x86_64 port and linux support for the x86 port
 - waiting functions return E_TIMEOUT after the end of the timer countdown (was E_FAILURE)
+- waiting functions with IMMEDIATE delay or a past timepoint return E_TIMEOUT at once (other tasks could run and release the object meanwhile); tsk_sleep* still gives up the processor once
 - fixed timers: system jumped into the timer object after the timer callback
 - fixed timers: stopping the timer from its own callback damaged the queue of ready tasks
 - fixed timers / tasks stopped or started by an interrupt handler while the system was handling the current object (lost stop, damaged queue or hang)
