@@ -171,8 +171,11 @@ INTERRUPT_HANDLER(TIM3_UPD_OVF_BRK_IRQHandler, 15)
 {
 //	if (TIM3->SR1 & TIM3_SR1_UIF)
 	{
+		lck_t lck = port_get_lock(); // port_sys_time must not see the flag cleared and the counter not yet updated
+		port_set_lock();
 		TIM3->SR1 = (uint8_t) ~TIM3_SR1_UIF;
 		core_sys_tick();
+		port_put_lock(lck);
 	}
 }
 

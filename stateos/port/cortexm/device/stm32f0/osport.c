@@ -164,8 +164,11 @@ void TIM3_IRQHandler( void )
 	#if HW_TIMER_SIZE < OS_TIMER_SIZE
 	if (TIM3->SR & TIM_SR_UIF)
 	{
+		lck_t lck = port_get_lock(); // port_sys_time must not see the flag cleared and the counter not yet updated
+		port_set_lock();
 		TIM3->SR = ~TIM_SR_UIF;
 		core_sys_tick();
+		port_put_lock(lck);
 	}
 	if (TIM3->SR & TIM_SR_CC1IF)
 	#endif

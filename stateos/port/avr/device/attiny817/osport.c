@@ -186,8 +186,11 @@ ISR( TCA0_OVF_vect )
 {
 //	if (TCA0.SINGLE.INTFLAGS & TCA_SINGLE_OVF_bm)
 	{
+		lck_t lck = port_get_lock(); // port_sys_time must not see the flag cleared and the counter not yet updated
+		port_set_lock();
 		TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
 		core_sys_tick();
+		port_put_lock(lck);
 	}
 }
 
