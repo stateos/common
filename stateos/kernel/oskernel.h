@@ -134,6 +134,9 @@ void core_ctx_switch( void );
 // save status of the current process and immediately yield system control to the next
 void core_ctx_switchNow( void );
 
+// the current task gives up the processor and goes to the end of its priority group (tsk_yield)
+void core_tsk_yield( void );
+
 // system infinite loop procedure for the current process
 __NO_RETURN
 void core_tsk_loop( void );

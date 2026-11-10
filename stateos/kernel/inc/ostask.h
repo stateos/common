@@ -847,6 +847,7 @@ int tsk_delete( tsk_t *tsk ) { return tsk_destroy(tsk); }
  * Alias             : tsk_pass
  *
  * Description       : yield system control to the next task with the same priority in READY queue
+ *                     the current task goes to the end of its priority group (also when a higher priority task is ready)
  *
  * Parameters        : none
  *

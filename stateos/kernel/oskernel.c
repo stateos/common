@@ -376,6 +376,21 @@ void core_ctx_switchNow( void )
 
 /* -------------------------------------------------------------------------- */
 
+// an explicit yield: the current task goes to the end of its priority group also when
+// a higher priority task is ready (priv_tsk_switch rotates only the first task)
+void core_tsk_yield( void )
+{
+	tsk_t *cur = System.cur;
+	if (cur != IDLE.hdr.next && cur != &IDLE)
+	{
+		priv_tsk_remove(cur);
+		priv_tsk_insert(cur);
+	}
+	core_ctx_switchNow();
+}
+
+/* -------------------------------------------------------------------------- */
+
 void core_tsk_loop( void )
 {
 	for (;;)
@@ -383,7 +398,7 @@ void core_tsk_loop( void )
 		port_clr_lock();
 		((fun_a *)System.cur->proc)(System.cur->arg);
 		port_set_lock();
-		core_ctx_switchNow();
+		core_tsk_yield();
 	}
 }
 
@@ -493,7 +508,7 @@ int priv_tsk_timeout( tsk_t **que )
 {
 	#if OS_ROBIN == 0
 	if (que == &WAIT.obj.queue)
-		core_ctx_switchNow();
+		core_tsk_yield();
 	#else
 	(void) que;
 	#endif

@@ -113,6 +113,7 @@ Features:
 - StateOS compiles again with C++11 (std::nothrow was used without <new>)
 - std::chrono::systick (stdc++) rounds up to whole ticks like Clock::count, a negative delay is IMMEDIATE and a delay out of range INFINITE; until converts other clocks through now() (waits and sleeps were shorter than requested)
 - in cooperative mode tsk_sleep* gives up the processor once also when it does not wait (IMMEDIATE, past timepoint, late tsk_sleepNext); a late periodic task starved the other tasks
+- tsk_yield and the end of the task function move the current task to the end of its priority group also when a higher priority task is ready (in cooperative mode tasks of the same priority starved when a higher priority task woke up between yields)
 ---------
 7.1
 - updated os version

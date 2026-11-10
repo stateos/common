@@ -463,7 +463,7 @@ void tsk_yield( void )
 
 	sys_lock();
 	{
-		core_ctx_switchNow();
+		core_tsk_yield();
 	}
 	sys_unlock();
 }
