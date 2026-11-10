@@ -12,6 +12,7 @@ Features:
 - a task gives up the processor only when it waits, in tsk_sleep* and in tsk_yield; a waiting function with IMMEDIATE delay (e.g. sem_waitFor(sem, IMMEDIATE)) does not give it up, so a polling loop needs tsk_yield
 - kernel can operate with 16, 32 or 64-bit timer counter
 - kernel can operate in tick-less mode
+- delays and timers are checked only when a task gives up the processor: a task that keeps it from the end of a delay until the system time wraps around (one period of the timer counter, counted from the start of the delay) makes the delay one period longer (e.g. 65.5 ms with OS_TIMER_SIZE 16 in tick-less mode at 1 MHz)
 - implemented basic protection using MPU (use nullptr, stack overflow)
 - implemented functions for asynchronous communication with unmasked interrupt handlers
 - spin locks
