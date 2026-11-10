@@ -106,6 +106,7 @@ Features:
 - hsm_start / hsm_startAsync with a dispatcher task that is not stopped do not start the state machine (it looked started, the events were not handled), assert in DEBUG
 - tsk_suspend(&IDLE) fails (it removed the guard of the ready list), assert in DEBUG
 - tsk_startFrom / tsk_flip clear the task argument (hsm_reset stopped a task that had been its event dispatcher)
+- Timer::Start* and Task::Start return the object started in place (a started object was moved when the compiler did not apply NRVO, which is not guaranteed)
 ---------
 7.1
 - updated os version

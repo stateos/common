@@ -1398,6 +1398,12 @@ struct TaskT : public baseTask, public baseStack<size_>
 	TaskT<size_>& operator=( TaskT<size_>&& ) = delete;
 	TaskT<size_>& operator=( const TaskT<size_>& ) = delete;
 
+private:
+	struct Starter {}; // Start functions return the task started in place: a started task must not be moved
+	template<typename... A>
+	TaskT( Starter, A&&... _args ): TaskT<size_>{static_cast<A&&>(_args)...} { this->start(); }
+public:
+
 /******************************************************************************
  *
  * Name              : TaskT<>::Make
@@ -1463,9 +1469,7 @@ struct TaskT : public baseTask, public baseStack<size_>
 	template<class F> static
 	TaskT<size_> Start( const unsigned _prio, F&& _proc )
 	{
-		TaskT<size_> tsk { _prio, _proc };
-		tsk.start();
-		return tsk;
+		return { Starter{}, _prio, _proc };
 	}
 
 	template<class F> static
