@@ -804,6 +804,9 @@ struct baseTimer : public __tmr
  *
  * Description       : provide set of functions for current timer
  *
+ * Note              : flipISR with a function object that does not fit in std::function (lambda with
+ *                     captures, std::bind) allocates on the heap in the timer interrupt
+ *
  ******************************************************************************/
 
 	struct Current
