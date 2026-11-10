@@ -538,8 +538,9 @@ struct LockGuard
 	LockGuard( Mutex& _mtx ): mtx_(&_mtx)
 	{
 		int result = mtx_->lock();
-		assert(result == E_SUCCESS || result == OWNERDEAD); // OWNERDEAD: the robust mutex is locked, its previous owner has stopped
-		(void) result;
+		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_STOPPED || result == E_DELETED);
+		if (result != E_SUCCESS && result != OWNERDEAD) // OWNERDEAD: the robust mutex is locked, its previous owner has stopped
+			mtx_ = nullptr; // nothing to release
 	}
 
 	~LockGuard()
@@ -556,6 +557,12 @@ struct LockGuard
 	{
 		_src.mtx_ = nullptr;
 	}
+
+	// false: the mutex was reset or deleted while waiting (or the guard was moved)
+	bool ownsLock() const { return mtx_ != nullptr; }
+
+	explicit
+	operator bool() const { return ownsLock(); }
 
 	LockGuard( const LockGuard& ) = delete;
 	LockGuard& operator=( LockGuard&& ) = delete;
@@ -633,7 +640,7 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->waitFor(_delay);
-		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_TIMEOUT);
+		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_TIMEOUT || result == E_STOPPED || result == E_DELETED);
 		locked_ = result == E_SUCCESS || result == OWNERDEAD;
 		return locked_;
 	}
@@ -645,7 +652,7 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->waitUntil(_time);
-		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_TIMEOUT);
+		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_TIMEOUT || result == E_STOPPED || result == E_DELETED);
 		locked_ = result == E_SUCCESS || result == OWNERDEAD;
 		return locked_;
 	}
@@ -656,7 +663,7 @@ struct UniqueLock
 			return false;
 
 		int result = mtx_->lock();
-		assert(result == E_SUCCESS || result == OWNERDEAD);
+		assert(result == E_SUCCESS || result == OWNERDEAD || result == E_STOPPED || result == E_DELETED);
 		locked_ = result == E_SUCCESS || result == OWNERDEAD; // OWNERDEAD: the robust mutex is locked, its previous owner has stopped
 		return locked_;
 	}
