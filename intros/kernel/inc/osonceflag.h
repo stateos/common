@@ -168,6 +168,10 @@ void one_init( one_t *one ) { *one = 0; }
  *
  * Return            : none
  *
+ * Note              : the once flag is set before the function is called, so another caller (another task
+ *                     or a timer callback, when the function gives up the processor, or an interrupt handler)
+ *                     does not wait for the completion of the function
+ *
  ******************************************************************************/
 
 __STATIC_INLINE
@@ -201,6 +205,10 @@ namespace intros {
  *
  * Constructor parameters
  *                   : none
+ *
+ * Note              : the once flag is set before the function is called, so another caller (another task
+ *                     or a timer callback, when the function gives up the processor, or an interrupt handler)
+ *                     does not wait for the completion of the function
  *
  ******************************************************************************/
 
