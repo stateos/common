@@ -662,7 +662,9 @@ void core_sig_push( tsk_t *tsk )
 
 	tsk->sig.backup.sp = tsk->sp;
 
-	tsk->sp = (ctx_t *)tsk->sp - 1;
+	// shift by a whole number of stk_t: the pushed context keeps the alignment of the saved one
+	// (for any stack convention; on Cortex-M sizeof(ctx_t) = 68 is not a multiple of 8)
+	tsk->sp = (ctx_t *)((uintptr_t)tsk->sp - ALIGNED(sizeof(ctx_t), sizeof(stk_t)));
 	assert_ctx_integrity(tsk, tsk->sp);
 	port_ctx_init(tsk->sp, priv_sig_deliver);
 }

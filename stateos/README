@@ -97,6 +97,7 @@ Features:
 - fixed priority change of the current task: it goes to the head of its new priority group and keeps its time slice (it stayed at its old place in the ready list, a ready task of higher priority waited until it blocked)
 - signal delivery does not end the time slice of the task (the task was rotated as after tsk_yield, a task signalled in every round did not run its own code)
 - tick-less mode with preemption: switching to and from a higher priority task does not restart the time slice (round robin stopped when such a task ran more often than the time slice), a time slice expired during such a task ends the turn at the next context switch
+- fixed signal action stack (Cortex-M): the action runs with the stack 8-byte aligned (AAPCS), it was 4 mod 8 (wrong va_arg of long long and double, e.g. printf in the action)
 ---------
 7.1
 - updated os version
