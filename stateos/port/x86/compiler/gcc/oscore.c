@@ -40,12 +40,11 @@
 
 /* -------------------------------------------------------------------------- */
 // switch the context of the current task: called by port_ctx_swap
+// the virtual interrupts are masked (port_isr) until the switch is finished (see port_sys_poll, port_ctx_enter)
 
 void *port_tsk_switch( void *sp )
 {
-	port_isr = true;
 	sp = core_tsk_switch(sp);
-	port_isr = false;
 
 #if defined(_WIN32)
 	// update the stack limits of the current task in the thread information block
@@ -87,6 +86,15 @@ void *port_tsk_switch( void *sp )
 }
 
 /* -------------------------------------------------------------------------- */
+// the new task leaves the virtual interrupt handler: called by port_ctx_start
+// (the pending interrupts are handled by port_clr_lock at the start of core_tsk_loop / core_tsk_exec)
+
+void port_ctx_enter( void )
+{
+	port_isr = false;
+}
+
+/* -------------------------------------------------------------------------- */
 
 #if   defined(__x86_64__) && defined(_WIN64)
 
@@ -104,33 +112,37 @@ SYM(port_ctx_swap) ":                \n"
 "	push  %r13                       \n"
 "	push  %r14                       \n"
 "	push  %r15                       \n"
-"	sub   $160,  %rsp                \n"
-"	movups %xmm6,    0(%rsp)         \n"
-"	movups %xmm7,   16(%rsp)         \n"
-"	movups %xmm8,   32(%rsp)         \n"
-"	movups %xmm9,   48(%rsp)         \n"
-"	movups %xmm10,  64(%rsp)         \n"
-"	movups %xmm11,  80(%rsp)         \n"
-"	movups %xmm12,  96(%rsp)         \n"
-"	movups %xmm13, 112(%rsp)         \n"
-"	movups %xmm14, 128(%rsp)         \n"
-"	movups %xmm15, 144(%rsp)         \n"
+"	sub   $168,  %rsp                \n"
+"	stmxcsr      0(%rsp)             \n"
+"	fnstcw       4(%rsp)             \n"
+"	movups %xmm6,    8(%rsp)         \n"
+"	movups %xmm7,   24(%rsp)         \n"
+"	movups %xmm8,   40(%rsp)         \n"
+"	movups %xmm9,   56(%rsp)         \n"
+"	movups %xmm10,  72(%rsp)         \n"
+"	movups %xmm11,  88(%rsp)         \n"
+"	movups %xmm12, 104(%rsp)         \n"
+"	movups %xmm13, 120(%rsp)         \n"
+"	movups %xmm14, 136(%rsp)         \n"
+"	movups %xmm15, 152(%rsp)         \n"
 "	mov   %rsp,  %rcx                \n"
 "	and   $-16,  %rsp                \n"
 "	sub   $32,   %rsp                \n"
 "	call " SYM(port_tsk_switch) "    \n"
 "	mov   %rax,  %rsp                \n"
-"	movups    0(%rsp), %xmm6         \n"
-"	movups   16(%rsp), %xmm7         \n"
-"	movups   32(%rsp), %xmm8         \n"
-"	movups   48(%rsp), %xmm9         \n"
-"	movups   64(%rsp), %xmm10        \n"
-"	movups   80(%rsp), %xmm11        \n"
-"	movups   96(%rsp), %xmm12        \n"
-"	movups  112(%rsp), %xmm13        \n"
-"	movups  128(%rsp), %xmm14        \n"
-"	movups  144(%rsp), %xmm15        \n"
-"	add   $160,  %rsp                \n"
+"	ldmxcsr      0(%rsp)             \n"
+"	fldcw        4(%rsp)             \n"
+"	movups    8(%rsp), %xmm6         \n"
+"	movups   24(%rsp), %xmm7         \n"
+"	movups   40(%rsp), %xmm8         \n"
+"	movups   56(%rsp), %xmm9         \n"
+"	movups   72(%rsp), %xmm10        \n"
+"	movups   88(%rsp), %xmm11        \n"
+"	movups  104(%rsp), %xmm12        \n"
+"	movups  120(%rsp), %xmm13        \n"
+"	movups  136(%rsp), %xmm14        \n"
+"	movups  152(%rsp), %xmm15        \n"
+"	add   $168,  %rsp                \n"
 "	pop   %r15                       \n"
 "	pop   %r14                       \n"
 "	pop   %r13                       \n"
@@ -146,6 +158,7 @@ SYM(port_ctx_swap) ":                \n"
 SYM(port_ctx_start) ":               \n"
 "	and   $-16,  %rsp                \n"
 "	sub   $32,   %rsp                \n"
+"	call " SYM(port_ctx_enter) "     \n"
 "	call *%rbx                       \n"
 "	ud2                              \n"
 );
@@ -164,10 +177,16 @@ SYM(port_ctx_swap) ":                \n"
 "	push  %r13                       \n"
 "	push  %r14                       \n"
 "	push  %r15                       \n"
+"	sub   $8,    %rsp                \n"
+"	stmxcsr      0(%rsp)             \n"
+"	fnstcw       4(%rsp)             \n"
 "	mov   %rsp,  %rdi                \n"
 "	and   $-16,  %rsp                \n"
 "	call " SYM(port_tsk_switch) "    \n"
 "	mov   %rax,  %rsp                \n"
+"	ldmxcsr      0(%rsp)             \n"
+"	fldcw        4(%rsp)             \n"
+"	add   $8,    %rsp                \n"
 "	pop   %r15                       \n"
 "	pop   %r14                       \n"
 "	pop   %r13                       \n"
@@ -182,6 +201,7 @@ SYM(port_ctx_start) ":               \n"
 "	.cfi_startproc                   \n"
 "	.cfi_undefined %rip              \n"
 "	and   $-16,  %rsp                \n"
+"	call " SYM(port_ctx_enter) "     \n"
 "	call *%rbx                       \n"
 "	ud2                              \n"
 "	.cfi_endproc                     \n"
@@ -199,12 +219,18 @@ SYM(port_ctx_swap) ":                \n"
 "	push  %ebx                       \n"
 "	push  %esi                       \n"
 "	push  %edi                       \n"
+"	sub   $8,    %esp                \n"
+"	stmxcsr      0(%esp)             \n"
+"	fnstcw       4(%esp)             \n"
 "	mov   %esp,  %eax                \n"
 "	and   $-16,  %esp                \n"
 "	sub   $12,   %esp                \n"
 "	push  %eax                       \n"
 "	call " SYM(port_tsk_switch) "    \n"
 "	mov   %eax,  %esp                \n"
+"	ldmxcsr      0(%esp)             \n"
+"	fldcw        4(%esp)             \n"
+"	add   $8,    %esp                \n"
 "	pop   %edi                       \n"
 "	pop   %esi                       \n"
 "	pop   %ebx                       \n"
@@ -215,6 +241,7 @@ SYM(port_ctx_swap) ":                \n"
 "	.globl " SYM(port_ctx_start) "   \n"
 SYM(port_ctx_start) ":               \n"
 "	and   $-16,  %esp                \n"
+"	call " SYM(port_ctx_enter) "     \n"
 "	call *%ebx                       \n"
 "	ud2                              \n"
 );

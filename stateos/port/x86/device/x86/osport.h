@@ -52,7 +52,13 @@ extern "C" {
  The interrupt handlers (timer callbacks) are executed on the stack of the
  current task, so the task stacks must be large enough for them and for the
  host library functions (see OS_STACK_SIZE)
- A task that does not call any system function is never interrupted
+ Cooperative mode (OS_ROBIN == 0): a task that does not call any system
+ function is never interrupted
+ Preemptive mode (OS_ROBIN > 0): the host timer also interrupts the running
+ task (linux: signal SIGALRM; windows 11: special user APC from a timer thread);
+ all tasks run in one thread of the host, so the calls of the host library
+ functions (printf, malloc, ...) must be protected with sys_lock / sys_unlock,
+ also the return from main (a task could preempt the exit of the host library)
  The c++ wrapper is not available if the host libstdc++ supports threads
 *******************************************************************************/
 
@@ -94,8 +100,8 @@ extern "C" {
 #define OS_ROBIN              0 /* system works in cooperative mode           */
 #endif
 
-#if     OS_ROBIN > 0
-#error  osconfig.h: Incorrect OS_ROBIN value! This port works only in cooperative mode.
+#if     OS_ROBIN > OS_FREQUENCY
+#error  osconfig.h: Incorrect OS_ROBIN value!
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -131,7 +137,7 @@ void port_sys_wait( void );
 /* -------------------------------------------------------------------------- */
 // context switch request (virtual PendSV)
 
-extern bool port_ctx_pending;
+extern volatile bool port_ctx_pending;
 
 /* -------------------------------------------------------------------------- */
 // force yield system control to the next process
@@ -145,10 +151,19 @@ void port_ctx_switch( void )
 /* -------------------------------------------------------------------------- */
 // reset context switch indicator
 
+#if OS_ROBIN && HW_TIMER_SIZE
+
+// tick-less mode with preemption: start a new time slice (see osport.c)
+void port_ctx_reset( void );
+
+#else
+
 __STATIC_INLINE
 void port_ctx_reset( void )
 {
 }
+
+#endif
 
 /* -------------------------------------------------------------------------- */
 // clear time breakpoint

@@ -80,7 +80,7 @@ typedef uint32_t              stk_t;
 #endif
 
 /* -------------------------------------------------------------------------- */
-// task context: callee-saved registers pushed onto the task stack by port_ctx_swap
+// task context: callee-saved registers and control words of the FPU pushed onto the task stack by port_ctx_swap
 // the task procedure is passed to the startup code (port_ctx_start) in rbx / ebx
 
 typedef struct __ctx ctx_t;
@@ -89,6 +89,9 @@ typedef struct __ctx ctx_t;
 
 struct __ctx
 {
+	uint32_t mxcsr;
+	uint16_t fpucw;   // x87 control word
+	uint16_t res;
 	uint64_t xmm[20]; // xmm6 - xmm15
 	void   * r15;
 	void   * r14;
@@ -101,12 +104,15 @@ struct __ctx
 	fun_t  * pc;
 };
 
-#define _CTX_INIT( pc ) { { 0 }, 0, 0, 0, 0, 0, 0, pc, 0, port_ctx_start }
+#define _CTX_INIT( pc ) { 0x1F80, 0x037F, 0, { 0 }, 0, 0, 0, 0, 0, 0, pc, 0, port_ctx_start }
 
 #elif defined(__x86_64__)
 
 struct __ctx
 {
+	uint32_t mxcsr;
+	uint16_t fpucw;   // x87 control word
+	uint16_t res;
 	void   * r15;
 	void   * r14;
 	void   * r13;
@@ -116,12 +122,15 @@ struct __ctx
 	fun_t  * pc;
 };
 
-#define _CTX_INIT( pc ) { 0, 0, 0, 0, pc, 0, port_ctx_start }
+#define _CTX_INIT( pc ) { 0x1F80, 0x037F, 0, 0, 0, 0, 0, pc, 0, port_ctx_start }
 
 #elif defined(__i386__)
 
 struct __ctx
 {
+	uint32_t mxcsr;
+	uint16_t fpucw;   // x87 control word
+	uint16_t res;
 	void   * edi;
 	void   * esi;
 	fun_t  * ebx;
@@ -129,7 +138,7 @@ struct __ctx
 	fun_t  * pc;
 };
 
-#define _CTX_INIT( pc ) { 0, 0, pc, 0, port_ctx_start }
+#define _CTX_INIT( pc ) { 0x1F80, 0x037F, 0, 0, 0, pc, 0, port_ctx_start }
 
 #else
 #error  Unsupported architecture!
@@ -139,6 +148,10 @@ struct __ctx
 // startup code of the task (see oscore.c)
 
 void port_ctx_start( void );
+
+// called by the startup code: the switch to the new task is finished (see port_sys_poll)
+
+void port_ctx_enter( void );
 
 /* -------------------------------------------------------------------------- */
 // save the context of the current task, switch to the next task and restore its context (see oscore.c)
@@ -151,6 +164,8 @@ void port_ctx_swap( void );
 __STATIC_INLINE
 void port_ctx_init( ctx_t *ctx, fun_t *pc )
 {
+	// the new context inherits the control words of the FPU (as a new thread in C11)
+	__ASM volatile ("stmxcsr %0; fnstcw %1" : "=m" (ctx->mxcsr), "=m" (ctx->fpucw));
 #ifdef __x86_64__
 	ctx->rbx = pc;
 #else
@@ -161,9 +176,11 @@ void port_ctx_init( ctx_t *ctx, fun_t *pc )
 
 /* -------------------------------------------------------------------------- */
 // state of the virtual interrupt controller (see osport.c)
+// volatile: in preemptive mode the host timer interrupts the task asynchronously
 
-extern lck_t port_lck; // interrupts are masked
-extern bool  port_isr; // virtual interrupt handler (or context switch) is running
+extern volatile lck_t port_lck; // interrupts are masked
+extern volatile bool  port_isr; // virtual interrupt handler (or context switch) is running
+extern volatile bool  port_irq; // interrupt of the host timer is pending (preemptive mode)
 
 // handle pending virtual interrupts (system timer, context switch)
 // called whenever the virtual interrupts are being unmasked
@@ -210,9 +227,12 @@ lck_t port_get_lock( void )
 	return port_lck;
 }
 
+// compiler barriers: the memory accesses of the critical section stay inside it
+
 __STATIC_INLINE
 void port_put_lock( lck_t lck )
 {
+	__COMPILER_BARRIER();
 	port_lck = lck;
 	if (lck == 0 && !port_isr)
 		port_sys_poll();
@@ -222,11 +242,13 @@ __STATIC_INLINE
 void port_set_lock( void )
 {
 	port_lck = 1;
+	__COMPILER_BARRIER();
 }
 
 __STATIC_INLINE
 void port_clr_lock( void )
 {
+	__COMPILER_BARRIER();
 	port_lck = 0;
 	if (!port_isr)
 		port_sys_poll();
