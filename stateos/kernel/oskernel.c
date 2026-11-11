@@ -289,6 +289,11 @@ void core_tsk_remove( tsk_t *tsk )
 	if (tsk == System.tsk)
 		System.tsk = NULL;
 
+	#if OS_ROBIN && HW_TIMER_SIZE
+	if (tsk == System.turn)          // the turn ends when the task leaves the ready queue
+		System.turn = NULL;
+	#endif
+
 	if (tsk == System.cur)
 		port_ctx_switchNow();
 }
@@ -495,6 +500,10 @@ int core_tsk_wait( tsk_t **que, tsk_t *tsk )
 		core_tmr_insert((tmr_t *)tsk); // sets ID_TIMER
 		tsk->hdr.id = ID_READY;        // sets ID_READY back
 		core_tsk_append(que, tsk);
+		#if OS_ROBIN && HW_TIMER_SIZE
+		if (tsk == System.turn)        // the turn ends when the task leaves the ready queue
+			System.turn = NULL;
+		#endif
 		// the mutex owner does not inherit priority if the task is not waiting (IMMEDIATE)
 		// core_tsk_prio recalculates it from the queues of the mutexes with a priority protocol
 		if (tsk->mtx.tree && tsk->mtx.tree->owner)
@@ -751,14 +760,15 @@ tsk_t *priv_tsk_switch( tsk_t *cur )
 	#if OS_ROBIN
 	if (nxt->slice == 0)             // new turn (0: the turn has not started), the time slice counts from 1
 	{
-		nxt->slice = 1;
-		#if HW_TIMER_SIZE            // tick-less mode: a new time slice, but a task preempting the current one
-		if (nxt->prio <= System.cur->prio || System.cur == &IDLE)
-		{                            // uses its time slice (it does not restart after preemption)
+		#if HW_TIMER_SIZE            // tick-less mode: a new time slice, unless the turn that started it is interrupted
+		if (System.turn == NULL || System.turn->slice == 0 || System.turn == &IDLE)
+		{                            // (the tasks preempting it, also one after another, use its time slice)
+			System.turn = nxt;
 			System.robin = false;
 			core_ctx_reset();
 		}
 		#endif
+		nxt->slice = 1;
 	}
 	#endif
 

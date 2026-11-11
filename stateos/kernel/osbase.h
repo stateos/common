@@ -208,6 +208,7 @@ typedef struct __sys
 	cnt_t    cnt;   // system timer counter
 #endif
 #if OS_ROBIN && HW_TIMER_SIZE
+	tsk_t  * turn;  // tick-less mode: the task whose turn has started the time slice
 	bool     robin; // tick-less mode: the time slice has expired, the turn ends at the next context switch
 #endif
 
