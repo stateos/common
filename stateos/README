@@ -119,6 +119,7 @@ Features:
 - tick-less mode works with the hardware timer wider than the system timer (HW_TIMER_SIZE > OS_TIMER_SIZE, e.g. OS_TIMER_SIZE 16 with a 32-bit timer); the time breakpoint wraps like the system time (it never matched)
 - a priority change keeps the turn of a task: the owner of a mutex with priority inheritance got a new time slice whenever a higher priority task blocked on the mutex (it could take most of the processor time)
 - tick-less mode with preemption: the time slice restarts only when the turn that started it is over; a task woken by a preempting task (or a mutex owner with an inherited priority) restarted the time slice of the interrupted turn, round robin stopped when this happened more often than the time slice
+- tick mode with preemption: a task whose turn expires while it is alone in its priority group (e.g. a mutex owner with a raised priority) keeps the expired turn; it got a new turn and kept it after its priority returned (two turns in a row)
 ---------
 7.1
 - updated os version

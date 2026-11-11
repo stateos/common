@@ -738,8 +738,8 @@ tsk_t *priv_tsk_switch( tsk_t *cur )
 
 	nxt = IDLE.hdr.next;
 
-	#if OS_ROBIN && HW_TIMER_SIZE == 0
-	if (cur == nxt || (nxt->slice > (OS_FREQUENCY)/(OS_ROBIN) && (nxt->slice = 0) == 0))
+	#if OS_ROBIN && HW_TIMER_SIZE == 0 // a task alone in its group keeps its expired turn (no new turn at a raised priority)
+	if (cur == nxt || (nxt->slice > (OS_FREQUENCY)/(OS_ROBIN) && ((tsk_t *)nxt->hdr.next)->prio == nxt->prio))
 	#elif OS_ROBIN
 	if (cur == nxt || (System.robin && nxt->slice && ((tsk_t *)nxt->hdr.next)->prio == nxt->prio))
 	#else
