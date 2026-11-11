@@ -69,6 +69,7 @@ Features:
 - the unused stack buffer of the main task is no longer reserved on ports without a stack symbol (x86, STM8/SDCC)
 - x86 port on linux: the system time is the monotonic time (clock() counts the processor time there)
 - x86 port: 64-bit hardware time (QueryPerformanceCounter on windows, clock() stopped after 24.8 days), the hardware timer has the size of the system timer, default OS_TIMER_SIZE is 64
+- x86 port: every task keeps its control words of the FPU (rounding in MXCSR and the x87 CW), a new task inherits them from the task that starts it
 - fixed timers / delays crossing the overflow of a 16-bit system timer on cores with 32-bit int (they never expired)
 - fixed tick-less ports with the hardware timer narrower than the system timer: at the timer overflow an interrupt handler of higher priority could get the system time one timer period back
 - fixed task started from a timer callback in DEBUG: the stack in use by the callback was filled

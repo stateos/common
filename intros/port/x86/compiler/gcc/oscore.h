@@ -81,7 +81,15 @@ typedef struct __ctx ctx_t;
 #define setjmp(BUF) _setjmp((BUF), NULL)
 #endif
 
-#if (defined(__USE_FORTIFY_LEVEL) && (__USE_FORTIFY_LEVEL > 0)) || defined(_WIN64)
+#if defined(__linux__)
+// glibc setjmp / longjmp do not keep the control words of the FPU: port_ctx_save / port_longjmp
+// keep them in the context of the current task (the other buffers are not changed)
+struct __jmp_buf_tag *port_ctx_save( struct __jmp_buf_tag *buf );
+#undef  setjmp
+#define setjmp(BUF) _setjmp(port_ctx_save(BUF))
+#endif
+
+#if defined(__linux__) || defined(_WIN64)
 // glibc: __longjmp_chk (_FORTIFY_SOURCE) does not allow to jump to another stack
 // win64: the stack limits of the thread must be updated for the next task
 __NO_RETURN
@@ -95,7 +103,9 @@ struct __ctx
 	char          buf[sizeof(jmp_buf)]; // place for jmp_buf (aliased by the task context union)
 	void        * sp;
 	fun_t       * pc;
-#define _CTX_INIT() { { 0 }, NULL, NULL }
+	uint32_t      mxcsr; // control words of the FPU (win64: kept by setjmp / longjmp of the crt)
+	uint16_t      fpucw; // a new task inherits them from the task that starts it
+#define _CTX_INIT() { { 0 }, NULL, NULL, 0, 0 }
 };
 
 #else

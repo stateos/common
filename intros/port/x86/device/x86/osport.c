@@ -104,6 +104,10 @@ static stk_t   priv_ctx_stk[1024];
 	__ASM volatile ("mov %0, %%esp; and $-16, %%esp; call *%1" :: "r" (sp), "r" (fun) : "memory")
 #endif
 
+// control words of the FPU in the task context (MXCSR, x87 CW)
+#define priv_fpu_save(ctx) __ASM volatile ("stmxcsr %0; fnstcw %1" : "=m" ((ctx)->mxcsr), "=m" ((ctx)->fpucw))
+#define priv_fpu_load(ctx) __ASM volatile ("ldmxcsr %0; fldcw %1" :: "m" ((ctx)->mxcsr), "m" ((ctx)->fpucw))
+
 static __NO_RETURN __attribute__((noinline, used))
 void priv_ctx_start( void )
 {
@@ -111,6 +115,7 @@ void priv_ctx_start( void )
 		longjmp(priv_ctx_ret, 1);
 
 	// executed after longjmp to the context of the new task
+	priv_fpu_load(&System.cur->ctx.reg); // win64: longjmp of the crt has loaded the control words of the trampoline
 	priv_ctx_call(System.cur->ctx.reg.sp, System.cur->ctx.reg.pc);
 	__builtin_unreachable();
 }
@@ -134,12 +139,32 @@ void port_ctx_init( ctx_t *ctx, stk_t *sp, fun_t *pc )
 	memcpy(ctx->buf, priv_ctx_tmp, sizeof(jmp_buf));
 	ctx->sp = sp;
 	ctx->pc = pc;
+	priv_fpu_save(ctx); // the new task inherits the control words of the FPU
 }
+
+/* -------------------------------------------------------------------------- */
+
+#if defined(__linux__)
+
+// setjmp with the context of the current task: save its control words of the FPU
+struct __jmp_buf_tag *port_ctx_save( struct __jmp_buf_tag *buf )
+{
+	if (buf == System.cur->ctx.buf)
+		priv_fpu_save(&System.cur->ctx.reg);
+	return buf;
+}
+
+#endif
 
 /* -------------------------------------------------------------------------- */
 
 void port_longjmp( jmp_buf buf, int val )
 {
+#if defined(__linux__)
+	// longjmp to the context of the current task (task switch): load its control words of the FPU
+	if (buf == System.cur->ctx.buf)
+		priv_fpu_load(&System.cur->ctx.reg);
+#endif
 #if defined(_WIN64)
 	// update StackBase (gs:0x08) and StackLimit (gs:0x10) in the thread information block
 	// the first longjmp is always called from the main thread stack
