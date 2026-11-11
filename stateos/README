@@ -117,6 +117,7 @@ Features:
 - tsk_yield and the end of the task function move the current task to the end of its priority group also when a higher priority task is ready (in cooperative mode tasks of the same priority starved when a higher priority task woke up between yields)
 - mtxPrioProtect implements the immediate priority ceiling protocol (ICPP, as POSIX PTHREAD_PRIO_PROTECT): the owner runs at least at the priority ceiling; before, the protocol was priority inheritance with a check of the ceiling (described as OCPP)
 - tick-less mode works with the hardware timer wider than the system timer (HW_TIMER_SIZE > OS_TIMER_SIZE, e.g. OS_TIMER_SIZE 16 with a 32-bit timer); the time breakpoint wraps like the system time (it never matched)
+- a priority change keeps the turn of a task: the owner of a mutex with priority inheritance got a new time slice whenever a higher priority task blocked on the mutex (it could take most of the processor time)
 ---------
 7.1
 - updated os version

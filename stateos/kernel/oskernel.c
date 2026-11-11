@@ -236,27 +236,35 @@ void priv_tsk_remove( tsk_t *tsk )
 
 /* -------------------------------------------------------------------------- */
 
-// the current task after a priority change goes to the head of its new priority group
-// (as after preemption) and keeps its time slice
+// a task in the middle of its turn goes after a priority change to the head of its new priority group and keeps
+// its time slice, unless the first task of the group is in the middle of its turn (then it waits for a new turn)
 static
-void priv_cur_move( tsk_t *cur )
+void priv_tsk_move( tsk_t *tsk )
 {
 	tsk_t *prv;
 	tsk_t *nxt = &IDLE;
 
-	priv_tsk_remove(cur);
+	priv_tsk_remove(tsk);
 
 	do nxt = nxt->hdr.next;
-	while (cur->prio < nxt->prio);
+	while (tsk->prio < nxt->prio);
 
-	cur->hdr.id = ID_READY;
+	#if OS_ROBIN
+	if (tsk->slice == 0 || (nxt->prio == tsk->prio && nxt->slice != 0))
+	{
+		priv_tsk_insert(tsk);
+		return;
+	}
+	#endif
+
+	tsk->hdr.id = ID_READY;
 
 	prv = nxt->hdr.prev;
 
-	cur->hdr.prev = prv;
-	cur->hdr.next = nxt;
-	nxt->hdr.prev = cur;
-	prv->hdr.next = cur;
+	tsk->hdr.prev = prv;
+	tsk->hdr.next = nxt;
+	nxt->hdr.prev = tsk;
+	prv->hdr.next = tsk;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -655,7 +663,7 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 
 		if (tsk == System.cur)       // current task
 		{
-			priv_cur_move(tsk);
+			priv_tsk_move(tsk);
 			#if OS_ROBIN
 			if (tsk != IDLE.hdr.next && System.tsk == NULL)
 				port_ctx_switch();
@@ -671,8 +679,14 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		else
 		if (tsk->hdr.id == ID_READY) // ready task
 		{
+			#if OS_ROBIN
+			priv_tsk_move(tsk);
+			if (tsk == IDLE.hdr.next && System.tsk == NULL)
+				port_ctx_switch();
+			#else
 			priv_tsk_remove(tsk);
 			core_tsk_insert(tsk);
+			#endif
 		}
 	}
 }
@@ -698,7 +712,7 @@ void core_cur_prio( unsigned prio )
 	if (tsk->prio != prio)
 	{
 		tsk->prio = prio;
-		priv_cur_move(tsk);
+		priv_tsk_move(tsk);
 		#if OS_ROBIN
 		if (tsk != IDLE.hdr.next && System.tsk == NULL)
 			port_ctx_switch();
@@ -716,7 +730,7 @@ tsk_t *priv_tsk_switch( tsk_t *cur )
 	nxt = IDLE.hdr.next;
 
 	#if OS_ROBIN && HW_TIMER_SIZE == 0
-	if (cur == nxt || (nxt->slice >= (OS_FREQUENCY)/(OS_ROBIN) && (nxt->slice = 0) == 0))
+	if (cur == nxt || (nxt->slice > (OS_FREQUENCY)/(OS_ROBIN) && (nxt->slice = 0) == 0))
 	#elif OS_ROBIN
 	if (cur == nxt || (System.robin && nxt->slice && ((tsk_t *)nxt->hdr.next)->prio == nxt->prio))
 	#else
@@ -734,15 +748,17 @@ tsk_t *priv_tsk_switch( tsk_t *cur )
 	if (System.tsk != NULL)
 		nxt = System.tsk->guard ? &IDLE : System.tsk;
 
-	#if OS_ROBIN && HW_TIMER_SIZE
-	if (nxt->slice == 0)             // new turn: a new time slice, but a task preempting the current one
-	{                                // uses its time slice (it does not restart after preemption)
+	#if OS_ROBIN
+	if (nxt->slice == 0)             // new turn (0: the turn has not started), the time slice counts from 1
+	{
 		nxt->slice = 1;
+		#if HW_TIMER_SIZE            // tick-less mode: a new time slice, but a task preempting the current one
 		if (nxt->prio <= System.cur->prio || System.cur == &IDLE)
-		{
+		{                            // uses its time slice (it does not restart after preemption)
 			System.robin = false;
 			core_ctx_reset();
 		}
+		#endif
 	}
 	#endif
 
@@ -865,7 +881,7 @@ void core_sys_tick( void )
 	System.cnt++;
 	core_tmr_handler();
 	#if OS_ROBIN
-	if (++System.cur->slice >= (OS_FREQUENCY)/(OS_ROBIN))
+	if (++System.cur->slice > (OS_FREQUENCY)/(OS_ROBIN))
 		core_ctx_switch();
 	#endif
 }
