@@ -40,6 +40,12 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
+#ifndef __x86_64__
+#error  Unsupported architecture! This port requires x86_64.
+#endif
+
+/* -------------------------------------------------------------------------- */
+
 #ifndef OS_STACK_SIZE
 #define OS_STACK_SIZE     16384 /* default task stack size in bytes           */
 #endif
@@ -56,20 +62,13 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef __x86_64__
 typedef uint64_t              lck_t;
 typedef uint64_t              stk_t;
-#else
-typedef uint32_t              lck_t;
-typedef uint32_t              stk_t;
-#endif
 
 /* -------------------------------------------------------------------------- */
 // task context
 
 typedef struct __ctx ctx_t;
-
-#if defined(__linux__) || defined(__x86_64__)
 
 // the context does not depend on the internal layout of jmp_buf
 // (glibc mangles the stack pointer and the program counter stored in jmp_buf)
@@ -100,21 +99,6 @@ struct __ctx
 #define _CTX_INIT() { { 0 }, NULL, NULL, 0, 0 }
 };
 
-#else
-
-struct __ctx
-{
-	unsigned long Ebp;
-	unsigned long Ebx;
-	unsigned long Edi;
-	unsigned long Esi;
-	void        * sp;
-	fun_t       * pc;
-#define _CTX_INIT() { 0, 0, 0, 0, NULL, NULL }
-};
-
-#endif
-
 /* -------------------------------------------------------------------------- */
 // state of the fpu not kept by setjmp / longjmp: saved and loaded at the task switch
 
@@ -137,22 +121,7 @@ void port_fpu_load( ctx_t *ctx )
 /* -------------------------------------------------------------------------- */
 // init task context
 
-#if defined(__linux__) || defined(__x86_64__)
-
 void port_ctx_init( ctx_t *ctx, stk_t *sp, fun_t *pc );
-
-#else
-
-__STATIC_INLINE
-void port_ctx_init( ctx_t *ctx, stk_t *sp, fun_t *pc )
-{
-	setjmp((_JBTYPE *)ctx);
-
-	ctx->sp = sp;
-	ctx->pc = pc;
-}
-
-#endif
 
 /* -------------------------------------------------------------------------- */
 // get current stack pointer
@@ -161,11 +130,7 @@ __STATIC_FORCEINLINE
 void * port_get_sp( void )
 {
 	void *sp;
-#ifdef __x86_64__
 	__ASM volatile ("mov %%rsp, %0" : "=&r" (sp));
-#else
-	__ASM volatile ("mov %%esp, %0" : "=&r" (sp));
-#endif
 	return sp;
 }
 

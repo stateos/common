@@ -82,8 +82,6 @@ uint64_t port_hw_time( void )
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__linux__) || defined(__x86_64__)
-
 #undef  longjmp
 
 /******************************************************************************
@@ -96,13 +94,8 @@ static jmp_buf priv_ctx_ret;
 static jmp_buf priv_ctx_tmp;
 static stk_t   priv_ctx_stk[1024];
 
-#ifdef __x86_64__
 #define priv_ctx_call(sp, fun) /* 16-byte stack alignment and 32-byte shadow space for win64 */ \
 	__ASM volatile ("mov %0, %%rsp; and $-16, %%rsp; sub $32, %%rsp; call *%1" :: "r" (sp), "r" (fun) : "memory")
-#else
-#define priv_ctx_call(sp, fun) /* 16-byte stack alignment */ \
-	__ASM volatile ("mov %0, %%esp; and $-16, %%esp; call *%1" :: "r" (sp), "r" (fun) : "memory")
-#endif
 
 static __NO_RETURN __attribute__((noinline, used))
 void priv_ctx_start( void )
@@ -161,7 +154,5 @@ void port_longjmp( jmp_buf buf, int val )
 #endif
 	longjmp(buf, val);
 }
-
-#endif
 
 /* -------------------------------------------------------------------------- */

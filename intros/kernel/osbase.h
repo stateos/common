@@ -71,6 +71,10 @@ extern "C" {
 #define OS_GUARD_SIZE     0
 #endif
 
+#ifndef __FPU_USED
+#define __FPU_USED        0
+#endif
+
 #ifndef __MPU_USED
 #define __MPU_USED        0
 #endif
@@ -83,12 +87,6 @@ extern "C" {
 
 #ifndef __ALIGNED
 #define __ALIGNED(x)
-#endif
-
-/* -------------------------------------------------------------------------- */
-
-#ifndef __FPU_USED
-#define __FPU_USED        0
 #endif
 
 /* -------------------------------------------------------------------------- */

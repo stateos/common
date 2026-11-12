@@ -75,9 +75,7 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
-#if defined(__linux__) || defined(__x86_64__)
 #define __FPU_USED            1 // the kernel keeps the control words of the FPU of every task, see oscore.h
-#endif
 
 /* -------------------------------------------------------------------------- */
 // return current hardware time (in OS_FREQUENCY units)
