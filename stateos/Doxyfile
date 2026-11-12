@@ -4,7 +4,8 @@
 
 PROJECT_NAME           = StateOS
 OUTPUT_DIRECTORY       = doc
-INPUT                  = kernel/osbase.h \
+INPUT                  = mainpage.md \
+                         kernel/osbase.h \
                          kernel/ossys.h \
                          kernel/osalloc.h \
                          kernel/inc/osclock.h \
@@ -41,6 +42,7 @@ MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
 SEARCH_INCLUDES        = NO
 PREDEFINED             = __cplusplus=201703L OS_ATOMICS=1 __STATIC_INLINE=inline __STATIC_FORCEINLINE=inline __NO_RETURN= __CONSTRUCTOR= __WEAK=
+USE_MDFILE_AS_MAINPAGE = mainpage.md
 INPUT_FILTER           = "sed -f ../doxygen.sed"
 EXCLUDE_SYMBOLS        = _* *_ core_* priv_* base* *MASK *_LIMIT MEM_SIZE MSG_SIZE STK_OVER STK_CROP obj_t hdr_t sys_t
 WARN_IF_UNDOCUMENTED   = YES
