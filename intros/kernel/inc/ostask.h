@@ -35,8 +35,15 @@
 #include "oskernel.h"
 #include "osclock.h"
 
+/**
+ * @defgroup task Task
+ * @brief    tasks (creation, control, delays)
+ * @{
+ */
+
 /* -------------------------------------------------------------------------- */
 
+/** size of the task stack in stk_t units: the size in bytes (rounded up) with the guard area */
 #define STK_SIZE( size ) \
     ALIGNED_SIZE((size_t)( size ) + (OS_GUARD_SIZE), sizeof(stk_t))
 
@@ -46,52 +53,50 @@
 #define STK_CROP( base, size ) \
          LIMITED((size_t)( base ) + (size_t)( size ), sizeof(stk_t))
 
-/******************************************************************************
- *
- * Name              : task (thread)
- *
- ******************************************************************************/
+/**
+ * @brief   task (thread)
+ */
 
 struct __tsk
 {
-	obj_t    obj;   // object header
-	hdr_t    hdr;   // timer / task header
+	obj_t    obj;   ///< object header
+	hdr_t    hdr;   ///< timer / task header
 
-	fun_t  * proc;  // task proc (initial task function, doesn't have to be noreturn-type)
-	void   * arg;   // reserved for internal use
-	cnt_t    start; // inherited from timer
-	cnt_t    delay; // inherited from timer
-	cnt_t    period;// inherited from timer
+	fun_t  * proc;  ///< task proc (initial task function, doesn't have to be noreturn-type)
+	void   * arg;   ///< argument of the task function
+	cnt_t    start; ///< inherited from timer
+	cnt_t    delay; ///< inherited from timer
+	cnt_t    period;///< inherited from timer
 
-	stk_t  * stack; // base of stack
-	size_t   size;  // size of stack (in bytes)
+	stk_t  * stack; ///< base of stack
+	size_t   size;  ///< size of stack (in bytes)
 
-	tsk_t ** guard; // BLOCKED queue for the pending process
-	int      event; // wakeup event
+	tsk_t ** guard; ///< BLOCKED queue for the pending process
+	int      event; ///< wakeup event
 
 	struct {
-	mtx_t  * list;  // list of mutexes held
+	mtx_t  * list;  ///< list of mutexes held
 	}        mtx;
 
 	union  {
 
 	struct {
 	unsigned event;
-	}        evt;   // temporary data used by event object
+	}        evt;   ///< temporary data used by event object
 
 	struct {
 	unsigned sigset;
 	unsigned signo;
-	}        sig;   // temporary data used by signal object
+	}        sig;   ///< temporary data used by signal object
 
 	struct {
 	unsigned flags;
 	unsigned mode;
-	}        flg;   // temporary data used by flag object
+	}        flg;   ///< temporary data used by flag object
 
 	struct {
 	void   * data;
-	}        lst;   // temporary data used by list / memory pool object
+	}        lst;   ///< temporary data used by list / memory pool object
 
 	struct {
 	union  {
@@ -100,7 +105,7 @@ struct __tsk
 	char   * in;
 	}        data;
 	size_t   size;
-	}        raw;   // temporary data used by raw buffer object
+	}        raw;   ///< temporary data used by raw buffer object
 
 	struct {
 	union  {
@@ -109,7 +114,7 @@ struct __tsk
 	char   * in;
 	}        data;
 	size_t   size;
-	}        msg;   // temporary data used by message buffer object
+	}        msg;   ///< temporary data used by message buffer object
 
 	struct {
 	union  {
@@ -117,21 +122,21 @@ struct __tsk
 	void   * out;
 	void   * in;
 	}        data;
-	}        box;   // temporary data used by mailbox queue object
+	}        box;   ///< temporary data used by mailbox queue object
 
 	struct {
 	unsigned event;
-	}        evq;   // temporary data used by event queue object
+	}        evq;   ///< temporary data used by event queue object
 
 	struct {
 	fun_t  * fun;
-	}        job;   // temporary data used by job queue object
+	}        job;   ///< temporary data used by job queue object
 
 	}        tmp;
 
 	union  {
-	ctx_t    reg;   // task context
-	jmp_buf  buf;   // setjmp/longjmp buffer
+	ctx_t    reg;   ///< task context
+	jmp_buf  buf;   ///< setjmp/longjmp buffer
 	}        ctx;
 };
 
@@ -190,128 +195,100 @@ typedef struct __tsk tsk_id [];
 
 #define               _VA_STK( _size ) ((_size + 0) ? (_size + 0) : (OS_STACK_SIZE))
 
-/******************************************************************************
+/**
+ * @brief   define task stack
  *
- * Name              : OS_TSK_STACK
- * Static alias      : static_TSK_STACK
- *
- * Description       : define task stack
- *
- * Parameters
- *   stk             : name of the stack (passed to the init function)
- *   size            : (optional) size of task stack (in bytes); default: OS_STACK_SIZE
- *
- ******************************************************************************/
+ * @param   stk        name of the stack (passed to the init function)
+ * @param   ...        size: (optional) size of task stack (in bytes); default: OS_STACK_SIZE
+ */
 
 #define             OS_TSK_STACK( stk, ... ) \
                        stk_t stk[ STK_SIZE( _VA_STK(__VA_ARGS__) ) ] __STKALIGN
 
+/** static alias of OS_TSK_STACK() */
 #define         static_TSK_STACK( stk, ... ) \
                 static stk_t stk[ STK_SIZE( _VA_STK(__VA_ARGS__) ) ] __STKALIGN
 
-/******************************************************************************
+/**
+ * @brief   define and initialize complete work area for task object
  *
- * Name              : OS_WRK
- * Static alias      : static_WRK
- *
- * Description       : define and initialize complete work area for task object
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   tsk        name of a pointer to task object
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   size            : size of task private stack (in bytes)
- *
- ******************************************************************************/
+ * @param   size       size of task private stack (in bytes)
+ */
 
 #define             OS_WRK( tsk, proc, size )                        \
                 static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
                        tsk_t tsk[] = { _TSK_INIT( proc, tsk##__stk, STK_OVER( size ) ) }
 
+/** static alias of OS_WRK() */
 #define         static_WRK( tsk, proc, size )                        \
                 static stk_t tsk##__stk[STK_SIZE( size )] __STKALIGN; \
                 static tsk_t tsk[] = { _TSK_INIT( proc, tsk##__stk, STK_OVER( size ) ) }
 
-/******************************************************************************
+/**
+ * @brief   define and initialize complete work area for task object with default stack size
  *
- * Name              : OS_TSK
- * Static alias      : static_TSK
- *
- * Description       : define and initialize complete work area for task object with default stack size
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   tsk        name of a pointer to task object
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
- *
- ******************************************************************************/
+ * @param   ...        size: (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
+ */
 
 #define             OS_TSK( tsk, proc, ... ) \
                     OS_WRK( tsk, proc, _VA_STK(__VA_ARGS__) )
 
+/** static alias of OS_TSK() */
 #define         static_TSK( tsk, proc, ... ) \
                 static_WRK( tsk, proc, _VA_STK(__VA_ARGS__) )
 
-/******************************************************************************
+/**
+ * @brief   define and initialize complete work area for task object
  *
- * Name              : OS_WRK_DEF
- * Static alias      : static_WRK_DEF
+ *          task proc (function body) must be defined immediately below
  *
- * Description       : define and initialize complete work area for task object
- *                     task proc (function body) must be defined immediately below
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   size            : size of task private stack (in bytes)
- *
- ******************************************************************************/
+ * @param   tsk        name of a pointer to task object
+ * @param   size       size of task private stack (in bytes)
+ */
 
 #define             OS_WRK_DEF( tsk, size )        \
                 static void tsk##__fun( void );     \
                     OS_WRK( tsk, tsk##__fun, size ); \
                        void tsk##__fun( void )
 
+/** static alias of OS_WRK_DEF() */
 #define         static_WRK_DEF( tsk, size )        \
                 static void tsk##__fun( void );     \
                 static_WRK( tsk, tsk##__fun, size ); \
                 static void tsk##__fun( void )
 
-/******************************************************************************
+/**
+ * @brief   define and initialize complete work area for task object with default stack size
  *
- * Name              : OS_TSK_DEF
- * Static alias      : static_TSK_DEF
+ *          task proc (function body) must be defined immediately below
  *
- * Description       : define and initialize complete work area for task object with default stack size
- *                     task proc (function body) must be defined immediately below
- *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
- *
- ******************************************************************************/
+ * @param   tsk        name of a pointer to task object
+ * @param   ...        size: (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
+ */
 
 #define             OS_TSK_DEF( tsk, ... ) \
                     OS_WRK_DEF( tsk, _VA_STK(__VA_ARGS__) )
 
+/** static alias of OS_TSK_DEF() */
 #define         static_TSK_DEF( tsk, ... ) \
                 static_WRK_DEF( tsk, _VA_STK(__VA_ARGS__) )
 
-/******************************************************************************
+/**
+ * @brief   define, initialize and start complete work area for task object
  *
- * Name              : OS_WRK_START
- * Static alias      : static_WRK_START
+ *          task proc (function body) must be defined immediately below
  *
- * Description       : define, initialize and start complete work area for task object
- *                     task proc (function body) must be defined immediately below
+ * @param   tsk        name of a pointer to task object
+ * @param   size       size of task private stack (in bytes)
  *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   size            : size of task private stack (in bytes)
- *
- * Note              : only available for compilers supporting the "constructor" function attribute or its equivalent
- *
- ******************************************************************************/
+ * @note    only available for compilers supporting the "constructor" function attribute or its equivalent
+ */
 
 #ifdef __CONSTRUCTOR
 #define             OS_WRK_START( tsk, size )                   \
@@ -322,6 +299,7 @@ typedef struct __tsk tsk_id [];
 #endif
 
 #ifdef __CONSTRUCTOR
+/** static alias of OS_WRK_START() */
 #define         static_WRK_START( tsk, size )                   \
                 static void tsk##__fun( void );                  \
                 static_WRK( tsk, tsk##__fun, size );              \
@@ -329,21 +307,16 @@ typedef struct __tsk tsk_id [];
                 static void tsk##__fun( void )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   define, initialize and start complete work area for task object with default stack size
  *
- * Name              : OS_TSK_START
- * Static alias      : static_TSK_START
+ *          task proc (function body) must be defined immediately below
  *
- * Description       : define, initialize and start complete work area for task object with default stack size
- *                     task proc (function body) must be defined immediately below
+ * @param   tsk        name of a pointer to task object
+ * @param   ...        size: (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
- * Parameters
- *   tsk             : name of a pointer to task object
- *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
- *
- * Note              : only available for compilers supporting the "constructor" function attribute or its equivalent
- *
- ******************************************************************************/
+ * @note    only available for compilers supporting the "constructor" function attribute or its equivalent
+ */
 
 #ifdef __CONSTRUCTOR
 #define             OS_TSK_START( tsk, ... ) \
@@ -351,100 +324,81 @@ typedef struct __tsk tsk_id [];
 #endif
 
 #ifdef __CONSTRUCTOR
+/** static alias of OS_TSK_START() */
 #define         static_TSK_START( tsk, ... ) \
                 static_WRK_START( tsk, _VA_STK(__VA_ARGS__) )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize complete work area for task object
  *
- * Name              : WRK_INIT
- *
- * Description       : create and initialize complete work area for task object
- *
- * Parameters
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   size            : size of task private stack (in bytes)
+ * @param   size       size of task private stack (in bytes)
  *
- * Return            : task object
+ * @return  task object
  *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                WRK_INIT( proc, size ) \
                       _TSK_INIT( proc, _TSK_STACK( size ), STK_OVER( size ) )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize complete work area for task object
  *
- * Name              : WRK_CREATE
- * Alias             : WRK_NEW
- *
- * Description       : create and initialize complete work area for task object
- *
- * Parameters
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   size            : size of task private stack (in bytes)
+ * @param   size       size of task private stack (in bytes)
  *
- * Return            : task object as array (id)
+ * @return  task object as array (id)
  *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                WRK_CREATE( proc, size ) \
                      { WRK_INIT  ( proc, size ) }
+/** alias of WRK_CREATE() */
 #define                WRK_NEW \
                        WRK_CREATE
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize complete work area for task object with default stack size
  *
- * Name              : TSK_INIT
- *
- * Description       : create and initialize complete work area for task object with default stack size
- *
- * Parameters
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
+ * @param   ...        size: (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
- * Return            : task object
+ * @return  task object
  *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                TSK_INIT( proc, ... ) \
                        WRK_INIT( proc, _VA_STK(__VA_ARGS__) )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize complete work area for task object with default stack size
  *
- * Name              : TSK_CREATE
- * Alias             : TSK_NEW
- *
- * Description       : create and initialize complete work area for task object with default stack size
- *
- * Parameters
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   size            : (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
+ * @param   ...        size: (optional) size of task private stack (in bytes); default: OS_STACK_SIZE
  *
- * Return            : task object as array (id)
+ * @return  task object as array (id)
  *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                TSK_CREATE( proc, ... ) \
                        WRK_CREATE( proc, _VA_STK(__VA_ARGS__) )
+/** alias of TSK_CREATE() */
 #define                TSK_NEW \
                        TSK_CREATE
 #endif
@@ -453,319 +407,210 @@ typedef struct __tsk tsk_id [];
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   return current task object
  *
- * Name              : tsk_this
- * Alias             : cur_task
- * Alias             : SELF
- *
- * Description       : return current task object
- *
- * Parameters        : none
- *
- * Return            : current task object
- *
- ******************************************************************************/
+ * @return  current task object
+ */
 
 __STATIC_INLINE
 tsk_t *tsk_this( void ) { return System.cur; }
 
+/** alias of tsk_this() */
 __STATIC_INLINE
 tsk_t *cur_task( void ) { return System.cur; }
 
+/** alias of tsk_this() */
 #define SELF                   ( System.cur )
 
-/******************************************************************************
+/**
+ * @brief   initialize complete work area for task object
  *
- * Name              : wrk_init
+ *          don't start the task
  *
- * Description       : initialize complete work area for task object
- *                     don't start the task
- *
- * Parameters
- *   tsk             : pointer to task object
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   tsk        pointer to task object
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   stack           : base of task's private stack storage
- *   size            : size of task private stack (in bytes)
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   stack      base of task's private stack storage
+ * @param   size       size of task private stack (in bytes)
+ */
 
 void wrk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size );
 
-/******************************************************************************
+/**
+ * @brief   initialize complete work area for task object
+ *          and start the task, if proc != NULL
  *
- * Name              : tsk_init
- *
- * Description       : initialize complete work area for task object
- *                     and start the task, if proc != NULL
- *
- * Parameters
- *   tsk             : pointer to task object
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   tsk        pointer to task object
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *   stack           : base of task's private stack storage
- *   size            : size of task private stack (in bytes)
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   stack      base of task's private stack storage
+ * @param   size       size of task private stack (in bytes)
+ */
 
 void tsk_init( tsk_t *tsk, fun_t *proc, stk_t *stack, size_t size );
 
-/******************************************************************************
+/**
+ * @brief   start previously defined/created/stopped task object
  *
- * Name              : tsk_start
- *
- * Description       : start previously defined/created/stopped task object
- *
- * Parameters
- *   tsk             : pointer to task object
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   tsk        pointer to task object
+ */
 
 void tsk_start( tsk_t *tsk );
 
-/******************************************************************************
+/**
+ * @brief   start previously defined/created/stopped task object
  *
- * Name              : tsk_startFrom
- *
- * Description       : start previously defined/created/stopped task object
- *
- * Parameters
- *   tsk             : pointer to task object
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
+ * @param   tsk        pointer to task object
+ * @param   proc       task proc (initial task function) doesn't have to be noreturn-type
  *                     it will be executed into an infinite system-implemented loop
- *
- * Return            : none
- *
- ******************************************************************************/
+ */
 
 void tsk_startFrom( tsk_t *tsk, fun_t *proc );
 
-/******************************************************************************
+/**
+ * @brief   start previously defined/created/stopped task object
  *
- * Name              : tsk_startWith
- *
- * Description       : start previously defined/created/stopped task object
- *
- * Parameters
- *   tsk             : pointer to task object
- *   proc            : task initial procedure (initial task function)
- *   arg             : task initial procedure argument (for internal use)
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   tsk        pointer to task object
+ * @param   proc       task initial procedure (initial task function)
+ * @param   arg        task initial procedure argument (for internal use)
+ */
 
 void tsk_startWith( tsk_t *tsk, fun_a *proc, void *arg );
 
-/******************************************************************************
+/**
+ * @brief   stop execution of current task
  *
- * Name              : tsk_stop
- * Alias             : tsk_exit
- *
- * Description       : stop execution of current task
- *                     all mutexes held by the task are released (waiting tasks get E_STOPPED)
- *
- * Parameters        : none
- *
- * Return            : none
- *
- ******************************************************************************/
+ *          all mutexes held by the task are released (waiting tasks get E_STOPPED)
+ */
 
 __NO_RETURN
 void tsk_stop( void );
 
+/** alias of tsk_stop() */
 __STATIC_INLINE
 void tsk_exit( void ) { tsk_stop(); }
 
-/******************************************************************************
+/**
+ * @brief   stop execution of given task
  *
- * Name              : tsk_reset
- * Alias             : tsk_kill
+ *          all mutexes held by the task are released (waiting tasks get E_STOPPED)
  *
- * Description       : stop execution of given task
- *                     all mutexes held by the task are released (waiting tasks get E_STOPPED)
- *                     other objects held by the task (e.g. semaphores, read/write locks) are not released
+ *          other objects held by the task (e.g. semaphores, read/write locks) are not released
  *
- * Parameters
- *   tsk             : pointer to task object
+ * @param   tsk        pointer to task object
  *
- * Return            : none
- *
- * Note              : use only in thread mode
- *                     readers waiting behind a writer stopped while waiting for a read/write lock
- *                     are not released until the lock is given
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ * @note    readers waiting behind a writer stopped while waiting for a read/write lock
+ *          are not released until the lock is given
+ */
 
 void tsk_reset( tsk_t *tsk );
 
+/** alias of tsk_reset() */
 __STATIC_INLINE
 void tsk_kill( tsk_t *tsk ) { tsk_reset(tsk); }
 
-/******************************************************************************
- *
- * Name              : tsk_yield
- * Alias             : tsk_pass
- *
- * Description       : yield system control to the next task
- *
- * Parameters        : none
- *
- * Return            : none
- *
- ******************************************************************************/
+/**
+ * @brief   yield system control to the next task
+ */
 
 __STATIC_INLINE
 void tsk_yield( void ) { core_ctx_switch(); }
 
+/** alias of tsk_yield() */
 __STATIC_INLINE
 void tsk_pass ( void ) { core_ctx_switch(); }
 
-/******************************************************************************
+/**
+ * @brief   restart current task with the new proc (task function)
  *
- * Name              : tsk_flip
+ *          all mutexes held by the task are released (waiting tasks get E_STOPPED)
  *
- * Description       : restart current task with the new proc (task function)
- *                     all mutexes held by the task are released (waiting tasks get E_STOPPED)
- *
- * Parameters
- *   proc            : new task proc (task function)
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   proc       new task proc (task function)
+ */
 
 __NO_RETURN
 void tsk_flip( fun_t *proc );
 
-/******************************************************************************
+/**
+ * @brief   delay execution of current task for given duration of time
  *
- * Name              : tsk_sleepFor
- * Alias             : tsk_delay
- *
- * Description       : delay execution of current task for given duration of time
- *
- * Parameters
- *   delay           : duration of time (maximum number of ticks to delay execution of current task)
- *                     IMMEDIATE: don't delay execution of current task (only give up the processor once)
- *                     INFINITE:  delay indefinitely execution of current task
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   delay      duration of time (maximum number of ticks to delay execution of current task)
+ *                     - IMMEDIATE: don't delay execution of current task (only give up the processor once)
+ *                     - INFINITE:  delay indefinitely execution of current task
+ */
 
 void tsk_sleepFor( cnt_t delay );
 
+/** alias of tsk_sleepFor() */
 __STATIC_INLINE
 void tsk_delay( cnt_t delay ) { tsk_sleepFor(delay); }
 
-/******************************************************************************
+/**
+ * @brief   delay execution of current task for given duration of time
  *
- * Name              : tsk_sleepNext
+ *          from the end of the previous countdown
  *
- * Description       : delay execution of current task for given duration of time
- *                     from the end of the previous countdown
- *
- * Parameters
- *   delay           : duration of time (maximum number of ticks to delay execution of current task)
- *                     IMMEDIATE: don't delay execution of current task (only give up the processor once)
- *                     INFINITE:  delay indefinitely execution of current task
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   delay      duration of time (maximum number of ticks to delay execution of current task)
+ *                     - IMMEDIATE: don't delay execution of current task (only give up the processor once)
+ *                     - INFINITE:  delay indefinitely execution of current task
+ */
 
 void tsk_sleepNext( cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   delay execution of current task until given timepoint
  *
- * Name              : tsk_sleepUntil
- *
- * Description       : delay execution of current task until given timepoint
- *
- * Parameters
- *   time            : timepoint value
- *                     past timepoint: only give up the processor once
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   time       timepoint value
+ *                     - past timepoint: only give up the processor once
+ */
 
 void tsk_sleepUntil( cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   delay indefinitely execution of current task
  *
- * Name              : tsk_sleep
- *
- * Description       : delay indefinitely execution of current task
- *                     execution of the task can be resumed
- *
- * Parameters        : none
- *
- * Return            : none
- *
- ******************************************************************************/
+ *          execution of the task can be resumed
+ */
 
 __STATIC_INLINE
 void tsk_sleep( void ) { tsk_sleepFor(INFINITE); }
 
-/******************************************************************************
+/**
+ * @brief   delay indefinitely execution of given task
  *
- * Name              : tsk_suspend
+ *          execution of the task can be resumed
  *
- * Description       : delay indefinitely execution of given task
- *                     execution of the task can be resumed
+ * @param   tsk        pointer to task object
  *
- * Parameters
- *   tsk             : pointer to task object
+ * @retval  E_SUCCESS  task was successfully suspended
+ * @retval  E_FAILURE  task cannot be suspended
  *
- * Return
- *   E_SUCCESS       : task was successfully suspended
- *   E_FAILURE       : task cannot be suspended
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int tsk_suspend( tsk_t *tsk );
 
-/******************************************************************************
+/**
+ * @brief   resume execution of given suspended task
  *
- * Name              : tsk_resume
+ *          only suspended or indefinitely blocked tasks can be resumed
  *
- * Description       : resume execution of given suspended task
- *                     only suspended or indefinitely blocked tasks can be resumed
+ * @param   tsk        pointer to suspended task object
  *
- * Parameters
- *   tsk             : pointer to suspended task object
- *
- * Return
- *   E_SUCCESS       : task was successfully resumed
- *   E_FAILURE       : task cannot be resumed
- *
- ******************************************************************************/
+ * @retval  E_SUCCESS  task was successfully resumed
+ * @retval  E_FAILURE  task cannot be resumed
+ */
 
 int tsk_resume( tsk_t *tsk );
 
-/******************************************************************************
+/**
+ * @brief   chack water mark of the stack of the current task
  *
- * Name              : tsk_stackSpace
- *
- * Description       : chack water mark of the stack of the current task
- *
- * Parameters        : none
- *
- * Return            : high water mark of the stack of the current task
- *   0               : DEBUG not defined or the current task is the main task (its stack size is unknown)
- *
- ******************************************************************************/
+ * @return  high water mark of the stack of the current task
+ * @retval  0          DEBUG not defined or the current task is the main task (its stack size is unknown)
+ */
 
 __STATIC_INLINE
 size_t tsk_stackSpace( void )
@@ -866,13 +711,9 @@ struct baseTask : public __tsk
 	Fun_t    fun;
 #endif
 
-/******************************************************************************
- *
- * Class             : [base]Task::Current
- *
- * Description       : provide set of functions for current task
- *
- ******************************************************************************/
+/**
+ * @brief   provide set of functions for current task
+ */
 
 	struct Current
 	{
@@ -914,33 +755,32 @@ struct baseTask : public __tsk
 using thisTask = baseTask::Current;
 using this_task = baseTask::Current;
 
-/******************************************************************************
+/**
+ * @brief   create and initialize complete work area for task object
  *
- * Class             : TaskT<>
- *
- * Description       : create and initialize complete work area for task object
- *
- * Constructor parameters
- *   size            : size of task private stack (in bytes)
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
- *                     it will be executed into an infinite system-implemented loop
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - size: size of task private stack (in bytes)
+ *          - proc: task proc (initial task function) doesn't have to be noreturn-type
+ *            it will be executed into an infinite system-implemented loop
+ */
 
 template<size_t size_>
 struct TaskT : public baseTask, public baseStack<size_>
 {
+	/// constructor, see the constructor parameters of the class
 	template<class F>
 	TaskT( F&& _proc ):
 	baseTask{_proc, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)} {}
 
 #if __cplusplus >= 202002L
+	/// constructor, see the constructor parameters of the class
 	template<typename F, typename... A>
 	TaskT( F&& _proc, A&&... _args ):
 	TaskT<size_>{[proc = std::forward<F>(_proc), ...args = std::forward<A>(_args)]() mutable
 		{ std::invoke(std::move(proc), std::unwrap_reference_t<A>(std::move(args))...); }} {}
 #else
 #if __cplusplus >= 201402L
+	/// constructor, see the constructor parameters of the class
 	template<typename F, typename... A>
 	TaskT( F&& _proc, A&&... _args ):
 	TaskT<size_>{std::bind(std::forward<F>(_proc), std::forward<A>(_args)...)} {}
@@ -950,9 +790,11 @@ struct TaskT : public baseTask, public baseStack<size_>
 	~TaskT() { assert(__tsk::hdr.id == ID_STOPPED); }
 
 #if __cplusplus >= 201402L
+	/// move constructor
 	TaskT( TaskT<size_>&& _src ):
 	baseTask{_src.fun, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)}
 #else
+	/// move constructor
 	TaskT( TaskT<size_>&& _src ):
 	baseTask{_src.proc, baseStack<size_>::stack_, sizeof(baseStack<size_>::stack_)}
 #endif
@@ -971,21 +813,17 @@ private:
 	TaskT( Starter, A&&... _args ): TaskT<size_>{static_cast<A&&>(_args)...} { this->start(); }
 public:
 
-/******************************************************************************
+/**
+ * @brief   create and initialize static task
  *
- * Name              : TaskT<>::Make
+ * @par     Parameters
+ *          - size: size of task private stack (in bytes)
+ *          - proc: task proc (initial task function) doesn't have to be noreturn-type
+ *            it will be executed into an infinite system-implemented loop
+ *          - args: arguments for task proc
  *
- * Description       : create and initialize static task
- *
- * Parameters
- *   size            : size of task private stack (in bytes)
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
- *                     it will be executed into an infinite system-implemented loop
- *   args            : arguments for task proc
- *
- * Return            : TaskT<> object
- *
- ******************************************************************************/
+ * @return  TaskT<> object
+ */
 
 	template<class F> static
 	TaskT<size_> Make( F&& _proc )
@@ -994,6 +832,7 @@ public:
 	}
 
 #if __cplusplus >= 201402L
+	/** @overload */
 	template<typename F, typename... A> static
 	TaskT<size_> Make( F&& _proc, A&&... _args )
 	{
@@ -1001,21 +840,17 @@ public:
 	}
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create, initialize and start static task
  *
- * Name              : TaskT<>::Start
+ * @par     Parameters
+ *          - size: size of task private stack (in bytes)
+ *          - proc: task proc (initial task function) doesn't have to be noreturn-type
+ *            it will be executed into an infinite system-implemented loop
+ *          - args: arguments for task proc
  *
- * Description       : create, initialize and start static task
- *
- * Parameters
- *   size            : size of task private stack (in bytes)
- *   proc            : task proc (initial task function) doesn't have to be noreturn-type
- *                     it will be executed into an infinite system-implemented loop
- *   args            : arguments for task proc
- *
- * Return            : TaskT<> object
- *
- ******************************************************************************/
+ * @return  TaskT<> object
+ */
 
 	template<class F> static
 	TaskT<size_> Start( F&& _proc )
@@ -1024,6 +859,7 @@ public:
 	}
 
 #if __cplusplus >= 201402L
+	/** @overload */
 	template<typename F, typename... A> static
 	TaskT<size_> Start( F&& _proc, A&&... _args )
 	{
@@ -1032,14 +868,11 @@ public:
 #endif
 };
 
-/******************************************************************************
+/**
+ * @brief   create and initialize complete work area for task object
  *
- * Class             : Task
- *
- * Description       : create and initialize complete work area for task object
- *                     with default stack size
- *
- ******************************************************************************/
+ *          with default stack size
+ */
 
 using Task = TaskT<OS_STACK_SIZE>;
 
@@ -1047,5 +880,7 @@ using Task = TaskT<OS_STACK_SIZE>;
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__INTROS_TSK_H

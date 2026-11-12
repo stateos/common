@@ -34,6 +34,12 @@
 
 #include "oskernel.h"
 
+/**
+ * @defgroup criticalsection Critical section
+ * @brief    masking and unmasking of the interrupts
+ * @{
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -126,34 +132,18 @@ lck_t core_get_lock( void )
 	return port_get_lock();
 }
 
-/******************************************************************************
- *
- * Name              : sys_lock
- *
- * Description       : save interrupts state then disable interrupts
- *                   / enter into critical section
- *
- * Parameters        : none
- *
- * Return            : none
- *
- ******************************************************************************/
+/**
+ * @brief   save interrupts state then disable interrupts
+ *          / enter into critical section
+ */
 
 #define                sys_lock() \
                        do { lck_t __LOCK = core_set_lock()
 
-/******************************************************************************
- *
- * Name              : sys_unlock
- *
- * Description       : restore saved interrupts state
- *                   / exit from critical section
- *
- * Parameters        : none
- *
- * Return            : none
- *
- ******************************************************************************/
+/**
+ * @brief   restore saved interrupts state
+ *          / exit from critical section
+ */
 
 #define                sys_unlock() \
                        core_put_lock(__LOCK); } while (0)
@@ -167,19 +157,13 @@ lck_t core_get_lock( void )
 #if defined(__cplusplus)
 namespace intros {
 
-/******************************************************************************
- *
- * Class             : CriticalSection
- *
- * Description       : create and initialize a critical section guard object
- *
- * Constructor parameters
- *                   : none
- *
- ******************************************************************************/
+/**
+ * @brief   create and initialize a critical section guard object
+ */
 
 struct CriticalSection
 {
+	/// constructor, see the constructor parameters of the class
 	CriticalSection() { lck_ = core_set_lock(); }
 
 	~CriticalSection() { core_put_lock(lck_); }
@@ -197,5 +181,7 @@ struct CriticalSection
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__INTROS_CRI_H

@@ -35,11 +35,15 @@
 #include "oskernel.h"
 #include "oscriticalsection.h"
 
-/******************************************************************************
- *
- * Name              : once flag
- *
- ******************************************************************************/
+/**
+ * @defgroup onceflag Once flag
+ * @brief    once flags (one-time call of a function)
+ * @{
+ */
+
+/**
+ * @brief   once flag
+ */
 
 typedef uint_fast8_t one_t;
 typedef uint_fast8_t one_id [];
@@ -76,61 +80,44 @@ typedef uint_fast8_t one_id [];
 
 #define               _ONE_DONE()   1
 
-/******************************************************************************
+/**
+ * @brief   define and initialize a once flag object
  *
- * Name              : OS_ONE
- * Static alias      : static_ONE
- *
- * Description       : define and initialize a once flag object
- *
- * Parameters
- *   one             : name of a pointer to once flag object
- *
- ******************************************************************************/
+ * @param   one        name of a pointer to once flag object
+ */
 
 #define             OS_ONE( one ) \
                        one_t one[] = { _ONE_INIT() }
 
+/** static alias of OS_ONE() */
 #define         static_ONE( one ) \
                 static one_t one[] = { _ONE_INIT() }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a once flag object
  *
- * Name              : ONE_INIT
+ * @return  once flag object
  *
- * Description       : create and initialize a once flag object
- *
- * Parameters        : none
- *
- * Return            : once flag object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                ONE_INIT() \
                       _ONE_INIT()
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a once flag object
  *
- * Name              : ONE_CREATE
- * Alias             : ONE_NEW
+ * @return  once flag object as array (id)
  *
- * Description       : create and initialize a once flag object
- *
- * Parameters        : none
- *
- * Return            : once flag object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                ONE_CREATE() \
                      { ONE_INIT  () }
+/** alias of ONE_CREATE() */
 #define                ONE_NEW \
                        ONE_CREATE
 #endif
@@ -139,40 +126,27 @@ typedef uint_fast8_t one_id [];
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   initialize a once flag object
  *
- * Name              : one_init
- *
- * Description       : initialize a once flag object
- *
- * Parameters
- *   one             : pointer to once flag object
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   one        pointer to once flag object
+ */
 
 __STATIC_INLINE
 void one_init( one_t *one ) { *one = 0; }
 
-/******************************************************************************
+/**
+ * @brief   try to execute given function
  *
- * Name              : one_call
+ *          if the once flag has been previously set, the function is not executed
  *
- * Description       : try to execute given function
- *                     if the once flag has been previously set, the function is not executed
+ * @param   one        pointer to once flag object
+ * @param   fun        pointer to once function
  *
- * Parameters
- *   one             : pointer to once flag object
- *   fun             : pointer to once function
- *
- * Return            : none
- *
- * Note              : the once flag is set before the function is called, so another caller (another task
- *                     or a timer callback, when the function gives up the processor, or an interrupt handler)
- *                     does not wait for the completion of the function
- *
- ******************************************************************************/
+ * @note    the once flag is set before the function is called, so another caller (another task
+ *          or a timer callback, when the function gives up the processor, or an interrupt handler)
+ *          does not wait for the completion of the function
+ */
 
 __STATIC_INLINE
 void one_call( one_t *one, fun_t *fun )
@@ -197,32 +171,28 @@ void one_call( one_t *one, fun_t *fun )
 #if defined(__cplusplus)
 namespace intros {
 
-/******************************************************************************
+/**
+ * @brief   use a once flag object
  *
- * Class             : OnceFlag
- *
- * Description       : use a once flag object
- *
- * Constructor parameters
- *                   : none
- *
- * Note              : the once flag is set before the function is called, so another caller (another task
- *                     or a timer callback, when the function gives up the processor, or an interrupt handler)
- *                     does not wait for the completion of the function
- *
- ******************************************************************************/
+ * @note    the once flag is set before the function is called, so another caller (another task
+ *          or a timer callback, when the function gives up the processor, or an interrupt handler)
+ *          does not wait for the completion of the function
+ */
 
 struct OnceFlag
 {
+	/// constructor, see the constructor parameters of the class
 	constexpr
 	OnceFlag(): flg_{_ONE_INIT()} {}
 
+	/// move constructor
 	OnceFlag( OnceFlag&& ) = default;
 	OnceFlag( const OnceFlag& ) = delete;
 	OnceFlag& operator=( OnceFlag&& ) = delete;
 	OnceFlag& operator=( const OnceFlag& ) = delete;
 
 #if __cplusplus >= 201402L
+	/// call _fun(_args...) once, like std::call_once (one_call())
 	template<typename Callable, typename... Args>
 	void call( Callable&& _fun, Args&&... _args )
 	{
@@ -249,5 +219,7 @@ struct OnceFlag
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__INTROS_ONE_H

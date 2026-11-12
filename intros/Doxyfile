@@ -1,0 +1,50 @@
+# doxygen configuration of the IntrOS API documentation
+# usage (in this directory): doxygen; the documentation is generated in doc/html
+# the API is documented in the header files; internal names (_*, *_, core_*, priv_*) are excluded
+
+PROJECT_NAME           = IntrOS
+OUTPUT_DIRECTORY       = doc
+INPUT                  = kernel/osbase.h \
+                         kernel/ossys.h \
+                         kernel/inc/osclock.h \
+                         kernel/inc/oscriticalsection.h \
+                         kernel/inc/osspinlock.h \
+                         kernel/inc/osonceflag.h \
+                         kernel/inc/osevent.h \
+                         kernel/inc/ossignal.h \
+                         kernel/inc/osflag.h \
+                         kernel/inc/osbarrier.h \
+                         kernel/inc/ossemaphore.h \
+                         kernel/inc/osmutex.h \
+                         kernel/inc/osconditionvariable.h \
+                         kernel/inc/osrwlock.h \
+                         kernel/inc/oslist.h \
+                         kernel/inc/osmemorypool.h \
+                         kernel/inc/osrawbuffer.h \
+                         kernel/inc/osmessagequeue.h \
+                         kernel/inc/osmailboxqueue.h \
+                         kernel/inc/oseventqueue.h \
+                         kernel/inc/osjobqueue.h \
+                         kernel/inc/ostimer.h \
+                         kernel/inc/ostask.h \
+                         kernel/inc/osstatemachine.h
+FILE_PATTERNS          = *.h
+FULL_PATH_NAMES        = NO
+EXTRACT_ALL            = NO
+HIDE_UNDOC_MEMBERS     = NO
+SORT_MEMBER_DOCS       = NO
+TYPEDEF_HIDES_STRUCT   = YES
+JAVADOC_AUTOBRIEF      = YES
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+SEARCH_INCLUDES        = NO
+PREDEFINED             = __cplusplus=201703L OS_ATOMICS=1 __STATIC_INLINE=inline __STATIC_FORCEINLINE=inline __NO_RETURN= __CONSTRUCTOR= __WEAK=
+INPUT_FILTER           = "sed -f ../doxygen.sed"
+EXCLUDE_SYMBOLS        = _* *_ core_* priv_* base* *MASK *_LIMIT MEM_SIZE MSG_SIZE STK_OVER STK_CROP obj_t hdr_t sys_t
+WARN_IF_UNDOCUMENTED   = YES
+WARN_NO_PARAMDOC       = NO
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+HAVE_DOT               = NO
+QUIET                  = YES

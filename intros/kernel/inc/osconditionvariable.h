@@ -36,22 +36,26 @@
 #include "osclock.h"
 #include "osmutex.h"
 
+/**
+ * @defgroup conditionvariable Condition variable
+ * @brief    condition variables
+ * @{
+ */
+
 /* -------------------------------------------------------------------------- */
 
-#define cndOne       ( false ) // notify one task
-#define cndAll       ( true  ) // notify all tasks (broadcast)
+#define cndOne       ( false ) ///< notify one task
+#define cndAll       ( true  ) ///< notify all tasks (broadcast)
 
-/******************************************************************************
- *
- * Name              : condition variable
- *
- ******************************************************************************/
+/**
+ * @brief   condition variable
+ */
 
 typedef struct __cnd cnd_t;
 
 struct __cnd
 {
-	obj_t    obj;   // object header
+	obj_t    obj;   ///< object header
 };
 
 typedef struct __cnd cnd_id [];
@@ -72,61 +76,44 @@ typedef struct __cnd cnd_id [];
 
 #define               _CND_INIT() { _OBJ_INIT() }
 
-/******************************************************************************
+/**
+ * @brief   define and initialize a condition variable object
  *
- * Name              : OS_CND
- * Static alias      : static_CND
- *
- * Description       : define and initialize a condition variable object
- *
- * Parameters
- *   cnd             : name of a pointer to condition variable object
- *
- ******************************************************************************/
+ * @param   cnd        name of a pointer to condition variable object
+ */
 
 #define             OS_CND( cnd ) \
                        cnd_t cnd[] = { _CND_INIT() }
 
+/** static alias of OS_CND() */
 #define         static_CND( cnd ) \
                 static cnd_t cnd[] = { _CND_INIT() }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a condition variable object
  *
- * Name              : CND_INIT
+ * @return  condition variable object
  *
- * Description       : create and initialize a condition variable object
- *
- * Parameters        : none
- *
- * Return            : condition variable object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                CND_INIT() \
                       _CND_INIT()
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a condition variable object
  *
- * Name              : CND_CREATE
- * Alias             : CND_NEW
+ * @return  condition variable object as array (id)
  *
- * Description       : create and initialize a condition variable object
- *
- * Parameters        : none
- *
- * Return            : condition variable object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                CND_CREATE() \
                      { CND_INIT  () }
+/** alias of CND_CREATE() */
 #define                CND_NEW \
                        CND_CREATE
 #endif
@@ -135,161 +122,108 @@ typedef struct __cnd cnd_id [];
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   initialize a condition variable object
  *
- * Name              : cnd_init
- *
- * Description       : initialize a condition variable object
- *
- * Parameters
- *   cnd             : pointer to condition variable object
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   cnd        pointer to condition variable object
+ */
 
 void cnd_init( cnd_t *cnd );
 
-/******************************************************************************
+/**
+ * @brief   reset the condition variable object and wake up all waiting tasks with 'E_STOPPED' event value
  *
- * Name              : cnd_reset
- * Alias             : cnd_kill
+ * @param   cnd        pointer to condition variable object
  *
- * Description       : reset the condition variable object and wake up all waiting tasks with 'E_STOPPED' event value
- *
- * Parameters
- *   cnd             : pointer to condition variable object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void cnd_reset( cnd_t *cnd );
 
+/** alias of cnd_reset() */
 __STATIC_INLINE
 void cnd_kill( cnd_t *cnd ) { cnd_reset(cnd); }
 
-/******************************************************************************
+/**
+ * @brief   wait for given duration of time on the condition variable releasing the currently owned mutex,
+ *          and finally lock the mutex again
  *
- * Name              : cnd_waitFor
+ * @param   cnd        pointer to condition variable object
+ * @param   mtx        currently owned mutex
+ * @param   delay      duration of time (maximum number of ticks to wait on the condition variable object)
+ *                     - IMMEDIATE: don't wait on the condition variable object
+ *                     - INFINITE:  wait indefinitely on the condition variable object
  *
- * Description       : wait for given duration of time on the condition variable releasing the currently owned mutex,
- *                     and finally lock the mutex again
- *
- * Parameters
- *   cnd             : pointer to condition variable object
- *   mtx             : currently owned mutex
- *   delay           : duration of time (maximum number of ticks to wait on the condition variable object)
- *                     IMMEDIATE: don't wait on the condition variable object
- *                     INFINITE:  wait indefinitely on the condition variable object
- *
- * Return
- *   E_SUCCESS       : condition variable object was successfully signalled; owned mutex was locked again
- *   E_FAILURE       : mutex object can't be unlocked
- *   E_STOPPED       : condition variable or mutex object was reseted
- *   E_TIMEOUT       : condition variable object was not signalled before the specified timeout expired; owned mutex was locked again
- *
- ******************************************************************************/
+ * @retval  E_SUCCESS  condition variable object was successfully signalled; owned mutex was locked again
+ * @retval  E_FAILURE  mutex object can't be unlocked
+ * @retval  E_STOPPED  condition variable or mutex object was reseted
+ * @retval  E_TIMEOUT  condition variable object was not signalled before the specified timeout expired; owned mutex was locked again
+ */
 
 int cnd_waitFor( cnd_t *cnd, mtx_t *mtx, cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   wait until given timepoint on the condition variable releasing the currently owned mutex,
+ *          and finally lock the mutex again
  *
- * Name              : cnd_waitUntil
+ * @param   cnd        pointer to condition variable object
+ * @param   mtx        currently owned mutex
+ * @param   time       timepoint value
  *
- * Description       : wait until given timepoint on the condition variable releasing the currently owned mutex,
- *                     and finally lock the mutex again
- *
- * Parameters
- *   cnd             : pointer to condition variable object
- *   mtx             : currently owned mutex
- *   time            : timepoint value
- *
- * Return
- *   E_SUCCESS       : condition variable object was successfully signalled; owned mutex was locked again
- *   E_FAILURE       : mutex object can't be unlocked
- *   E_STOPPED       : condition variable or mutex object was reseted
- *   E_TIMEOUT       : condition variable object was not signalled before the specified timeout expired; owned mutex was locked again
- *
- ******************************************************************************/
+ * @retval  E_SUCCESS  condition variable object was successfully signalled; owned mutex was locked again
+ * @retval  E_FAILURE  mutex object can't be unlocked
+ * @retval  E_STOPPED  condition variable or mutex object was reseted
+ * @retval  E_TIMEOUT  condition variable object was not signalled before the specified timeout expired; owned mutex was locked again
+ */
 
 int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   wait indefinitely on the condition variable releasing the currently owned mutex,
+ *          and finally lock the mutex again
  *
- * Name              : cnd_wait
+ * @param   cnd        pointer to condition variable object
+ * @param   mtx        currently owned mutex
  *
- * Description       : wait indefinitely on the condition variable releasing the currently owned mutex,
- *                     and finally lock the mutex again
+ * @retval  E_SUCCESS  condition variable object was successfully signalled; owned mutex was locked again
+ * @retval  E_FAILURE  mutex object can't be unlocked
+ * @retval  E_STOPPED  condition variable or mutex object was reseted
  *
- * Parameters
- *   cnd             : pointer to condition variable object
- *   mtx             : currently owned mutex
- *
- * Return
- *   E_SUCCESS       : condition variable object was successfully signalled; owned mutex was locked again
- *   E_FAILURE       : mutex object can't be unlocked
- *   E_STOPPED       : condition variable or mutex object was reseted
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 __STATIC_INLINE
 int cnd_wait( cnd_t *cnd, mtx_t *mtx ) { return cnd_waitFor(cnd, mtx, INFINITE); }
 
-/******************************************************************************
+/**
+ * @brief   signal one or all tasks that are waiting on the condition variable
  *
- * Name              : cnd_give
- *
- * Description       : signal one or all tasks that are waiting on the condition variable
- *
- * Parameters
- *   cnd             : pointer to condition variable object
- *   all             : signal receiver
- *                     cndOne: notify one task that is waiting on the condition variable
- *                     cndAll: notify all tasks that are waiting on the condition variable
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   cnd        pointer to condition variable object
+ * @param   all        signal receiver
+ *                     - cndOne: notify one task that is waiting on the condition variable
+ *                     - cndAll: notify all tasks that are waiting on the condition variable
+ */
 
 void cnd_give( cnd_t *cnd, bool all );
 
-/******************************************************************************
+/**
+ * @brief   signal one task waiting on the condition variable
  *
- * Name              : cnd_notifyOne
+ * @param   cnd        pointer to condition variable object
  *
- * Description       : signal one task waiting on the condition variable
- *
- * Parameters
- *   cnd             : pointer to condition variable object
- *
- * Return            : none
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ */
 
 __STATIC_INLINE
 void cnd_notifyOne( cnd_t *cnd ) { cnd_give(cnd, cndOne); }
 
-/******************************************************************************
+/**
+ * @brief   signal all tasks waiting on the condition variable
  *
- * Name              : cnd_notifyAll
+ * @param   cnd        pointer to condition variable object
  *
- * Description       : signal all tasks waiting on the condition variable
- *
- * Parameters
- *   cnd             : pointer to condition variable object
- *
- * Return            : none
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ */
 
 __STATIC_INLINE
 void cnd_notifyAll( cnd_t *cnd ) { cnd_give(cnd, cndAll); }
@@ -303,24 +237,19 @@ void cnd_notifyAll( cnd_t *cnd ) { cnd_give(cnd, cndAll); }
 #if defined(__cplusplus)
 namespace intros {
 
-/******************************************************************************
- *
- * Class             : ConditionVariable
- *
- * Description       : create and initialize a condition variable object
- *
- * Constructor parameters
- *                   : none
- *
- ******************************************************************************/
+/**
+ * @brief   create and initialize a condition variable object
+ */
 
 struct ConditionVariable : public __cnd
 {
+	/// constructor, see the constructor parameters of the class
 	constexpr
 	ConditionVariable(): __cnd _CND_INIT() {}
 
 	~ConditionVariable() { assert(__cnd::obj.queue == nullptr); }
 
+	/// move constructor
 	ConditionVariable( ConditionVariable&& _src ): __cnd(_src)
 	{
 		assert(_src.obj.queue == nullptr);
@@ -330,16 +259,17 @@ struct ConditionVariable : public __cnd
 	ConditionVariable& operator=( ConditionVariable&& ) = delete;
 	ConditionVariable& operator=( const ConditionVariable& ) = delete;
 
-	void reset    ()                               {        cnd_reset    (this); }
-	void kill     ()                               {        cnd_kill     (this); }
+	void reset    ()                               {        cnd_reset    (this); }                              ///< cnd_reset()
+	void kill     ()                               {        cnd_kill     (this); }                              ///< cnd_kill()
 	template<typename T>
-	int  waitFor  ( mtx_t& _mtx, const T& _delay ) { return cnd_waitFor  (this, &_mtx, Clock::count(_delay)); }
+	int  waitFor  ( mtx_t& _mtx, const T& _delay ) { return cnd_waitFor  (this, &_mtx, Clock::count(_delay)); } ///< cnd_waitFor()
 	template<typename T>
-	int  waitUntil( mtx_t& _mtx, const T& _time )  { return cnd_waitUntil(this, &_mtx, Clock::until(_time)); }
-	int  wait     ( mtx_t& _mtx )                  { return cnd_wait     (this, &_mtx); }
-	void give     ( bool   _all = cndAll )         {        cnd_give     (this,  _all); }
-	void notifyOne()                               {        cnd_notifyOne(this); }
-	void notifyAll()                               {        cnd_notifyAll(this); }
+	int  waitUntil( mtx_t& _mtx, const T& _time )  { return cnd_waitUntil(this, &_mtx, Clock::until(_time)); }  ///< cnd_waitUntil()
+	int  wait     ( mtx_t& _mtx )                  { return cnd_wait     (this, &_mtx); }                       ///< cnd_wait()
+	void give     ( bool   _all = cndAll )         {        cnd_give     (this,  _all); }                       ///< cnd_give()
+	void notifyOne()                               {        cnd_notifyOne(this); }                              ///< cnd_notifyOne()
+	void notifyAll()                               {        cnd_notifyAll(this); }                              ///< cnd_notifyAll()
+	/// wait for given duration of time until _stopWaiting() returns true (E_SUCCESS)
 	template<typename T, typename F>
 	int  waitFor  ( mtx_t& _mtx, const T& _delay, F _stopWaiting )
 	{
@@ -347,6 +277,7 @@ struct ConditionVariable : public __cnd
 		return (_time == INFINITE) ? wait(_mtx, _stopWaiting)
 		                           : waitUntil(_mtx, sys_time() + _time, _stopWaiting);
 	}
+	/// wait until given timepoint until _stopWaiting() returns true (E_SUCCESS)
 	template<typename T, typename F>
 	int  waitUntil( mtx_t& _mtx, const T& _time, F _stopWaiting )
 	{
@@ -356,6 +287,7 @@ struct ConditionVariable : public __cnd
 			result = E_SUCCESS;
 		return result;
 	}
+	/// wait indefinitely until _stopWaiting() returns true (E_SUCCESS)
 	template<typename F>
 	int  wait     ( mtx_t& _mtx, F _stopWaiting )
 	{
@@ -369,5 +301,7 @@ struct ConditionVariable : public __cnd
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__INTROS_CND_H

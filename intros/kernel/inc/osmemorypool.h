@@ -36,26 +36,30 @@
 #include "osclock.h"
 #include "oslist.h"
 
+/**
+ * @defgroup memorypool Memory pool
+ * @brief    memory pools (objects of a fixed size)
+ * @{
+ */
+
 /* -------------------------------------------------------------------------- */
 
 #define MEM_SIZE( size ) \
     ALIGNED_SIZE( size, sizeof(que_t) )
 
-/******************************************************************************
- *
- * Name              : memory pool
- *
- ******************************************************************************/
+/**
+ * @brief   memory pool
+ */
 
 typedef struct __mem mem_t;
 
 struct __mem
 {
-	lst_t    lst;   // memory pool list
+	lst_t    lst;   ///< memory pool list
 
-	unsigned limit; // size of a memory pool (depth of memory pool buffer)
-	unsigned size;  // size of memory object (in sizeof(que_t) units)
-	que_t  * data;  // pointer to memory pool buffer
+	unsigned limit; ///< size of a memory pool (depth of memory pool buffer)
+	unsigned size;  ///< size of memory object (in sizeof(que_t) units)
+	que_t  * data;  ///< pointer to memory pool buffer
 };
 
 typedef struct __mem mem_id [];
@@ -99,85 +103,65 @@ typedef struct __mem mem_id [];
 #define               _MEM_DATA( _limit, _size ) (que_t[_limit * (1 + _size)]){ { NULL } }
 #endif
 
-/******************************************************************************
+/**
+ * @brief   define memory pool data buffer
  *
- * Name              : OS_MEM_BUFFER
- *
- * Description       : define memory pool data buffer
- *
- * Parameters
- *   buf             : name of the buffer (passed to the init function)
- *   limit           : size of a buffer (max number of objects)
- *   size            : size of memory object (in bytes)
- *
- ******************************************************************************/
+ * @param   buf        name of the buffer (passed to the init function)
+ * @param   limit      size of a buffer (max number of objects)
+ * @param   size       size of memory object (in bytes)
+ */
 
 #define             OS_MEM_BUFFER( buf, limit, size ) \
                        que_t buf[limit * (1 + MEM_SIZE(size))]
 
-/******************************************************************************
+/**
+ * @brief   define and initialize a memory pool object
  *
- * Name              : OS_MEM
- * Static alias      : static_MEM
- *
- * Description       : define and initialize a memory pool object
- *
- * Parameters
- *   mem             : name of a pointer to memory pool object
- *   limit           : size of a buffer (max number of objects)
- *   size            : size of memory object (in bytes)
- *
- ******************************************************************************/
+ * @param   mem        name of a pointer to memory pool object
+ * @param   limit      size of a buffer (max number of objects)
+ * @param   size       size of memory object (in bytes)
+ */
 
 #define             OS_MEM( mem, limit, size )                        \
                 static que_t mem##__buf[limit * (1 + MEM_SIZE(size))]; \
                        mem_t mem[] = { _MEM_INIT( limit, MEM_SIZE(size), mem##__buf ) }
 
+/** static alias of OS_MEM() */
 #define         static_MEM( mem, limit, size )                        \
                 static que_t mem##__buf[limit * (1 + MEM_SIZE(size))]; \
                 static mem_t mem[] = { _MEM_INIT( limit, MEM_SIZE(size), mem##__buf ) }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a memory pool object
  *
- * Name              : MEM_INIT
+ * @param   limit      size of a buffer (max number of objects)
+ * @param   size       size of memory object (in bytes)
  *
- * Description       : create and initialize a memory pool object
+ * @return  memory pool object
  *
- * Parameters
- *   limit           : size of a buffer (max number of objects)
- *   size            : size of memory object (in bytes)
- *
- * Return            : memory pool object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                MEM_INIT( limit, size ) \
                       _MEM_INIT( limit, MEM_SIZE(size), _MEM_DATA(limit, MEM_SIZE(size)) )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a memory pool object
  *
- * Name              : MEM_CREATE
- * Alias             : MEM_NEW
+ * @param   limit      size of a buffer (max number of objects)
+ * @param   size       size of memory object (in bytes)
  *
- * Description       : create and initialize a memory pool object
+ * @return  memory pool object as array (id)
  *
- * Parameters
- *   limit           : size of a buffer (max number of objects)
- *   size            : size of memory object (in bytes)
- *
- * Return            : memory pool object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                MEM_CREATE( limit, size ) \
                      { MEM_INIT  ( limit, size ) }
+/** alias of MEM_CREATE() */
 #define                MEM_NEW \
                        MEM_CREATE
 #endif
@@ -186,145 +170,100 @@ typedef struct __mem mem_id [];
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   initialize a memory pool object
  *
- * Name              : mem_init
- *
- * Description       : initialize a memory pool object
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *   size            : size of memory object (in bytes)
- *   data            : memory pool data buffer
- *   bufsize         : size of the data buffer (in bytes)
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   mem        pointer to memory pool object
+ * @param   size       size of memory object (in bytes)
+ * @param   data       memory pool data buffer
+ * @param   bufsize    size of the data buffer (in bytes)
+ */
 
 void mem_init( mem_t *mem, size_t size, que_t *data, size_t bufsize );
 
-/******************************************************************************
+/**
+ * @brief   reset the memory pool object and wake up all waiting tasks with 'E_STOPPED' event value
  *
- * Name              : mem_reset
- * Alias             : mem_kill
+ * @param   mem        pointer to memory pool object
  *
- * Description       : reset the memory pool object and wake up all waiting tasks with 'E_STOPPED' event value
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void mem_reset( mem_t *mem );
 
+/** alias of mem_reset() */
 __STATIC_INLINE
 void mem_kill( mem_t *mem ) { mem_reset(mem); }
 
-/******************************************************************************
+/**
+ * @brief   try to get memory object from the memory pool object,
+ *          don't wait if the memory pool object is empty
  *
- * Name              : mem_take
- * Alias             : mem_tryWait
+ * @param   mem        pointer to memory pool object
+ * @param   data       pointer to store the pointer to the memory object
  *
- * Description       : try to get memory object from the memory pool object,
- *                     don't wait if the memory pool object is empty
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *   data            : pointer to store the pointer to the memory object
- *
- * Return
- *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
- *   E_TIMEOUT       : memory pool object is empty
- *
- ******************************************************************************/
+ * @retval  E_SUCCESS  pointer to memory object was successfully transferred to the data pointer
+ * @retval  E_TIMEOUT  memory pool object is empty
+ */
 
 int mem_take( mem_t *mem, void **data );
 
+/** alias of mem_take() */
 __STATIC_INLINE
 int mem_tryWait( mem_t *mem, void **data ) { return mem_take(mem, data); }
 
-/******************************************************************************
+/**
+ * @brief   try to get memory object from the memory pool object,
+ *          wait for given duration of time while the memory pool object is empty
  *
- * Name              : mem_waitFor
+ * @param   mem        pointer to memory pool object
+ * @param   data       pointer to store the pointer to the memory object
+ * @param   delay      duration of time (maximum number of ticks to wait while the memory pool object is empty)
+ *                     - IMMEDIATE: don't wait if the memory pool object is empty
+ *                     - INFINITE:  wait indefinitely while the memory pool object is empty
  *
- * Description       : try to get memory object from the memory pool object,
- *                     wait for given duration of time while the memory pool object is empty
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *   data            : pointer to store the pointer to the memory object
- *   delay           : duration of time (maximum number of ticks to wait while the memory pool object is empty)
- *                     IMMEDIATE: don't wait if the memory pool object is empty
- *                     INFINITE:  wait indefinitely while the memory pool object is empty
- *
- * Return
- *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
- *   E_STOPPED       : memory pool object was reseted before the specified timeout expired
- *   E_TIMEOUT       : memory pool object is empty and was not received data before the specified timeout expired
- *
- ******************************************************************************/
+ * @retval  E_SUCCESS  pointer to memory object was successfully transferred to the data pointer
+ * @retval  E_STOPPED  memory pool object was reseted before the specified timeout expired
+ * @retval  E_TIMEOUT  memory pool object is empty and was not received data before the specified timeout expired
+ */
 
 int mem_waitFor( mem_t *mem, void **data, cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   try to get memory object from the memory pool object,
+ *          wait until given timepoint while the memory pool object is empty
  *
- * Name              : mem_waitUntil
+ * @param   mem        pointer to memory pool object
+ * @param   data       pointer to store the pointer to the memory object
+ * @param   time       timepoint value
  *
- * Description       : try to get memory object from the memory pool object,
- *                     wait until given timepoint while the memory pool object is empty
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *   data            : pointer to store the pointer to the memory object
- *   time            : timepoint value
- *
- * Return
- *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
- *   E_STOPPED       : memory pool object was reseted before the specified timeout expired
- *   E_TIMEOUT       : memory pool object is empty and was not received data before the specified timeout expired
- *
- ******************************************************************************/
+ * @retval  E_SUCCESS  pointer to memory object was successfully transferred to the data pointer
+ * @retval  E_STOPPED  memory pool object was reseted before the specified timeout expired
+ * @retval  E_TIMEOUT  memory pool object is empty and was not received data before the specified timeout expired
+ */
 
 int mem_waitUntil( mem_t *mem, void **data, cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   try to get memory object from the memory pool object,
+ *          wait indefinitely while the memory pool object is empty
  *
- * Name              : mem_wait
+ * @param   mem        pointer to memory pool object
+ * @param   data       pointer to store the pointer to the memory object
  *
- * Description       : try to get memory object from the memory pool object,
- *                     wait indefinitely while the memory pool object is empty
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *   data            : pointer to store the pointer to the memory object
- *
- * Return
- *   E_SUCCESS       : pointer to memory object was successfully transferred to the data pointer
- *   E_STOPPED       : memory pool object was reseted
- *
- ******************************************************************************/
+ * @retval  E_SUCCESS  pointer to memory object was successfully transferred to the data pointer
+ * @retval  E_STOPPED  memory pool object was reseted
+ */
 
 __STATIC_INLINE
 int mem_wait( mem_t *mem, void **data ) { return mem_waitFor(mem, data, INFINITE); }
 
-/******************************************************************************
+/**
+ * @brief   transfer memory object to the memory pool object,
  *
- * Name              : mem_give
- *
- * Description       : transfer memory object to the memory pool object,
- *
- * Parameters
- *   mem             : pointer to memory pool object
- *   data            : pointer to memory object
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   mem        pointer to memory pool object
+ * @param   data       pointer to memory object
+ */
 
 void mem_give( mem_t *mem, void *data );
 
@@ -337,25 +276,23 @@ void mem_give( mem_t *mem, void *data );
 #if defined(__cplusplus)
 namespace intros {
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a memory pool object
  *
- * Class             : MemoryPoolT<>
- *
- * Description       : create and initialize a memory pool object
- *
- * Constructor parameters
- *   limit           : size of a buffer (max number of objects)
- *   size            : size of memory object (in bytes)
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - limit: size of a buffer (max number of objects)
+ *          - size: size of memory object (in bytes)
+ */
 
 template<unsigned limit_, size_t size_>
 struct MemoryPoolT : public __mem
 {
+	/// constructor, see the constructor parameters of the class
 	MemoryPoolT(): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_) {}
 
 	~MemoryPoolT() { assert(__mem::lst.obj.queue == nullptr); }
 
+	/// move constructor
 	MemoryPoolT( MemoryPoolT&& _src ): __mem _MEM_INIT(limit_, MEM_SIZE(size_), data_)
 	{
 		assert(_src.limit == limit_ && _src.lst.obj.queue == nullptr); // the pool has not been used (the buffer is bound at the first use)
@@ -366,50 +303,49 @@ struct MemoryPoolT : public __mem
 	MemoryPoolT& operator=( MemoryPoolT&& ) = delete;
 	MemoryPoolT& operator=( const MemoryPoolT& ) = delete;
 
-	void reset    ()                                {        mem_reset    (this); }
-	void kill     ()                                {        mem_kill     (this); }
-	int  take     ( void **_data )                  { return mem_take     (this, _data); }
-	int  tryWait  ( void **_data )                  { return mem_tryWait  (this, _data); }
+	void reset    ()                                {        mem_reset    (this); }                              ///< mem_reset()
+	void kill     ()                                {        mem_kill     (this); }                              ///< mem_kill()
+	int  take     ( void **_data )                  { return mem_take     (this, _data); }                       ///< mem_take()
+	int  tryWait  ( void **_data )                  { return mem_tryWait  (this, _data); }                       ///< mem_tryWait()
 	template<typename T>
-	int  waitFor  ( void **_data, const T& _delay ) { return mem_waitFor  (this, _data, Clock::count(_delay)); }
+	int  waitFor  ( void **_data, const T& _delay ) { return mem_waitFor  (this, _data, Clock::count(_delay)); } ///< mem_waitFor()
 	template<typename T>
-	int  waitUntil( void **_data, const T& _time )  { return mem_waitUntil(this, _data, Clock::until(_time)); }
-	int  wait     ( void **_data )                  { return mem_wait     (this, _data); }
-	void give     ( void  *_data )                  {        mem_give     (this, _data); }
+	int  waitUntil( void **_data, const T& _time )  { return mem_waitUntil(this, _data, Clock::until(_time)); }  ///< mem_waitUntil()
+	int  wait     ( void **_data )                  { return mem_wait     (this, _data); }                       ///< mem_wait()
+	void give     ( void  *_data )                  {        mem_give     (this, _data); }                       ///< mem_give()
 
 	private:
 	que_t data_[limit_ * (1 + MEM_SIZE(size_))];
 };
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a memory pool object
  *
- * Class             : MemoryPoolTT<>
- *
- * Description       : create and initialize a memory pool object
- *
- * Constructor parameters
- *   limit           : size of a buffer (max number of objects)
- *   C               : class of a memory object
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - limit: size of a buffer (max number of objects)
+ *          - C: class of a memory object
+ */
 
 template<unsigned limit_, class C>
 struct MemoryPoolTT : public MemoryPoolT<limit_, sizeof(C)>
 {
+	/// constructor, see the constructor parameters of the class
 	MemoryPoolTT(): MemoryPoolT<limit_, sizeof(C)>() {}
 
-	int  take     ( C **_data )                  { return mem_take     (this, reinterpret_cast<void **>(_data)); }
-	int  tryWait  ( C **_data )                  { return mem_tryWait  (this, reinterpret_cast<void **>(_data)); }
+	int  take     ( C **_data )                  { return mem_take     (this, reinterpret_cast<void **>(_data)); }                       ///< mem_take()
+	int  tryWait  ( C **_data )                  { return mem_tryWait  (this, reinterpret_cast<void **>(_data)); }                       ///< mem_tryWait()
 	template<typename T>
-	int  waitFor  ( C **_data, const T& _delay ) { return mem_waitFor  (this, reinterpret_cast<void **>(_data), Clock::count(_delay)); }
+	int  waitFor  ( C **_data, const T& _delay ) { return mem_waitFor  (this, reinterpret_cast<void **>(_data), Clock::count(_delay)); } ///< mem_waitFor()
 	template<typename T>
-	int  waitUntil( C **_data, const T& _time )  { return mem_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }
-	int  wait     ( C **_data )                  { return mem_wait     (this, reinterpret_cast<void **>(_data)); }
+	int  waitUntil( C **_data, const T& _time )  { return mem_waitUntil(this, reinterpret_cast<void **>(_data), Clock::until(_time)); }  ///< mem_waitUntil()
+	int  wait     ( C **_data )                  { return mem_wait     (this, reinterpret_cast<void **>(_data)); }                       ///< mem_wait()
 };
 
 }     //  namespace
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__INTROS_MEM_H

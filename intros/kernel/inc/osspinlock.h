@@ -35,11 +35,15 @@
 #include "oskernel.h"
 #include "oscriticalsection.h"
 
-/******************************************************************************
- *
- * Name              : spin lock
- *
- ******************************************************************************/
+/**
+ * @defgroup spinlock Spin lock
+ * @brief    spin locks
+ * @{
+ */
+
+/**
+ * @brief   spin lock
+ */
 
 typedef uint_fast8_t spn_t;
 typedef uint_fast8_t spn_id [];
@@ -60,61 +64,44 @@ typedef uint_fast8_t spn_id [];
 
 #define               _SPN_INIT()   0
 
-/******************************************************************************
+/**
+ * @brief   define and initialize a spin lock object
  *
- * Name              : OS_SPN
- * Static alias      : static_SPN
- *
- * Description       : define and initialize a spin lock object
- *
- * Parameters
- *   spn             : name of a pointer to spin lock object
- *
- ******************************************************************************/
+ * @param   spn        name of a pointer to spin lock object
+ */
 
 #define             OS_SPN( spn ) \
                        spn_t spn[] = { _SPN_INIT() }
 
+/** static alias of OS_SPN() */
 #define         static_SPN( spn ) \
                 static spn_t spn[] = { _SPN_INIT() }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a spin lock object
  *
- * Name              : SPN_INIT
+ * @return  spin lock object
  *
- * Description       : create and initialize a spin lock object
- *
- * Parameters        : none
- *
- * Return            : spin lock object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                SPN_INIT() \
                       _SPN_INIT()
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a spin lock object
  *
- * Name              : SPN_CREATE
- * Alias             : SPN_NEW
+ * @return  spin lock object as array (id)
  *
- * Description       : create and initialize a spin lock object
- *
- * Parameters        : none
- *
- * Return            : spin lock object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                SPN_CREATE() \
                      { SPN_INIT  () }
+/** alias of SPN_CREATE() */
 #define                SPN_NEW \
                        SPN_CREATE
 #endif
@@ -204,18 +191,11 @@ void core_spn_unlock( spn_t *spn )
 #endif
 }
 
-/******************************************************************************
+/**
+ * @brief   initialize a spin lock object
  *
- * Name              : spn_init
- *
- * Description       : initialize a spin lock object
- *
- * Parameters
- *   spn             : pointer to spin lock object
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   spn        pointer to spin lock object
+ */
 
 __STATIC_INLINE
 void spn_init( spn_t *spn )
@@ -223,44 +203,30 @@ void spn_init( spn_t *spn )
 	*spn = 0;
 }
 
-/******************************************************************************
+/**
+ * @brief   save interrupts state, disable interrupts then lock the spin lock object
+ *          (wait indefinitely if the spin lock object can't be locked immediately)
+ *          or do nothing if OS_ATOMICS is zero
+ *          / enter into critical section
  *
- * Name              : spn_lock
+ * @param   spn        pointer to spin lock object
  *
- * Description       : save interrupts state, disable interrupts then lock the spin lock object
- *                     (wait indefinitely if the spin lock object can't be locked immediately)
- *                     or do nothing if OS_ATOMICS is zero
- *                   / enter into critical section
- *
- * Parameters
- *   spn             : pointer to spin lock object
- *
- * Return            : none
- *
- * Note              : do not use waiting functions inside spn_lock / spn_unlock
- *
- ******************************************************************************/
+ * @note    do not use waiting functions inside spn_lock / spn_unlock
+ */
 
 #define                spn_lock(spn) \
                        sys_lock(); core_spn_lock(spn)
 
-/******************************************************************************
+/**
+ * @brief   unlock the spin lock object
+ *          or do nothing if OS_ATOMICS is zero
+ *          then restore saved interrupts state
+ *          / exit from critical section
  *
- * Name              : spn_unlock
+ * @param   spn        pointer to spin lock object
  *
- * Description       : unlock the spin lock object
- *                     or do nothing if OS_ATOMICS is zero
- *                     then restore saved interrupts state
- *                   / exit from critical section
- *
- * Parameters
- *   spn             : pointer to spin lock object
- *
- * Return            : none
- *
- * Note              : do not use waiting functions inside spn_lock / spn_unlock
- *
- ******************************************************************************/
+ * @note    do not use waiting functions inside spn_lock / spn_unlock
+ */
 
 #define                spn_unlock(spn) \
                        core_spn_unlock(spn); sys_unlock()
@@ -274,21 +240,19 @@ void spn_init( spn_t *spn )
 #if defined(__cplusplus)
 namespace intros {
 
-/******************************************************************************
+/**
+ * @brief   use a spin lock object
  *
- * Class             : SpinLock
- *
- * Description       : use a spin lock object
- *
- * Constructor parameters
- *   spn             : pointer to spin lock object
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - spn: pointer to spin lock object
+ */
 
 struct SpinLock : private CriticalSection
 {
+	/// constructor, see the constructor parameters of the class
 	explicit
 	SpinLock( spn_t *_spn ): spn_{ _spn} { core_spn_lock(spn_); }
+	/// constructor, see the constructor parameters of the class
 	explicit
 	SpinLock( spn_t& _spn ): spn_{&_spn} { core_spn_lock(spn_); }
 
@@ -307,5 +271,7 @@ struct SpinLock : private CriticalSection
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__INTROS_SPN_H
