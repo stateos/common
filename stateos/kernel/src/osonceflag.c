@@ -38,7 +38,7 @@ static
 tsk_t *OnceQueue = NULL; // tasks waiting for the end of once functions
 
 /* -------------------------------------------------------------------------- */
-bool one_enter( one_t *one )
+bool core_one_enter( one_t *one )
 /* -------------------------------------------------------------------------- */
 {
 	one_t flag;
@@ -51,7 +51,7 @@ bool one_enter( one_t *one )
 
 		while (flag == _ONE_BUSY() && !port_isr_context())
 		{
-			core_tsk_waitFor(&OnceQueue, INFINITE); // wait for one_leave
+			core_tsk_waitFor(&OnceQueue, INFINITE); // wait for core_one_leave
 			flag = *one;
 		}
 
@@ -64,7 +64,7 @@ bool one_enter( one_t *one )
 }
 
 /* -------------------------------------------------------------------------- */
-void one_leave( one_t *one, one_t state )
+void core_one_leave( one_t *one, one_t state )
 /* -------------------------------------------------------------------------- */
 {
 	assert(one);

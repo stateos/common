@@ -175,7 +175,7 @@ void one_init( one_t *one ) { *one = 0; }
 
 /******************************************************************************
  *
- * Name              : one_enter
+ * Name              : core_one_enter
  *
  * Description       : start the execution of the once function
  *                     if the once function is being executed by another task, wait for its completion
@@ -184,7 +184,7 @@ void one_init( one_t *one ) { *one = 0; }
  *   one             : pointer to once flag object
  *
  * Return
- *   true            : the caller must execute the once function and then call one_leave
+ *   true            : the caller must execute the once function and then call core_one_leave
  *   false           : the once function has already been executed
  *                     (or is being executed and the caller is an interrupt handler)
  *
@@ -192,11 +192,11 @@ void one_init( one_t *one ) { *one = 0; }
  *
  ******************************************************************************/
 
-bool one_enter( one_t *one );
+bool core_one_enter( one_t *one );
 
 /******************************************************************************
  *
- * Name              : one_leave
+ * Name              : core_one_leave
  *
  * Description       : end the execution of the once function and wake up waiting tasks
  *
@@ -212,7 +212,7 @@ bool one_enter( one_t *one );
  *
  ******************************************************************************/
 
-void one_leave( one_t *one, one_t state );
+void core_one_leave( one_t *one, one_t state );
 
 /******************************************************************************
  *
@@ -240,10 +240,10 @@ void one_call( one_t *one, fun_t *fun )
 	assert(one);
 	assert(fun);
 
-	if (one_enter(one))
+	if (core_one_enter(one))
 	{
 		fun();
-		one_leave(one, _ONE_DONE());
+		core_one_leave(one, _ONE_DONE());
 	}
 }
 
@@ -285,7 +285,7 @@ struct OnceFlag
 	template<typename Callable, typename... Args>
 	void call( Callable&& _fun, Args&&... _args )
 	{
-		if (one_enter(&flg_))
+		if (core_one_enter(&flg_))
 		{
 	#if __cpp_exceptions
 			try
@@ -294,13 +294,13 @@ struct OnceFlag
 			}
 			catch (...)
 			{
-				one_leave(&flg_, _ONE_INIT()); // the once function can be executed again
+				core_one_leave(&flg_, _ONE_INIT()); // the once function can be executed again
 				throw;
 			}
 	#else
 			_fun(std::forward<Args>(_args)...);
 	#endif
-			one_leave(&flg_, _ONE_DONE());
+			core_one_leave(&flg_, _ONE_DONE());
 		}
 	}
 #else

@@ -34,7 +34,7 @@
 
 /* -------------------------------------------------------------------------- */
 static
-void priv_tmr_init( tmr_t *tmr, fun_t *proc, void *arg, void *res )
+void priv_tmr_init( tmr_t *tmr, fun_t *proc, void *res )
 /* -------------------------------------------------------------------------- */
 {
 	memset(tmr, 0, sizeof(tmr_t));
@@ -43,7 +43,6 @@ void priv_tmr_init( tmr_t *tmr, fun_t *proc, void *arg, void *res )
 	core_hdr_init(&tmr->hdr);
 
 	tmr->proc = proc;
-	tmr->arg  = arg;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -55,7 +54,7 @@ void tmr_init( tmr_t *tmr, fun_t *proc )
 
 	sys_lock();
 	{
-		priv_tmr_init(tmr, proc, NULL, NULL);
+		priv_tmr_init(tmr, proc, NULL);
 	}
 	sys_unlock();
 }
@@ -72,26 +71,7 @@ tmr_t *tmr_create( fun_t *proc )
 	{
 		tmr = malloc(sizeof(tmr_t));
 		if (tmr)
-			priv_tmr_init(tmr, proc, NULL, tmr);
-	}
-	sys_unlock();
-
-	return tmr;
-}
-
-/* -------------------------------------------------------------------------- */
-tmr_t *tmr_setup( fun_t *proc, void *arg )
-/* -------------------------------------------------------------------------- */
-{
-	tmr_t *tmr;
-
-	assert_tsk_context();
-
-	sys_lock();
-	{
-		tmr = malloc(sizeof(tmr_t));
-		if (tmr)
-			priv_tmr_init(tmr, proc, arg, tmr);
+			priv_tmr_init(tmr, proc, tmr);
 	}
 	sys_unlock();
 

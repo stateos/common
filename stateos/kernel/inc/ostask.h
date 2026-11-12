@@ -599,14 +599,15 @@ tsk_t *wrk_new( unsigned prio, fun_t *proc, size_t size, bool detached, bool aut
  *
  * Parameters
  *   prio            : initial task priority (any unsigned int value)
- *   proc            : task initial procedure (initial task function)
- *   arg             : task initial procedure argument (for internal use)
+ *   proc            : task initial procedure (initial task function with argument)
+ *   arg             : task initial procedure argument
  *   size            : size of task private stack (in bytes)
  *
  * Return            : pointer to task object
  *   NULL            : object not created (not enough free memory)
  *
- * Note              : for internal use
+ * Note              : use only in thread mode
+ *                     tsk_startFrom and tsk_flip clear the argument
  *
  ******************************************************************************/
 
@@ -713,12 +714,13 @@ void tsk_startFrom( tsk_t *tsk, fun_t *proc );
  *
  * Parameters
  *   tsk             : pointer to task object
- *   proc            : task initial procedure (initial task function)
- *   arg             : task initial procedure argument (for internal use)
+ *   proc            : task initial procedure (initial task function with argument)
+ *   arg             : task initial procedure argument
  *
  * Return            : none
  *
  * Note              : use only in thread mode
+ *                     tsk_startFrom and tsk_flip clear the argument
  *
  ******************************************************************************/
 

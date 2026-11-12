@@ -303,25 +303,6 @@ tmr_t *tmr_new( fun_t *proc ) { return tmr_create(proc); }
 
 /******************************************************************************
  *
- * Name              : tmr_setup
- *
- * Description       : create and initialize a new timer object
- *
- * Parameters
- *   proc            : timer callback procedure
- *   arg             : timer callback procedure argument (for internal use)
- *
- * Return            : pointer to timer object
- *   NULL            : object not created (not enough free memory)
- *
- * Note              : for internal use
- *
- ******************************************************************************/
-
-tmr_t *tmr_setup( fun_t *proc, void *arg );
-
-/******************************************************************************
- *
  * Name              : tmr_reset
  * Alias             : tmr_kill
  *
