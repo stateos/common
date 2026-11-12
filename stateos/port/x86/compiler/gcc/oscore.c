@@ -58,11 +58,7 @@ void *port_tsk_switch( void *sp )
 		void *tb, *tl;
 
 		if (base == NULL)
-		#ifdef __x86_64__
 			__ASM volatile ("mov %%gs:0x08, %0; mov %%gs:0x10, %1" : "=r" (base), "=r" (limit));
-		#else
-			__ASM volatile ("mov %%fs:0x04, %0; mov %%fs:0x08, %1" : "=r" (base), "=r" (limit));
-		#endif
 
 		if (cur == &MAIN)
 		{
@@ -74,11 +70,7 @@ void *port_tsk_switch( void *sp )
 			tb = (uint8_t *)cur->stack + cur->size;
 			tl = cur->stack;
 		}
-		#ifdef __x86_64__
 		__ASM volatile ("mov %0, %%gs:0x08; mov %1, %%gs:0x10" :: "r" (tb), "r" (tl) : "memory");
-		#else
-		__ASM volatile ("mov %0, %%fs:0x04; mov %1, %%fs:0x08" :: "r" (tb), "r" (tl) : "memory");
-		#endif
 	}
 #endif
 
@@ -96,7 +88,7 @@ void port_ctx_enter( void )
 
 /* -------------------------------------------------------------------------- */
 
-#if   defined(__x86_64__) && defined(_WIN64)
+#if defined(_WIN64)
 
 __ASM
 (
@@ -163,7 +155,7 @@ SYM(port_ctx_start) ":               \n"
 "	ud2                              \n"
 );
 
-#elif defined(__x86_64__)
+#else
 
 __ASM
 (
@@ -207,45 +199,6 @@ SYM(port_ctx_start) ":               \n"
 "	.cfi_endproc                     \n"
 );
 
-#else
-
-__ASM
-(
-"	.text                            \n"
-"	.p2align 4                       \n"
-"	.globl " SYM(port_ctx_swap) "    \n"
-SYM(port_ctx_swap) ":                \n"
-"	push  %ebp                       \n"
-"	push  %ebx                       \n"
-"	push  %esi                       \n"
-"	push  %edi                       \n"
-"	sub   $8,    %esp                \n"
-"	stmxcsr      0(%esp)             \n"
-"	fnstcw       4(%esp)             \n"
-"	mov   %esp,  %eax                \n"
-"	and   $-16,  %esp                \n"
-"	sub   $12,   %esp                \n"
-"	push  %eax                       \n"
-"	call " SYM(port_tsk_switch) "    \n"
-"	mov   %eax,  %esp                \n"
-"	ldmxcsr      0(%esp)             \n"
-"	fldcw        4(%esp)             \n"
-"	add   $8,    %esp                \n"
-"	pop   %edi                       \n"
-"	pop   %esi                       \n"
-"	pop   %ebx                       \n"
-"	pop   %ebp                       \n"
-"	ret                              \n"
-
-"	.p2align 4                       \n"
-"	.globl " SYM(port_ctx_start) "   \n"
-SYM(port_ctx_start) ":               \n"
-"	and   $-16,  %esp                \n"
-"	call " SYM(port_ctx_enter) "     \n"
-"	call *%ebx                       \n"
-"	ud2                              \n"
-);
-
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -258,12 +211,10 @@ void core_tsk_flip( void *sp )
 	fun_t *pc = core_tsk_exec;
 #endif
 
-#if   defined(__x86_64__) && defined(_WIN64)
+#if defined(_WIN64)
 	__ASM volatile ("mov %0, %%rsp; and $-16, %%rsp; sub $32, %%rsp; call *%1" :: "r" (sp), "r" (pc) : "memory");
-#elif defined(__x86_64__)
-	__ASM volatile ("mov %0, %%rsp; and $-16, %%rsp; call *%1" :: "r" (sp), "r" (pc) : "memory");
 #else
-	__ASM volatile ("mov %0, %%esp; and $-16, %%esp; call *%1" :: "r" (sp), "r" (pc) : "memory");
+	__ASM volatile ("mov %0, %%rsp; and $-16, %%rsp; call *%1" :: "r" (sp), "r" (pc) : "memory");
 #endif
 	__builtin_unreachable();
 }

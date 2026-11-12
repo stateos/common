@@ -40,6 +40,12 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
+#ifndef __x86_64__
+#error  Unsupported architecture! This port requires x86_64.
+#endif
+
+/* -------------------------------------------------------------------------- */
+
 #ifndef OS_HEAP_SIZE
 #define OS_HEAP_SIZE          0 /* default system heap: host memory allocator */
 #endif
@@ -73,19 +79,15 @@ extern "C" {
 /* -------------------------------------------------------------------------- */
 
 typedef unsigned              lck_t;
-#ifdef __x86_64__
 typedef uint64_t              stk_t;
-#else
-typedef uint32_t              stk_t;
-#endif
 
 /* -------------------------------------------------------------------------- */
 // task context: callee-saved registers and control words of the FPU pushed onto the task stack by port_ctx_swap
-// the task procedure is passed to the startup code (port_ctx_start) in rbx / ebx
+// the task procedure is passed to the startup code (port_ctx_start) in rbx
 
 typedef struct __ctx ctx_t;
 
-#if   defined(__x86_64__) && defined(_WIN64)
+#if defined(_WIN64)
 
 struct __ctx
 {
@@ -106,7 +108,7 @@ struct __ctx
 
 #define _CTX_INIT( pc ) { 0x1F80, 0x037F, 0, { 0 }, 0, 0, 0, 0, 0, 0, pc, 0, port_ctx_start }
 
-#elif defined(__x86_64__)
+#else
 
 struct __ctx
 {
@@ -124,24 +126,6 @@ struct __ctx
 
 #define _CTX_INIT( pc ) { 0x1F80, 0x037F, 0, 0, 0, 0, 0, pc, 0, port_ctx_start }
 
-#elif defined(__i386__)
-
-struct __ctx
-{
-	uint32_t mxcsr;
-	uint16_t fpucw;   // x87 control word
-	uint16_t res;
-	void   * edi;
-	void   * esi;
-	fun_t  * ebx;
-	void   * ebp;
-	fun_t  * pc;
-};
-
-#define _CTX_INIT( pc ) { 0x1F80, 0x037F, 0, 0, 0, pc, 0, port_ctx_start }
-
-#else
-#error  Unsupported architecture!
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -166,11 +150,7 @@ void port_ctx_init( ctx_t *ctx, fun_t *pc )
 {
 	// the new context inherits the control words of the FPU (as a new thread in C11)
 	__ASM volatile ("stmxcsr %0; fnstcw %1" : "=m" (ctx->mxcsr), "=m" (ctx->fpucw));
-#ifdef __x86_64__
 	ctx->rbx = pc;
-#else
-	ctx->ebx = pc;
-#endif
 	ctx->pc = port_ctx_start;
 }
 
@@ -211,11 +191,7 @@ __STATIC_FORCEINLINE
 void * port_get_sp( void )
 {
 	void *sp;
-#ifdef __x86_64__
 	__ASM volatile ("mov %%rsp, %0" : "=r" (sp));
-#else
-	__ASM volatile ("mov %%esp, %0" : "=r" (sp));
-#endif
 	return sp;
 }
 
