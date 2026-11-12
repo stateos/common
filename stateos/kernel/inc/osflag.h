@@ -35,28 +35,32 @@
 #include "oskernel.h"
 #include "osclock.h"
 
+/**
+ * @defgroup flag Flag
+ * @brief    flags (any, all, new)
+ * @{
+ */
+
 /* -------------------------------------------------------------------------- */
 
-#define flgAny          0U
-#define flgAll          1U
-#define flgNew          2U
+#define flgAny          0U ///< wait for any flags to be set
+#define flgAll          1U ///< wait for all flags to be set
+#define flgNew          2U ///< ignore flags in flag object that have been set before
 
-#define flgAnyNew     ( flgAny | flgNew  )
-#define flgAllNew     ( flgAll | flgNew  )
+#define flgAnyNew     ( flgAny | flgNew  ) ///< flgAny | flgNew
+#define flgAllNew     ( flgAll | flgNew  ) ///< flgAll | flgNew
 
-/******************************************************************************
- *
- * Name              : flag
- *
- ******************************************************************************/
+/**
+ * @brief   flag
+ */
 
 typedef struct __flg flg_t;
 
 struct __flg
 {
-	obj_t    obj;   // object header
+	obj_t    obj;   ///< object header
 
-	unsigned flags; // pending flags
+	unsigned flags; ///< pending flags
 };
 
 typedef struct __flg flg_id [];
@@ -90,64 +94,49 @@ typedef struct __flg flg_id [];
 
 #define               _VA_FLG( _init ) ( _init + 0 )
 
-/******************************************************************************
+/**
+ * @brief   define and initialize a flag object
  *
- * Name              : OS_FLG
- * Static alias      : static_FLG
- *
- * Description       : define and initialize a flag object
- *
- * Parameters
- *   flg             : name of a pointer to flag object
- *   init            : (optional) initial value of flag; default: 0
- *
- ******************************************************************************/
+ * @param   flg        name of a pointer to flag object
+ * @param   ...        init: (optional) initial value of flag; default: 0
+ */
 
 #define             OS_FLG( flg, ... ) \
                        flg_t flg[] = { _FLG_INIT( _VA_FLG(__VA_ARGS__) ) }
 
+/** static alias of OS_FLG() */
 #define         static_FLG( flg, ... ) \
                 static flg_t flg[] = { _FLG_INIT( _VA_FLG(__VA_ARGS__) ) }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a flag object
  *
- * Name              : FLG_INIT
+ * @param   ...        init: (optional) initial value of flag; default: 0
  *
- * Description       : create and initialize a flag object
+ * @return  flag object
  *
- * Parameters
- *   init            : (optional) initial value of flag; default: 0
- *
- * Return            : flag object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                FLG_INIT( ... ) \
                       _FLG_INIT( _VA_FLG(__VA_ARGS__) )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a flag object
  *
- * Name              : FLG_CREATE
- * Alias             : FLG_NEW
+ * @param   ...        init: (optional) initial value of flag; default: 0
  *
- * Description       : create and initialize a flag object
+ * @return  flag object as array (id)
  *
- * Parameters
- *   init            : (optional) initial value of flag; default: 0
- *
- * Return            : flag object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                FLG_CREATE( ... ) \
                      { FLG_INIT  ( _VA_FLG(__VA_ARGS__) ) }
+/** alias of FLG_CREATE() */
 #define                FLG_NEW \
                        FLG_CREATE
 #endif
@@ -156,276 +145,211 @@ typedef struct __flg flg_id [];
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   initialize a flag object
  *
- * Name              : flg_init
+ * @param   flg        pointer to flag object
+ * @param   init       initial value of flag
  *
- * Description       : initialize a flag object
- *
- * Parameters
- *   flg             : pointer to flag object
- *   init            : initial value of flag
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void flg_init( flg_t *flg, unsigned init );
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a new flag object
  *
- * Name              : flg_create
- * Alias             : flg_new
+ * @param   init       initial value of flag
  *
- * Description       : create and initialize a new flag object
+ * @return  pointer to flag object
+ * @retval  NULL       object not created (not enough free memory)
  *
- * Parameters
- *   init            : initial value of flag
- *
- * Return            : pointer to flag object
- *   NULL            : object not created (not enough free memory)
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 flg_t *flg_create( unsigned init );
 
+/** alias of flg_create() */
 __STATIC_INLINE
 flg_t *flg_new( unsigned init ) { return flg_create(init); }
 
-/******************************************************************************
+/**
+ * @brief   reset the flag object and wake up all waiting tasks with 'E_STOPPED' event value
  *
- * Name              : flg_reset
- * Alias             : flg_kill
+ * @param   flg        pointer to flag object
  *
- * Description       : reset the flag object and wake up all waiting tasks with 'E_STOPPED' event value
- *
- * Parameters
- *   flg             : pointer to flag object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void flg_reset( flg_t *flg );
 
+/** alias of flg_reset() */
 __STATIC_INLINE
 void flg_kill( flg_t *flg ) { flg_reset(flg); }
 
-/******************************************************************************
+/**
+ * @brief   reset the flag object, wake up all waiting tasks with 'E_DELETED' event value and free allocated resource
  *
- * Name              : flg_destroy
- * Alias             : flg_delete
+ * @param   flg        pointer to flag object
  *
- * Description       : reset the flag object, wake up all waiting tasks with 'E_DELETED' event value and free allocated resource
- *
- * Parameters
- *   flg             : pointer to flag object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void flg_destroy( flg_t *flg );
 
+/** alias of flg_destroy() */
 __STATIC_INLINE
 void flg_delete( flg_t *flg ) { flg_destroy(flg); }
 
-/******************************************************************************
+/**
+ * @brief   check if required flags have been set in the flag object
  *
- * Name              : flg_take
- * Alias             : flg_tryWait
- * ISR alias         : flg_takeISR
- *
- * Description       : check if required flags have been set in the flag object
- *
- * Parameters
- *   flg             : pointer to flag object
- *   flags           : all flags to wait
- *   mode            : waiting mode
- *                     flgAny: wait for any flags to be set
- *                     flgAll: wait for all flags to be set
- *                     flgNew: ignore flags in flag object that have been set before
+ * @param   flg        pointer to flag object
+ * @param   flags      all flags to wait
+ * @param   mode       waiting mode
+ *                     - flgAny: wait for any flags to be set
+ *                     - flgAll: wait for all flags to be set
+ *                     - flgNew: ignore flags in flag object that have been set before
  *                     ( either flgAny or flgAll can be used with flgNew )
  *
- * Return
- *   0               : required flags have been set
- *   another value   : remaining flags, try again
+ * @retval  0              required flags have been set
+ * @retval  another value  remaining flags, try again
  *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 unsigned flg_take( flg_t *flg, unsigned flags, unsigned mode );
 
+/** alias of flg_take() */
 __STATIC_INLINE
 unsigned flg_tryWait( flg_t *flg, unsigned flags, unsigned mode ) { return flg_take(flg, flags, mode); }
 
+/** ISR alias of flg_take() */
 __STATIC_INLINE
 unsigned flg_takeISR( flg_t *flg, unsigned flags, unsigned mode ) { return flg_take(flg, flags, mode); }
 
-/******************************************************************************
+/**
+ * @brief   wait on flag object for given flags for given duration of time
  *
- * Name              : flg_waitFor
- *
- * Description       : wait on flag object for given flags for given duration of time
- *
- * Parameters
- *   flg             : pointer to flag object
- *   flags           : all flags to wait
- *   mode            : waiting mode
- *                     flgAny: wait for any flags to be set
- *                     flgAll: wait for all flags to be set
- *                     flgNew: ignore flags in flag object that have been set before
+ * @param   flg        pointer to flag object
+ * @param   flags      all flags to wait
+ * @param   mode       waiting mode
+ *                     - flgAny: wait for any flags to be set
+ *                     - flgAll: wait for all flags to be set
+ *                     - flgNew: ignore flags in flag object that have been set before
  *                     ( either flgAny or flgAll can be used with flgNew )
- *   delay           : duration of time (maximum number of ticks to wait on flag object for given flags)
- *                     IMMEDIATE: don't wait until required flags have been set
- *                     INFINITE:  wait indefinitely until required flags have been set
+ * @param   delay      duration of time (maximum number of ticks to wait on flag object for given flags)
+ *                     - IMMEDIATE: don't wait until required flags have been set
+ *                     - INFINITE:  wait indefinitely until required flags have been set
  *
- * Return
- *   E_SUCCESS       : required flags have been set
- *   E_STOPPED       : flag object was reseted before the specified timeout expired
- *   E_DELETED       : flag object was deleted before the specified timeout expired
- *   E_TIMEOUT       : required flags have not been set before the specified timeout expired
+ * @retval  E_SUCCESS  required flags have been set
+ * @retval  E_STOPPED  flag object was reseted before the specified timeout expired
+ * @retval  E_DELETED  flag object was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  required flags have not been set before the specified timeout expired
  *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int flg_waitFor( flg_t *flg, unsigned flags, unsigned mode, cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   wait on flag object for given flags until given timepoint
  *
- * Name              : flg_waitUntil
- *
- * Description       : wait on flag object for given flags until given timepoint
- *
- * Parameters
- *   flg             : pointer to flag object
- *   flags           : all flags to wait
- *   mode            : waiting mode
- *                     flgAny: wait for any flags to be set
- *                     flgAll: wait for all flags to be set
- *                     flgNew: ignore flags in flag object that have been set before
+ * @param   flg        pointer to flag object
+ * @param   flags      all flags to wait
+ * @param   mode       waiting mode
+ *                     - flgAny: wait for any flags to be set
+ *                     - flgAll: wait for all flags to be set
+ *                     - flgNew: ignore flags in flag object that have been set before
  *                     ( either flgAny or flgAll can be used with flgNew )
- *   time            : timepoint value
+ * @param   time       timepoint value
  *
- * Return
- *   E_SUCCESS       : required flags have been set
- *   E_STOPPED       : flag object was reseted before the specified timeout expired
- *   E_DELETED       : flag object was deleted before the specified timeout expired
- *   E_TIMEOUT       : required flags have not been set before the specified timeout expired
+ * @retval  E_SUCCESS  required flags have been set
+ * @retval  E_STOPPED  flag object was reseted before the specified timeout expired
+ * @retval  E_DELETED  flag object was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  required flags have not been set before the specified timeout expired
  *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int flg_waitUntil( flg_t *flg, unsigned flags, unsigned mode, cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   wait indefinitely on flag object until required flags have been set
  *
- * Name              : flg_wait
- *
- * Description       : wait indefinitely on flag object until required flags have been set
- *
- * Parameters
- *   flg             : pointer to flag object
- *   flags           : all flags to wait
- *   mode            : waiting mode
- *                     flgAny: wait for any flags to be set
- *                     flgAll: wait for all flags to be set
- *                     flgNew: ignore flags in flag object that have been set before
+ * @param   flg        pointer to flag object
+ * @param   flags      all flags to wait
+ * @param   mode       waiting mode
+ *                     - flgAny: wait for any flags to be set
+ *                     - flgAll: wait for all flags to be set
+ *                     - flgNew: ignore flags in flag object that have been set before
  *                     ( either flgAny or flgAll can be used with flgNew )
  *
- * Return
- *   E_SUCCESS       : required flags have been set
- *   E_STOPPED       : flag object was reseted
- *   E_DELETED       : flag object was deleted
+ * @retval  E_SUCCESS  required flags have been set
+ * @retval  E_STOPPED  flag object was reseted
+ * @retval  E_DELETED  flag object was deleted
  *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 __STATIC_INLINE
 int flg_wait( flg_t *flg, unsigned flags, unsigned mode ) { return flg_waitFor(flg, flags, mode, INFINITE); }
 
-/******************************************************************************
+/**
+ * @brief   set given flags in flag object
  *
- * Name              : flg_give
- * Alias             : flg_set
- * ISR alias         : flg_giveISR
+ * @param   flg        pointer to flag object
+ * @param   flags      all flags to set
  *
- * Description       : set given flags in flag object
+ * @return  flags after setting
  *
- * Parameters
- *   flg             : pointer to flag object
- *   flags           : all flags to set
- *
- * Return            : flags after setting
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 unsigned flg_give( flg_t *flg, unsigned flags );
 
+/** alias of flg_give() */
 __STATIC_INLINE
 unsigned flg_set( flg_t *flg, unsigned flags ) { return flg_give(flg, flags); }
 
+/** ISR alias of flg_give() */
 __STATIC_INLINE
 unsigned flg_giveISR( flg_t *flg, unsigned flags ) { return flg_give(flg, flags); }
 
-/******************************************************************************
+/**
+ * @brief   clear given flags in flag object
  *
- * Name              : flg_clear
- * ISR alias         : flg_clearISR
+ * @param   flg        pointer to flag object
+ * @param   flags      all flags to clear
  *
- * Description       : clear given flags in flag object
+ * @return  flags before clearing
  *
- * Parameters
- *   flg             : pointer to flag object
- *   flags           : all flags to clear
- *
- * Return            : flags before clearing
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 unsigned flg_clear( flg_t *flg, unsigned flags );
 
+/** ISR alias of flg_clear() */
 __STATIC_INLINE
 unsigned flg_clearISR( flg_t *flg, unsigned flags ) { return flg_clear(flg, flags); }
 
-/******************************************************************************
+/**
+ * @brief   get current flags from flag object
  *
- * Name              : flg_get
- * ISR alias         : flg_getISR
+ * @param   flg        pointer to flag object
  *
- * Description       : get current flags from flag object
+ * @return  current flags in flag object
  *
- * Parameters
- *   flg             : pointer to flag object
- *
- * Return            : current flags in flag object
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 unsigned flg_get( flg_t *flg );
 
+/** ISR alias of flg_get() */
 __STATIC_INLINE
 unsigned flg_getISR( flg_t *flg ) { return flg_get(flg); }
 
@@ -438,24 +362,22 @@ unsigned flg_getISR( flg_t *flg ) { return flg_get(flg); }
 #if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
 namespace stateos {
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a flag object
  *
- * Class             : Flag
- *
- * Description       : create and initialize a flag object
- *
- * Constructor parameters
- *   init            : initial value of flag
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - init: initial value of flag
+ */
 
 struct Flag : public __flg
 {
+	/// constructor, see the constructor parameters of the class
 	constexpr
 	Flag( const unsigned _init = 0 ): __flg _FLG_INIT(_init) {}
 
 	~Flag() { assert(__flg::obj.queue == nullptr); }
 
+	/// move constructor
 	Flag( Flag&& _src ): __flg(_src)
 	{
 		assert(_src.obj.queue == nullptr);
@@ -465,45 +387,40 @@ struct Flag : public __flg
 	Flag& operator=( Flag&& ) = delete;
 	Flag& operator=( const Flag& ) = delete;
 
-	void     reset    ()                                                   {        flg_reset    (this); }
-	void     kill     ()                                                   {        flg_kill     (this); }
-	void     destroy  ()                                                   {        flg_destroy  (this); }
-	unsigned take     ( unsigned _flags, unsigned _mode = flgAll )         { return flg_take     (this, _flags, _mode); }
-	unsigned tryWait  ( unsigned _flags, unsigned _mode = flgAll )         { return flg_tryWait  (this, _flags, _mode); }
-	unsigned takeISR  ( unsigned _flags, unsigned _mode = flgAll )         { return flg_takeISR  (this, _flags, _mode); }
+	void     reset    ()                                                   {        flg_reset    (this); }                                      ///< flg_reset()
+	void     kill     ()                                                   {        flg_kill     (this); }                                      ///< flg_kill()
+	void     destroy  ()                                                   {        flg_destroy  (this); }                                      ///< flg_destroy()
+	unsigned take     ( unsigned _flags, unsigned _mode = flgAll )         { return flg_take     (this, _flags, _mode); }                       ///< flg_take()
+	unsigned tryWait  ( unsigned _flags, unsigned _mode = flgAll )         { return flg_tryWait  (this, _flags, _mode); }                       ///< flg_tryWait()
+	unsigned takeISR  ( unsigned _flags, unsigned _mode = flgAll )         { return flg_takeISR  (this, _flags, _mode); }                       ///< flg_takeISR()
 	template<typename T>
-	int      waitFor  ( unsigned _flags, unsigned _mode, const T& _delay ) { return flg_waitFor  (this, _flags, _mode, Clock::count(_delay)); }
+	int      waitFor  ( unsigned _flags, unsigned _mode, const T& _delay ) { return flg_waitFor  (this, _flags, _mode, Clock::count(_delay)); } ///< flg_waitFor()
 	template<typename T>
-	int      waitUntil( unsigned _flags, unsigned _mode, const T& _time )  { return flg_waitUntil(this, _flags, _mode, Clock::until(_time)); }
-	int      wait     ( unsigned _flags, unsigned _mode = flgAll )         { return flg_wait     (this, _flags, _mode); }
-	unsigned give     ( unsigned _flags )                                  { return flg_give     (this, _flags); }
-	unsigned set      ( unsigned _flags )                                  { return flg_set      (this, _flags); }
-	unsigned giveISR  ( unsigned _flags )                                  { return flg_giveISR  (this, _flags); }
-	unsigned clear    ( unsigned _flags )                                  { return flg_clear    (this, _flags); }
-	unsigned clearISR ( unsigned _flags )                                  { return flg_clearISR (this, _flags); }
-	unsigned get      ()                                                   { return flg_get      (this); }
-	unsigned getISR   ()                                                   { return flg_getISR   (this); }
+	int      waitUntil( unsigned _flags, unsigned _mode, const T& _time )  { return flg_waitUntil(this, _flags, _mode, Clock::until(_time)); }  ///< flg_waitUntil()
+	int      wait     ( unsigned _flags, unsigned _mode = flgAll )         { return flg_wait     (this, _flags, _mode); }                       ///< flg_wait()
+	unsigned give     ( unsigned _flags )                                  { return flg_give     (this, _flags); }                              ///< flg_give()
+	unsigned set      ( unsigned _flags )                                  { return flg_set      (this, _flags); }                              ///< flg_set()
+	unsigned giveISR  ( unsigned _flags )                                  { return flg_giveISR  (this, _flags); }                              ///< flg_giveISR()
+	unsigned clear    ( unsigned _flags )                                  { return flg_clear    (this, _flags); }                              ///< flg_clear()
+	unsigned clearISR ( unsigned _flags )                                  { return flg_clearISR (this, _flags); }                              ///< flg_clearISR()
+	unsigned get      ()                                                   { return flg_get      (this); }                                      ///< flg_get()
+	unsigned getISR   ()                                                   { return flg_getISR   (this); }                                      ///< flg_getISR()
 
 #if __cplusplus >= 201402L
-	using Ptr = std::unique_ptr<Flag>;
+	using Ptr = std::unique_ptr<Flag>; ///< result type of Create()
 #else
-	using Ptr = Flag *;
+	using Ptr = Flag *; ///< result type of Create()
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create dynamic object with manageable resources
  *
- * Name              : Flag::Create
+ * @param   _init      initial value of flag
  *
- * Description       : create dynamic object with manageable resources
+ * @return  std::unique_pointer / pointer to Flag object
  *
- * Parameters
- *   init            : initial value of flag
- *
- * Return            : std::unique_pointer / pointer to Flag object
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 	static
 	Ptr Create( const unsigned _init = 0 )
@@ -520,5 +437,7 @@ struct Flag : public __flg
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__STATEOS_FLG_H

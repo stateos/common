@@ -34,6 +34,12 @@
 
 #include "oskernel.h"
 
+/**
+ * @defgroup criticalsection Critical section
+ * @brief    masking and unmasking of the interrupts
+ * @{
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -126,49 +132,33 @@ lck_t core_get_lock( void )
 	return port_get_lock();
 }
 
-/******************************************************************************
+/**
+ * @brief   save interrupts state then disable interrupts
+ *          / enter into critical section
  *
- * Name              : sys_lock
- * ISR alias         : sys_lockISR
- *
- * Description       : save interrupts state then disable interrupts
- *                   / enter into critical section
- *
- * Parameters        : none
- *
- * Return            : none
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 #define                sys_lock() \
                        do { lck_t __LOCK = core_set_lock()
 
+/** ISR alias of sys_lock() */
 #define                sys_lockISR() \
                        sys_lock()
 
-/******************************************************************************
+/**
+ * @brief   restore saved interrupts state
+ *          / exit from critical section
  *
- * Name              : sys_unlock
- * ISR alias         : sys_unlockISR
- *
- * Description       : restore saved interrupts state
- *                   / exit from critical section
- *
- * Parameters        : none
- *
- * Return            : none
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 #define                sys_unlock() \
                        core_put_lock(__LOCK); } while (0)
 
+/** ISR alias of sys_unlock() */
 #define                sys_unlockISR() \
                        sys_unlock()
 
@@ -181,19 +171,13 @@ lck_t core_get_lock( void )
 #if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
 namespace stateos {
 
-/******************************************************************************
- *
- * Class             : CriticalSection
- *
- * Description       : create and initialize a critical section guard object
- *
- * Constructor parameters
- *                   : none
- *
- ******************************************************************************/
+/**
+ * @brief   create and initialize a critical section guard object
+ */
 
 struct CriticalSection
 {
+	/// constructor, see the constructor parameters of the class
 	CriticalSection() { lck_ = core_set_lock(); }
 
 	~CriticalSection() { core_put_lock(lck_); }
@@ -211,5 +195,7 @@ struct CriticalSection
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__STATEOS_CRI_H

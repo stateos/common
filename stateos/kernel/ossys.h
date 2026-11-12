@@ -34,59 +34,41 @@
 
 #include "oskernel.h"
 
+/**
+ * @defgroup sys System
+ * @brief    initialization of the system, system suspend mode
+ * @{
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   initialize system timer and enable services
  *
- * Name              : sys_init
- *
- * Description       : initialize system timer and enable services
- *
- * Parameters        : none
- *
- * Return            : none
- *
- * Note              : function sys_init should be invoked as a static constructor
- *                   : otherwise, call sys_init as the first instruction in function main
- *
- ******************************************************************************/
+ * @note    function sys_init should be invoked as a static constructor
+ *          otherwise, call sys_init as the first instruction in function main
+ */
 
 #ifdef __CONSTRUCTOR
        __CONSTRUCTOR
 #endif
 void sys_init( void );
 
-/******************************************************************************
+/**
+ * @brief   enter to system suspend mode (executes only current task)
  *
- * Name              : sys_suspend
- *
- * Description       : enter to system suspend mode (executes only current task)
- *
- * Parameters        : none
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void sys_suspend( void );
 
-/******************************************************************************
+/**
+ * @brief   exit from system suspend mode
  *
- * Name              : sys_resume
- *
- * Description       : exit from system suspend mode
- *
- * Parameters        : none
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void sys_resume( void );
 
@@ -106,5 +88,7 @@ static inline void resume () { sys_resume (); }
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__STATEOS_SYS_H

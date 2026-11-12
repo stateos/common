@@ -34,79 +34,62 @@
 
 #include "oskernel.h"
 
+/**
+ * @defgroup alloc Memory allocation
+ * @brief    allocation of the memory for the objects created dynamically
+ * @{
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   system malloc procedure, deprecated
  *
- * Alias             : sys_malloc
+ * @param   size       required size of the memory segment (in bytes)
  *
- * Description       : system malloc procedure, deprecated
+ * @return  pointer to the beginning of allocated memory segment
+ * @retval  NULL       memory segment not allocated (not enough free memory)
  *
- * Parameters
- *   size            : required size of the memory segment (in bytes)
- *
- * Return            : pointer to the beginning of allocated memory segment
- *   NULL            : memory segment not allocated (not enough free memory)
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 __STATIC_INLINE
 void *sys_malloc( size_t size ) { return malloc(size); }
 
-/******************************************************************************
+/**
+ * @brief   system free procedure, deprecated
  *
- * Alias             : sys_free
+ * @param   ptr        pointer to a memory segment previously allocated with sys_malloc, xxx_create or xxx_new functions
  *
- * Description       : system free procedure, deprecated
- *
- * Parameters
- *   ptr             : pointer to a memory segment previously allocated with sys_malloc, xxx_create or xxx_new functions
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 __STATIC_INLINE
 void sys_free( void *ptr ) { free(ptr); }
 
-/******************************************************************************
+/**
+ * @brief   get total size of free blocks of the dedicated heap memory
  *
- * Name              : sys_heapSize
+ * @return  size of free heap memory
+ * @retval  0          there is no dedicated heap memory or the heap is full
  *
- * Description       : get total size of free blocks of the dedicated heap memory
- *
- * Parameters        : none
- *
- * Return            : size of free heap memory
- *   0               : there is no dedicated heap memory or the heap is full
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 size_t sys_heapSize( void );
 
-/******************************************************************************
+/**
+ * @brief   get memory segment size
  *
- * Name              : sys_segSize
+ * @param   ptr        pointer to a memory segment previously allocated with sys_malloc, xxx_create or xxx_new functions
  *
- * Description       : get memory segment size
+ * @return  size of allocated memory segment
+ * @retval  0          there is no dedicated heap memory or the heap is full
  *
- * Parameters
- *   ptr             : pointer to a memory segment previously allocated with sys_malloc, xxx_create or xxx_new functions
- *
- * Return            : size of allocated memory segment
- *   0               : there is no dedicated heap memory or the heap is full
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 size_t sys_segSize( void *ptr );
 
@@ -117,5 +100,7 @@ size_t sys_segSize( void *ptr );
 #endif
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__STATEOSALLOC_H

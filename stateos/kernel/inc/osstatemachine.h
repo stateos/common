@@ -36,6 +36,12 @@
 #include "osclock.h"
 #include "oseventqueue.h"
 
+/**
+ * @defgroup statemachine Hierarchical state machine
+ * @brief    hierarchical state machine
+ * @{
+ */
+
 /* -------------------------------------------------------------------------- */
 
 enum
@@ -48,92 +54,82 @@ enum
 	hsmUser,   // values less than hsmUser are reserved for the system
 };
 
-/******************************************************************************
- *
- * Name              : hierarchical state machine - state
- *
- ******************************************************************************/
+/**
+ * @brief   hierarchical state machine - state
+ */
 
 typedef struct __hsm_state hsm_state_t;
 
-/******************************************************************************
- *
- * Name              : hierarchical state machine - state action
- *
- ******************************************************************************/
+/**
+ * @brief   hierarchical state machine - state action
+ */
 
 typedef struct __hsm_action hsm_action_t;
 
-/******************************************************************************
- *
- * Name              : hierarchical state machine
- *
- ******************************************************************************/
+/**
+ * @brief   hierarchical state machine
+ */
 
 typedef struct __hsm hsm_t;
 
-/******************************************************************************
- *
- * Name              : hierarchical state machine - event handler definition
- *
- ******************************************************************************/
+/**
+ * @brief   hierarchical state machine - event handler definition
+ */
 
 typedef void hsm_handler_t(hsm_t *, unsigned);
 
-/******************************************************************************
- *
- * Name              : hierarchical state machine - state definition
- *
- ******************************************************************************/
+/**
+ * @brief   hierarchical state machine - state definition
+ */
 
 struct __hsm_state
 {
-	hsm_state_t *   parent;  // pointer to parent state in the hsm tree
-	hsm_action_t *  queue;   // state action queue
+	hsm_state_t *   parent;  ///< pointer to parent state in the hsm tree
+	hsm_action_t *  queue;   ///< state action queue
 };
 
 typedef struct __hsm_state hsm_state_id [];
 
-/******************************************************************************
+/**
+ * @brief   hierarchical state machine - state action definition
  *
- * Name              : hierarchical state machine - state action definition
+ *          each state can handle the following system events:
+ *          - hsmExit  (exit from the state during transition)
+ *          - hsmEntry (entry to the state during transition)
+ *          - hsmInit  (init the state after transition)
  *
- * Description       : each state can handle the following system events:
- *                     - hsmExit  (exit from the state during transition)
- *                     - hsmEntry (entry to the state during transition)
- *                     - hsmInit  (init the state after transition)
- *                     each state should also handle the necessary user events
- *                     user event values must be greater than or equal to hsmUser
- *                     values less than hsmUser are reserved for the system
- *                     transition is possible, if:
- *                     - handling user events or
- *                     - handling hsmInit event and transition to child state
+ *          each state should also handle the necessary user events
  *
- ******************************************************************************/
+ *          user event values must be greater than or equal to hsmUser
+ *
+ *          values less than hsmUser are reserved for the system
+ *
+ *          transition is possible, if:
+ *          - handling user events or
+ *          - handling hsmInit event and transition to child state
+ */
 
 struct __hsm_action
 {
-	hsm_state_t *   owner;   // action owner
-	unsigned        event;   // event value
-	hsm_state_t *   target;  // pointer to transition target state (NULL, if no transition)
-	hsm_handler_t * handler; // event handler (NULL, if no handler)
-	hsm_action_t *  next;    // next element in the hsm state action queue
+	hsm_state_t *   owner;   ///< action owner
+	unsigned        event;   ///< event value
+	hsm_state_t *   target;  ///< pointer to transition target state (NULL, if no transition)
+	hsm_handler_t * handler; ///< event handler (NULL, if no handler)
+	hsm_action_t *  next;    ///< next element in the hsm state action queue
 };
 
 typedef struct __hsm_action hsm_action_id [];
 
-/******************************************************************************
- *
- * Name              : hierarchical state machine - definition
- *
- ******************************************************************************/
+/**
+ * @brief   hierarchical state machine - definition
+ */
 
 struct __hsm
 {
-	evq_t           evq;     // event queue
-	hsm_state_t *   state;   // current hsm state
-	hsm_action_t *  action;  // current hsm state action
-	tsk_t *         tsk;     // hsm event dispatcher task
+	evq_t           evq;     ///< event queue
+	hsm_state_t *   state;   ///< current hsm state
+	hsm_action_t *  action;  ///< current hsm state action
+	tsk_t *         tsk;     ///< hsm event dispatcher task
 };
 
 typedef struct __hsm hsm_id [];
@@ -156,64 +152,49 @@ typedef struct __hsm hsm_id [];
 #define               _HSM_STATE_INIT( _parent ) \
                     { _parent, NULL }
 
-/******************************************************************************
+/**
+ * @brief   define and initialize an hsm state object
  *
- * Name              : OS_HSM_STATE
- * Static alias      : static_HSM_STATE
- *
- * Description       : define and initialize an hsm state object
- *
- * Parameters
- *   state           : name of a pointer to hsm state object
- *   parent          : pointer to parent state in the hsm tree (NULL for root)
- *
- ******************************************************************************/
+ * @param   state      name of a pointer to hsm state object
+ * @param   parent     pointer to parent state in the hsm tree (NULL for root)
+ */
 
 #define             OS_HSM_STATE( state, parent ) \
                        hsm_state_t state[] = { _HSM_STATE_INIT( parent ) }
 
+/** static alias of OS_HSM_STATE() */
 #define         static_HSM_STATE( state, parent ) \
                 static hsm_state_t state[] = { _HSM_STATE_INIT( parent ) }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize hsm state object
  *
- * Name              : HSM_STATE_INIT
+ * @param   parent     pointer to parent state in the hsm tree (NULL for root)
  *
- * Description       : create and initialize hsm state object
+ * @return  hsm state object
  *
- * Parameters
- *   parent          : pointer to parent state in the hsm tree (NULL for root)
- *
- * Return            : hsm state object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                HSM_STATE_INIT( parent ) \
                       _HSM_STATE_INIT( parent )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize hsm state object
  *
- * Name              : HSM_STATE_CREATE
- * Alias             : HSM_STATE_NEW
+ * @param   parent     pointer to parent state in the hsm tree (NULL for root)
  *
- * Description       : create and initialize hsm state object
+ * @return  hsm state object as array (id)
  *
- * Parameters
- *   parent          : pointer to parent state in the hsm tree (NULL for root)
- *
- * Return            : hsm state object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                HSM_STATE_CREATE( parent ) \
                      { HSM_STATE_INIT  ( parent ) }
+/** alias of HSM_STATE_CREATE() */
 #define                HSM_STATE_NEW \
                        HSM_STATE_CREATE
 #endif
@@ -239,73 +220,58 @@ typedef struct __hsm hsm_id [];
 #define               _HSM_ACTION_INIT( _owner, _event, _target, _handler ) \
                     { _owner, _event, _target, _handler, NULL }
 
-/******************************************************************************
+/**
+ * @brief   define and initialize an hsm action object
  *
- * Name              : OS_HSM_ACTION
- * Static alias      : static_HSM_ACTION
- *
- * Description       : define and initialize an hsm action object
- *
- * Parameters
- *   action          : name of a pointer to hsm action object
- *   owner           : action owner
- *   event           : event value
- *   target          : pointer to transition target state (NULL, if no transition)
- *   handler         : event handler
- *
- ******************************************************************************/
+ * @param   action     name of a pointer to hsm action object
+ * @param   owner      action owner
+ * @param   event      event value
+ * @param   target     pointer to transition target state (NULL, if no transition)
+ * @param   handler    event handler
+ */
 
 #define             OS_HSM_ACTION( action, owner, event, target, handler ) \
                        hsm_action_t action[] = { _HSM_ACTION_INIT( owner, event, target, handler ) }
 
+/** static alias of OS_HSM_ACTION() */
 #define         static_HSM_ACTION( action, owner, event, target, handler ) \
                 static hsm_action_t action[] = { _HSM_ACTION_INIT( owner, event, target, handler ) }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize an hsm action object
  *
- * Name              : HSM_ACTION_INIT
+ * @param   owner      action owner
+ * @param   event      event value
+ * @param   target     pointer to transition target state (NULL, if no transition)
+ * @param   handler    event handler
  *
- * Description       : create and initialize an hsm action object
+ * @return  hsm action object
  *
- * Parameters
- *   owner           : action owner
- *   event           : event value
- *   target          : pointer to transition target state (NULL, if no transition)
- *   handler         : event handler
- *
- * Return            : hsm action object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                HSM_ACTION_INIT( owner, event, target, handler ) \
                       _HSM_ACTION_INIT( owner, event, target, handler )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize an hsm action object
  *
- * Name              : HSM_ACTION_CREATE
- * Alias             : HSM_ACTION_NEW
+ * @param   owner      action owner
+ * @param   event      event value
+ * @param   target     pointer to transition target state (NULL, if no transition)
+ * @param   handler    event handler
  *
- * Description       : create and initialize an hsm action object
+ * @return  hsm action object as array
  *
- * Parameters
- *   owner           : action owner
- *   event           : event value
- *   target          : pointer to transition target state (NULL, if no transition)
- *   handler         : event handler
- *
- * Return            : hsm action object as array
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                HSM_ACTION_CREATE( owner, event, target, handler ) \
                      { HSM_ACTION_INIT  ( owner, event, target, handler ) }
+/** alias of HSM_ACTION_CREATE() */
 #define                HSM_ACTION_NEW \
                        HSM_ACTION_CREATE
 #endif
@@ -329,66 +295,51 @@ typedef struct __hsm hsm_id [];
 #define               _HSM_INIT( _limit, _data ) \
                     { _EVQ_INIT( _limit, _data ), NULL, NULL, NULL }
 
-/******************************************************************************
+/**
+ * @brief   define and initialize complete hsm object
  *
- * Name              : OS_HSM
- * Static alias      : static_HSM
- *
- * Description       : define and initialize complete hsm object
- *
- * Parameters
- *   hsm             : name of a pointer to hsm object
- *   limit           : size of an hsm event queue (max number of stored events)
- *
- ******************************************************************************/
+ * @param   hsm        name of a pointer to hsm object
+ * @param   limit      size of an hsm event queue (max number of stored events)
+ */
 
 #define             OS_HSM( hsm, limit )          \
                 static unsigned hsm##__buf[limit]; \
                        hsm_t hsm[] = { _HSM_INIT( limit, hsm##__buf ) }
 
+/** static alias of OS_HSM() */
 #define         static_HSM( hsm, limit )          \
                 static unsigned hsm##__buf[limit]; \
                 static hsm_t hsm[] = { _HSM_INIT( limit, hsm##__buf ) }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize complete hsm object
  *
- * Name              : HSM_INIT
+ * @param   limit      size of an hsm event queue (max number of stored events)
  *
- * Description       : create and initialize complete hsm object
+ * @return  hsm object
  *
- * Parameters
- *   limit           : size of an hsm event queue (max number of stored events)
- *
- * Return            : hsm object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                HSM_INIT( limit ) \
                       _HSM_INIT( limit, _EVQ_DATA( limit ) )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize complete hsm object
  *
- * Name              : HSM_CREATE
- * Alias             : HSM_NEW
+ * @param   limit      size of an hsm event queue (max number of stored events)
  *
- * Description       : create and initialize complete hsm object
+ * @return  hsm object as array (id)
  *
- * Parameters
- *   limit           : size of an hsm event queue (max number of stored events)
- *
- * Return            : hsm object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                HSM_CREATE( limit ) \
                      { HSM_INIT  ( limit ) }
+/** alias of HSM_CREATE() */
 #define                HSM_NEW \
                        HSM_CREATE
 #endif
@@ -397,307 +348,217 @@ typedef struct __hsm hsm_id [];
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   initialize hsm object
  *
- * Name              : hsm_initState
- *
- * Description       : initialize hsm object
- *
- * Parameters
- *   state           : pointer to hsm state object
- *   parent          : pointer to parent state in the hsm tree (NULL for root)
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   state      pointer to hsm state object
+ * @param   parent     pointer to parent state in the hsm tree (NULL for root)
+ */
 
 void hsm_initState( hsm_state_t *state, hsm_state_t *parent );
 
-/******************************************************************************
+/**
+ * @brief   initialize hsm state action object
  *
- * Name              : hsm_initAction
- *
- * Description       : initialize hsm state action object
- *
- * Parameters
- *   action          : pointer to hsm state action object
- *   owner           : action owner
- *   event           : event value
- *   target          : pointer to transition target state (NULL, if no transition)
- *   handler         : event handler
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   action     pointer to hsm state action object
+ * @param   owner      action owner
+ * @param   event      event value
+ * @param   target     pointer to transition target state (NULL, if no transition)
+ * @param   handler    event handler
+ */
 
 void hsm_initAction( hsm_action_t *action, hsm_state_t *owner, unsigned event, hsm_state_t *target, hsm_handler_t *handler );
 
-/******************************************************************************
+/**
+ * @brief   initialize hsm object
  *
- * Name              : hsm_init
- *
- * Description       : initialize hsm object
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *   data            : hsm event queue data buffer
- *   bufsize         : size of the buffer
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   hsm        pointer to hsm object
+ * @param   data       hsm event queue data buffer
+ * @param   bufsize    size of the buffer
+ */
 
 void hsm_init( hsm_t *hsm, void *data, size_t bufsize );
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a new hsm object
  *
- * Name              : hsm_create
- * Alias             : hsm_new
+ * @param   limit      size of an hsm event queue (max number of stored events)
  *
- * Description       : create and initialize a new hsm object
+ * @return  pointer to hsm object
+ * @retval  NULL       object not created (not enough free memory)
  *
- * Parameters
- *   limit           : size of an hsm event queue (max number of stored events)
- *
- * Return            : pointer to hsm object
- *   NULL            : object not created (not enough free memory)
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 hsm_t *hsm_create( unsigned limit );
 
+/** alias of hsm_create() */
 __STATIC_INLINE
 hsm_t *hsm_new( unsigned limit ) { return hsm_create(limit); }
 
-/******************************************************************************
+/**
+ * @brief   link hsm state action to the state action queue
  *
- * Name              : hsm_link
- *
- * Description       : link hsm state action to the state action queue
- *
- * Parameters
- *   action          : pointer to hsm state action object
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   action     pointer to hsm state action object
+ */
 
 void hsm_link( hsm_action_t *action );
 
-/******************************************************************************
+/**
+ * @brief   start hsm event dispatcher
  *
- * Name              : hsm_start
- * Async alias       : hsm_startAsync
- *
- * Description       : start hsm event dispatcher
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *   tsk             : pointer to hsm dispatcher
- *   initState       : pointer to initial hsm state
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   hsm        pointer to hsm object
+ * @param   tsk        pointer to hsm dispatcher
+ * @param   initState  pointer to initial hsm state
+ */
 
 void hsm_start( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 
 #if OS_ATOMICS
+/** Async alias of hsm_start() */
 void hsm_startAsync( hsm_t *hsm, tsk_t *tsk, hsm_state_t *initState );
 #endif
 
-/******************************************************************************
+/**
+ * @brief   reset the hsm object, stop the hsm event dispatcher
+ *          and wake up all waiting tasks with 'E_STOPPED' event value
  *
- * Name              : hsm_reset
- * Alias             : hsm_kill
+ * @param   hsm        pointer to hsm object
  *
- * Description       : reset the hsm object, stop the hsm event dispatcher
- *                     and wake up all waiting tasks with 'E_STOPPED' event value
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void hsm_reset( hsm_t *hsm );
 
+/** alias of hsm_reset() */
 __STATIC_INLINE
 void hsm_kill( hsm_t *hsm ) { hsm_reset(hsm); }
 
-/******************************************************************************
+/**
+ * @brief   reset the hsm object, stop the hsm event dispatcher,
+ *          wake up all waiting tasks with 'E_DELETED' event value and free allocated resource
  *
- * Name              : hsm_destroy
- * Alias             : hsm_delete
+ * @param   hsm        pointer to hsm object
  *
- * Description       : reset the hsm object, stop the hsm event dispatcher,
- *                     wake up all waiting tasks with 'E_DELETED' event value and free allocated resource
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void hsm_destroy( hsm_t *hsm );
 
+/** alias of hsm_destroy() */
 __STATIC_INLINE
 void hsm_delete( hsm_t *hsm ) { hsm_destroy(hsm); }
 
-/******************************************************************************
+/**
+ * @brief   try to transfer event data to the hsm event queue,
+ *          don't wait if the hsm event queue is full
  *
- * Name              : hsm_give
- * ISR alias         : hsm_giveISR
- * Async alias       : hsm_giveAsync
+ * @param   hsm        pointer to hsm object
+ * @param   event      event value
  *
- * Description       : try to transfer event data to the hsm event queue,
- *                     don't wait if the hsm event queue is full
+ * @retval  E_SUCCESS  event data was successfully transferred to the hsm object
+ * @retval  E_TIMEOUT  hsm event queue is full, try again
  *
- * Parameters
- *   hsm             : pointer to hsm object
- *   event           : event value
- *
- * Return
- *   E_SUCCESS       : event data was successfully transferred to the hsm object
- *   E_TIMEOUT       : hsm event queue is full, try again
- *
- * Note              : can be used in both thread and handler mode
- *                     use ISR alias in blockable interrupt handlers
- *                     use Async alias for communication with unmasked interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode
+ * @note    use ISR alias in blockable interrupt handlers
+ * @note    use Async alias for communication with unmasked interrupt handlers
+ */
 
 int hsm_give( hsm_t *hsm, unsigned event );
 
+/** ISR alias of hsm_give() */
 __STATIC_INLINE
 int hsm_giveISR( hsm_t *hsm, unsigned event ) { return hsm_give(hsm, event); }
 
 #if OS_ATOMICS
+/** Async alias of hsm_give() */
 int hsm_giveAsync( hsm_t *hsm, unsigned event );
 #endif
 
-/******************************************************************************
+/**
+ * @brief   try to transfer event value to the hsm event queue,
+ *          wait for given duration of time while the hsm event queue is full
  *
- * Name              : hsm_sendFor
+ * @param   hsm        pointer to hsm object
+ * @param   event      event value
+ * @param   delay      duration of time (maximum number of ticks to wait while the hsm event queue is full)
+ *                     - IMMEDIATE: don't wait if the hsm event queue is full
+ *                     - INFINITE:  wait indefinitely while the hsm event queue is full
  *
- * Description       : try to transfer event value to the hsm event queue,
- *                     wait for given duration of time while the hsm event queue is full
+ * @retval  E_SUCCESS  event value was successfully transferred to the hsm object
+ * @retval  E_STOPPED  hsm object was reseted before the specified timeout expired
+ * @retval  E_DELETED  hsm object was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  hsm event queue is full and was not issued data before the specified timeout expired
  *
- * Parameters
- *   hsm             : pointer to hsm object
- *   event           : event value
- *   delay           : duration of time (maximum number of ticks to wait while the hsm event queue is full)
- *                     IMMEDIATE: don't wait if the hsm event queue is full
- *                     INFINITE:  wait indefinitely while the hsm event queue is full
- *
- * Return
- *   E_SUCCESS       : event value was successfully transferred to the hsm object
- *   E_STOPPED       : hsm object was reseted before the specified timeout expired
- *   E_DELETED       : hsm object was deleted before the specified timeout expired
- *   E_TIMEOUT       : hsm event queue is full and was not issued data before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int hsm_sendFor( hsm_t *hsm, unsigned event, cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   try to transfer event value to the hsm event queue,
+ *          wait until given timepoint while the hsm event queue is full
  *
- * Name              : hsm_sendUntil
+ * @param   hsm        pointer to hsm object
+ * @param   event      event value
+ * @param   time       timepoint value
  *
- * Description       : try to transfer event value to the hsm event queue,
- *                     wait until given timepoint while the hsm event queue is full
+ * @retval  E_SUCCESS  event value was successfully transferred to the hsm object
+ * @retval  E_STOPPED  hsm object was reseted before the specified timeout expired
+ * @retval  E_DELETED  hsm object was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  hsm event queue is full and was not issued data before the specified timeout expired
  *
- * Parameters
- *   hsm             : pointer to hsm object
- *   event           : event value
- *   time            : timepoint value
- *
- * Return
- *   E_SUCCESS       : event value was successfully transferred to the hsm object
- *   E_STOPPED       : hsm object was reseted before the specified timeout expired
- *   E_DELETED       : hsm object was deleted before the specified timeout expired
- *   E_TIMEOUT       : hsm event queue is full and was not issued data before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int hsm_sendUntil( hsm_t *hsm, unsigned event, cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   try to transfer event data to the hsm event queue,
+ *          wait indefinitely while the hsm event queue is full
  *
- * Name              : hsm_send
- * Async alias       : hsm_sendAsync
+ * @param   hsm        pointer to hsm object
+ * @param   event      event value
  *
- * Description       : try to transfer event data to the hsm event queue,
- *                     wait indefinitely while the hsm event queue is full
+ * @retval  E_SUCCESS  event data was successfully transferred to the hsm object
+ * @retval  E_STOPPED  hsm object was reseted (unavailable for async version)
+ * @retval  E_DELETED  hsm object was deleted (unavailable for async version)
  *
- * Parameters
- *   hsm             : pointer to hsm object
- *   event           : event value
- *
- * Return
- *   E_SUCCESS       : event data was successfully transferred to the hsm object
- *   E_STOPPED       : hsm object was reseted (unavailable for async version)
- *   E_DELETED       : hsm object was deleted (unavailable for async version)
- *
- * Note              : use only in thread mode
- *                     use Async alias for communication with unmasked interrupt handlers
- *                     the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
- *                     lower priority tasks do not run meanwhile
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ * @note    use Async alias for communication with unmasked interrupt handlers
+ * @note    the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
+ *          lower priority tasks do not run meanwhile
+ */
 
 __STATIC_INLINE
 int hsm_send( hsm_t *hsm, unsigned event ) { return hsm_sendFor(hsm, event, INFINITE); }
 
 #if OS_ATOMICS
+/** Async alias of hsm_send() */
 int hsm_sendAsync( hsm_t *hsm, unsigned event );
 #endif
 
-/******************************************************************************
+/**
+ * @brief   transfer event data to the hsm event queue,
+ *          remove the oldest event data if the hsm event queue is full
  *
- * Name              : hsm_push
- * ISR alias         : hsm_pushISR
- *
- * Description       : transfer event data to the hsm event queue,
- *                     remove the oldest event data if the hsm event queue is full
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *   event           : event value
- *
- * Return            : none
- *
- ******************************************************************************/
+ * @param   hsm        pointer to hsm object
+ * @param   event      event value
+ */
 
 void hsm_push( hsm_t *hsm, unsigned event );
 
+/** ISR alias of hsm_push() */
 __STATIC_INLINE
 void hsm_pushISR( hsm_t *hsm, unsigned event ) { hsm_push(hsm, event); }
 
-/******************************************************************************
+/**
+ * @brief   get current hsm state
  *
- * Name              : hsm_getState
+ * @param   hsm        pointer to hsm object
  *
- * Description       : get current hsm state
- *
- * Parameters
- *   hsm             : pointer to hsm object
- *
- * Return            : pointer to current hsm state
- *
- ******************************************************************************/
+ * @return  pointer to current hsm state
+ */
 
 hsm_state_t *hsm_getState( hsm_t *hsm );
 
@@ -714,24 +575,20 @@ hsm_state_t *hsm_getState( hsm_t *hsm );
 
 namespace stateos {
 
-/******************************************************************************
- *
- * Class             : State
- *
- * Description       : create and initialize an hsm state object
- *
- * Constructor parameters
- *                   : none
- *
- ******************************************************************************/
+/**
+ * @brief   create and initialize an hsm state object
+ */
 
 struct State : public __hsm_state
 {
+	/// constructor, see the constructor parameters of the class
 	constexpr
 	State():             __hsm_state _HSM_STATE_INIT( nullptr) {}
 	template<class S> constexpr
+	/// constructor, see the constructor parameters of the class
 	State( S& _parent ): __hsm_state _HSM_STATE_INIT(&_parent) {}
 
+	/// move constructor
 	State( State&& _src ): __hsm_state(_src)
 	{
 		assert(_src.queue == nullptr);
@@ -744,31 +601,30 @@ struct State : public __hsm_state
 
 template<unsigned> struct StateMachineT; // forward declaration
 
-/******************************************************************************
- *
- * Class             : Action
- *
- * Description       : create and initialize an hsm action object
- *
- * Constructor parameters
- *                   : none
- *
- ******************************************************************************/
+/**
+ * @brief   create and initialize an hsm action object
+ */
 
 struct Action : public __hsm_action
 {
 	template<class S> constexpr
+	/// constructor, see the constructor parameters of the class
 	Action( S& _owner, unsigned _event,             hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, _handler) {}
 	template<class S> constexpr
+	/// constructor, see the constructor parameters of the class
 	Action( S& _owner, unsigned _event, S& _target, hsm_handler_t *_handler = nullptr ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, _handler) {}
 #if __cplusplus >= 201402L
 	template<class S, class F> constexpr
+	/// constructor, see the constructor parameters of the class
 	Action( S& _owner, unsigned _event,             F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event,  nullptr, handler_), handler{_handler} {}
 	template<class S, class F> constexpr
+	/// constructor, see the constructor parameters of the class
 	Action( S& _owner, unsigned _event, S& _target, F&& _handler ): __hsm_action _HSM_ACTION_INIT(&_owner, _event, &_target, handler_), handler{_handler} {}
 #endif
 
+	/// move constructor
 	Action( Action&& ) = default;
+	/// copy constructor
 	Action( const Action& ) = default;
 	Action& operator=( Action&& ) = delete;
 	Action& operator=( const Action& ) = delete;
@@ -776,7 +632,7 @@ struct Action : public __hsm_action
 #if __cplusplus >= 201402L
 	static
 	void handler_( hsm_t *_hsm, unsigned _event ) { static_cast<Action*>(_hsm->action)->handler(_hsm, _event); }
-	std::function<void( hsm_t *, unsigned )> handler;
+	std::function<void( hsm_t *, unsigned )> handler; ///< handler of the action (function object)
 #endif
 
 	private:
@@ -787,23 +643,22 @@ struct Action : public __hsm_action
 	friend struct StateMachineT;
 };
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a hierarchical state machine object
  *
- * Class             : StateMachineT<>
- *
- * Description       : create and initialize a hierarchical state machine object
- *
- * Constructor parameters
- *   limit           : size of an event queue (max number of stored events)
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - limit: size of an event queue (max number of stored events)
+ */
 
 template<unsigned limit_ = 1>
 struct StateMachineT : public __hsm
 {
+	/// constructor, see the constructor parameters of the class
 	StateMachineT():                                  __hsm _HSM_INIT(limit_, data_), tab_{}     {}
+	/// constructor, see the constructor parameters of the class
 	StateMachineT( const std::vector<Action>& _tab ): __hsm _HSM_INIT(limit_, data_), tab_{_tab} {}
 
+	/// move constructor
 	StateMachineT( StateMachineT&& _src ): __hsm _HSM_INIT(limit_, data_), tab_(std::move(_src.tab_))
 	{
 		assert(_src.state == nullptr && _src.evq.count == 0 && _src.evq.obj.queue == nullptr);
@@ -814,51 +669,51 @@ struct StateMachineT : public __hsm
 	StateMachineT& operator=( StateMachineT&& ) = delete;
 	StateMachineT& operator=( const StateMachineT& ) = delete;
 
+	/// add an action (parameters of the Action constructor) to the table of the state machine
 	template<class S, typename... A>
 	void          add       ( S& _owner, unsigned _event, A&&... _args ) { tab_.emplace_back(_owner, _event, std::forward<A>(_args)...); }
+	/// add the actions to the table of the state machine
 	void          add       ( const std::vector<Action>& _tab )   {        std::copy(std::begin(_tab), std::end(_tab), std::back_inserter(tab_)); }
+	/// link the actions of the table and start the state machine (hsm_start())
 	void          start     ( tsk_t& _task, hsm_state_t& _init )  {        for (auto& _action: tab_) _action.link();
 	                                                                       hsm_start     (this, &_task, &_init); }
-	void          reset     ()                                    {        hsm_reset     (this); }
-	void          kill      ()                                    {        hsm_kill      (this); }
-	void          destroy   ()                                    {        hsm_destroy   (this); }
-	int           give      ( unsigned _event )                   { return hsm_give      (this,  _event); }
-	int           giveISR   ( unsigned _event )                   { return hsm_giveISR   (this,  _event); }
+	void          reset     ()                                    {        hsm_reset     (this); }                                ///< hsm_reset()
+	void          kill      ()                                    {        hsm_kill      (this); }                                ///< hsm_kill()
+	void          destroy   ()                                    {        hsm_destroy   (this); }                                ///< hsm_destroy()
+	int           give      ( unsigned _event )                   { return hsm_give      (this,  _event); }                       ///< hsm_give()
+	int           giveISR   ( unsigned _event )                   { return hsm_giveISR   (this,  _event); }                       ///< hsm_giveISR()
 	template<typename T>
-	int           sendFor   ( unsigned _event, const T& _delay )  { return hsm_sendFor  (this,   _event, Clock::count(_delay)); }
+	int           sendFor   ( unsigned _event, const T& _delay )  { return hsm_sendFor  (this,   _event, Clock::count(_delay)); } ///< hsm_sendFor()
 	template<typename T>
-	int           sendUntil ( unsigned _event, const T& _time )   { return hsm_sendUntil(this,   _event, Clock::until(_time)); }
-	int           send      ( unsigned _event )                   { return hsm_send      (this,  _event); }
-	void          push      ( unsigned _event )                   {        hsm_push      (this,  _event); }
-	void          pushISR   ( unsigned _event )                   {        hsm_pushISR   (this,  _event); }
-	hsm_state_t * getState  ()                                    { return hsm_getState  (this); }
+	int           sendUntil ( unsigned _event, const T& _time )   { return hsm_sendUntil(this,   _event, Clock::until(_time)); }  ///< hsm_sendUntil()
+	int           send      ( unsigned _event )                   { return hsm_send      (this,  _event); }                       ///< hsm_send()
+	void          push      ( unsigned _event )                   {        hsm_push      (this,  _event); }                       ///< hsm_push()
+	void          pushISR   ( unsigned _event )                   {        hsm_pushISR   (this,  _event); }                       ///< hsm_pushISR()
+	hsm_state_t * getState  ()                                    { return hsm_getState  (this); }                                ///< hsm_getState()
 #if OS_ATOMICS
+	/// link the actions of the table and start the state machine (hsm_startAsync())
 	void          startAsync( tsk_t& _task, hsm_state_t& _init )  {        for (auto& _action: tab_) _action.link();
 	                                                                       hsm_startAsync(this, &_task, &_init); }
-	int           giveAsync ( unsigned _event )                   { return hsm_giveAsync (this,  _event); }
-	int           sendAsync ( unsigned _event )                   { return hsm_sendAsync (this,  _event); }
+	int           giveAsync ( unsigned _event )                   { return hsm_giveAsync (this,  _event); } ///< hsm_giveAsync()
+	int           sendAsync ( unsigned _event )                   { return hsm_sendAsync (this,  _event); } ///< hsm_sendAsync()
 #endif
 
 #if __cplusplus >= 201402L
-	using Ptr = std::unique_ptr<StateMachineT<limit_>>;
+	using Ptr = std::unique_ptr<StateMachineT<limit_>>; ///< result type of Create()
 #else
-	using Ptr = StateMachineT<limit_> *;
+	using Ptr = StateMachineT<limit_> *; ///< result type of Create()
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create dynamic object with manageable resources
  *
- * Name              : StateMachineT<>::Create
+ * @par     Parameters
+ *          - limit: size of an event queue (max number of stored events)
  *
- * Description       : create dynamic object with manageable resources
+ * @return  std::unique_pointer / pointer to StateMachineT<> object
  *
- * Parameters
- *   limit           : size of an event queue (max number of stored events)
- *
- * Return            : std::unique_pointer / pointer to StateMachineT<> object
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 	static
 	Ptr Create()
@@ -869,6 +724,7 @@ struct StateMachineT : public __hsm
 		return Ptr(hsm);
 	}
 
+	/** @overload */
 	static
 	Ptr Create( const std::vector<Action>& _tab )
 	{
@@ -888,5 +744,7 @@ struct StateMachineT : public __hsm
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__STATEOS_HSM_H

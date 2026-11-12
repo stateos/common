@@ -35,24 +35,28 @@
 #include "oskernel.h"
 #include "osclock.h"
 
-/******************************************************************************
- *
- * Name              : job queue
- *
- ******************************************************************************/
+/**
+ * @defgroup jobqueue Job queue
+ * @brief    job queues (procedures executed by the receiving task)
+ * @{
+ */
+
+/**
+ * @brief   job queue
+ */
 
 typedef struct __job job_t;
 
 struct __job
 {
-	obj_t    obj;   // object header
+	obj_t    obj;   ///< object header
 
-	unsigned count; // inherited from semaphore
-	unsigned limit; // inherited from semaphore
+	unsigned count; ///< inherited from semaphore
+	unsigned limit; ///< inherited from semaphore
 
-	unsigned head;  // first element to read from data buffer
-	unsigned tail;  // first element to write into data buffer
-	fun_t ** data;  // data buffer
+	unsigned head;  ///< first element to read from data buffer
+	unsigned tail;  ///< first element to write into data buffer
+	fun_t ** data;  ///< data buffer
 };
 
 typedef struct __job job_id [];
@@ -94,81 +98,61 @@ typedef struct __job job_id [];
 #define               _JOB_DATA( _limit ) (fun_t *[_limit]){ NULL }
 #endif
 
-/******************************************************************************
+/**
+ * @brief   define job queue data buffer
  *
- * Name              : OS_JOB_BUFFER
- *
- * Description       : define job queue data buffer
- *
- * Parameters
- *   buf             : name of the buffer (passed to the init function)
- *   size            : size of a queue (max number of stored job procedures)
- *
- ******************************************************************************/
+ * @param   buf        name of the buffer (passed to the init function)
+ * @param   size       size of a queue (max number of stored job procedures)
+ */
 
 #define             OS_JOB_BUFFER( buf, size ) \
                        fun_t *buf[size]
 
-/******************************************************************************
+/**
+ * @brief   define and initialize a job queue object
  *
- * Name              : OS_JOB
- * Static alias      : static_JOB
- *
- * Description       : define and initialize a job queue object
- *
- * Parameters
- *   job             : name of a pointer to job queue object
- *   limit           : size of a queue (max number of stored job procedures)
- *
- ******************************************************************************/
+ * @param   job        name of a pointer to job queue object
+ * @param   limit      size of a queue (max number of stored job procedures)
+ */
 
 #define             OS_JOB( job, limit )        \
                 static fun_t *job##__buf[limit]; \
                        job_t job[] = { _JOB_INIT( limit, job##__buf ) }
 
+/** static alias of OS_JOB() */
 #define         static_JOB( job, limit )        \
                 static fun_t *job##__buf[limit]; \
                 static job_t job[] = { _JOB_INIT( limit, job##__buf ) }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a job queue object
  *
- * Name              : JOB_INIT
+ * @param   limit      size of a queue (max number of stored job procedures)
  *
- * Description       : create and initialize a job queue object
+ * @return  job queue object
  *
- * Parameters
- *   limit           : size of a queue (max number of stored job procedures)
- *
- * Return            : job queue object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                JOB_INIT( limit ) \
                       _JOB_INIT( limit, _JOB_DATA( limit ) )
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a job queue object
  *
- * Name              : JOB_CREATE
- * Alias             : JOB_NEW
+ * @param   limit      size of a queue (max number of stored job procedures)
  *
- * Description       : create and initialize a job queue object
+ * @return  job queue object as array (id)
  *
- * Parameters
- *   limit           : size of a queue (max number of stored job procedures)
- *
- * Return            : job queue object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                JOB_CREATE( limit ) \
                      { JOB_INIT  ( limit ) }
+/** alias of JOB_CREATE() */
 #define                JOB_NEW \
                        JOB_CREATE
 #endif
@@ -177,402 +161,306 @@ typedef struct __job job_id [];
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   initialize a job queue object
  *
- * Name              : job_init
+ * @param   job        pointer to job queue object
+ * @param   data       job queue data buffer
+ * @param   bufsize    size of the data buffer (in bytes)
  *
- * Description       : initialize a job queue object
- *
- * Parameters
- *   job             : pointer to job queue object
- *   data            : job queue data buffer
- *   bufsize         : size of the data buffer (in bytes)
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void job_init( job_t *job, fun_t **data, size_t bufsize );
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a new job queue object
  *
- * Name              : job_create
- * Alias             : job_new
+ * @param   limit      size of a queue (max number of stored job procedures)
  *
- * Description       : create and initialize a new job queue object
+ * @return  pointer to job queue object
+ * @retval  NULL       object not created (not enough free memory)
  *
- * Parameters
- *   limit           : size of a queue (max number of stored job procedures)
- *
- * Return            : pointer to job queue object
- *   NULL            : object not created (not enough free memory)
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 job_t *job_create( unsigned limit );
 
+/** alias of job_create() */
 __STATIC_INLINE
 job_t *job_new( unsigned limit ) { return job_create(limit); }
 
-/******************************************************************************
+/**
+ * @brief   reset the job queue object and wake up all waiting tasks with 'E_STOPPED' event
  *
- * Name              : job_reset
- * Alias             : job_kill
+ * @param   job        pointer to job queue object
  *
- * Description       : reset the job queue object and wake up all waiting tasks with 'E_STOPPED' event
- *
- * Parameters
- *   job             : pointer to job queue object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void job_reset( job_t *job );
 
+/** alias of job_reset() */
 __STATIC_INLINE
 void job_kill( job_t *job ) { job_reset(job); }
 
-/******************************************************************************
+/**
+ * @brief   reset the job queue object, wake up all waiting tasks with 'E_DELETED' event value and free allocated resource
  *
- * Name              : job_destroy
- * Alias             : job_delete
+ * @param   job        pointer to job queue object
  *
- * Description       : reset the job queue object, wake up all waiting tasks with 'E_DELETED' event value and free allocated resource
- *
- * Parameters
- *   job             : pointer to job queue object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void job_destroy( job_t *job );
 
+/** alias of job_destroy() */
 __STATIC_INLINE
 void job_delete( job_t *job ) { job_destroy(job); }
 
-/******************************************************************************
+/**
+ * @brief   try to transfer job data from the job queue object and execute the job procedure,
+ *          don't wait if the job queue object is empty
  *
- * Name              : job_take
- * Alias             : job_tryWait
- * ISR alias         : job_takeISR
- * Async alias       : job_takeAsync
+ * @param   job        pointer to job queue object
  *
- * Description       : try to transfer job data from the job queue object and execute the job procedure,
- *                     don't wait if the job queue object is empty
+ * @retval  E_SUCCESS  job data was successfully transferred from the job queue object
+ * @retval  E_TIMEOUT  job queue object is empty, try again
  *
- * Parameters
- *   job             : pointer to job queue object
- *
- * Return
- *   E_SUCCESS       : job data was successfully transferred from the job queue object
- *   E_TIMEOUT       : job queue object is empty, try again
- *
- * Note              : can be used in both thread and handler mode
- *                     use ISR alias in blockable interrupt handlers
- *                     use Async alias for communication with unmasked interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode
+ * @note    use ISR alias in blockable interrupt handlers
+ * @note    use Async alias for communication with unmasked interrupt handlers
+ */
 
 int job_take( job_t *job );
 
+/** alias of job_take() */
 __STATIC_INLINE
 int job_tryWait( job_t *job ) { return job_take(job); }
 
+/** ISR alias of job_take() */
 __STATIC_INLINE
 int job_takeISR( job_t *job ) { return job_take(job); }
 
 #if OS_ATOMICS
+/** Async alias of job_take() */
 int job_takeAsync( job_t *job );
 #endif
 
-/******************************************************************************
+/**
+ * @brief   try to transfer job data from the job queue object and execute the job procedure,
+ *          wait for given duration of time while the job queue object is empty
  *
- * Name              : job_waitFor
+ * @param   job        pointer to job queue object
+ * @param   delay      duration of time (maximum number of ticks to wait while the job queue object is empty)
+ *                     - IMMEDIATE: don't wait if the job queue object is empty
+ *                     - INFINITE:  wait indefinitely while the job queue object is empty
  *
- * Description       : try to transfer job data from the job queue object and execute the job procedure,
- *                     wait for given duration of time while the job queue object is empty
+ * @retval  E_SUCCESS  job data was successfully transferred from the job queue object
+ * @retval  E_STOPPED  job queue object was reseted before the specified timeout expired
+ * @retval  E_DELETED  job queue object was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  job queue object is empty and was not received data before the specified timeout expired
  *
- * Parameters
- *   job             : pointer to job queue object
- *   delay           : duration of time (maximum number of ticks to wait while the job queue object is empty)
- *                     IMMEDIATE: don't wait if the job queue object is empty
- *                     INFINITE:  wait indefinitely while the job queue object is empty
- *
- * Return
- *   E_SUCCESS       : job data was successfully transferred from the job queue object
- *   E_STOPPED       : job queue object was reseted before the specified timeout expired
- *   E_DELETED       : job queue object was deleted before the specified timeout expired
- *   E_TIMEOUT       : job queue object is empty and was not received data before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int job_waitFor( job_t *job, cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   try to transfer job data from the job queue object and execute the job procedure,
+ *          wait until given timepoint while the job queue object is empty
  *
- * Name              : job_waitUntil
+ * @param   job        pointer to job queue object
+ * @param   time       timepoint value
  *
- * Description       : try to transfer job data from the job queue object and execute the job procedure,
- *                     wait until given timepoint while the job queue object is empty
+ * @retval  E_SUCCESS  job data was successfully transferred from the job queue object
+ * @retval  E_STOPPED  job queue object was reseted before the specified timeout expired
+ * @retval  E_DELETED  job queue object was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  job queue object is empty and was not received data before the specified timeout expired
  *
- * Parameters
- *   job             : pointer to job queue object
- *   time            : timepoint value
- *
- * Return
- *   E_SUCCESS       : job data was successfully transferred from the job queue object
- *   E_STOPPED       : job queue object was reseted before the specified timeout expired
- *   E_DELETED       : job queue object was deleted before the specified timeout expired
- *   E_TIMEOUT       : job queue object is empty and was not received data before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int job_waitUntil( job_t *job, cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   try to transfer job data from the job queue object and execute the job procedure,
+ *          wait indefinitely while the job queue object is empty
  *
- * Name              : job_wait
- * Async alias       : job_waitAsync
+ * @param   job        pointer to job queue object
  *
- * Description       : try to transfer job data from the job queue object and execute the job procedure,
- *                     wait indefinitely while the job queue object is empty
+ * @retval  E_SUCCESS  job data was successfully transferred from the job queue object
+ * @retval  E_STOPPED  job queue object was reseted (unavailable for async version)
+ * @retval  E_DELETED  job queue object was deleted (unavailable for async version)
  *
- * Parameters
- *   job             : pointer to job queue object
- *
- * Return
- *   E_SUCCESS       : job data was successfully transferred from the job queue object
- *   E_STOPPED       : job queue object was reseted (unavailable for async version)
- *   E_DELETED       : job queue object was deleted (unavailable for async version)
- *
- * Note              : use only in thread mode
- *                     use Async alias for communication with unmasked interrupt handlers
- *                     the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
- *                     lower priority tasks do not run meanwhile
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ * @note    use Async alias for communication with unmasked interrupt handlers
+ * @note    the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
+ *          lower priority tasks do not run meanwhile
+ */
 
 __STATIC_INLINE
 int job_wait( job_t *job ) { return job_waitFor(job, INFINITE); }
 
 #if OS_ATOMICS
+/** Async alias of job_wait() */
 int job_waitAsync( job_t *job );
 #endif
 
-/******************************************************************************
+/**
+ * @brief   try to transfer job data to the job queue object,
+ *          don't wait if the job queue object is full
  *
- * Name              : job_give
- * ISR alias         : job_giveISR
- * Async alias       : job_giveAsync
+ * @param   job        pointer to job queue object
+ * @param   fun        pointer to job procedure
  *
- * Description       : try to transfer job data to the job queue object,
- *                     don't wait if the job queue object is full
+ * @retval  E_SUCCESS  job data was successfully transferred to the job queue object
+ * @retval  E_TIMEOUT  job queue object is full, try again
  *
- * Parameters
- *   job             : pointer to job queue object
- *   fun             : pointer to job procedure
- *
- * Return
- *   E_SUCCESS       : job data was successfully transferred to the job queue object
- *   E_TIMEOUT       : job queue object is full, try again
- *
- * Note              : can be used in both thread and handler mode
- *                     use ISR alias in blockable interrupt handlers
- *                     use Async alias for communication with unmasked interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode
+ * @note    use ISR alias in blockable interrupt handlers
+ * @note    use Async alias for communication with unmasked interrupt handlers
+ */
 
 int job_give( job_t *job, fun_t *fun );
 
+/** ISR alias of job_give() */
 __STATIC_INLINE
 int job_giveISR( job_t *job, fun_t *fun ) { return job_give(job, fun); }
 
 #if OS_ATOMICS
+/** Async alias of job_give() */
 int job_giveAsync( job_t *job, fun_t *fun );
 #endif
 
-/******************************************************************************
+/**
+ * @brief   try to transfer job data to the job queue object,
+ *          wait for given duration of time while the job queue object is full
  *
- * Name              : job_sendFor
+ * @param   job        pointer to job queue object
+ * @param   fun        pointer to job procedure
+ * @param   delay      duration of time (maximum number of ticks to wait while the job queue object is full)
+ *                     - IMMEDIATE: don't wait if the job queue object is full
+ *                     - INFINITE:  wait indefinitely while the job queue object is full
  *
- * Description       : try to transfer job data to the job queue object,
- *                     wait for given duration of time while the job queue object is full
+ * @retval  E_SUCCESS  job data was successfully transferred to the job queue object
+ * @retval  E_STOPPED  job queue object was reseted before the specified timeout expired
+ * @retval  E_DELETED  job queue object was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  job queue object is full and was not issued data before the specified timeout expired
  *
- * Parameters
- *   job             : pointer to job queue object
- *   fun             : pointer to job procedure
- *   delay           : duration of time (maximum number of ticks to wait while the job queue object is full)
- *                     IMMEDIATE: don't wait if the job queue object is full
- *                     INFINITE:  wait indefinitely while the job queue object is full
- *
- * Return
- *   E_SUCCESS       : job data was successfully transferred to the job queue object
- *   E_STOPPED       : job queue object was reseted before the specified timeout expired
- *   E_DELETED       : job queue object was deleted before the specified timeout expired
- *   E_TIMEOUT       : job queue object is full and was not issued data before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int job_sendFor( job_t *job, fun_t *fun, cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   try to transfer job data to the job queue object,
+ *          wait until given timepoint while the job queue object is full
  *
- * Name              : job_sendUntil
+ * @param   job        pointer to job queue object
+ * @param   fun        pointer to job procedure
+ * @param   time       timepoint value
  *
- * Description       : try to transfer job data to the job queue object,
- *                     wait until given timepoint while the job queue object is full
+ * @retval  E_SUCCESS  job data was successfully transferred to the job queue object
+ * @retval  E_STOPPED  job queue object was reseted before the specified timeout expired
+ * @retval  E_DELETED  job queue object was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  job queue object is full and was not issued data before the specified timeout expired
  *
- * Parameters
- *   job             : pointer to job queue object
- *   fun             : pointer to job procedure
- *   time            : timepoint value
- *
- * Return
- *   E_SUCCESS       : job data was successfully transferred to the job queue object
- *   E_STOPPED       : job queue object was reseted before the specified timeout expired
- *   E_DELETED       : job queue object was deleted before the specified timeout expired
- *   E_TIMEOUT       : job queue object is full and was not issued data before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int job_sendUntil( job_t *job, fun_t *fun, cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   try to transfer job data to the job queue object,
+ *          wait indefinitely while the job queue object is full
  *
- * Name              : job_send
- * Async alias       : job_sendAsync
+ * @param   job        pointer to job queue object
+ * @param   fun        pointer to job procedure
  *
- * Description       : try to transfer job data to the job queue object,
- *                     wait indefinitely while the job queue object is full
+ * @retval  E_SUCCESS  job data was successfully transferred to the job queue object
+ * @retval  E_STOPPED  job queue object was reseted (unavailable for async version)
+ * @retval  E_DELETED  job queue object was deleted (unavailable for async version)
  *
- * Parameters
- *   job             : pointer to job queue object
- *   fun             : pointer to job procedure
- *
- * Return
- *   E_SUCCESS       : job data was successfully transferred to the job queue object
- *   E_STOPPED       : job queue object was reseted (unavailable for async version)
- *   E_DELETED       : job queue object was deleted (unavailable for async version)
- *
- * Note              : use only in thread mode
- *                     use Async alias for communication with unmasked interrupt handlers
- *                     the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
- *                     lower priority tasks do not run meanwhile
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ * @note    use Async alias for communication with unmasked interrupt handlers
+ * @note    the Async alias is intended for tasks of equal priority: it waits in a loop with tsk_yield,
+ *          lower priority tasks do not run meanwhile
+ */
 
 __STATIC_INLINE
 int job_send( job_t *job, fun_t *fun ) { return job_sendFor(job, fun, INFINITE); }
 
 #if OS_ATOMICS
+/** Async alias of job_send() */
 int job_sendAsync( job_t *job, fun_t *fun );
 #endif
 
-/******************************************************************************
+/**
+ * @brief   transfer job data to the job queue object,
+ *          remove the oldest job data if the job queue object is full
  *
- * Name              : job_push
- * ISR alias         : job_pushISR
+ * @param   job        pointer to job queue object
+ * @param   fun        pointer to job procedure
  *
- * Description       : transfer job data to the job queue object,
- *                     remove the oldest job data if the job queue object is full
- *
- * Parameters
- *   job             : pointer to job queue object
- *   fun             : pointer to job procedure
- *
- * Return            : none
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 void job_push( job_t *job, fun_t *fun );
 
+/** ISR alias of job_push() */
 __STATIC_INLINE
 void job_pushISR( job_t *job, fun_t *fun ) { job_push(job, fun); }
 
-/******************************************************************************
+/**
+ * @brief   return the amount of data contained in the job queue
  *
- * Name              : job_count
- * ISR alias         : job_countISR
+ * @param   job        pointer to job queue object
  *
- * Description       : return the amount of data contained in the job queue
+ * @return  amount of data contained in the job queue
  *
- * Parameters
- *   job             : pointer to job queue object
- *
- * Return            : amount of data contained in the job queue
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 unsigned job_count( job_t *job );
 
+/** ISR alias of job_count() */
 __STATIC_INLINE
 unsigned job_countISR( job_t *job ) { return job_count(job); }
 
-/******************************************************************************
+/**
+ * @brief   return the amount of free space in the job queue
  *
- * Name              : job_space
- * ISR alias         : job_spaceISR
+ * @param   job        pointer to job queue object
  *
- * Description       : return the amount of free space in the job queue
+ * @return  amount of free space in the job queue
  *
- * Parameters
- *   job             : pointer to job queue object
- *
- * Return            : amount of free space in the job queue
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 unsigned job_space( job_t *job );
 
+/** ISR alias of job_space() */
 __STATIC_INLINE
 unsigned job_spaceISR( job_t *job ) { return job_space(job); }
 
-/******************************************************************************
+/**
+ * @brief   return the size of the job queue
  *
- * Name              : job_limit
- * ISR alias         : job_limitISR
+ * @param   job        pointer to job queue object
  *
- * Description       : return the size of the job queue
+ * @return  size of the job queue
  *
- * Parameters
- *   job             : pointer to job queue object
- *
- * Return            : size of the job queue
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 unsigned job_limit( job_t *job );
 
+/** ISR alias of job_limit() */
 __STATIC_INLINE
 unsigned job_limitISR( job_t *job ) { return job_limit(job); }
 
@@ -585,25 +473,23 @@ unsigned job_limitISR( job_t *job ) { return job_limit(job); }
 #if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
 namespace stateos {
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a job queue object
  *
- * Class             : JobQueueT<>
- *
- * Description       : create and initialize a job queue object
- *
- * Constructor parameters
- *   limit           : size of a queue (max number of stored job procedures)
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - limit: size of a queue (max number of stored job procedures)
+ */
 
 template<unsigned limit_>
 struct JobQueueT : public __job
 {
+	/// constructor, see the constructor parameters of the class
 	constexpr
 	JobQueueT(): __job _JOB_INIT(limit_, data_) {}
 
 	~JobQueueT() { assert(__job::obj.queue == nullptr); }
 
+	/// move constructor
 	JobQueueT( JobQueueT&& _src ): __job _JOB_INIT(limit_, data_)
 	{
 		assert(_src.__job::count == 0 && _src.obj.queue == nullptr);
@@ -614,59 +500,55 @@ struct JobQueueT : public __job
 	JobQueueT& operator=( JobQueueT&& ) = delete;
 	JobQueueT& operator=( const JobQueueT& ) = delete;
 
-	void     reset    ()                               {        job_reset    (this); }
-	void     kill     ()                               {        job_kill     (this); }
-	void     destroy  ()                               {        job_destroy  (this); }
-	int      take     ()                               { return job_take     (this); }
-	int      tryWait  ()                               { return job_tryWait  (this); }
-	int      takeISR  ()                               { return job_takeISR  (this); }
+	void     reset    ()                               {        job_reset    (this); }                             ///< job_reset()
+	void     kill     ()                               {        job_kill     (this); }                             ///< job_kill()
+	void     destroy  ()                               {        job_destroy  (this); }                             ///< job_destroy()
+	int      take     ()                               { return job_take     (this); }                             ///< job_take()
+	int      tryWait  ()                               { return job_tryWait  (this); }                             ///< job_tryWait()
+	int      takeISR  ()                               { return job_takeISR  (this); }                             ///< job_takeISR()
 	template<typename T>
-	int      waitFor  ( const T& _delay )              { return job_waitFor  (this, Clock::count(_delay)); }
+	int      waitFor  ( const T& _delay )              { return job_waitFor  (this, Clock::count(_delay)); }       ///< job_waitFor()
 	template<typename T>
-	int      waitUntil( const T& _time )               { return job_waitUntil(this, Clock::until(_time)); }
-	int      wait     ()                               { return job_wait     (this); }
-	int      give     ( fun_t *_fun )                  { return job_give     (this, _fun); }
-	int      giveISR  ( fun_t *_fun )                  { return job_giveISR  (this, _fun); }
+	int      waitUntil( const T& _time )               { return job_waitUntil(this, Clock::until(_time)); }        ///< job_waitUntil()
+	int      wait     ()                               { return job_wait     (this); }                             ///< job_wait()
+	int      give     ( fun_t *_fun )                  { return job_give     (this, _fun); }                       ///< job_give()
+	int      giveISR  ( fun_t *_fun )                  { return job_giveISR  (this, _fun); }                       ///< job_giveISR()
 	template<typename T>
-	int      sendFor  ( fun_t *_fun, const T& _delay ) { return job_sendFor  (this, _fun, Clock::count(_delay)); }
+	int      sendFor  ( fun_t *_fun, const T& _delay ) { return job_sendFor  (this, _fun, Clock::count(_delay)); } ///< job_sendFor()
 	template<typename T>
-	int      sendUntil( fun_t *_fun, const T& _time )  { return job_sendUntil(this, _fun, Clock::until(_time)); }
-	int      send     ( fun_t *_fun )                  { return job_send     (this, _fun); }
-	void     push     ( fun_t *_fun )                  {        job_push     (this, _fun); }
-	void     pushISR  ( fun_t *_fun )                  {        job_pushISR  (this, _fun); }
-	unsigned count    ()                               { return job_count    (this); }
-	unsigned countISR ()                               { return job_countISR (this); }
-	unsigned space    ()                               { return job_space    (this); }
-	unsigned spaceISR ()                               { return job_spaceISR (this); }
-	unsigned limit    ()                               { return job_limit    (this); }
-	unsigned limitISR ()                               { return job_limitISR (this); }
+	int      sendUntil( fun_t *_fun, const T& _time )  { return job_sendUntil(this, _fun, Clock::until(_time)); }  ///< job_sendUntil()
+	int      send     ( fun_t *_fun )                  { return job_send     (this, _fun); }                       ///< job_send()
+	void     push     ( fun_t *_fun )                  {        job_push     (this, _fun); }                       ///< job_push()
+	void     pushISR  ( fun_t *_fun )                  {        job_pushISR  (this, _fun); }                       ///< job_pushISR()
+	unsigned count    ()                               { return job_count    (this); }                             ///< job_count()
+	unsigned countISR ()                               { return job_countISR (this); }                             ///< job_countISR()
+	unsigned space    ()                               { return job_space    (this); }                             ///< job_space()
+	unsigned spaceISR ()                               { return job_spaceISR (this); }                             ///< job_spaceISR()
+	unsigned limit    ()                               { return job_limit    (this); }                             ///< job_limit()
+	unsigned limitISR ()                               { return job_limitISR (this); }                             ///< job_limitISR()
 #if OS_ATOMICS
-	int      takeAsync()                               { return job_takeAsync(this); }
-	int      waitAsync()                               { return job_waitAsync(this); }
-	int      giveAsync( fun_t *_fun )                  { return job_giveAsync(this, _fun); }
-	int      sendAsync( fun_t *_fun )                  { return job_sendAsync(this, _fun); }
+	int      takeAsync()                               { return job_takeAsync(this); }                             ///< job_takeAsync()
+	int      waitAsync()                               { return job_waitAsync(this); }                             ///< job_waitAsync()
+	int      giveAsync( fun_t *_fun )                  { return job_giveAsync(this, _fun); }                       ///< job_giveAsync()
+	int      sendAsync( fun_t *_fun )                  { return job_sendAsync(this, _fun); }                       ///< job_sendAsync()
 #endif
 
 #if __cplusplus >= 201402L
-	using Ptr = std::unique_ptr<JobQueueT<limit_>>;
+	using Ptr = std::unique_ptr<JobQueueT<limit_>>; ///< result type of Create()
 #else
-	using Ptr = JobQueueT<limit_> *;
+	using Ptr = JobQueueT<limit_> *; ///< result type of Create()
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create dynamic object with manageable resources
  *
- * Name              : JobQueueT<>::Create
+ * @par     Parameters
+ *          - limit: size of a queue (max number of stored job procedures)
  *
- * Description       : create dynamic object with manageable resources
+ * @return  std::unique_pointer / pointer to JobQueueT<> object
  *
- * Parameters
- *   limit           : size of a queue (max number of stored job procedures)
- *
- * Return            : std::unique_pointer / pointer to JobQueueT<> object
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 	static
 	Ptr Create()
@@ -685,5 +567,7 @@ struct JobQueueT : public __job
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__STATEOS_JOB_H

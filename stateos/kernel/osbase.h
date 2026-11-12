@@ -102,43 +102,56 @@ typedef uint64_t     hwt_t;
 #error  Invalid HW_TIMER_SIZE value!
 #endif
 
+/**
+ * @defgroup basic Basic definitions
+ * @brief    types, error codes and time units common to all objects
+ * @{
+ */
+
 #if     OS_TIMER_SIZE == 16
-typedef uint16_t     cnt_t;
-#define CNT_MAX           0xFFFFU
+typedef uint16_t     cnt_t; ///< system time (OS_TIMER_SIZE bits)
+#define CNT_MAX           0xFFFFU ///< maximum value of the system time
 #elif   OS_TIMER_SIZE == 32
-typedef uint32_t     cnt_t;
-#define CNT_MAX           0xFFFFFFFFUL
+typedef uint32_t     cnt_t; ///< system time (OS_TIMER_SIZE bits)
+#define CNT_MAX           0xFFFFFFFFUL ///< maximum value of the system time
 #elif   OS_TIMER_SIZE == 64
-typedef uint64_t     cnt_t;
-#define CNT_MAX           0xFFFFFFFFFFFFFFFFULL
+typedef uint64_t     cnt_t; ///< system time (OS_TIMER_SIZE bits)
+#define CNT_MAX           0xFFFFFFFFFFFFFFFFULL ///< maximum value of the system time
 #else
 #error  Invalid OS_TIMER_SIZE value!
 #endif
 
 #define CNT_LIMIT       ((CNT_MAX)-((CNT_MAX)>>((OS_TIMER_SIZE)/4)))
 
+/** @} */
+
 /* -------------------------------------------------------------------------- */
 
 typedef struct __mtx mtx_t;           // mutex
 typedef struct __tmr tmr_t;           // timer
 typedef struct __tsk tsk_t;           // task
-typedef         void fun_t(void);     // timer/task procedure
-typedef         void fun_a(void*);    // timer/task procedure with argument
-typedef         void act_t(unsigned); // signal action
+/** @addtogroup basic
+ * @{
+ */
+
+typedef         void fun_t(void);     ///< timer/task procedure
+typedef         void fun_a(void*);    ///< timer/task procedure with argument
+typedef         void act_t(unsigned); ///< signal action
 
 /* -------------------------------------------------------------------------- */
 
-// error codes
-
+/** error codes: results of the functions */
 enum
 {
-	E_SUCCESS = 0,  // process was released as a result of taking the supervising object
-	E_FAILURE,      // process was released as a result of any failure
-	E_STOPPED,      // process was released as a result of reset the supervising object
-	E_DELETED,      // process was released as a result of deleting the supervising object
-	E_TIMEOUT,      // process was released as a result of the end of the timer countdown
-	OWNERDEAD,      // previous owner has stopped
+	E_SUCCESS = 0,  ///< process was released as a result of taking the supervising object
+	E_FAILURE,      ///< process was released as a result of any failure
+	E_STOPPED,      ///< process was released as a result of reset the supervising object
+	E_DELETED,      ///< process was released as a result of deleting the supervising object
+	E_TIMEOUT,      ///< process was released as a result of the end of the timer countdown
+	OWNERDEAD,      ///< previous owner has stopped
 };
+
+/** @} */
 
 /* -------------------------------------------------------------------------- */
 
@@ -216,33 +229,39 @@ typedef struct __sys
 
 /* -------------------------------------------------------------------------- */
 
+/** @addtogroup basic
+ * @{
+ */
+
 #if (OS_FREQUENCY)/1000000 > 0 && (OS_FREQUENCY)/1000000 < (CNT_MAX)
-#define USEC       (cnt_t)((OS_FREQUENCY)/1000000)
+#define USEC       (cnt_t)((OS_FREQUENCY)/1000000) ///< one microsecond in ticks of the system timer
 #endif
 #if (OS_FREQUENCY)/1000 > 0 && (OS_FREQUENCY)/1000 < (CNT_MAX)
-#define MSEC       (cnt_t)((OS_FREQUENCY)/1000)
+#define MSEC       (cnt_t)((OS_FREQUENCY)/1000) ///< one millisecond in ticks of the system timer
 #endif
 #if (OS_FREQUENCY) < (CNT_MAX)
-#define  SEC       ((cnt_t)(OS_FREQUENCY))
+#define  SEC       ((cnt_t)(OS_FREQUENCY)) ///< one second in ticks of the system timer
 #endif
 #if (OS_FREQUENCY) < (CNT_MAX)/60
-#define  MIN       ((cnt_t)(OS_FREQUENCY)*60)
+#define  MIN       ((cnt_t)(OS_FREQUENCY)*60) ///< one minute in ticks of the system timer
 #endif
 #if (OS_FREQUENCY) < (CNT_MAX)/3600
-#define HOUR       ((cnt_t)(OS_FREQUENCY)*3600)
+#define HOUR       ((cnt_t)(OS_FREQUENCY)*3600) ///< one hour in ticks of the system timer
 #endif
 #if (OS_FREQUENCY) < (CNT_MAX)/86400
-#define  DAY       ((cnt_t)(OS_FREQUENCY)*86400)
+#define  DAY       ((cnt_t)(OS_FREQUENCY)*86400) ///< one day in ticks of the system timer
 #endif
 
 /* -------------------------------------------------------------------------- */
 
 #ifndef IMMEDIATE
-#define IMMEDIATE    0       // no waiting
+#define IMMEDIATE    0       ///< no waiting
 #endif
 #ifndef INFINITE
-#define INFINITE     CNT_MAX // infinite waiting
+#define INFINITE     CNT_MAX ///< infinite waiting
 #endif
+
+/** @} */
 
 /* -------------------------------------------------------------------------- */
 

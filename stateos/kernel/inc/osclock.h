@@ -34,28 +34,28 @@
 
 #include "oskernel.h"
 
+/**
+ * @defgroup clock Clock
+ * @brief    system time
+ * @{
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   return current value of system counter
  *
- * Name              : sys_time
- * ISR alias         : sys_timeISR
+ * @return  current value of system counter
  *
- * Description       : return current value of system counter
- *
- * Parameters        : none
- *
- * Return            : current value of system counter
- *
- * Note              : can be used in both thread and handler mode (for blockable interrupts)
- *                     use ISR alias in blockable interrupt handlers
- *
- ******************************************************************************/
+ * @note    can be used in both thread and handler mode (for blockable interrupts)
+ * @note    use ISR alias in blockable interrupt handlers
+ */
 
 cnt_t sys_time( void );
 
+/** ISR alias of sys_time() */
 __STATIC_INLINE
 cnt_t sys_timeISR( void ) { return sys_time(); }
 
@@ -73,24 +73,21 @@ cnt_t sys_timeISR( void ) { return sys_time(); }
 
 namespace stateos {
 
-/******************************************************************************
- *
- * Class             : Clock
- *
- * Description       : steady clock
- *
- ******************************************************************************/
+/**
+ * @brief   steady clock
+ */
 
 struct Clock
 {
-	using rep        = cnt_t;
+	using rep        = cnt_t; ///< type of the system time (cnt_t)
 #if __cplusplus >= 201402L
-	using period     = std::ratio<1, OS_FREQUENCY>;
-	using duration   = std::chrono::duration<rep, period>;
-	using time_point = std::chrono::time_point<Clock>;
+	using period     = std::ratio<1, OS_FREQUENCY>; ///< tick of the system timer (1 / OS_FREQUENCY s)
+	using duration   = std::chrono::duration<rep, period>; ///< duration in ticks of the system timer
+	using time_point = std::chrono::time_point<Clock>; ///< time point of the system time
 
-	static constexpr bool is_steady = true;
+	static constexpr bool is_steady = true; ///< the system time is monotonic
 
+	/// current system time (sys_time())
 	static
 	time_point now()
 	{
@@ -107,14 +104,14 @@ private:
 	}
 
 public:
-	// negative delay: IMMEDIATE, delay out of range: INFINITE
+	/// delay in ticks, rounded up to whole ticks; negative delay: IMMEDIATE, delay out of range: INFINITE
 	template<class _Rep, class _Period> static constexpr
 	rep count( const std::chrono::duration<_Rep, _Period>& _delay )
 	{
 		return ticks(_delay) <= 0 ? IMMEDIATE : static_cast<uintmax_t>(ticks(_delay)) >= INFINITE ? INFINITE : static_cast<rep>(ticks(_delay));
 	}
 
-	// only a time point of this clock
+	/// time point in ticks, rounded up to whole ticks (only a time point of this clock)
 	template<class _Duration> static constexpr
 	rep until( const std::chrono::time_point<Clock, _Duration>& _time )
 	{
@@ -122,9 +119,11 @@ public:
 	}
 #endif
 	static constexpr
+	/// delay in ticks
 	rep count( const rep _delay ) { return _delay; }
 
 	static constexpr
+	/// time point in ticks
 	rep until( const rep _time )  { return _time; }
 };
 
@@ -132,5 +131,7 @@ public:
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__STATEOS_CLK_H

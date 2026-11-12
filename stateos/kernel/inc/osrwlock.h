@@ -35,27 +35,29 @@
 #include "oskernel.h"
 #include "osclock.h"
 
+/**
+ * @defgroup rwlock Read/write lock
+ * @brief    read/write locks
+ * @{
+ */
+
 /* -------------------------------------------------------------------------- */
 
 #define RDR_LIMIT    ( 0U-1 )
 
-/******************************************************************************
- *
- * Name              : read/write lock (one write, many read)
- *
- * Note              : waiting writers have priority over new readers
- *
- ******************************************************************************/
+/**
+ * @brief   read/write lock (one write, many read)
+ */
 
 typedef struct __rwl rwl_t;
 
 struct __rwl
 {
-	obj_t    obj;   // object header
+	obj_t    obj;   ///< object header
 
-	tsk_t  * queue; // readers queue
-	bool     write; // writer is active
-	unsigned count; // number of active readers
+	tsk_t  * queue; ///< readers queue
+	bool     write; ///< writer is active
+	unsigned count; ///< number of active readers
 };
 
 typedef struct __rwl rwl_id [];
@@ -76,61 +78,44 @@ typedef struct __rwl rwl_id [];
 
 #define               _RWL_INIT() { _OBJ_INIT(), NULL, false, 0 }
 
-/******************************************************************************
+/**
+ * @brief   define and initialize a read/write lock object
  *
- * Name              : OS_RWL
- * Static alias      : static_RWL
- *
- * Description       : define and initialize a read/write lock object
- *
- * Parameters
- *   rwl             : name of a pointer to read/write lock object
- *
- ******************************************************************************/
+ * @param   rwl        name of a pointer to read/write lock object
+ */
 
 #define             OS_RWL( rwl ) \
                        rwl_t rwl[] = { _RWL_INIT() }
 
+/** static alias of OS_RWL() */
 #define         static_RWL( rwl ) \
                 static rwl_t rwl[] = { _RWL_INIT() }
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a read/write lock object
  *
- * Name              : RWL_INIT
+ * @return  read/write lock object
  *
- * Description       : create and initialize a read/write lock object
- *
- * Parameters        : none
- *
- * Return            : read/write lock object
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                RWL_INIT() \
                       _RWL_INIT()
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a read/write lock object
  *
- * Name              : RWL_CREATE
- * Alias             : RWL_NEW
+ * @return  read/write lock object as array (id)
  *
- * Description       : create and initialize a read/write lock object
- *
- * Parameters        : none
- *
- * Return            : read/write lock object as array (id)
- *
- * Note              : use only in 'C' code
- *
- ******************************************************************************/
+ * @note    use only in 'C' code
+ */
 
 #ifndef __cplusplus
 #define                RWL_CREATE() \
                      { RWL_INIT  () }
+/** alias of RWL_CREATE() */
 #define                RWL_NEW \
                        RWL_CREATE
 #endif
@@ -139,321 +124,232 @@ typedef struct __rwl rwl_id [];
 extern "C" {
 #endif
 
-/******************************************************************************
+/**
+ * @brief   initialize a read/write lock object
  *
- * Name              : rwl_init
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : initialize a read/write lock object
- *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void rwl_init( rwl_t *rwl );
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a new read/write lock object
  *
- * Name              : rwl_create
- * Alias             : rwl_new
+ * @return  pointer to read/write lock object
+ * @retval  NULL       object not created (not enough free memory)
  *
- * Description       : create and initialize a new read/write lock object
- *
- * Parameters        : none
- *
- * Return            : pointer to read/write lock object
- *   NULL            : object not created (not enough free memory)
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 rwl_t *rwl_create( void );
 
+/** alias of rwl_create() */
 __STATIC_INLINE
 rwl_t *rwl_new( void ) { return rwl_create(); }
 
-/******************************************************************************
+/**
+ * @brief   reset the read/write lock object and wake up all waiting tasks with 'E_STOPPED' event value
  *
- * Name              : rwl_reset
- * Alias             : rwl_kill
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : reset the read/write lock object and wake up all waiting tasks with 'E_STOPPED' event value
- *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void rwl_reset( rwl_t *rwl );
 
+/** alias of rwl_reset() */
 __STATIC_INLINE
 void rwl_kill( rwl_t *rwl ) { rwl_reset(rwl); }
 
-/******************************************************************************
+/**
+ * @brief   reset the read/write lock object, wake up all waiting tasks with 'E_DELETED' event value and free allocated resource
  *
- * Name              : rwl_destroy
- * Alias             : rwl_delete
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : reset the read/write lock object, wake up all waiting tasks with 'E_DELETED' event value and free allocated resource
- *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void rwl_destroy( rwl_t *rwl );
 
+/** alias of rwl_destroy() */
 __STATIC_INLINE
 void rwl_delete( rwl_t *rwl ) { rwl_destroy(rwl); }
 
-/******************************************************************************
+/**
+ * @brief   try to lock the reader,
+ *          don't wait if the reader can't be locked immediately
  *
- * Name              : rwl_takeRead
- * Alias             : rwl_tryLockRead
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : try to lock the reader,
- *                     don't wait if the reader can't be locked immediately
+ * @retval  E_SUCCESS  reader was successfully locked
+ * @retval  E_TIMEOUT  reader can't be locked immediately, try again
  *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return
- *   E_SUCCESS       : reader was successfully locked
- *   E_TIMEOUT       : reader can't be locked immediately, try again
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int rwl_takeRead( rwl_t *rwl );
 
+/** alias of rwl_takeRead() */
 __STATIC_INLINE
 int rwl_tryLockRead( rwl_t *rwl ) { return rwl_takeRead(rwl); }
 
-/******************************************************************************
+/**
+ * @brief   try to lock the reader,
+ *          wait for given duration of time if the reader can't be locked immediately
  *
- * Name              : rwl_waitReadFor
+ * @param   rwl        pointer to read/write lock object
+ * @param   delay      duration of time (maximum number of ticks to wait for lock the reader)
+ *                     - IMMEDIATE: don't wait if the reader can't be locked immediately
+ *                     - INFINITE:  wait indefinitely until the reader has been locked
  *
- * Description       : try to lock the reader,
- *                     wait for given duration of time if the reader can't be locked immediately
+ * @retval  E_SUCCESS  reader was successfully locked
+ * @retval  E_STOPPED  reader was reseted before the specified timeout expired
+ * @retval  E_DELETED  reader was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  reader was not locked before the specified timeout expired
  *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *   delay           : duration of time (maximum number of ticks to wait for lock the reader)
- *                     IMMEDIATE: don't wait if the reader can't be locked immediately
- *                     INFINITE:  wait indefinitely until the reader has been locked
- *
- * Return
- *   E_SUCCESS       : reader was successfully locked
- *   E_STOPPED       : reader was reseted before the specified timeout expired
- *   E_DELETED       : reader was deleted before the specified timeout expired
- *   E_TIMEOUT       : reader was not locked before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int rwl_waitReadFor( rwl_t *rwl, cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   try to lock the reader,
+ *          wait until given timepoint if the reader can't be locked immediately
  *
- * Name              : rwl_waitReadUntil
+ * @param   rwl        pointer to read/write lock object
+ * @param   time       timepoint value
  *
- * Description       : try to lock the reader,
- *                     wait until given timepoint if the reader can't be locked immediately
+ * @retval  E_SUCCESS  reader was successfully locked
+ * @retval  E_STOPPED  reader was reseted before the specified timeout expired
+ * @retval  E_DELETED  reader was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  reader was not locked before the specified timeout expired
  *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *   time            : timepoint value
- *
- * Return
- *   E_SUCCESS       : reader was successfully locked
- *   E_STOPPED       : reader was reseted before the specified timeout expired
- *   E_DELETED       : reader was deleted before the specified timeout expired
- *   E_TIMEOUT       : reader was not locked before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int rwl_waitReadUntil( rwl_t *rwl, cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   try to lock the reader,
+ *          wait indefinitely if the reader can't be locked immediately
  *
- * Name              : rwl_waitRead
- * Alias             : rwl_lockRead
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : try to lock the reader,
- *                     wait indefinitely if the reader can't be locked immediately
+ * @retval  E_SUCCESS  reader was successfully locked
+ * @retval  E_STOPPED  reader was reseted
+ * @retval  E_DELETED  reader was deleted
  *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return
- *   E_SUCCESS       : reader was successfully locked
- *   E_STOPPED       : reader was reseted
- *   E_DELETED       : reader was deleted
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 __STATIC_INLINE
 int rwl_waitRead( rwl_t *rwl ) { return rwl_waitReadFor(rwl, INFINITE); }
 
+/** alias of rwl_waitRead() */
 __STATIC_INLINE
 int rwl_lockRead( rwl_t *rwl ) { return rwl_waitRead(rwl); }
 
-/******************************************************************************
+/**
+ * @brief   unlock the reader
  *
- * Name              : rwl_giveRead
- * Alias             : rwl_unlockRead
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : unlock the reader
- *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void rwl_giveRead( rwl_t *rwl );
 
+/** alias of rwl_giveRead() */
 __STATIC_INLINE
 void rwl_unlockRead( rwl_t *rwl ) { rwl_giveRead(rwl); }
 
-/******************************************************************************
+/**
+ * @brief   try to lock the writer,
+ *          don't wait if the writer can't be locked immediately
  *
- * Name              : rwl_takeWrite
- * Alias             : rwl_tryLockWrite
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : try to lock the writer,
- *                     don't wait if the writer can't be locked immediately
+ * @retval  E_SUCCESS  writer was successfully locked
+ * @retval  E_TIMEOUT  writer can't be locked immediately, try again
  *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return
- *   E_SUCCESS       : writer was successfully locked
- *   E_TIMEOUT       : writer can't be locked immediately, try again
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int rwl_takeWrite( rwl_t *rwl );
 
+/** alias of rwl_takeWrite() */
 __STATIC_INLINE
 int rwl_tryLockWrite( rwl_t *rwl ) { return rwl_takeWrite(rwl); }
 
-/******************************************************************************
+/**
+ * @brief   try to lock the writer,
+ *          wait for given duration of time if the writer can't be locked immediately
  *
- * Name              : rwl_waitWriteFor
+ * @param   rwl        pointer to read/write lock object
+ * @param   delay      duration of time (maximum number of ticks to wait for lock the writer)
+ *                     - IMMEDIATE: don't wait if the writer can't be locked immediately
+ *                     - INFINITE:  wait indefinitely until the writer has been locked
  *
- * Description       : try to lock the writer,
- *                     wait for given duration of time if the writer can't be locked immediately
+ * @retval  E_SUCCESS  writer was successfully locked
+ * @retval  E_STOPPED  writer was reseted before the specified timeout expired
+ * @retval  E_DELETED  writer was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  writer was not locked before the specified timeout expired
  *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *   delay           : duration of time (maximum number of ticks to wait for lock the writer)
- *                     IMMEDIATE: don't wait if the writer can't be locked immediately
- *                     INFINITE:  wait indefinitely until the writer has been locked
- *
- * Return
- *   E_SUCCESS       : writer was successfully locked
- *   E_STOPPED       : writer was reseted before the specified timeout expired
- *   E_DELETED       : writer was deleted before the specified timeout expired
- *   E_TIMEOUT       : writer was not locked before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int rwl_waitWriteFor( rwl_t *rwl, cnt_t delay );
 
-/******************************************************************************
+/**
+ * @brief   try to lock the writer,
+ *          wait until given timepoint if the writer can't be locked immediately
  *
- * Name              : rwl_waitWriteUntil
+ * @param   rwl        pointer to read/write lock object
+ * @param   time       timepoint value
  *
- * Description       : try to lock the writer,
- *                     wait until given timepoint if the writer can't be locked immediately
+ * @retval  E_SUCCESS  writer was successfully locked
+ * @retval  E_STOPPED  writer was reseted before the specified timeout expired
+ * @retval  E_DELETED  writer was deleted before the specified timeout expired
+ * @retval  E_TIMEOUT  writer was not locked before the specified timeout expired
  *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *   time            : timepoint value
- *
- * Return
- *   E_SUCCESS       : writer was successfully locked
- *   E_STOPPED       : writer was reseted before the specified timeout expired
- *   E_DELETED       : writer was deleted before the specified timeout expired
- *   E_TIMEOUT       : writer was not locked before the specified timeout expired
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 int rwl_waitWriteUntil( rwl_t *rwl, cnt_t time );
 
-/******************************************************************************
+/**
+ * @brief   try to lock the writer,
+ *          wait indefinitely if the writer can't be locked immediately
  *
- * Name              : rwl_waitWrite
- * Alias             : rwl_lockWrite
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : try to lock the writer,
- *                     wait indefinitely if the writer can't be locked immediately
+ * @retval  E_SUCCESS  writer was successfully locked
+ * @retval  E_STOPPED  writer was reseted
+ * @retval  E_DELETED  writer was deleted
  *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return
- *   E_SUCCESS       : writer was successfully locked
- *   E_STOPPED       : writer was reseted
- *   E_DELETED       : writer was deleted
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 __STATIC_INLINE
 int rwl_waitWrite( rwl_t *rwl ) { return rwl_waitWriteFor(rwl, INFINITE); }
 
+/** alias of rwl_waitWrite() */
 __STATIC_INLINE
 int rwl_lockWrite( rwl_t *rwl ) { return rwl_waitWrite(rwl); }
 
-/******************************************************************************
+/**
+ * @brief   unlock the writer
  *
- * Name              : rwl_giveWrite
- * Alias             : rwl_unlockWrite
+ * @param   rwl        pointer to read/write lock object
  *
- * Description       : unlock the writer
- *
- * Parameters
- *   rwl             : pointer to read/write lock object
- *
- * Return            : none
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 void rwl_giveWrite( rwl_t *rwl );
 
+/** alias of rwl_giveWrite() */
 __STATIC_INLINE
 void rwl_unlockWrite( rwl_t *rwl ) { rwl_giveWrite(rwl); }
 
@@ -466,24 +362,19 @@ void rwl_unlockWrite( rwl_t *rwl ) { rwl_giveWrite(rwl); }
 #if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
 namespace stateos {
 
-/******************************************************************************
- *
- * Class             : RWLock
- *
- * Description       : create and initialize a read/write lock object
- *
- * Constructor parameters
- *                   : none
- *
- ******************************************************************************/
+/**
+ * @brief   create and initialize a read/write lock object
+ */
 
 struct RWLock : public __rwl
 {
+	/// constructor, see the constructor parameters of the class
 	constexpr
 	RWLock(): __rwl _RWL_INIT() {}
 
 	~RWLock() { assert(__rwl::write == false && __rwl::count == 0); }
 
+	/// move constructor
 	RWLock( RWLock&& _src ): __rwl(_src)
 	{
 		assert(_src.write == false && _src.count == 0 && _src.obj.queue == nullptr && _src.queue == nullptr);
@@ -493,49 +384,43 @@ struct RWLock : public __rwl
 	RWLock& operator=( RWLock&& ) = delete;
 	RWLock& operator=( const RWLock& ) = delete;
 
-	void reset         ()                  {        rwl_reset         (this); }
-	void kill          ()                  {        rwl_kill          (this); }
-	void destroy       ()                  {        rwl_destroy       (this); }
-	int  takeRead      ()                  { return rwl_takeRead      (this); }
-	int  tryLockRead   ()                  { return rwl_tryLockRead   (this); }
+	void reset         ()                  {        rwl_reset         (this); }                       ///< rwl_reset()
+	void kill          ()                  {        rwl_kill          (this); }                       ///< rwl_kill()
+	void destroy       ()                  {        rwl_destroy       (this); }                       ///< rwl_destroy()
+	int  takeRead      ()                  { return rwl_takeRead      (this); }                       ///< rwl_takeRead()
+	int  tryLockRead   ()                  { return rwl_tryLockRead   (this); }                       ///< rwl_tryLockRead()
 	template<typename T>
-	int  waitReadFor   ( const T& _delay ) { return rwl_waitReadFor   (this, Clock::count(_delay)); }
+	int  waitReadFor   ( const T& _delay ) { return rwl_waitReadFor   (this, Clock::count(_delay)); } ///< rwl_waitReadFor()
 	template<typename T>
-	int  waitReadUntil ( const T& _time )  { return rwl_waitReadUntil (this, Clock::until(_time)); }
-	int  waitRead      ()                  { return rwl_waitRead      (this); }
-	int  lockRead      ()                  { return rwl_lockRead      (this); }
-	void giveRead      ()                  {        rwl_giveRead      (this); }
-	void unlockRead    ()                  {        rwl_unlockRead    (this); }
-	int  takeWrite     ()                  { return rwl_takeWrite     (this); }
-	int  tryLockWrite  ()                  { return rwl_tryLockWrite  (this); }
+	int  waitReadUntil ( const T& _time )  { return rwl_waitReadUntil (this, Clock::until(_time)); }  ///< rwl_waitReadUntil()
+	int  waitRead      ()                  { return rwl_waitRead      (this); }                       ///< rwl_waitRead()
+	int  lockRead      ()                  { return rwl_lockRead      (this); }                       ///< rwl_lockRead()
+	void giveRead      ()                  {        rwl_giveRead      (this); }                       ///< rwl_giveRead()
+	void unlockRead    ()                  {        rwl_unlockRead    (this); }                       ///< rwl_unlockRead()
+	int  takeWrite     ()                  { return rwl_takeWrite     (this); }                       ///< rwl_takeWrite()
+	int  tryLockWrite  ()                  { return rwl_tryLockWrite  (this); }                       ///< rwl_tryLockWrite()
 	template<typename T>
-	int  waitWriteFor  ( const T& _delay ) { return rwl_waitWriteFor  (this, Clock::count(_delay)); }
+	int  waitWriteFor  ( const T& _delay ) { return rwl_waitWriteFor  (this, Clock::count(_delay)); } ///< rwl_waitWriteFor()
 	template<typename T>
-	int  waitWriteUntil( const T& _time )  { return rwl_waitWriteUntil(this, Clock::until(_time)); }
-	int  waitWrite     ()                  { return rwl_waitWrite     (this); }
-	int  lockWrite     ()                  { return rwl_lockWrite     (this); }
-	void giveWrite     ()                  {        rwl_giveWrite     (this); }
-	void unlockWrite   ()                  {        rwl_unlockWrite   (this); }
+	int  waitWriteUntil( const T& _time )  { return rwl_waitWriteUntil(this, Clock::until(_time)); }  ///< rwl_waitWriteUntil()
+	int  waitWrite     ()                  { return rwl_waitWrite     (this); }                       ///< rwl_waitWrite()
+	int  lockWrite     ()                  { return rwl_lockWrite     (this); }                       ///< rwl_lockWrite()
+	void giveWrite     ()                  {        rwl_giveWrite     (this); }                       ///< rwl_giveWrite()
+	void unlockWrite   ()                  {        rwl_unlockWrite   (this); }                       ///< rwl_unlockWrite()
 
 #if __cplusplus >= 201402L
-	using Ptr = std::unique_ptr<RWLock>;
+	using Ptr = std::unique_ptr<RWLock>; ///< result type of Create()
 #else
-	using Ptr = RWLock *;
+	using Ptr = RWLock *; ///< result type of Create()
 #endif
 
-/******************************************************************************
+/**
+ * @brief   create dynamic object with manageable resources
  *
- * Name              : RWLock::Create
+ * @return  std::unique_pointer / pointer to RWLock object
  *
- * Description       : create dynamic object with manageable resources
- *
- * Parameters        : none
- *
- * Return            : std::unique_pointer / pointer to RWLock object
- *
- * Note              : use only in thread mode
- *
- ******************************************************************************/
+ * @note    use only in thread mode
+ */
 
 	static
 	Ptr Create()
@@ -548,19 +433,16 @@ struct RWLock : public __rwl
 
 };
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a read guard object
  *
- * Class             : ReadLock
- *
- * Description       : create and initialize a read guard object
- *
- * Constructor parameters
- *   rwl             : RWLock object
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - rwl: RWLock object
+ */
 
 struct ReadLock
 {
+	/// constructor, see the constructor parameters of the class
 	explicit
 	ReadLock( RWLock& _rwl ): lck_(&_rwl)
 	{
@@ -576,16 +458,17 @@ struct ReadLock
 			lck_->unlockRead();
 	}
 
+	/// move constructor
 	ReadLock( ReadLock&& _src ): lck_(_src.lck_)
 	{
 		_src.lck_ = nullptr;
 	}
 
-	// false: the lock was reset or deleted while waiting (or the guard was moved)
+	/// true: the lock is held by the guard; false: the lock was reset or deleted while waiting (or the guard was moved)
 	bool ownsLock() const { return lck_ != nullptr; }
 
 	explicit
-	operator bool() const { return ownsLock(); }
+	operator bool() const { return ownsLock(); } ///< ownsLock()
 
 	ReadLock( const ReadLock& ) = delete;
 	ReadLock& operator=( ReadLock&& ) = delete;
@@ -595,19 +478,16 @@ struct ReadLock
 	RWLock *lck_;
 };
 
-/******************************************************************************
+/**
+ * @brief   create and initialize a write guard object
  *
- * Class             : WriteLock
- *
- * Description       : create and initialize a write guard object
- *
- * Constructor parameters
- *   rwl             : RWLock object
- *
- ******************************************************************************/
+ * @par     Constructor parameters
+ *          - rwl: RWLock object
+ */
 
 struct WriteLock
 {
+	/// constructor, see the constructor parameters of the class
 	explicit
 	WriteLock( RWLock& _rwl ): lck_(&_rwl)
 	{
@@ -623,16 +503,17 @@ struct WriteLock
 			lck_->unlockWrite();
 	}
 
+	/// move constructor
 	WriteLock( WriteLock&& _src ): lck_(_src.lck_)
 	{
 		_src.lck_ = nullptr;
 	}
 
-	// false: the lock was reset or deleted while waiting (or the guard was moved)
+	/// true: the lock is held by the guard; false: the lock was reset or deleted while waiting (or the guard was moved)
 	bool ownsLock() const { return lck_ != nullptr; }
 
 	explicit
-	operator bool() const { return ownsLock(); }
+	operator bool() const { return ownsLock(); } ///< ownsLock()
 
 	WriteLock( const WriteLock& ) = delete;
 	WriteLock& operator=( WriteLock&& ) = delete;
@@ -646,5 +527,7 @@ struct WriteLock
 #endif//__cplusplus
 
 /* -------------------------------------------------------------------------- */
+
+/** @} */
 
 #endif//__STATEOS_RWL_H

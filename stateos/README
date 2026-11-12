@@ -123,6 +123,7 @@ Features:
 - tsk_setup is a public function: it creates and starts a task with an argument of the task function
 - removed tmr_setup internal function (not used)
 - one_enter and one_leave internal functions renamed to core_one_enter and core_one_leave
+- API documentation in the doxygen format: doxygen run in this directory (Doxyfile) generates the HTML documentation in doc/html, internal items (_*, *_, core_*, priv_*) are not documented
 ---------
 7.1
 - updated os version
