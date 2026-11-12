@@ -82,11 +82,31 @@ struct __ctx
 	void   * sp;
 #if __FPU_USED
 	float    s[16]; // s16-s31
-#define _CTX_INIT() { 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, { 0 } }
+	unsigned fpscr; // not kept by setjmp / longjmp
+#define _CTX_INIT() { 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, { 0 }, 0 }
 #else
 #define _CTX_INIT() { 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL }
 #endif
 };
+
+/* -------------------------------------------------------------------------- */
+// state of the fpu not kept by setjmp / longjmp: saved and loaded at the task switch
+
+#if __FPU_USED
+
+__STATIC_INLINE
+void port_fpu_save( ctx_t *ctx )
+{
+	ctx->fpscr = __get_FPSCR();
+}
+
+__STATIC_INLINE
+void port_fpu_load( ctx_t *ctx )
+{
+	__set_FPSCR(ctx->fpscr);
+}
+
+#endif
 
 /* -------------------------------------------------------------------------- */
 // init task context
@@ -96,6 +116,9 @@ void port_ctx_init( ctx_t *ctx, stk_t *sp, fun_t *pc )
 {
 	ctx->sp = sp;
 	ctx->pc = pc;
+#if __FPU_USED
+	port_fpu_save(ctx); // a new task inherits FPSCR from the task that starts it
+#endif
 }
 
 /* -------------------------------------------------------------------------- */

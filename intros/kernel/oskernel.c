@@ -375,6 +375,9 @@ void core_ctx_switch( void )
 
 	sys_lock();
 	{
+#if __FPU_USED == 1
+		port_fpu_save(&System.cur->ctx.reg); // setjmp / longjmp do not keep the whole state of the fpu (FPSCR)
+#endif
 		if (setjmp(System.cur->ctx.buf) == 0)
 			core_tsk_switch();
 	}
@@ -511,6 +514,10 @@ void core_tsk_switch( void )
 #endif
 
 	assert_ctx_integrity(System.cur);
+
+#if __FPU_USED == 1
+	port_fpu_load(&cur->ctx.reg);
+#endif
 
 	longjmp(cur->ctx.buf, 1);
 }
