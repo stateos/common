@@ -45,7 +45,7 @@ extern "C" {
 /*---------------------------------------------------------------------------*/
 
 /// Kernel Information
-#define osVersionAPI         20010002   ///< API version (2.1.2)
+#define osVersionAPI         20030000   ///< API version (2.3.0)
 #define osVersionKernel  ((((__STATEOS_MAJOR)&0xFUL)<<28)|(((__STATEOS_MINOR)&0xFFFUL)<<16)|((__STATEOS_BUILD)&0xFFFFUL))
 #define osKernelId           __STATEOS__  ///< Kernel identification string
 

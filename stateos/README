@@ -127,6 +127,7 @@ Features:
 - fixed crash in the priority recalculation: a task woken up from waiting for a mutex kept the pointer to the mutex while its signal handler was blocked; reset of a mutex in a deadlock cycle
 - stdc++: destructors of the thread_local objects are called at the exit of the thread (own __cxa_thread_atexit; they were queued for the exit of the program), the destructors can use other thread_local variables
 - stdc++: fixed result of __gthread_equal
+- cmsis-rtos2 api updated to version 2.3.0 (the new functions return osError: process isolation, thread watchdog and processor affinity are not supported)
 ---------
 7.1
 - updated os version

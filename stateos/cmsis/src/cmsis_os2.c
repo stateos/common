@@ -177,6 +177,29 @@ uint32_t osKernelGetSysTimerFreq (void)
 #endif
 }
 
+// process isolation (functional safety) is not supported
+
+osStatus_t osKernelProtect (uint32_t safety_class)
+{
+	(void) safety_class;
+
+	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
+		return osErrorISR;
+
+	return osError;
+}
+
+osStatus_t osKernelDestroyClass (uint32_t safety_class, uint32_t mode)
+{
+	(void) safety_class;
+	(void) mode;
+
+	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
+		return osErrorISR;
+
+	return osError;
+}
+
 /* -------------------------------------------------------------------------- */
 
 osThreadId_t osThreadNew (osThreadFunc_t func, void *argument, const osThreadAttr_t *attr)
@@ -254,7 +277,7 @@ const char *osThreadGetName (osThreadId_t thread_id)
 {
 	osThread_t *thread = thread_id;
 
-	if (IS_IRQ_MODE() || IS_IRQ_MASKED() || (thread_id == NULL))
+	if (thread_id == NULL)
 		return NULL;
 
 	return thread->name;
@@ -488,6 +511,90 @@ uint32_t osThreadEnumerate (osThreadId_t *thread_array, uint32_t array_items)
 	return count;
 }
 
+// process isolation (functional safety), thread watchdogs and processor affinity are not supported
+
+uint32_t osThreadGetClass (osThreadId_t thread_id)
+{
+	(void) thread_id;
+
+	return osErrorId;
+}
+
+uint32_t osThreadGetZone (osThreadId_t thread_id)
+{
+	(void) thread_id;
+
+	return osErrorId;
+}
+
+osStatus_t osThreadFeedWatchdog (uint32_t ticks)
+{
+	(void) ticks;
+
+	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
+		return osErrorISR;
+
+	return osError;
+}
+
+osStatus_t osThreadProtectPrivileged (void)
+{
+	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
+		return osErrorISR;
+
+	return osError;
+}
+
+osStatus_t osThreadSuspendClass (uint32_t safety_class, uint32_t mode)
+{
+	(void) safety_class;
+	(void) mode;
+
+	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
+		return osErrorISR;
+
+	return osError;
+}
+
+osStatus_t osThreadResumeClass (uint32_t safety_class, uint32_t mode)
+{
+	(void) safety_class;
+	(void) mode;
+
+	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
+		return osErrorISR;
+
+	return osError;
+}
+
+osStatus_t osThreadTerminateZone (uint32_t zone)
+{
+	(void) zone;
+
+	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
+		return osErrorISR;
+
+	return osError;
+}
+
+osStatus_t osThreadSetAffinityMask (osThreadId_t thread_id, uint32_t affinity_mask)
+{
+	(void) thread_id;
+	(void) affinity_mask;
+
+	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
+		return osErrorISR;
+
+	return osError;
+}
+
+uint32_t osThreadGetAffinityMask (osThreadId_t thread_id)
+{
+	(void) thread_id;
+
+	return 0U;
+}
+
 /* -------------------------------------------------------------------------- */
 
 uint32_t osThreadFlagsSet (osThreadId_t thread_id, uint32_t flags)
@@ -607,7 +714,7 @@ const char *osTimerGetName (osTimerId_t timer_id)
 {
 	osTimer_t *timer = timer_id;
 
-	if (IS_IRQ_MODE() || IS_IRQ_MASKED() || (timer_id == NULL))
+	if (timer_id == NULL)
 		return NULL;
 
 	return timer->name;
@@ -769,7 +876,7 @@ const char *osEventFlagsGetName (osEventFlagsId_t ef_id)
 {
 	osEventFlags_t *ef = ef_id;
 
-	if (IS_IRQ_MODE() || IS_IRQ_MASKED() || (ef_id == NULL))
+	if (ef_id == NULL)
 		return NULL;
 
 	return ef->name;
@@ -833,7 +940,7 @@ const char *osMutexGetName (osMutexId_t mutex_id)
 {
 	osMutex_t *mutex = mutex_id;
 
-	if (IS_IRQ_MODE() || IS_IRQ_MASKED() || (mutex_id == NULL))
+	if (mutex_id == NULL)
 		return NULL;
 
 	return mutex->name;
@@ -939,7 +1046,7 @@ const char *osSemaphoreGetName (osSemaphoreId_t semaphore_id)
 {
 	osSemaphore_t *semaphore = semaphore_id;
 
-	if (IS_IRQ_MODE() || IS_IRQ_MASKED() || (semaphore_id == NULL))
+	if (semaphore_id == NULL)
 		return NULL;
 
 	return semaphore->name;
@@ -1068,7 +1175,7 @@ const char *osMemoryPoolGetName (osMemoryPoolId_t mp_id)
 {
 	osMemoryPool_t *mp = mp_id;
 
-	if (IS_IRQ_MODE() || IS_IRQ_MASKED() || (mp_id == NULL))
+	if (mp_id == NULL)
 		return NULL;
 
 	return mp->name;
@@ -1241,7 +1348,7 @@ const char *osMessageQueueGetName (osMessageQueueId_t mq_id)
 {
 	osMessageQueue_t *mq = mq_id;
 
-	if (IS_IRQ_MODE() || IS_IRQ_MASKED() || (mq_id == NULL))
+	if (mq_id == NULL)
 		return NULL;
 
 	return mq->name;
@@ -1354,3 +1461,13 @@ osStatus_t osMessageQueueDelete (osMessageQueueId_t mq_id)
 
 	return osOK;
 }
+
+/* -------------------------------------------------------------------------- */
+
+// exception faults are not handled by the system
+
+void osFaultResume (void)
+{
+}
+
+/* -------------------------------------------------------------------------- */
