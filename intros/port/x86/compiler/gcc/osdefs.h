@@ -54,6 +54,9 @@
 #define __COMPILER_BARRIER() \
                             __asm__ volatile("":::"memory")
 #endif
+#ifndef __ALIGNED
+#define __ALIGNED(x)        __attribute__((aligned(x)))
+#endif
 #ifndef __PACKED
 #define __PACKED            __attribute__((packed, aligned(1)))
 #endif
