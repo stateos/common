@@ -463,6 +463,7 @@ void core_tsk_unlink( tsk_t *tsk, int event )
 	mtx_t *mtx = tsk->guard ? tsk->mtx.tree : NULL;
 
 	priv_tsk_unlink(tsk, event);
+	tsk->mtx.tree = NULL;                             // the task is not waiting for the mutex anymore
 
 	if (mtx && mtx->owner)                            // the task has stopped waiting for the mutex
 		core_tsk_prio(mtx->owner, mtx->owner->basic); // the mutex owner can lose the inherited priority
@@ -599,6 +600,7 @@ tsk_t *priv_one_wakeup( tsk_t **que, int event )
 	{
 		tsk->guard = 0;
 		tsk->event = event;
+		tsk->mtx.tree = NULL;       // the task is not waiting for the mutex anymore
 		*que = tsk->obj.queue;
 	}
 
@@ -682,7 +684,7 @@ void core_tsk_prio( tsk_t *tsk, unsigned prio )
 		if (tsk->guard != 0)         // blocked task
 		{
 			core_tsk_transfer(tsk->guard, tsk);
-			if (tsk->mtx.tree)
+			if (tsk->mtx.tree && tsk->mtx.tree->owner) // no owner: the mutex is being released or reset
 				core_tsk_prio(tsk->mtx.tree->owner, tsk->mtx.tree->owner->basic);
 		}
 		else
