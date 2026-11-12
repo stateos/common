@@ -17,4 +17,8 @@ The API is available in C (functions, macros and types described in the topics b
 - the functions return the error codes described in @ref basic (E_SUCCESS, E_TIMEOUT, ...)
 - Async aliases are intended for communication with unmasked interrupt handlers
 
+## Porting
+
+The port layer and how to write a new port: @ref porting
+
 Sources, examples and templates: https://github.com/stateos

@@ -5,6 +5,7 @@
 PROJECT_NAME           = IntrOS
 OUTPUT_DIRECTORY       = doc
 INPUT                  = mainpage.md \
+                         PORTING.md \
                          kernel/osbase.h \
                          kernel/ossys.h \
                          kernel/inc/osclock.h \
