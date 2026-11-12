@@ -9,7 +9,7 @@ Inspiration:
 StateOS was inspired by the concept of a state machine. Procedure executed by the task (task proc) doesn't have to be noreturn-type. It will be executed into an infinite loop. There's a dedicated function for immediate change the task proc (task function).
 ---------
 Documentation:
-All documentation is contained within source files, in particular header files.
+The API is documented in the header files, the documentation generated with doxygen: https://stateos.github.io/StateOS/
 ---------
 Gettin started:
 Building an application for a specific compiler is realised using the appropriate makefile script.
@@ -47,7 +47,7 @@ Features:
 - cmsis-rtos2 api
 - c++ wrapper
 - support for std::thread
-- all documentation is contained within source files, in particular header files
+- API documentation generated with doxygen from the header files: https://stateos.github.io/StateOS/
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 7.2
@@ -123,7 +123,7 @@ Features:
 - tsk_setup is a public function: it creates and starts a task with an argument of the task function
 - removed tmr_setup internal function (not used)
 - one_enter and one_leave internal functions renamed to core_one_enter and core_one_leave
-- API documentation in the doxygen format: doxygen run in this directory (Doxyfile) generates the HTML documentation in doc/html, internal items (_*, *_, core_*, priv_*) are not documented
+- API documentation in the doxygen format: doxygen run in this directory (Doxyfile) generates the HTML documentation in doc/html, internal items (_*, *_, core_*, priv_*) are not documented, published on https://stateos.github.io/StateOS/
 ---------
 7.1
 - updated os version
