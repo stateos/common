@@ -85,27 +85,39 @@ int __gthread_setspecific(__gthread_key_t key, const void *ptr)
   return 0;
 }
 
+// defined in emutls.cc
+extern void __emutls_thread_atexit();
+
 static void __gthread_atexit()
 {
-  std::lock_guard<std::mutex> lock(key_mutex);
   auto task = __gthread_self();
-#if __cplusplus < 201703L
-  for (auto const& item : key_map)
+
+  __emutls_thread_atexit(); // destructors of the thread_local objects, before their storage (values of the keys) is released
+
+  for (;;) // a destructor can set a value of another key
   {
-    auto const& key = item.first;
-    auto const& dtor = item.second;
-#else
-  for (auto const& [key, dtor] : key_map)
-  {
-#endif
-    auto const& it = key->find(task);
-    if (it != key->end())
+    void (*dtor)(void *) = nullptr;
+    void *ptr = nullptr;
+    bool found = false;
     {
-      void *ptr = it->second;
-      if (dtor != nullptr && ptr != nullptr)
-        dtor(ptr);
-      key->erase(it);
+      std::lock_guard<std::mutex> lock(key_mutex);
+      for (auto const& item : key_map)
+      {
+        auto it = item.first->find(task);
+        if (it != item.first->end())
+        {
+          dtor = item.second;
+          ptr = it->second;
+          item.first->erase(it);
+          found = true;
+          break;
+        }
+      }
     }
+    if (!found)
+      break;
+    if (dtor != nullptr && ptr != nullptr)
+      dtor(ptr); // without the mutex: a destructor can use the thread_local variables
   }
 }
 

@@ -30,6 +30,9 @@
  ******************************************************************************/
 
 #include <mutex>
+#include <unordered_map>
+#include <new>
+#include <cstdlib>
 #include <system_error>
 #include <malloc.h>
 #include "bits/gthr.h"
@@ -105,6 +108,64 @@ void __emutls_register_common(void *ptr, size_t size, size_t align, void *init)
 	}
 	if (obj->align < align)
 		obj->align = align;
+}
+
+// destructors of the thread_local objects: a list per thread
+// (__cxa_thread_atexit of a toolchain with the single thread model keeps one list and runs it at exit)
+
+struct __emutls_dtor
+{
+	void (*dtor)(void *);
+	void  *obj;
+	__emutls_dtor *next;
+};
+
+static std::unordered_map<__gthread_t, __emutls_dtor *> emutls_dtors{};
+
+// call the destructors of the thread_local objects of the current thread, in the reverse order of the construction
+// called at the exit of the thread (thread.cc) and of the program
+void __emutls_thread_atexit()
+{
+	for (;;) // a destructor can construct another thread_local object
+	{
+		__emutls_dtor *elt;
+		{
+			std::lock_guard<std::mutex> lock(emutls_mutex);
+			auto it = emutls_dtors.find(__gthread_self());
+			if (it == emutls_dtors.end())
+				return;
+			elt = it->second;
+			emutls_dtors.erase(it);
+		}
+		while (elt != nullptr) // without the mutex: a destructor can use the thread_local variables
+		{
+			__emutls_dtor *next = elt->next;
+			elt->dtor(elt->obj);
+			delete elt;
+			elt = next;
+		}
+	}
+}
+
+extern "C"
+int __cxa_thread_atexit(void (*dtor)(void *), void *obj, void * /*dso_handle*/)
+{
+	static bool queued = false;
+	__emutls_dtor *elt = new (std::nothrow) __emutls_dtor{ dtor, obj, nullptr };
+	if (elt == nullptr)
+		return -1;
+	bool first;
+	{
+		std::lock_guard<std::mutex> lock(emutls_mutex);
+		__emutls_dtor *&head = emutls_dtors[__gthread_self()];
+		elt->next = head;
+		head = elt;
+		first = !queued;
+		queued = true;
+	}
+	if (first)
+		std::atexit(__emutls_thread_atexit); // the thread that calls exit (it does not return from its function)
+	return 0;
 }
 
 #if __GNUC__ >= 15

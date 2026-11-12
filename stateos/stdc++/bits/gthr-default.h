@@ -253,7 +253,7 @@ int __gthread_detach(__gthread_t thread)
 static inline
 int __gthread_equal(const __gthread_t t1, const __gthread_t t2)
 {
-	return t1 == t2 ? 0 : 1;
+	return t1 == t2 ? 1 : 0;
 }
 
 static inline
