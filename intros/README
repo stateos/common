@@ -34,7 +34,7 @@ Features:
 - timers (one-shot, periodic)
 - hierarchical state machine
 - c++ wrapper
-- all documentation is contained within the source files
+- API documentation generated with doxygen from the header files: https://stateos.github.io/IntrOS/
 - examples and templates are in separate repositories (https://github.com/stateos)
 ---------
 5.2
@@ -92,7 +92,7 @@ Features:
 - tick-less mode works with the hardware timer wider than the system timer (HW_TIMER_SIZE > OS_TIMER_SIZE, e.g. OS_TIMER_SIZE 16 with a 32-bit timer)
 - fixed compiler warnings on 64-bit targets
 - fixed name of oslibc.c in cmake config
-- API documentation in the doxygen format: doxygen run in this directory (Doxyfile) generates the HTML documentation in doc/html, internal items (_*, *_, core_*, priv_*) are not documented
+- API documentation in the doxygen format: doxygen run in this directory (Doxyfile) generates the HTML documentation in doc/html, internal items (_*, *_, core_*, priv_*) are not documented, published on https://stateos.github.io/IntrOS/
 ---------
 5.1
 - updated os version
