@@ -155,7 +155,7 @@ void cnd_kill( cnd_t *cnd ) { cnd_reset(cnd); }
  *                     - INFINITE:  wait indefinitely on the condition variable object
  *
  * @retval  E_SUCCESS  condition variable object was successfully signalled; owned mutex was locked again
- * @retval  E_FAILURE  mutex object can't be unlocked
+ * @retval  E_FAILURE  mutex object can't be unlocked or the task was resumed (tsk_resume)
  * @retval  E_STOPPED  condition variable or mutex object was reseted
  * @retval  E_TIMEOUT  condition variable object was not signalled before the specified timeout expired; owned mutex was locked again
  */
@@ -171,7 +171,7 @@ int cnd_waitFor( cnd_t *cnd, mtx_t *mtx, cnt_t delay );
  * @param   time       timepoint value
  *
  * @retval  E_SUCCESS  condition variable object was successfully signalled; owned mutex was locked again
- * @retval  E_FAILURE  mutex object can't be unlocked
+ * @retval  E_FAILURE  mutex object can't be unlocked or the task was resumed (tsk_resume)
  * @retval  E_STOPPED  condition variable or mutex object was reseted
  * @retval  E_TIMEOUT  condition variable object was not signalled before the specified timeout expired; owned mutex was locked again
  */
@@ -186,7 +186,7 @@ int cnd_waitUntil( cnd_t *cnd, mtx_t *mtx, cnt_t time );
  * @param   mtx        currently owned mutex
  *
  * @retval  E_SUCCESS  condition variable object was successfully signalled; owned mutex was locked again
- * @retval  E_FAILURE  mutex object can't be unlocked
+ * @retval  E_FAILURE  mutex object can't be unlocked or the task was resumed (tsk_resume)
  * @retval  E_STOPPED  condition variable or mutex object was reseted
  *
  * @note    use only in thread mode
