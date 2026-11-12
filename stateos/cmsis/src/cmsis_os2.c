@@ -56,12 +56,49 @@
 
 /* -------------------------------------------------------------------------- */
 
+static osKernelState_t KernelState = osKernelInactive;
+
+// timeout in kernel ticks: osWaitForever is INFINITE, a value out of the range of cnt_t is the longest finite delay
+static cnt_t priv_timeout (uint32_t timeout)
+{
+	if (timeout == osWaitForever)
+		return INFINITE;
+#if OS_TIMER_SIZE < 32
+	if (timeout >= INFINITE)
+		return INFINITE - 1U;
+#endif
+	return (cnt_t) timeout;
+}
+
+// lock (only the current thread is executed) or unlock the scheduler, return the previous state
+static int32_t priv_kernel_lock (bool lock)
+{
+	int32_t prev;
+
+	sys_lock();
+	{
+		prev = (System.tsk != NULL) ? 1 : 0;
+	}
+	sys_unlock();
+
+	if (lock) sys_suspend();
+	else      sys_resume();
+
+	return prev;
+}
+
+/* -------------------------------------------------------------------------- */
+
 osStatus_t osKernelInitialize (void)
 {
 	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
 		return osErrorISR;
 
-	tsk_prio(osPriorityISR);
+	if (KernelState != osKernelInactive)
+		return osError;
+
+	tsk_prio(osPriorityISR); // the threads created before osKernelStart do not preempt the main thread
+	KernelState = osKernelReady;
 	return osOK;
 }
 
@@ -81,7 +118,10 @@ osStatus_t osKernelGetInfo (osVersion_t *version, char *id_buf, uint32_t id_size
 
 osKernelState_t osKernelGetState (void)
 {
-	return osKernelRunning;
+	if (KernelState == osKernelRunning && System.tsk != NULL)
+		return osKernelLocked;
+
+	return KernelState;
 }
 
 osStatus_t osKernelStart (void)
@@ -89,7 +129,11 @@ osStatus_t osKernelStart (void)
 	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
 		return osErrorISR;
 
-	tsk_prio(osPriorityNormal);
+	if (KernelState != osKernelReady)
+		return osError;
+
+	KernelState = osKernelRunning;
+	tsk_prio(osPriorityNormal); // the main thread continues as a thread
 	return osOK;
 }
 
@@ -98,7 +142,7 @@ int32_t osKernelLock (void)
 	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
 		return (int32_t)osErrorISR;
 
-	return (int32_t) core_set_lock();
+	return priv_kernel_lock(true);
 }
 
 int32_t osKernelUnlock (void)
@@ -106,7 +150,7 @@ int32_t osKernelUnlock (void)
 	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
 		return (int32_t)osErrorISR;
 
-	return (int32_t) core_clr_lock();
+	return priv_kernel_lock(false);
 }
 
 int32_t osKernelRestoreLock (int32_t lock)
@@ -114,7 +158,10 @@ int32_t osKernelRestoreLock (int32_t lock)
 	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
 		return (int32_t)osErrorISR;
 
-	core_put_lock((lck_t) lock);
+	if (lock != 0 && lock != 1)
+		return (int32_t)osError;
+
+	priv_kernel_lock(lock != 0);
 
 	return lock;
 }
@@ -205,7 +252,8 @@ osStatus_t osKernelDestroyClass (uint32_t safety_class, uint32_t mode)
 osThreadId_t osThreadNew (osThreadFunc_t func, void *argument, const osThreadAttr_t *attr)
 {
 	osThread_t *thread     = NULL;
-	uint32_t    flags      = osThreadJoinable;
+	uint32_t    flags      = osThreadDetached;
+	osPriority_t prio      = osPriorityNormal;
 	void       *stack_mem  = NULL;
 	uint32_t    stack_size = 0;
 
@@ -214,8 +262,13 @@ osThreadId_t osThreadNew (osThreadFunc_t func, void *argument, const osThreadAtt
 
 	if (attr != NULL)
 	{
-		if ((attr->priority < osPriorityIdle) || (attr->priority > osPriorityISR))
-			return NULL;
+		if (attr->priority != osPriorityNone) // osPriorityNone: default priority
+		{
+			if ((attr->priority < osPriorityIdle) || (attr->priority > osPriorityISR))
+				return NULL;
+
+			prio = attr->priority;
+		}
 
 		flags = attr->attr_bits;
 
@@ -259,7 +312,7 @@ osThreadId_t osThreadNew (osThreadFunc_t func, void *argument, const osThreadAtt
 
 	sys_lock();
 	{
-		tsk_init(&thread->tsk, attr == NULL ? osPriorityNormal : (unsigned)attr->priority, (fun_t *)func, stack_mem, stack_size);
+		tsk_init(&thread->tsk, (unsigned)prio, (fun_t *)func, stack_mem, stack_size);
 		if (attr == NULL || attr->cb_mem == NULL || attr->cb_size == 0U ) thread->tsk.obj.res = thread;
 		else if (attr->stack_mem == NULL || attr->stack_size == 0U) thread->tsk.obj.res = stack_mem;
 		thread->tsk.arg = argument;
@@ -640,7 +693,7 @@ uint32_t osThreadFlagsWait (uint32_t flags, uint32_t options, uint32_t timeout)
 	if ((flags & osFlagsError) != 0U)
 		return osFlagsErrorParameter;
 
-	switch (flg_waitFor(&thread->flg, flags, options, timeout))
+	switch (flg_waitFor(&thread->flg, flags, options, priv_timeout(timeout)))
 	{
 		case E_SUCCESS: return flags;
 		case E_TIMEOUT: return osFlagsErrorTimeout;
@@ -655,17 +708,29 @@ osStatus_t osDelay (uint32_t ticks)
 	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
 		return osErrorISR;
 
-	tsk_sleepFor(ticks);
+	tsk_sleepFor(priv_timeout(ticks));
 
 	return osOK;
 }
 
 osStatus_t osDelayUntil (uint32_t ticks)
 {
+	cnt_t    now;
+	uint32_t delay;
+
 	if (IS_IRQ_MODE() || IS_IRQ_MASKED())
 		return osErrorISR;
 
-	tsk_sleepUntil(ticks);
+	now   = sys_time();
+	delay = ticks - (uint32_t)now; // the tick count of the API has 32 bits
+	if (delay == 0U || delay > 0x7FFFFFFFU)
+		return osErrorParameter;    // the time point is in the past
+
+#if OS_TIMER_SIZE < 32
+	tsk_sleepFor(priv_timeout(delay));
+#else
+	tsk_sleepUntil(now + delay);
+#endif
 
 	return osOK;
 }
@@ -729,7 +794,7 @@ osStatus_t osTimerStart (osTimerId_t timer_id, uint32_t ticks)
 	if (timer_id == NULL)
 		return osErrorParameter;
 
-	tmr_start(&timer->tmr, ticks, (timer->flags & osTimerPeriodic) ? ticks : 0);
+	tmr_start(&timer->tmr, priv_timeout(ticks), (timer->flags & osTimerPeriodic) ? priv_timeout(ticks) : 0);
 
 	return osOK;
 }
@@ -850,7 +915,7 @@ uint32_t osEventFlagsWait (osEventFlagsId_t ef_id, uint32_t flags, uint32_t opti
 	if ((IS_IRQ_MODE() || IS_IRQ_MASKED()) && (timeout != 0U))
 		return osFlagsErrorParameter;
 
-	switch (flg_waitFor(&ef->flg, flags, options, timeout))
+	switch (flg_waitFor(&ef->flg, flags, options, priv_timeout(timeout)))
 	{
 		case E_SUCCESS: return flags;
 		case E_TIMEOUT: return osFlagsErrorTimeout;
@@ -955,9 +1020,10 @@ osStatus_t osMutexAcquire (osMutexId_t mutex_id, uint32_t timeout)
 	if (mutex_id == NULL)
 		return osErrorParameter;
 
-	switch (mtx_waitFor(&mutex->mtx, timeout))
+	switch (mtx_waitFor(&mutex->mtx, priv_timeout(timeout)))
 	{
-		case E_SUCCESS: return osOK;
+		case E_SUCCESS:
+		case OWNERDEAD: return osOK; // robust mutex: the previous owner was terminated, the mutex is locked
 		case E_TIMEOUT: return osErrorTimeout;
 		default:        return osErrorResource;
 	}
@@ -1061,7 +1127,7 @@ osStatus_t osSemaphoreAcquire (osSemaphoreId_t semaphore_id, uint32_t timeout)
 	if ((IS_IRQ_MODE() || IS_IRQ_MASKED()) && (timeout != 0U))
 		return osErrorParameter;
 
-	switch (sem_waitFor(&semaphore->sem, timeout))
+	switch (sem_waitFor(&semaphore->sem, priv_timeout(timeout)))
 	{
 		case E_SUCCESS: return osOK;
 		case E_TIMEOUT: return osErrorTimeout;
@@ -1191,7 +1257,7 @@ void *osMemoryPoolAlloc (osMemoryPoolId_t mp_id, uint32_t timeout)
 	if ((IS_IRQ_MODE() || IS_IRQ_MASKED()) && (timeout != 0U))
 		return NULL;
 
-	switch (mem_waitFor(&mp->mem, &block, timeout))
+	switch (mem_waitFor(&mp->mem, &block, priv_timeout(timeout)))
 	{
 		case E_SUCCESS: return block;
 		default:        return NULL;
@@ -1366,7 +1432,7 @@ osStatus_t osMessageQueuePut (osMessageQueueId_t mq_id, const void *msg_ptr, uin
 	if ((IS_IRQ_MODE() || IS_IRQ_MASKED()) && (timeout != 0U))
 		return osErrorParameter;
 
-	switch (box_sendFor(&mq->box, msg_ptr, timeout))
+	switch (box_sendFor(&mq->box, msg_ptr, priv_timeout(timeout)))
 	{
 		case E_SUCCESS: return osOK;
 		case E_TIMEOUT: return osErrorTimeout;
@@ -1386,7 +1452,7 @@ osStatus_t osMessageQueueGet (osMessageQueueId_t mq_id, void *msg_ptr, uint8_t *
 	if ((IS_IRQ_MODE() || IS_IRQ_MASKED()) && (timeout != 0U))
 		return osErrorParameter;
 
-	switch (box_waitFor(&mq->box, msg_ptr, timeout))
+	switch (box_waitFor(&mq->box, msg_ptr, priv_timeout(timeout)))
 	{
 		case E_SUCCESS: return osOK;
 		case E_TIMEOUT: return osErrorTimeout;
