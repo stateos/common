@@ -180,10 +180,10 @@ int sig_waitFor( sig_t *sig, unsigned sigset, unsigned *signo, cnt_t delay )
 		result = priv_sig_take(sig, sigset, signo);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.sig.sigset = sigset;
+			System.cur->temp.sig.sigset = sigset;
 			result = core_tsk_waitFor(&sig->obj.queue, delay);
 			if (result == E_SUCCESS && signo != NULL)
-				*signo = System.cur->tmp.sig.signo;
+				*signo = System.cur->temp.sig.signo;
 		}
 	}
 	sys_unlock();
@@ -206,10 +206,10 @@ int sig_waitUntil( sig_t *sig, unsigned sigset, unsigned *signo, cnt_t time )
 		result = priv_sig_take(sig, sigset, signo);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.sig.sigset = sigset;
+			System.cur->temp.sig.sigset = sigset;
 			result = core_tsk_waitUntil(&sig->obj.queue, time);
 			if (result == E_SUCCESS && signo != NULL)
-				*signo = System.cur->tmp.sig.signo;
+				*signo = System.cur->temp.sig.signo;
 		}
 	}
 	sys_unlock();
@@ -234,10 +234,10 @@ void sig_give( sig_t *sig, unsigned signo )
 		que = &sig->obj.queue;
 		while (*que)
 		{
-			if (((*que)->tmp.sig.sigset & sigset) != 0 || (*que)->tmp.sig.sigset == 0)
+			if (((*que)->temp.sig.sigset & sigset) != 0 || (*que)->temp.sig.sigset == 0)
 			{
 				sig->sigset &= ~sigset;
-				(*que)->tmp.sig.signo = signo;
+				(*que)->temp.sig.signo = signo;
 				core_one_wakeup(que, E_SUCCESS);
 				continue;
 			}

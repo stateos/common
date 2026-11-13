@@ -183,7 +183,7 @@ int lst_waitFor( lst_t *lst, void **data, cnt_t delay )
 		{
 			result = core_tsk_waitFor(&lst->obj.queue, delay);
 			if (result == E_SUCCESS)
-				*data = System.cur->tmp.lst.data;
+				*data = System.cur->temp.lst.data;
 		}
 	}
 	sys_unlock();
@@ -209,7 +209,7 @@ int lst_waitUntil( lst_t *lst, void **data, cnt_t time )
 		{
 			result = core_tsk_waitUntil(&lst->obj.queue, time);
 			if (result == E_SUCCESS)
-				*data = System.cur->tmp.lst.data;
+				*data = System.cur->temp.lst.data;
 		}
 	}
 	sys_unlock();
@@ -237,7 +237,7 @@ void priv_lst_give( lst_t *lst, void *data )
 
 	if (tsk)
 	{
-		tsk->tmp.lst.data = data;
+		tsk->temp.lst.data = data;
 	}
 	else
 	{

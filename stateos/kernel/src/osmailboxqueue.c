@@ -192,7 +192,7 @@ void priv_box_getUpdate( box_t *box, char *data )
 
 	priv_box_get(box, data);
 	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
-	if (tsk) priv_box_put(box, tsk->tmp.box.data.out);
+	if (tsk) priv_box_put(box, tsk->temp.box.data.out);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -204,7 +204,7 @@ void priv_box_putUpdate( box_t *box, const char *data )
 
 	priv_box_put(box, data);
 	tsk = core_one_wakeup(&box->obj.queue, E_SUCCESS);
-	if (tsk) priv_box_get(box, tsk->tmp.box.data.in);
+	if (tsk) priv_box_get(box, tsk->temp.box.data.in);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -259,7 +259,7 @@ int box_waitFor( box_t *box, void *data, cnt_t delay )
 		result = priv_box_take(box, data);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.box.data.in = data;
+			System.cur->temp.box.data.in = data;
 			result = core_tsk_waitFor(&box->obj.queue, delay);
 		}
 	}
@@ -286,7 +286,7 @@ int box_waitUntil( box_t *box, void *data, cnt_t time )
 		result = priv_box_take(box, data);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.box.data.in = data;
+			System.cur->temp.box.data.in = data;
 			result = core_tsk_waitUntil(&box->obj.queue, time);
 		}
 	}
@@ -347,7 +347,7 @@ int box_sendFor( box_t *box, const void *data, cnt_t delay )
 		result = priv_box_give(box, data);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.box.data.out = data;
+			System.cur->temp.box.data.out = data;
 			result = core_tsk_waitFor(&box->obj.queue, delay);
 		}
 	}
@@ -374,7 +374,7 @@ int box_sendUntil( box_t *box, const void *data, cnt_t time )
 		result = priv_box_give(box, data);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.box.data.out = data;
+			System.cur->temp.box.data.out = data;
 			result = core_tsk_waitUntil(&box->obj.queue, time);
 		}
 	}

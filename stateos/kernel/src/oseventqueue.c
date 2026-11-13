@@ -193,7 +193,7 @@ unsigned priv_evq_getUpdate( evq_t *evq )
 
 	unsigned event = priv_evq_get(evq);
 	tsk = core_one_wakeup(&evq->obj.queue, E_SUCCESS);
-	if (tsk) priv_evq_put(evq, tsk->tmp.evq.event);
+	if (tsk) priv_evq_put(evq, tsk->temp.evq.event);
 
 	return event;
 }
@@ -207,7 +207,7 @@ void priv_evq_putUpdate( evq_t *evq, unsigned event )
 
 	priv_evq_put(evq, event);
 	tsk = core_one_wakeup(&evq->obj.queue, E_SUCCESS);
-	if (tsk) tsk->tmp.evq.event = priv_evq_get(evq);
+	if (tsk) tsk->temp.evq.event = priv_evq_get(evq);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -266,7 +266,7 @@ int evq_waitFor( evq_t *evq, unsigned *event, cnt_t delay )
 		{
 			result = core_tsk_waitFor(&evq->obj.queue, delay);
 			if (result == E_SUCCESS && event != NULL)
-				*event = System.cur->tmp.evq.event;
+				*event = System.cur->temp.evq.event;
 		}
 	}
 	sys_unlock();
@@ -293,7 +293,7 @@ int evq_waitUntil( evq_t *evq, unsigned *event, cnt_t time )
 		{
 			result = core_tsk_waitUntil(&evq->obj.queue, time);
 			if (result == E_SUCCESS && event != NULL)
-				*event = System.cur->tmp.evq.event;
+				*event = System.cur->temp.evq.event;
 		}
 	}
 	sys_unlock();
@@ -351,7 +351,7 @@ int evq_sendFor( evq_t *evq, unsigned event, cnt_t delay )
 		result = priv_evq_give(evq, event);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.evq.event = event;
+			System.cur->temp.evq.event = event;
 			result = core_tsk_waitFor(&evq->obj.queue, delay);
 		}
 	}
@@ -377,7 +377,7 @@ int evq_sendUntil( evq_t *evq, unsigned event, cnt_t time )
 		result = priv_evq_give(evq, event);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.evq.event = event;
+			System.cur->temp.evq.event = event;
 			result = core_tsk_waitUntil(&evq->obj.queue, time);
 		}
 	}

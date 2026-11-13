@@ -218,7 +218,7 @@ int mem_waitFor( mem_t *mem, void **data, cnt_t delay )
 		{
 			result = core_tsk_waitFor(&mem->lst.obj.queue, delay);
 			if (result == E_SUCCESS)
-				*data = System.cur->tmp.lst.data;
+				*data = System.cur->temp.lst.data;
 		}
 	}
 	sys_unlock();
@@ -244,7 +244,7 @@ int mem_waitUntil( mem_t *mem, void **data, cnt_t time )
 		{
 			result = core_tsk_waitUntil(&mem->lst.obj.queue, time);
 			if (result == E_SUCCESS)
-				*data = System.cur->tmp.lst.data;
+				*data = System.cur->temp.lst.data;
 		}
 	}
 	sys_unlock();
@@ -272,7 +272,7 @@ void priv_mem_give( mem_t *mem, void *data )
 
 	if (tsk)
 	{
-		tsk->tmp.lst.data = data;
+		tsk->temp.lst.data = data;
 	}
 	else
 	{

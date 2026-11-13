@@ -204,7 +204,7 @@ size_t priv_msg_getUpdate( msg_t *msg, char *data )
 
 	size_t size = priv_msg_get(msg, data);
 	tsk = core_one_wakeup(&msg->obj.queue, E_SUCCESS);
-	if (tsk) priv_msg_put(msg, tsk->tmp.msg.data.out, tsk->tmp.msg.size);
+	if (tsk) priv_msg_put(msg, tsk->temp.msg.data.out, tsk->temp.msg.size);
 
 	return size;
 }
@@ -218,7 +218,7 @@ void priv_msg_putUpdate( msg_t *msg, const char *data, size_t size )
 
 	priv_msg_put(msg, data, size);
 	tsk = core_one_wakeup(&msg->obj.queue, E_SUCCESS);
-	if (tsk) tsk->tmp.msg.size = priv_msg_get(msg, tsk->tmp.msg.data.in);
+	if (tsk) tsk->temp.msg.size = priv_msg_get(msg, tsk->temp.msg.data.in);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -280,11 +280,11 @@ int msg_waitFor( msg_t *msg, void *data, size_t size, size_t *read, cnt_t delay 
 		result = priv_msg_take(msg, data, size, read);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.msg.data.in = data;
-			System.cur->tmp.msg.size = size;
+			System.cur->temp.msg.data.in = data;
+			System.cur->temp.msg.size = size;
 			result = core_tsk_waitFor(&msg->obj.queue, delay);
 			if (result == E_SUCCESS && read != NULL)
-				*read = System.cur->tmp.msg.size;
+				*read = System.cur->temp.msg.size;
 		}
 	}
 	sys_unlock();
@@ -311,11 +311,11 @@ int msg_waitUntil( msg_t *msg, void *data, size_t size, size_t *read, cnt_t time
 		result = priv_msg_take(msg, data, size, read);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.msg.data.in = data;
-			System.cur->tmp.msg.size = size;
+			System.cur->temp.msg.data.in = data;
+			System.cur->temp.msg.size = size;
 			result = core_tsk_waitUntil(&msg->obj.queue, time);
 			if (result == E_SUCCESS && read != NULL)
-				*read = System.cur->tmp.msg.size;
+				*read = System.cur->temp.msg.size;
 		}
 	}
 	sys_unlock();
@@ -380,8 +380,8 @@ int msg_sendFor( msg_t *msg, const void *data, size_t size, cnt_t delay )
 		result = priv_msg_give(msg, data, size);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.msg.data.out = data;
-			System.cur->tmp.msg.size = size;
+			System.cur->temp.msg.data.out = data;
+			System.cur->temp.msg.size = size;
 			result = core_tsk_waitFor(&msg->obj.queue, delay);
 		}
 	}
@@ -409,8 +409,8 @@ int msg_sendUntil( msg_t *msg, const void *data, size_t size, cnt_t time )
 		result = priv_msg_give(msg, data, size);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.msg.data.out = data;
-			System.cur->tmp.msg.size = size;
+			System.cur->temp.msg.data.out = data;
+			System.cur->temp.msg.size = size;
 			result = core_tsk_waitUntil(&msg->obj.queue, time);
 		}
 	}

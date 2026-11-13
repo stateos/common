@@ -60,9 +60,10 @@
  * @brief   task (thread)
  */
 
+typedef union __tmp tmp_t;
+
 union __tmp
 {
-
 	struct {
 	unsigned event;
 	}        evt;   // temporary data used by event object
@@ -114,7 +115,6 @@ union __tmp
 	struct {
 	fun_t  * fun;
 	}        job;   // temporary data used by job queue object
-
 };
 
 struct __tsk
@@ -153,11 +153,11 @@ struct __tsk
 	int      event; ///< wakeup event of the interrupted context
 	cnt_t    start; ///< timer data of the interrupted context
 	cnt_t    delay; ///< timer data of the interrupted context
-	union __tmp tmp;///< temporary data of the interrupted context
+	tmp_t    temp;  ///< temporary data of the interrupted context
 	}        backup;
 	}        sig;
 
-	union __tmp tmp; ///< temporary data used by blocking functions
+	tmp_t    temp;  ///< temporary data used by blocking functions
 
 #ifndef _PORT_DATA_INIT
 #define _PORT_DATA_INIT()

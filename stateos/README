@@ -129,6 +129,7 @@ Features:
 - stdc++: fixed result of __gthread_equal
 - cmsis-rtos2 api updated to version 2.3.0 (the new functions return osError: process isolation, thread watchdog and processor affinity are not supported)
 - cmsis-rtos2: default thread priority (osPriorityNone in the attributes) and detached threads by default, osKernelLock locks the scheduler (not the interrupts) and can be unlocked, osKernelGetState returns the real state, osWaitForever is INFINITE for every OS_TIMER_SIZE, osDelayUntil with 64-bit system time, osMutexAcquire returns osOK for a robust mutex taken over from a terminated owner
+- task field tmp (temporary data used by blocking functions) renamed to temp, added tmp_t type
 ---------
 7.1
 - updated os version

@@ -166,8 +166,8 @@ int flg_waitFor( flg_t *flg, unsigned flags, unsigned mode, cnt_t delay )
 		flags = priv_flg_take(flg, flags, mode);
 		if (flags != 0)
 		{
-			System.cur->tmp.flg.flags = flags;
-			System.cur->tmp.flg.mode  = mode;
+			System.cur->temp.flg.flags = flags;
+			System.cur->temp.flg.mode  = mode;
 			result = core_tsk_waitFor(&flg->obj.queue, delay);
 		}
 	}
@@ -191,8 +191,8 @@ int flg_waitUntil( flg_t *flg, unsigned flags, unsigned mode, cnt_t time )
 		flags = priv_flg_take(flg, flags, mode);
 		if (flags != 0)
 		{
-			System.cur->tmp.flg.flags = flags;
-			System.cur->tmp.flg.mode  = mode;
+			System.cur->temp.flg.flags = flags;
+			System.cur->temp.flg.mode  = mode;
 			result = core_tsk_waitUntil(&flg->obj.queue, time);
 		}
 	}
@@ -219,10 +219,10 @@ unsigned flg_give( flg_t *flg, unsigned flags )
 		que = &flg->obj.queue;
 		while (*que)
 		{
-			if ((*que)->tmp.flg.flags & flags)
+			if ((*que)->temp.flg.flags & flags)
 			{
-				(*que)->tmp.flg.flags &= ~flags;
-				if ((*que)->tmp.flg.flags == 0 || ((*que)->tmp.flg.mode & flgAll) == 0)
+				(*que)->temp.flg.flags &= ~flags;
+				if ((*que)->temp.flg.flags == 0 || ((*que)->temp.flg.mode & flgAll) == 0)
 				{
 					core_one_wakeup(que, E_SUCCESS);
 					continue;

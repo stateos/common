@@ -640,14 +640,14 @@ void priv_sig_deliver( void )
 	cur->sig.backup.event = cur->event; // the handler can call blocking functions
 	cur->sig.backup.start = cur->start;
 	cur->sig.backup.delay = cur->delay;
-	cur->sig.backup.tmp   = cur->tmp;
+	cur->sig.backup.temp  = cur->temp;
 
 	priv_sig_handler(cur);
 
 	cur->event = cur->sig.backup.event;
 	cur->start = cur->sig.backup.start;
 	cur->delay = cur->sig.backup.delay;
-	cur->tmp   = cur->sig.backup.tmp;
+	cur->temp  = cur->sig.backup.temp;
 	cur->sp    = cur->sig.backup.sp;
 	cur->sig.backup.sp = 0;
 

@@ -181,9 +181,9 @@ size_t priv_raw_getUpdate( raw_t *raw, void *data, size_t size )
 
 	priv_raw_get(raw, data, size);
 
-	while (raw->obj.queue != 0 && raw->count + raw->obj.queue->tmp.raw.size <= raw->limit)
+	while (raw->obj.queue != 0 && raw->count + raw->obj.queue->temp.raw.size <= raw->limit)
 	{
-		priv_raw_put(raw, raw->obj.queue->tmp.raw.data.out, raw->obj.queue->tmp.raw.size);
+		priv_raw_put(raw, raw->obj.queue->temp.raw.data.out, raw->obj.queue->temp.raw.size);
 		core_one_wakeup(&raw->obj.queue, E_SUCCESS);
 	}
 
@@ -199,10 +199,10 @@ void priv_raw_putUpdate( raw_t *raw, const void *data, size_t size )
 
 	while (raw->obj.queue != 0 && raw->count > 0)
 	{
-		size = raw->obj.queue->tmp.raw.size;
+		size = raw->obj.queue->temp.raw.size;
 		if (size > raw->count) size = raw->count;
-		raw->obj.queue->tmp.raw.size = size;
-		priv_raw_get(raw, raw->obj.queue->tmp.raw.data.in, size);
+		raw->obj.queue->temp.raw.size = size;
+		priv_raw_get(raw, raw->obj.queue->temp.raw.data.in, size);
 		core_one_wakeup(&raw->obj.queue, E_SUCCESS);
 	}
 }
@@ -263,11 +263,11 @@ int raw_waitFor( raw_t *raw, void *data, size_t size, size_t *read, cnt_t delay 
 		result = priv_raw_take(raw, data, size, read);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.raw.data.in = data;
-			System.cur->tmp.raw.size = size;
+			System.cur->temp.raw.data.in = data;
+			System.cur->temp.raw.size = size;
 			result = core_tsk_waitFor(&raw->obj.queue, delay);
 			if (result == E_SUCCESS && read != NULL)
-				*read = System.cur->tmp.raw.size;
+				*read = System.cur->temp.raw.size;
 		}
 	}
 	sys_unlock();
@@ -294,11 +294,11 @@ int raw_waitUntil( raw_t *raw, void *data, size_t size, size_t *read, cnt_t time
 		result = priv_raw_take(raw, data, size, read);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.raw.data.in = data;
-			System.cur->tmp.raw.size = size;
+			System.cur->temp.raw.data.in = data;
+			System.cur->temp.raw.size = size;
 			result = core_tsk_waitUntil(&raw->obj.queue, time);
 			if (result == E_SUCCESS && read != NULL)
-				*read = System.cur->tmp.raw.size;
+				*read = System.cur->temp.raw.size;
 		}
 	}
 	sys_unlock();
@@ -366,8 +366,8 @@ int raw_sendFor( raw_t *raw, const void *data, size_t size, cnt_t delay )
 		result = priv_raw_give(raw, data, size);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.raw.data.out = data;
-			System.cur->tmp.raw.size = size;
+			System.cur->temp.raw.data.out = data;
+			System.cur->temp.raw.size = size;
 			result = core_tsk_waitFor(&raw->obj.queue, delay);
 		}
 	}
@@ -395,8 +395,8 @@ int raw_sendUntil( raw_t *raw, const void *data, size_t size, cnt_t time )
 		result = priv_raw_give(raw, data, size);
 		if (result == E_TIMEOUT)
 		{
-			System.cur->tmp.raw.data.out = data;
-			System.cur->tmp.raw.size = size;
+			System.cur->temp.raw.data.out = data;
+			System.cur->temp.raw.size = size;
 			result = core_tsk_waitUntil(&raw->obj.queue, time);
 		}
 	}

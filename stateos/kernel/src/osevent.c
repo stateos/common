@@ -129,7 +129,7 @@ int evt_waitFor( evt_t *evt, unsigned *event, cnt_t delay )
 	{
 		result = core_tsk_waitFor(&evt->obj.queue, delay);
 		if (result == E_SUCCESS && event != NULL)
-			*event = System.cur->tmp.evt.event;
+			*event = System.cur->temp.evt.event;
 	}
 	sys_unlock();
 
@@ -150,7 +150,7 @@ int evt_waitUntil( evt_t *evt, unsigned *event, cnt_t time )
 	{
 		result = core_tsk_waitUntil(&evt->obj.queue, time);
 		if (result == E_SUCCESS && event != NULL)
-			*event = System.cur->tmp.evt.event;
+			*event = System.cur->temp.evt.event;
 	}
 	sys_unlock();
 
@@ -169,7 +169,7 @@ void evt_give( evt_t *evt, unsigned event )
 	sys_lock();
 	{
 		while (tsk = core_one_wakeup(&evt->obj.queue, E_SUCCESS), tsk != NULL)
-			tsk->tmp.evt.event = event;
+			tsk->temp.evt.event = event;
 	}
 	sys_unlock();
 }
