@@ -94,6 +94,7 @@ Features:
 - fixed name of oslibc.c in cmake config
 - API documentation in the doxygen format: doxygen run in this directory (Doxyfile) generates the HTML documentation in doc/html, internal items (_*, *_, core_*, priv_*) are not documented, published on https://stateos.github.io/IntrOS/
 - cnd_wait functions: removed the assertion on the result of locking the mutex again (E_STOPPED is a documented result), described E_FAILURE after tsk_resume
+- C++: the tag of the constructors used by the Start functions of Task and Timer is defined once (Held_t in oskernel.h)
 ---------
 5.1
 - updated os version

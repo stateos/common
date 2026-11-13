@@ -52,6 +52,10 @@
 
 /* -------------------------------------------------------------------------- */
 
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
+struct Held_t {}; // tag of the constructors of the objects started in place
+#endif
+
 #if defined(__cplusplus) && (__cplusplus >= 201402L)
 #include <functional>
 #include <memory>

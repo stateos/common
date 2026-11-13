@@ -807,10 +807,9 @@ struct TaskT : public baseTask, public baseStack<size_>
 	TaskT<size_>& operator=( TaskT<size_>&& ) = delete;
 	TaskT<size_>& operator=( const TaskT<size_>& ) = delete;
 
-private:
-	struct Starter {}; // Start functions return the task started in place: a started task must not be moved
+private: // the Start functions return the object started in place: a started object must not be moved
 	template<typename... A>
-	TaskT( Starter, A&&... _args ): TaskT<size_>{static_cast<A&&>(_args)...} { this->start(); }
+	TaskT( Held_t, A&&... _args ): TaskT<size_>{static_cast<A&&>(_args)...} { this->start(); }
 public:
 
 /**
@@ -855,7 +854,7 @@ public:
 	template<class F> static
 	TaskT<size_> Start( F&& _proc )
 	{
-		return { Starter{}, _proc };
+		return { Held_t{}, _proc };
 	}
 
 #if __cplusplus >= 201402L
@@ -863,7 +862,7 @@ public:
 	template<typename F, typename... A> static
 	TaskT<size_> Start( F&& _proc, A&&... _args )
 	{
-		return { Starter{}, std::forward<F>(_proc), std::forward<A>(_args)... };
+		return { Held_t{}, std::forward<F>(_proc), std::forward<A>(_args)... };
 	}
 #endif
 };
