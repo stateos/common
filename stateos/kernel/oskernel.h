@@ -53,7 +53,8 @@
 /* -------------------------------------------------------------------------- */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L) && !defined(__STATEOS_STDCXX)
-#include <new>      // std::nothrow (Create, Make)
+#include <new>     // std::nothrow (Create, Make)
+struct Held_t {};  // tag of the constructors of the objects started in place
 #endif
 
 #if defined(__cplusplus) && (__cplusplus >= 201402L) && !defined(__STATEOS_STDCXX)
